@@ -4,7 +4,7 @@ import RailGlyph, {
 } from "../../components/desktop/navigation/rail-glyphs.jsx";
 import { tr, useTr } from "../../locales/ui.js";
 import { trFill } from "../../locales/tr-fill.js";
-import { openCart, useCart } from "./cart-store.js";
+import { closeCart, openCart, useCart } from "./cart-store.js";
 
 /*
  * Кнопка корзины в нижней части рейки, над «Загрузками» (владелец, 16.11.2026: «значок корзины виден с самого начала»): стоит всегда. Число отложенного — тем же бейджем, что у загрузок;
@@ -18,7 +18,7 @@ export default function CartRailButton({ style }) {
     <button
       type="button"
       className={`sidebar-cart-button${open ? " active" : ""}`}
-      onClick={openCart}
+      onClick={open ? closeCart : openCart}
       aria-label={label}
       aria-haspopup="dialog"
       aria-expanded={open}

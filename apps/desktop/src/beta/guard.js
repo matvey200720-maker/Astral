@@ -38,6 +38,9 @@ const LICENSE_INVALID_EXTRA_PAUSES = [2800, 4200];
 // Секрет привязки после удачной привязки стирается с повторами (его могла держать антивирусная программа).
 const BIND_REMOVE_PAUSES = [200, 600];
 const CLOCK_BACK_TOLERANCE_MS = 5 * 60 * 1000;
+// Единственный выключатель стирания. false — отзыв доступа и несовпадения только останавливают лаунчер (окно и выход),
+// а файлы установки остаются. Тексты окна (messages.js, ключи destroy*) обещают удаление: менять вместе с этой строкой.
+export const SELF_ERASE_ENABLED = true;
 const UPDATE_MARKERS = ["app.new", "app.old", "beta.new", "beta.old"];
 
 // Ключи текста окна-ошибки и окна «повторить» по причине.
@@ -114,6 +117,7 @@ export function createBetaGuard(overrides = {}) {
   const clearTimer = option("clearInterval", () => clearInterval);
   const sleep = option("sleep", () => (ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const loadBundle = option("loadBundle", () => (opts) => loadBetaWebBundle({ ...opts, scan: scanPakOffThread }));
+  const selfErase = option("selfErase", () => SELF_ERASE_ENABLED);
 
   let buildConfig = null;
   let state = null;
@@ -218,6 +222,8 @@ export function createBetaGuard(overrides = {}) {
       now,
       userAgent,
       headersTimeoutMs: SERVER_HEADERS_TIMEOUT_MS,
+      // Тем же ключом, что и лицензия, сервер подписывает вердикт «стереть»: без его подписи лаунчер не стирает.
+      verdictKey: buildConfig?.licensePublicKey,
     });
   }
 
@@ -234,6 +240,10 @@ export function createBetaGuard(overrides = {}) {
   }
 
   function logTransient(verdict) {
+    if (verdict.reason === "unverified") {
+      log("warn", `ответ велит стереть (${verdict.code}), но подписи сервера на нём нет: ничего не стираем`);
+      return;
+    }
     const label = verdict.status ? `${verdict.reason} ${verdict.status}` : verdict.reason;
     log("info", `сервер недоступен (${label})`);
   }
@@ -281,6 +291,28 @@ export function createBetaGuard(overrides = {}) {
 
     closeWindows();
 
+    if (selfErase) await eraseInstallation(reason, ctx);
+    else log("warn", "стирание выключено в сборке: файлы установки остаются");
+
+    const text = destroyDialogText(session.lang, reason, ctx.serial ?? "");
+    await showDialog({
+      type: "warning",
+      title: text.title,
+      message: text.message,
+      detail: text.detail,
+      buttons: [text.ok],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+
+    eraser.killProcessTree({ platform, spawn, env });
+    session.electron.app.exit(0);
+    return { ok: false, reason };
+  }
+
+  // Само стирание: файлы доступа сразу, папки установки, ярлыки и запись «Приложения» — отложенным сценарием.
+  async function eraseInstallation(reason, ctx) {
     let siblings = [];
     if (SERVER_VERDICTS.has(reason)) {
       siblings = await findSiblingLicenses(ctx);
@@ -315,22 +347,6 @@ export function createBetaGuard(overrides = {}) {
     } catch (error) {
       log("error", "самоудаление споткнулось", error?.stack ?? textOf(error));
     }
-
-    const text = destroyDialogText(session.lang, reason, ctx.serial ?? "");
-    await showDialog({
-      type: "warning",
-      title: text.title,
-      message: text.message,
-      detail: text.detail,
-      buttons: [text.ok],
-      defaultId: 0,
-      cancelId: 0,
-      noLink: true,
-    });
-
-    eraser.killProcessTree({ platform, spawn, env });
-    session.electron.app.exit(0);
-    return { ok: false, reason };
   }
 
   // --- кэш ключа ----------------------------------------------------------

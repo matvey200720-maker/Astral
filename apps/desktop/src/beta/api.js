@@ -1,8 +1,13 @@
 // apps/desktop/src/beta/api.js
 // Клиент HTTP-API бета-доступа: подпись запросов DPoP, поправка часов по 401,
 // разбор ответов bind/unlock в вердикт («стереть», «остановиться», «не знаем»).
+//
+// Вердикт «стереть» принимается только с подписью сервера (ключ лицензии, вшит в сборку),
+// привязанной к этому самому запросу: кто просил (ключ устройства), какой запрос (jti),
+// что в нём было (сумма тела). Ответ без такой подписи — «не знаем»: файлы остаются.
 
-import { createDpopProof } from "./dpop.js";
+import crypto from "node:crypto";
+import { createDpopProof, dpopTarget, jwkThumbprint } from "./dpop.js";
 
 export const API_PREFIX = "/api/v1/beta/";
 
@@ -26,6 +31,21 @@ export const BLOCKING_CODES = frozenTable([
 
 export const VERDICTS_HEADER = "astral-beta-verdicts";
 export const VERDICTS_VERSION = "2";
+
+// Подпись вердикта «стереть»: base64url(JSON) + «.» + подпись Ed25519 ключом лицензии над текстом
+// «метка + первая часть». Метка отделяет эту подпись от подписи самой лицензии: одно за другое не выдать.
+export const VERDICT_SIGNATURE_HEADER = "astral-beta-verdict-sig";
+export const VERDICT_TOKEN_TYPE = "astral-beta-verdict";
+export const VERDICT_SIGNING_LABEL = "astral-beta-verdict\n";
+const VERDICT_TOKEN_CAP = 2048;
+const VERDICT_TOKEN_PART = /^[A-Za-z0-9_-]+$/;
+const SIGNATURE_BYTES = 64;
+const PUBLIC_KEY_BYTES = 32;
+// DER SubjectPublicKeyInfo для Ed25519: за этим префиксом идут 32 байта ключа.
+const ED25519_SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
+
+// Что лаунчер отправил в запросе, на который пришёл этот ответ: с этим сверяется подписанный вердикт.
+const SENT_REQUESTS = new WeakMap();
 
 const PROBLEM_BODY_CAP = 65536;
 const CLOCK_SANITY_MS = 86_400_000;
@@ -85,14 +105,78 @@ const CODE_RULES = [
   [[403, 404], BLOCKING_CODES, "blocked"],
 ];
 
+// Байты тела запроса так, как они уйдут в сеть; null — тело не пересчитать (поток, Blob, FormData).
+function requestBodyBytes(body) {
+  if (body == null) return Buffer.alloc(0);
+  if (typeof body === "string") return Buffer.from(body, "utf8");
+  if (body instanceof URLSearchParams) return Buffer.from(body.toString(), "utf8");
+  if (ArrayBuffer.isView(body)) return Buffer.from(body.buffer, body.byteOffset, body.byteLength);
+  if (body instanceof ArrayBuffer) return Buffer.from(body);
+  return null;
+}
+
+function requestBodyHash(body) {
+  const bytes = requestBodyBytes(body);
+  return bytes === null ? null : crypto.createHash("sha256").update(bytes).digest("hex");
+}
+
+// Содержимое подписанного вердикта, если подпись сделана ключом лицензии; иначе null.
+function signedVerdictClaims(token, rawKey) {
+  if (typeof token !== "string" || token.length > VERDICT_TOKEN_CAP) return null;
+  if (!Buffer.isBuffer(rawKey) || rawKey.length !== PUBLIC_KEY_BYTES) return null;
+
+  const pieces = token.trim().split(".");
+  if (pieces.length !== 2 || !pieces.every((piece) => VERDICT_TOKEN_PART.test(piece))) return null;
+  const [payloadText, signatureText] = pieces;
+  const signature = Buffer.from(signatureText, "base64url");
+  if (signature.length !== SIGNATURE_BYTES) return null;
+
+  try {
+    const spki = Buffer.concat([ED25519_SPKI_PREFIX, rawKey]);
+    const key = crypto.createPublicKey({ key: spki, format: "der", type: "spki" });
+    const signedText = Buffer.from(VERDICT_SIGNING_LABEL + payloadText, "ascii");
+    if (!crypto.verify(null, signedText, key, signature)) return null;
+    const claims = JSON.parse(Buffer.from(payloadText, "base64url").toString("utf8"));
+    return claims !== null && typeof claims === "object" && !Array.isArray(claims) ? claims : null;
+  } catch {
+    return null;
+  }
+}
+
+// «Стереть» доказано: подпись сервера стоит на этом коде и на этом самом запросе —
+// кто просил (jkt), какой запрос (jti), каким методом и куда (htm, htu), что в нём было (bh).
+function eraseIsProven(response, code) {
+  const sent = SENT_REQUESTS.get(response);
+  if (!sent || sent.bodyHash === null) return false;
+
+  const claims = signedVerdictClaims(response.headers.get(VERDICT_SIGNATURE_HEADER), sent.verdictKey);
+  if (claims === null) return false;
+  return (
+    claims.t === VERDICT_TOKEN_TYPE &&
+    claims.v === 1 &&
+    claims.code === code &&
+    claims.jkt === sent.jkt &&
+    claims.jti === sent.jti &&
+    claims.htm === sent.method &&
+    claims.htu === sent.target &&
+    claims.bh === sent.bodyHash
+  );
+}
+
 export async function verdictOf(response) {
   if (response.ok) return { kind: "ok" };
 
   const code = await readProblemCode(response.clone());
   const { status } = response;
   for (const [statuses, table, kind] of CODE_RULES) {
+    // Только свои записи таблицы: код вроде «toString» не должен найти унаследованное свойство.
+    if (!statuses.includes(status) || typeof code !== "string" || !Object.hasOwn(table, code)) continue;
     const reason = table[code];
-    if (statuses.includes(status) && reason !== undefined) return { kind, reason, code };
+    // Ответ без подписи сервера не доказывает его решения: это «не знаем», файлы остаются.
+    if (kind === "destroy" && !eraseIsProven(response, code)) {
+      return { kind: "transient", reason: "unverified", status, code };
+    }
+    return { kind, reason, code };
   }
   return { kind: "transient", reason: transientReason(status), status, code };
 }
@@ -142,6 +226,7 @@ class BetaApiClient {
   #now;
   #userAgent;
   #headersTimeoutMs;
+  #verdictKey;
   #skew = 0;
 
   constructor(options) {
@@ -149,6 +234,8 @@ class BetaApiClient {
     this.#origin = options.origin;
     this.#getKey = options.getKey;
     this.#fetchImpl = options.fetchImpl;
+    // Открытый ключ лицензии (32 байта): без него подписанный вердикт не проверить, и «стереть» не принимается.
+    this.#verdictKey = options.verdictKey;
     this.#now = given("now");
     this.#userAgent = given("userAgent");
     this.#headersTimeoutMs = given("headersTimeoutMs");
@@ -172,13 +259,16 @@ class BetaApiClient {
     return this.#fetchImpl ? this.#fetchImpl(href, init) : fetch(href, init);
   }
 
+  // Заголовки с подтверждением DPoP и то, чем этот запрос опознаётся в подписанном вердикте (ключ и jti).
   #signedHeaders(source, method, url) {
     const headers = new Headers(source);
-    const proof = createDpopProof(this.#getKey(), { method, url: url.href, nowMs: this.#now() + this.#skew });
+    const key = this.#getKey();
+    const proof = createDpopProof(key, { method, url: url.href, nowMs: this.#now() + this.#skew });
     headers.set("DPoP", proof);
     headers.set(VERDICTS_HEADER, VERDICTS_VERSION);
     if (!headers.has("user-agent")) headers.set("user-agent", this.#userAgent);
-    return headers;
+    const { jti } = JSON.parse(Buffer.from(proof.split(".")[1], "base64url").toString("utf8"));
+    return { headers, jkt: jwkThumbprint(key.publicJwk), jti };
   }
 
   #armDeadline(timeoutMs, callerSignal) {
@@ -207,7 +297,16 @@ class BetaApiClient {
     const timeoutMs = flags.timeoutMs === undefined ? this.#headersTimeoutMs : flags.timeoutMs;
     const url = this.resolve(pathOrUrl);
     const method = String(init.method || "GET").toUpperCase();
-    const headers = this.#signedHeaders(init.headers, method, url);
+    const { headers, jkt, jti } = this.#signedHeaders(init.headers, method, url);
+    // Сумма тела снимается до отправки: позже вызывающий мог бы поменять свой массив.
+    const sent = {
+      verdictKey: this.#verdictKey,
+      jkt,
+      jti,
+      method,
+      target: dpopTarget(url.href),
+      bodyHash: requestBodyHash(init.body),
+    };
     const { signal, disarm } = this.#armDeadline(timeoutMs, init.signal);
 
     const passthrough = { ...init };
@@ -219,6 +318,7 @@ class BetaApiClient {
     } finally {
       disarm();
     }
+    SENT_REQUESTS.set(response, sent);
 
     if (retried || response.status !== 401 || !isResendableBody(init.body)) return response;
     const drift = this.#measureDrift(response);
@@ -259,7 +359,10 @@ class BetaApiClient {
     } catch (error) {
       return { kind: "transient", reason: "network", error };
     }
-    return response.status === 200 ? this.#readLauncherSuccess(response) : this.#readLauncherOther(response);
+    if (response.status === 200) return this.#readLauncherSuccess(response);
+    // Успех без тела ответа (201, 204, 206…) ключа не несёт: это не «доступ подтверждён», а непонятный ответ.
+    if (response.ok) return { kind: "transient", reason: "unexpected", status: response.status };
+    return this.#readLauncherOther(response);
   }
 }
 

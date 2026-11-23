@@ -97,6 +97,16 @@ export default function CartPanel({ mods, installed, queue, onInstall, onOpenMod
     }
   }, [open]);
 
+  /* Панель выезжает от рейки и оставляет рейку живой: щелчок по другому значку рейки закрывает панель (страница сменится обычным щелчком), по значку корзины — закрывает его собственная кнопка. */
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (event) => {
+      if (event.target?.closest?.(".desktop-sidebar") && !event.target.closest(".sidebar-cart-button")) closeCart();
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    return () => document.removeEventListener("pointerdown", onDown, true);
+  }, [open]);
+
   const locale = LOCALES[code] || "en-US";
   const modEntries = entries.filter((entry) => entry.mod);
   const total = modEntries.reduce((sum, { mod }) => sum + (modSizeBytes(mod, mods) || 0), 0);
@@ -302,9 +312,10 @@ export default function CartPanel({ mods, installed, queue, onInstall, onOpenMod
         onClose={closeCart}
         title={tr("Корзина")}
         description={entries.length ? tr("«Скачать всё» ставит то, что ставится одним нажатием. Одежду, сборки и работы ставят кнопкой «Установить» у самой позиции.") : null}
-        size="md"
-        className="cart-dialog"
-        bodyClassName="cart-dialog-body"
+        size="drawer"
+        className="cart-drawer"
+        backdropClassName="cart-drawer-backdrop"
+        bodyClassName="cart-drawer-body"
         status={status}
         actions={
           entries.length ? (
