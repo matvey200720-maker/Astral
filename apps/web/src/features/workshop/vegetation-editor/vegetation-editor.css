@@ -1,0 +1,161 @@
+/*
+ * «Растительность»: кадры и панели кустов, цветов и деревьев (задача 2 ТЗ
+ * 10.10.2026, вечер). Общий кадр и разделы — у редакторов перекраски
+ * (`model-stage/recolor-editor.css`), здесь — только своё.
+ */
+
+/* Луг «Цветов» и карта «Деревьев» — в рамке и на холсте «Травы вблизи»
+   (`.vegetation-ground`, `recolor-editor.css`); карта — на тёмной плашке
+   кадра, без неба: это схема, а не вид. */
+.vegetation-area-map {
+  background: var(--fx-matte-stage, var(--fx-matte, #141415));
+}
+
+/* Виды цветов и деревьев — плитками по две в ряд: колонка правок узкая. */
+.vegetation-kinds.ui-pick-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vegetation-kinds .ui-pick-media {
+  aspect-ratio: 2 / 1;
+}
+
+/* Имя и пояснение вида — целиком, переносом, а не многоточием:
+   «Жёлтые цветы пустыни». */
+.vegetation-kinds .ui-pick-copy > b {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.vegetation-kinds .ui-pick-copy > small {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+/* Лист цветов из игры — целиком, по низу плитки; без листа — цвет цветка
+   (с листом `--flower-colour` прозрачный). */
+.vegetation-flower-thumb {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: end center;
+  background: radial-gradient(circle at 50% 38%, var(--flower-colour, var(--astral-accent)) 0 18%, transparent 19%), var(--astral-surface-sunken);
+}
+
+.vegetation-flower-thumb > canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Районы — набором отметок в две колонки; длинное имя переносится. */
+.vegetation-areas.ui-toggles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vegetation-areas .ui-toggle {
+  min-height: var(--astral-control-h-sm);
+  padding: 2px 6px;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+/* «В разнобой» (задача 7 ТЗ 17.10.2026): полоса палитры — цвет своей долей
+   ширины (`flex-grow` — в разметке), «как в игре» — зеленью Rockstar.
+   Остальное — классами соседних инструментов (`fx-switch`, `ListGroup`). */
+.vegetation-variety-strip {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-xs);
+}
+
+.vegetation-variety-strip > i {
+  background: var(--variety-colour);
+}
+
+.vegetation-variety-strip > .is-game {
+  background: linear-gradient(135deg, #4f6b2c, #6f8f3a);
+}
+
+.vegetation-variety-templates .vegetation-variety-strip {
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Доля цвета и «убрать» — одной строкой. */
+.vegetation-variety-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Бегунок доли в этой строке: подпись — по слову, дорожка — остаток, значение узкое. Со столбцами по умолчанию
+   (72 / дорожка / 68 и 12 между ними) на 207 px дорожка сжималась до 46 px, а поле значения вылезало за ячейку на 3 px
+   (сверка `box-overflow`). */
+.vegetation-variety-share .ui-slider {
+  grid-template-columns: auto minmax(0, 1fr) 60px;
+  gap: 8px;
+}
+
+/*
+ * «Цвет пород»: плитки пород — снимок дерева в цвете породы над названием, три в ряд в колонке правок
+ * (ТЗ 22.10.2026, п. 6). Снимок — на той же матовой плашке, что кадр; у породы без модели — значок дерева.
+ */
+.vegetation-species.ui-choice-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.vegetation-species .ui-choice {
+  gap: 6px;
+  padding: 4px 4px 8px;
+}
+
+.vegetation-species .ui-choice-media {
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  background: var(--fx-matte-stage, var(--fx-matte));
+}
+
+.vegetation-species .ui-choice-media > .scene-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vegetation-species .ui-choice-copy > b {
+  padding: 0 2px;
+  text-align: center;
+}
+
+/* Метка выбора — меньше и ближе к углу: плитка маленькая, снимок под ней не прятать. */
+.vegetation-species .ui-choice-mark {
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+}
+
+.vegetation-species .ui-choice-mark svg {
+  width: 10px;
+  height: 10px;
+}
+
+.vegetation-species-glyph {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--astral-ink-faint);
+}
+
+.vegetation-species-glyph svg {
+  width: 38%;
+  height: 38%;
+}

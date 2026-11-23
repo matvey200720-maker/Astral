@@ -1,0 +1,140 @@
+/* Колонка каталога «2.0»: три группы через черту. Остальное (рамка, рейка, строки) — из catalog-browse.css. */
+@layer overrides {
+  .catalog-menu {
+    & [data-menu-group] + [data-menu-group] {
+      border-top: 1px solid var(--astral-line);
+      margin-top: 6px;
+      padding-top: 8px;
+    }
+  }
+
+  /*
+   * Плитка каталога «2.0» (доска Cat, 13.11.2026): обложка одного размера 16:9 сверху, под ней имя и строка «N стволов · @автор»,
+   * сердечко на обложке справа вверху — одинаково во всех разделах. Только сетка каталога (`.public-catalog-grid`): плитки на главной,
+   * на странице автора и в «Похожих» остаются афишей. У внешнего блока нет `overflow: hidden` — сверху могут встать шапки сезонного набора;
+   * обрезает углы сама обложка. Строка фактов (загрузки, вес) в плитке не выезжает: вес и скачивания — на странице мода.
+   */
+  .desktop-app .public-catalog-grid .ui-media-card.is-store.is-poster {
+    --poster-ink: var(--astral-ink);
+    --poster-ink-muted: var(--astral-ink-muted);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    aspect-ratio: auto;
+    overflow: visible;
+    background: var(--astral-surface-strong);
+  }
+
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster
+    > .ui-media-card-frame {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--astral-radius) var(--astral-radius) 0 0;
+  }
+
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster
+    > .ui-media-card-shade {
+    display: none;
+  }
+
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster
+    > .ui-media-card-copy,
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster:is(
+      :hover,
+      :focus-visible,
+      :focus-within
+    ).has-trailing
+    > .ui-media-card-copy {
+    position: static;
+    gap: 4px;
+    padding: 12px 14px 14px;
+    transform: none;
+  }
+
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster
+    .ui-media-card-copy
+    h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: none;
+    white-space: nowrap;
+  }
+
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster
+    .ui-media-card-copy
+    p {
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster
+    > .ui-media-card-trailing,
+  .desktop-app
+    .public-catalog-grid
+    .ui-media-card.is-store.is-poster:is(:hover, :focus-visible, :focus-within)
+    > .ui-media-card-trailing {
+    display: none;
+  }
+
+  /* Три плитки в ряд (доска Cat); на очень широком окне — четыре, на узком — две и одна. */
+  .desktop-app
+    .public-catalog-page.is-navigator
+    .catalog-main
+    .public-catalog-grid {
+    grid-template-columns: repeat(3, var(--catalog-track));
+  }
+
+  /* Подзаголовок внутри ветки: тонкая подпись между видами, не пункт. */
+  .catalog-tree-subhead {
+    padding: 10px 12px 4px 36px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  @media (min-width: 1700px) {
+    .desktop-app
+      .public-catalog-page.is-navigator
+      .catalog-main
+      .public-catalog-grid {
+      grid-template-columns: repeat(4, var(--catalog-track));
+    }
+  }
+
+  @media (max-width: 1099px) {
+    .desktop-app
+      .public-catalog-page.is-navigator
+      .catalog-main
+      .public-catalog-grid {
+      grid-template-columns: repeat(2, var(--catalog-track));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .desktop-app
+      .public-catalog-page.is-navigator
+      .catalog-main
+      .public-catalog-grid {
+      grid-template-columns: var(--catalog-track);
+    }
+  }
+}

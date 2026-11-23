@@ -1,0 +1,777 @@
+/* «Выборочные» (каталог 2.0): сетка стволов 4 в ряд и экран ствола. У плиток и кадров нет overflow:hidden на внешнем блоке — сверху могут встать шапки сезонного набора. */
+@layer overrides {
+  .selective-page {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    min-width: 0;
+  }
+
+  .selective-head {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .selective-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .selective-tile {
+    --selective-glow: radial-gradient(
+      110% 85% at 50% 14%,
+      var(--astral-surface-hover),
+      transparent 70%
+    );
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    aspect-ratio: 4 / 3;
+    min-width: 0;
+    padding: 0;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--selective-glow), var(--astral-surface-strong);
+    color: var(--astral-ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--astral-duration-fast) var(--astral-ease),
+      background-color var(--astral-duration-fast) var(--astral-ease);
+
+    &:hover {
+      border-color: var(--astral-line-strong);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: 2px;
+    }
+  }
+
+  .selective-tile-frame {
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    padding: 12px 12px 0;
+  }
+
+  /* Плитка без кадра (обвесы, ствол, которого нет в игре) — спокойный знак, а не пустое место. */
+  .selective-tile-mark {
+    width: 44px;
+    height: 44px;
+    color: var(--astral-ink-faint);
+  }
+
+  .selective-picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .selective-tile-name {
+    padding: 0 14px;
+    overflow: hidden;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .selective-tile-count {
+    padding: 2px 14px 14px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .selective-empty {
+    margin: 24px 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* ───────── экран ствола ───────── */
+
+  /* Колонки разделов на экране ствола нет (доска Pick-gun, владелец 16.11.2026): кадр и панель скинов занимают всю ширину. Переход между разделами —
+     путь над кадром («Оружие / Выборочные / ствол») и рейка окна. */
+  .desktop-app
+    .is-navigator.public-catalog-page:has(.selective-page[data-view="weapon"]) {
+    grid-template-columns: minmax(0, 1fr);
+    /* Общая высота страницы каталога (`100vh − 118px`) на 8 px больше, чем остаётся от окна над и под колонками: страница ходила на эти 8 px, и вместе с ней
+       уезжала левая колонка. Высота экрана ствола — ровно окно: 62 px сверху, 64 px снизу. */
+    min-height: calc(100vh - 62px - var(--astral-page-pad-bottom));
+
+    & > .catalog-navigator {
+      display: none;
+    }
+  }
+
+  .selective-weapon {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 32vw, 452px);
+    gap: 22px;
+    align-items: start;
+  }
+
+  /* Левая колонка (кадр, название, органы, «о скине») стоит на месте, пока листаешь сетку скинов (владелец, 16.11.2026: «слева картинка не должна двигаться»).
+     Экран ствола по высоте равен окну без ходов страницы: кадр во всю ширину колонки, а по высоте не больше того, что останется от окна за вычетом
+     остального (`--selective-rest`: 62 px над колонкой, 64 px под ней и всё, что в колонке не кадр). Окно низкое — кадр становится ниже, а не обрезается;
+     без «о скине» (окно ниже 820 px) остального меньше. Колонка — контейнер, чтобы высота кадра считалась от её ширины (`cqw`). */
+  .selective-weapon-left {
+    --selective-rest: 472px;
+    position: sticky;
+    top: 8px;
+    container-type: inline-size;
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    align-self: start;
+  }
+
+  /* Карточка «Пульт» (15.11.2026): раздел капителью, название и строка «N скинов из M паков» под кадром, переключатель сравнения и размер одной плашкой. */
+  .selective-info {
+    display: grid;
+    gap: 4px;
+  }
+
+  .selective-kickline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 12px;
+  }
+
+  .selective-kicker {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* «1 из 275» рядом с подписью раздела: где этот скин среди всех скинов ствола. */
+  .selective-ordinal {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  /* Плашка под названием, как в макете «Пульт»: тумблер «Сравнить со штатным» (половина кадра — штатная модель, шторка с линией; подписи «Штатный» и «Скин» стоят
+     на половинах кадра) и «Размер модели» с ползунком. Пояснение переносится, а не режется. */
+  .selective-bar {
+    display: grid;
+    /* Одной строкой, как в макете: тумблер слева, размер справа; когда колонка уже двух по 300 px, они встают друг под друга. */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    align-items: center;
+    gap: 14px 28px;
+    padding: 14px 16px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+
+    & small {
+      display: block;
+      overflow: visible;
+      -webkit-line-clamp: none;
+      text-overflow: clip;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    & .ui-slider {
+      row-gap: 8px;
+    }
+  }
+
+  .selective-trail {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    /* Высота полосы не зависит от кнопки «Скопировать ссылку»: у штатного ствола её нет, и кадр под полосой не должен сдвигаться. */
+    min-height: var(--astral-control-h-sm);
+    min-width: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .selective-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--astral-control-h-xs);
+    padding: 0 10px 0 6px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    color: var(--astral-ink);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--astral-surface-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: 1px;
+    }
+  }
+
+  /* Путь «Оружие / Выборочные › ствол»: разделы — ссылки, ствол — отметка «вы здесь». */
+  .selective-path {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+
+    & > b {
+      overflow: hidden;
+      color: var(--astral-ink);
+      font-weight: 700;
+      text-overflow: ellipsis;
+    }
+
+    & > svg {
+      flex: none;
+      width: 12px;
+      height: 12px;
+      color: var(--astral-ink-faint);
+    }
+  }
+
+  /* «Скопировать ссылку» — у правого края полосы пути, вровень с правой панелью. Если буфер не дался, на её месте поле со ссылкой «скопируйте вручную». */
+  .selective-trail > .redux-product-share {
+    flex: none;
+    margin-inline-start: auto;
+  }
+
+  .selective-trail > .redux-product-share.is-manual {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    max-inline-size: min(420px, 100%);
+    min-inline-size: 0;
+  }
+
+  .selective-trail .redux-product-share-field {
+    flex: 1 1 220px;
+    min-inline-size: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface);
+    color: var(--astral-ink);
+    font: inherit;
+    font-size: var(--astral-text-small);
+  }
+
+  .selective-trail .redux-product-share-note {
+    flex: none;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .selective-crumb {
+    min-height: 28px;
+    padding: 0 4px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--astral-ink);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: 1px;
+    }
+  }
+
+  .selective-big {
+    position: relative;
+    /* Картинка при размере больше 100 % растёт за кадр — обрезается по скруглённым краям, высота кадра при этом не трогается. */
+    clip-path: inset(0 round var(--astral-radius-lg));
+    height: min(56.25cqw, max(180px, calc(100vh - var(--selective-rest))));
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background:
+      radial-gradient(
+        110% 90% at 50% 20%,
+        var(--astral-surface-hover),
+        transparent 72%
+      ),
+      var(--astral-surface-strong);
+  }
+
+  /* Размер модели в кадре: картинка скина растёт и сжимается от центра, пока ползунок двигают (50–200 %). */
+  .selective-big > .selective-picture {
+    position: absolute;
+    inset: 0;
+    padding: 18px;
+    box-sizing: border-box;
+    transform: scale(var(--selective-scale, 1));
+    transform-origin: center;
+  }
+
+  .selective-caption {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+    padding: 6px 12px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 999px;
+    background: var(--astral-bg);
+    font-size: var(--astral-text-small);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .selective-weapon-name {
+    margin: 2px 0 0;
+    font-size: var(--astral-text-hero);
+    font-weight: 800;
+    line-height: var(--astral-line-tight);
+    letter-spacing: -0.02em;
+  }
+
+  .selective-weapon-line {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* Ряд действий: «Поставить этот скин» занимает всё свободное место, корзина и сердце — квадраты справа, одной высоты. */
+  .selective-actions {
+    --selective-ctl: 48px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--selective-ctl) var(
+        --selective-ctl
+      );
+    gap: 10px;
+    align-items: stretch;
+    margin-top: 6px;
+
+    /* Ствол, что ещё не стоит, ещё и кладётся в корзину (16.11.2026): значок «В корзину» — четвёртая клетка ряда, той же ширины. */
+    &:has(.selective-cart) {
+      grid-template-columns: minmax(0, 1fr) repeat(3, var(--selective-ctl));
+    }
+
+    & > * {
+      min-width: 0;
+      box-sizing: border-box;
+    }
+  }
+
+  .selective-install {
+    width: 100%;
+  }
+
+  .selective-icon {
+    width: var(--selective-ctl);
+    min-width: var(--selective-ctl);
+    padding: 0;
+  }
+
+  .selective-heart.is-on svg {
+    color: var(--astral-heart);
+  }
+
+  /* Тумблер слева, подпись справа — как на макете, без своей рамки: вся плашка уже в рамке. */
+  .selective-bar .selective-compare {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  /* Строка «Размер модели» под переключателем сравнения: общий ползунок мастерской (`ui-slider`) и число рядом. */
+  .selective-size {
+    margin-top: 2px;
+
+    /* Поле числа — цель нажатия не меньше мелкого органа дизайн-пакета. */
+    & > .ui-slider-value {
+      min-block-size: var(--astral-control-h-xs);
+    }
+  }
+
+  /* ───────── о скине ───────── */
+
+  .selective-about {
+    display: grid;
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-strong);
+
+    & > h3 {
+      margin: 0;
+      color: var(--astral-ink-muted);
+      font-size: var(--astral-text-micro);
+      font-weight: 700;
+    }
+
+    & dl {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+    }
+
+    & dl > div {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 10px;
+      align-items: baseline;
+      font-size: var(--astral-text-small);
+    }
+
+    & dt {
+      color: var(--astral-ink-muted);
+    }
+
+    & dd {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: baseline;
+      min-width: 0;
+      margin: 0;
+      font-weight: 600;
+    }
+  }
+
+  /* Ссылка «Открыть пак» — мишень не меньше 28 px по высоте (аудит «hit-target»), подчёркнутый текст остаётся на месте. */
+  .selective-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 2px;
+    border: 0;
+    background: transparent;
+    color: var(--astral-ink);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: 2px;
+    }
+  }
+
+  .selective-chip {
+    padding: 1px 9px;
+    border: 1px solid var(--astral-line);
+    border-radius: 999px;
+    color: var(--astral-ink-muted);
+    font-weight: 600;
+  }
+
+  /* Окно низкое — «о скине» не влезает в стоящую колонку и уходит: кадр и органы важнее. */
+  @media (max-height: 820px) {
+    .selective-weapon-left {
+      --selective-rest: 334px;
+    }
+
+    .selective-about {
+      display: none;
+    }
+  }
+
+  /* ───────── все скины ствола ───────── */
+
+  /* Правая панель в рамке: заголовок, сетка скинов (листается), «Что изменится», серверы и откат, «Поставить этот скин». */
+  .selective-weapon-right {
+    position: sticky;
+    top: 8px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    max-height: min(calc(100vh - 62px - var(--astral-page-pad-bottom)), 780px);
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .selective-skins-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 52px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--astral-line);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+
+    & > h3 {
+      margin: 0;
+      color: var(--astral-ink);
+      font-size: var(--astral-text-body);
+      font-weight: 700;
+    }
+  }
+
+  /* Панель по высоте содержимого: две плитки — короткая панель, а не большая пустая область до «Что изменится» (сверка снимков 15.11.2026); много скинов — листаются. */
+  .selective-skins-scroll {
+    flex: 0 1 auto;
+    min-height: 0;
+    padding: 12px 14px 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .selective-skins {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .selective-foot {
+    display: grid;
+    flex: none;
+    gap: 10px;
+    padding: 12px 20px 18px;
+  }
+
+  .selective-flow {
+    padding: 11px 14px 12px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+
+  .selective-flow-title {
+    margin: 0 0 9px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .selective-flow-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    & > svg {
+      flex: none;
+      width: 16px;
+      height: 16px;
+      color: var(--astral-ink-faint);
+    }
+  }
+
+  .selective-flow-side {
+    display: grid;
+    flex: 1 1 0;
+    min-width: 0;
+
+    & > small {
+      color: var(--astral-ink-muted);
+      font-size: var(--astral-text-micro);
+      font-weight: 600;
+    }
+
+    & > b {
+      overflow: hidden;
+      font-size: var(--astral-text-small);
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .selective-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--astral-line);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .selective-rollback {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+
+    & > svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .selective-skin {
+    display: grid;
+    grid-template-rows: auto auto auto;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    padding: 0;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-strong);
+    color: var(--astral-ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--astral-line-strong);
+    }
+
+    &.is-active {
+      border-color: var(--astral-ink);
+      box-shadow: 0 0 0 1px var(--astral-ink);
+    }
+  }
+
+  .selective-skin-frame {
+    grid-column: 1 / -1;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--astral-radius) var(--astral-radius) 0 0;
+    background:
+      radial-gradient(
+        110% 90% at 50% 20%,
+        var(--astral-surface-hover),
+        transparent 72%
+      ),
+      var(--astral-surface-float);
+  }
+
+  .selective-skin-frame > .selective-picture {
+    border-radius: inherit;
+    object-fit: cover;
+  }
+
+  .selective-skin.is-stock .selective-skin-frame > .selective-picture {
+    object-fit: contain;
+  }
+
+  .selective-skin-name,
+  .selective-skin-pack {
+    padding: 8px 10px 0;
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .selective-skin-name {
+    font-weight: 700;
+  }
+
+  .selective-skin-pack {
+    padding-bottom: 10px;
+    color: var(--astral-ink-muted);
+  }
+
+  .selective-more {
+    justify-self: center;
+  }
+
+  /* ───────── шторка «Сравнить со штатным» ───────── */
+
+  .selective-compare-stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  .selective-compare-stage > canvas {
+    display: block;
+    border-radius: inherit;
+  }
+
+  .selective-compare-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--astral-ink);
+    pointer-events: none;
+  }
+
+  /* Ручка линии: DOM поверх холста со своей зоной захвата; вращение моделей тянется везде, кроме неё. */
+  .selective-compare-grip {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    margin-left: -22px;
+    cursor: ew-resize;
+    touch-action: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: -2px;
+    }
+  }
+
+  .selective-compare-knob {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--astral-ink);
+    border-radius: 999px;
+    background: var(--astral-bg);
+    color: var(--astral-ink);
+    pointer-events: none;
+
+    & svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .selective-compare-tag {
+    position: absolute;
+    top: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 999px;
+    background: var(--astral-bg);
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+    pointer-events: none;
+
+    &.is-stock {
+      left: 12px;
+    }
+
+    &.is-skin {
+      right: 12px;
+    }
+  }
+}

@@ -1,0 +1,191 @@
+.catalog-v3 {
+  --catalog-surface: #171717;
+  --catalog-surface-raised: #1e1e1e;
+  --catalog-border: rgba(255, 255, 255, 0.09);
+  --catalog-muted: #8e8e8e;
+  --catalog-text: #f6f7fb;
+  --catalog-accent: #eef1ff;
+  max-width: none;
+  min-height: calc(100vh - 76px);
+  padding: 22px 26px 52px;
+  color: var(--catalog-text);
+  background: #101010;
+}
+
+.weapon-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(145px, 1fr));
+  gap: 12px;
+}
+
+.weapon-slot-grid > :is(button, .weapon-slot-card) {
+  min-width: 0;
+  aspect-ratio: 0.92;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0;
+  text-align: left;
+  border: 1px solid var(--catalog-border);
+  border-radius: var(--astral-radius-lg);
+  color: white;
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(119, 119, 119, 0.15),
+      transparent 55%
+    ),
+    linear-gradient(155deg, #1f1f1f, #131313);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.weapon-slot-grid > :is(button, .weapon-slot-card):hover {
+  z-index: 2;
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.24);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+}
+
+.weapon-slot-grid svg {
+  width: calc(100% - 20px);
+  height: 54%;
+  position: absolute;
+  inset: 12% 10px auto;
+  overflow: visible;
+  fill: rgba(222, 225, 234, 0.16);
+  stroke: rgba(240, 242, 248, 0.64);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.42));
+}
+
+.weapon-slot-grid > :is(button, .weapon-slot-card) > div {
+  width: 100%;
+  position: relative;
+  padding: 17px 15px 15px;
+  background: linear-gradient(transparent, rgba(6, 6, 6, 0.95) 35%);
+}
+
+/* Многоточия здесь нет: у стволов разница часто в последнем слове (MK2),
+   и обрезалось именно оно. Подробно — в `workshop-library.css`. */
+.weapon-slot-grid h3 {
+  margin: 0 0 6px;
+  color: #f7f8fb;
+  font-family: var(--font-display, Inter, sans-serif);
+  font-size: var(--astral-text-strong);
+  font-weight: 760;
+  font-style: normal;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.weapon-slot-grid span {
+  color: #7c7c7c;
+  font-family: var(--font-ui, Inter, sans-serif);
+  font-size: var(--astral-text-micro);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+}
+
+.weapon-slot-grid i {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 7px;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-positive);
+  background: rgba(9, 35, 25, 0.82);
+  font-family: var(--font-ui, Inter, sans-serif);
+  font-size: var(--astral-text-micro);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  font-style: normal;
+}
+
+.catalog-v3-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.catalog-v3-landing-grid button {
+  min-height: 160px;
+  display: grid;
+  grid-template-columns: 44px 1fr 30px;
+  align-items: center;
+  gap: 16px;
+  padding: 25px;
+  text-align: left;
+  color: white;
+  border: 1px solid var(--catalog-border);
+  border-radius: var(--astral-radius-lg);
+  background: linear-gradient(145deg, #1d1d1d, #151515);
+  transition: 180ms ease;
+}
+
+.catalog-v3-landing-grid button:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.catalog-v3-landing-grid button > span {
+  align-self: start;
+  color: #626262;
+  font-family: var(--font-ui, Inter, sans-serif);
+  font-size: var(--astral-text-micro);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: 0.1em;
+}
+
+.catalog-v3-landing-grid h3 {
+  margin: 0 0 9px;
+  font-family: var(--font-display, Inter, sans-serif);
+  font-size: var(--astral-text-section);
+  font-weight: 760;
+  font-style: normal;
+  line-height: 1.08;
+}
+
+.catalog-v3-landing-grid p {
+  margin: 0;
+  color: var(--catalog-muted);
+  font-size: 12px;
+}
+
+.catalog-v3-landing-grid svg {
+  width: 19px;
+  color: #6b6b6b;
+}
+
+@media (max-width: 1260px) {
+  .weapon-slot-grid {
+    grid-template-columns: repeat(4, minmax(145px, 1fr));
+  }
+
+  .catalog-v3-landing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .catalog-v3 {
+    padding-inline: 16px;
+  }
+
+  .weapon-slot-grid {
+    grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+
+  .catalog-v3-landing-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,385 @@
+/*
+ * Сборка каталога, мастерской и комнаты редактора — один лист на всю
+ * хореографию появления.
+ *
+ * ПОЧЕМУ ОТДЕЛЬНЫЙ ЛИСТ. Вход карточки был написан ПЯТЬЮ проходами сразу, и
+ * каждый считал очередь по-своему:
+ *
+ *   1) `page-assembly-active :where(…)` в appearance-settings.css — пятнадцать
+ *      имён, из которых в разметке остались четыре, задержка по `nth-child` с
+ *      потолком 0,2 с и отдельный зажим длительности;
+ *   2) `astral-card-rise !important` там же — и рядом пять правил, которые
+ *      прибивали `--reveal-index` к четвёрке, то есть всё с пятой карточки
+ *      приезжало одним куском;
+ *   3) `astral-mod-card-assemble` там же ниже — тот же вход ещё раз, со своей
+ *      длительностью;
+ *   4) «Motion V14» там же, двумя одинаковыми блоками, один в самом верху
+ *      файла, — `animation-delay: 0.08s !important` на все карточки
+ *      мастерской, то есть очередь, стёртая начисто;
+ *   5) `workshop-card-compose !important` в workshop-motion.css.
+ *
+ * Выигрывал в мастерской пятый — ровно до тех пор, пока его не убрали, после
+ * чего вперёд вышел четвёртый и сравнял всю полку в один кадр. Такой и была
+ * цена пяти проходов: чтобы понять, что видно на экране, надо было держать в
+ * голове их порядок и вес. Здесь это написано один раз, и те пять проходов
+ * убраны, а не перекрыты шестым.
+ *
+ * ПОРЯДОК. Ряд за рядом, сверху вниз, внутри ряда — слева направо. Ряды
+ * настоящие: их считает по разложенной странице hooks/useAssemblyOrder.js и
+ * кладёт в `--reveal-row` и `--reveal-col`. Прежний счётчик `index % 8` из JSX
+ * рядов не знал и на сетке из четырёх колонок давал 0,1,2,3 / 4,5,6,7 /
+ * 0,1,2,3 — третий ряд стартовал вместе с первым. Это и выглядело случайным.
+ *
+ * ЧТО СЧИТАЕТСЯ СЕТКОЙ. Всё, что помечено `data-assembly-grid`: сетка каталога,
+ * обе полки мастерской, каталог оружия и одежды, плитки раздела, установленное,
+ * поиск, очередь загрузок, полка сборок, готовые наборы и полка модулей студии.
+ * Прямые дети такой сетки — карточки.
+ *
+ * ВЫКЛЮЧАТЕЛЬ ДВИЖЕНИЯ. Своих правил здесь нет: `[data-motion="off"]` из
+ * motion-switch.css гасит этот лист вместе со всем остальным, а хук при
+ * выключенном движении не мерит страницу вовсе. Медиазапрос
+ * `prefers-reduced-motion` здесь не нужен и намеренно не написан — он знает
+ * только половину ответа, см. шапку motion-preference.js.
+ */
+
+.desktop-app {
+  /* Один разгон на весь лист: быстрый съём, длинное успокоение, без отскока. */
+  --assembly-ease: cubic-bezier(0.22, 0.68, 0.24, 1);
+  --assembly-col-step: 30ms;
+  /* Пауза между концом одного ряда и началом следующего. Ради неё очередь и
+     читается как «ряд, потом ряд», а не как одна сплошная волна. */
+  --assembly-row-gap: 32ms;
+  /* Пауза перед первой карточкой: сетка успевает встать на место раньше, чем
+     на неё начнут приезжать карточки. */
+  --assembly-lead: 60ms;
+}
+
+/* Сетка ---------------------------------------------------------------------
+   Метка расставляет очередь детям и ничего не делает с самой сеткой. Своей
+   анимации у контейнера здесь намеренно нет: пометить можно и ленту с
+   собственным ходом (лента главной едет `is-marquee`), а правило на контейнер
+   этот ход бы затёрло — свойство `animation` одно. */
+
+/* Шаг ряда — не постоянная величина, а «сколько ряд едет плюс пауза».
+   Постоянный шаг работает ровно на той ширине, под которую его подобрали: на
+   четырёх колонках ряд занимает 90 мс, а на шести — 150, и шаг в 130 мс пускал
+   бы шестиколоночный ряд вдогонку предыдущему — волна шла бы наискось.
+
+   Правило стоит на самой сетке, а не на `.desktop-app`, и это обязательно:
+   значение свойства подставляется там, где оно ОБЪЯВЛЕНО, и дальше наследуется
+   уже посчитанным. Объяви его выше — и `--reveal-columns`, который хук ставит
+   на сетку, никто бы уже не прочитал: осталась бы запасная четвёрка. */
+.desktop-app [data-assembly-grid] {
+  --assembly-row-step: calc(
+    (var(--reveal-columns, 4) - 1) * var(--assembly-col-step) +
+      var(--assembly-row-gap)
+  );
+}
+
+/* `will-change` и `backface-visibility: hidden` здесь нет намеренно. Появление длится доли секунды, и на это
+   время Chromium сам выносит карточку в свой слой: анимация transform и
+   opacity идёт на композиторе без подсказок. Объявленный же `will-change`
+   держал слой у каждой карточки каждой сетки навсегда — после появления он
+   ничего не ускорял, а видеопамять и работу композитора ел, пока экран открыт
+   (Т-14). То же делал `backface-visibility: hidden`: он тоже закрепляет слой навсегда (22.11.2026, замер в
+   настоящем Electron: у полки редакторов мастерской 39 плиток = 39 постоянных слоёв видеокарты). Заголовки групп
+   остаются в общем слое страницы, и при быстрой прокрутке он дорисовывается кусками, пока плитки-слои уже стоят:
+   карточки на месте, подписи над рядами пропадают, а по краям висят обрывки (жалоба владельца 22.11.2026;
+   19.10.2026 то же «моргание» уже убирали у страницы каталога, см. `appearance-settings.css`). Страж — `fast-scroll.mjs`
+   и `test/no-permanent-layer-hints.test.js`. */
+.desktop-app [data-assembly-grid] > * {
+  animation: assembly-card-in 380ms var(--assembly-ease) backwards;
+  animation-delay: calc(
+    var(--assembly-lead) + var(--reveal-row, 0) * var(--assembly-row-step) +
+      var(--reveal-col, 0) * var(--assembly-col-step)
+  );
+}
+
+/* Карточки, въехавшие прокруткой (`data-virtual-scrolled`, VirtualGrid.jsx), встают без плиты скелета под фото (30.10.2026, прокрутка каталога). Плита с
+   бликом на каждой — это стиль, слой и сборка слоёв на каждую из восьми карточек ряда: на стенде (×4, 3000 модов) без плит пересчёт стилей −50 %, сборка
+   слоёв −40 %, кадров дольше 20 мс 36 → 20 из 89. Фото ложится на тёмную подложку карточки и проявляется тем же переходом. Первый экран (с очередью появления
+   и ожиданием плит) и карточки вне виртуальной сетки плит не теряют. */
+.desktop-app [data-virtual-scrolled] .ui-media-card-frame > .ui-skeleton {
+  display: none;
+}
+
+/* Первый экран сетки (`data-assembly-grid`, холодный вход в каталог 31.10.2026): плита под фото стоит серым местом без бегущего блика, пока фото не доехало. Блик — анимация на
+   `::after` каждой плиты: у двадцати-тридцати карточек это столько же запусков анимации и перерасчётов стиля в кадрах входа (237 на `::after` и 142 на плиту в трассе
+   входа в каталог при ×4), а хвост кадров по 60–130 мс — как раз они. Фото проявляется поверх места тем же переходом; в прокрученной сетке плит нет вовсе (правило выше). */
+.desktop-app [data-assembly-grid] .ui-media-card-frame > .ui-skeleton::after {
+  animation: none;
+}
+
+/* Рывок по списку (ползунок, End, колесо с разгона; `data-virtual-fling`, VirtualGrid.jsx): карточки, что встали в документ посреди рывка (`data-virtual-held`), пролетают
+   мимо и не просят картинку — ни фон, ни `<img>` рендера. Каждая просила бы её у локального API, а тот — у CDN; на рывке в сто рядов это сотня загрузок, и картинки
+   последнего экрана вставали в хвост очереди (стенд, холодно: ~100 лишних запросов, последний экран через 7–8 с). Рывок кончился — признак снят, и просят её уже
+   только те, что остались на экране. Не готовый `<img>` (`is-pending`) и так не виден; `display: none` у ленивой картинки откладывает загрузку до возвращения. */
+.desktop-app [data-virtual-held] .ui-media-card-frame {
+  background-image: none !important;
+}
+
+/* `!important`: лист карточки лежит в слое `overrides`, этот — в `components`, и обычное правило слоя ниже проиграло бы `display: block` карточки при любой точности. */
+.desktop-app [data-virtual-held] .ui-media-card-frame > img.is-pending {
+  display: none !important;
+}
+
+/* Сетка с фото встаёт целиком (ТЗ 24.10.2026, решение владельца: «когда всё прогрузится в скелете, тогда показывается
+   вкладка, а не так, что всё поодиночке»). Ведёт её `components/ui/screen-ready.js`: пока плиты скелета первого экрана
+   не отпущены все (но не дольше потолка), у сетки `data-screen="wait"` — карточки стоят серыми местами фото, а их
+   содержимое (фото, подпись, сердечко) скрыто; потом `data-screen="ready"`, и плиты растворяются разом, а не по одной
+   (`.ui-skeleton[data-loaded]` в astral-design/ui.css).
+
+   Поштучной очереди в такой сетке нет: пока она ждёт, очередь прошла бы невидимо, а после готовности гасила бы «разом».
+   Сетка без фото-плит (режимы каталога, очередь загрузок) и сетка, где нечего ждать, как и прежде, собираются очередью;
+   сетка, у которой плиты были, но все уже готовы (повторный заход, кэш), встаёт общим проявлением вместо очереди. */
+
+/* Комната (`data-screen-room`) своё содержимое не прячет: над ней стоит занавес (`EditorVeil`, `editor-shell.css`), а плиты
+   её панели ждут вместе с кадром. */
+.desktop-app [data-screen="wait"]:not([data-screen-room]) > * > * {
+  visibility: hidden;
+}
+
+.desktop-app [data-screen="wait"]:not([data-screen-room]) .ui-skeleton {
+  visibility: visible;
+}
+
+.desktop-app [data-screen="wait"] > *,
+.desktop-app [data-screen="ready"][data-screen-plates] > * {
+  animation: none;
+}
+
+.desktop-app [data-screen="ready"][data-screen-warm] {
+  animation: assembly-screen-in 240ms var(--assembly-ease) backwards;
+}
+
+/* Ряд разделов наверху каталога в этой очереди не участвует намеренно: он
+   приезжает целиком (`astral-toolbar-drop`), потому что это один список, а не
+   набор отдельных кнопок, — см. «разделы больше не гаснут поодиночке». */
+
+/* Каталог оружия за раскрытием ----------------------------------------------
+   Добавка приезжает сверху, из-под кнопки, которой её раскрыли, — поэтому у
+   неё свой кадр, а очередь та же. Ряды хук считает от первой новой карточки,
+   так что раскрытие собирается так же, как первое открытие. */
+
+.desktop-app
+  [data-assembly-grid][data-expanded]
+  > [data-catalog-tier="extended"] {
+  animation-name: assembly-card-drop;
+  animation-duration: 400ms;
+}
+
+.desktop-app
+  [data-assembly-grid][data-collapsing]
+  > [data-catalog-tier="extended"] {
+  pointer-events: none;
+  animation: assembly-card-out 240ms cubic-bezier(0.4, 0, 0.8, 0.2) both;
+  animation-delay: calc(
+    var(--reveal-row, 0) * 24ms + var(--reveal-col, 0) * 8ms
+  );
+}
+
+/* Разделы мастерской --------------------------------------------------------
+   Раздел меняется без перезагрузки страницы, и его содержимое монтируется
+   заново — поэтому композиция проигрывается на каждой вкладке. */
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-catalog,
+    .workshop-clothing-catalog,
+    .weapon-catalog-disclosure
+  ) {
+  animation: assembly-section-in 340ms var(--assembly-ease) backwards;
+}
+
+/* Комната редактора ---------------------------------------------------------
+   Каркас у всех редакторов один (components/ui/EditorShell.jsx), поэтому и
+   сборка одна: полоса сверху, затем тело слева направо — список, сцена,
+   инспектор. Порядок именно такой, потому что это порядок чтения комнаты:
+   сначала «где я», потом «из чего выбираю», потом «что правлю».
+
+   Сцена в этой очереди третья, а не первая, хотя она и главная: она же самая
+   крупная, и приезжай она первой, следом за ней ничего бы уже не заметили. */
+
+.desktop-app .ui-editor-shell {
+  --assembly-room-step: 48ms;
+}
+
+.desktop-app .ui-editor-shell > .ui-editor-topbar {
+  animation: assembly-room-in 420ms var(--assembly-ease) backwards;
+}
+
+.desktop-app .ui-editor-shell > .ui-editor-body > .ui-editor-rail {
+  animation: assembly-room-in 420ms var(--assembly-ease)
+    calc(var(--assembly-room-step) * 1) backwards;
+}
+
+.desktop-app .ui-editor-shell > .ui-editor-body > .ui-editor-canvas {
+  animation: assembly-room-in 460ms var(--assembly-ease)
+    calc(var(--assembly-room-step) * 2) backwards;
+}
+
+.desktop-app .ui-editor-shell > .ui-editor-body > .ui-editor-inspector {
+  animation: assembly-room-in 460ms var(--assembly-ease)
+    calc(var(--assembly-room-step) * 3) backwards;
+}
+
+/* Комната встаёт целиком (ТЗ 24.10.2026 вечер): её открывает занавес над готовой комнатой (`EditorVeil`,
+   `screen-ready.js`), он растворяется разом. Очередь органов под ним — полоса, колонка, кадр, панель по одной —
+   прошла бы невидимо или, при быстром открытии, мелькала бы под растворяющимся занавесом: её нет. */
+.desktop-app .ui-editor-shell[data-screen-room] > .ui-editor-topbar,
+.desktop-app .ui-editor-shell[data-screen-room] > .ui-editor-body > *,
+.desktop-app .ui-editor-shell[data-screen-room] .ui-editor-inspector > * {
+  animation: none;
+}
+
+/* Органы управления внутри инспектора идут следом за самой колонкой.
+
+   Здесь `nth-child`, а не мерка хуком, и это не исключение из правила, а его
+   вторая половина: хук нужен там, где число колонок решает ширина окна.
+   Инспектор — одна колонка постоянной ширины (styles/editor-shell.css), в ней
+   ряд и порядок в разметке — одно и то же, и считать нечего. */
+
+.desktop-app .ui-editor-inspector > * {
+  animation: assembly-piece-in 340ms var(--assembly-ease) backwards;
+  animation-delay: calc(190ms + var(--assembly-piece, 0) * 42ms);
+}
+
+.desktop-app .ui-editor-inspector > :nth-child(2) {
+  --assembly-piece: 1;
+}
+
+.desktop-app .ui-editor-inspector > :nth-child(3) {
+  --assembly-piece: 2;
+}
+
+.desktop-app .ui-editor-inspector > :nth-child(4) {
+  --assembly-piece: 3;
+}
+
+.desktop-app .ui-editor-inspector > :nth-child(5) {
+  --assembly-piece: 4;
+}
+
+/* Дальше пятой группы очередь не растягивается — по той же причине, по какой у
+   рядов есть потолок: инспектор человек видит целиком, и ждать его низ дольше
+   полусекунды не за чем. */
+.desktop-app .ui-editor-inspector > :nth-child(n + 6) {
+  --assembly-piece: 5;
+}
+
+/* Редактор встаёт на место своего каркаса.
+
+   Пока кусок редактора едет, на его месте стоит каркас (`EditorSkeleton`), и
+   комнату собирает он — той же очередью, что выше. Приехавший редактор
+   встаёт в те же клетки (`data-arrival="warm"`, components/ui/
+   editor-arrival.js), и собирать комнату второй раз нечего: повторный въезд
+   читался бы как перезагрузка — плашки гасли бы, и комната выезжала заново.
+   Плашки меняются на органы на месте, как в любой ленте со скелетоном.
+
+   Так же встаёт и второй каркас, который сменяет первый (приехал кусок
+   студии, кусок редактора ещё нет), — вместе с обёрткой студии, которая
+   приходит с ним прямым ребёнком страницы. У входа страницы
+   (`astral-primary-page-assemble` в appearance-settings.css) объявление
+   важное, поэтому и здесь `!important`: вес селектора выше, слой тот же. */
+/* Обёртку с тёплым редактором метит сам редактор (`warm-editor`, `useHolds.js`). Прежний
+   `:is(…, :has(> .ui-editor-shell[data-arrival="warm"]))` — `:has()` без своего субъекта — браузер перепроверял
+   по всей цепочке предков на каждую вставку в редакторе: 3 600 перепроверок на щелчок шаблона большой карты
+   (21.10.2026). Метка дважды — вес прежнего `:has()`. */
+.desktop-app[data-motion]
+  .desktop-content[data-page]
+  > :is(
+    .ui-editor-shell[data-arrival="warm"],
+    [data-holds~="warm-editor"][data-holds~="warm-editor"]
+  ),
+.desktop-app .desktop-content > * > .ui-editor-shell[data-arrival="warm"],
+.desktop-app .ui-editor-shell[data-arrival="warm"] > .ui-editor-topbar,
+.desktop-app .ui-editor-shell[data-arrival="warm"] > .ui-editor-body > * {
+  animation: none !important;
+}
+
+.desktop-app .ui-editor-shell[data-arrival="warm"] .ui-editor-inspector > * {
+  animation: none;
+}
+
+/* Кадры ---------------------------------------------------------------------
+   Ни одного перелёта и ни одного масштабирования: сдвиг на 10–16 px и
+   прозрачность. Это две вещи, которые браузер отдаёт композитору целиком, —
+   сетка из сорока карточек с `filter` или `scale` роняет кадры на слабой
+   машине, а разница на глаз при этом нулевая. Сторожит tests/motion-performance. */
+
+@keyframes assembly-section-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Общее проявление сетки: одна прозрачность, ни сдвига, ни масштаба. */
+@keyframes assembly-screen-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes assembly-card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes assembly-card-drop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes assembly-card-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes assembly-room-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes assembly-piece-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}

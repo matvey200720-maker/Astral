@@ -1,0 +1,660 @@
+/*
+ * Раздел «Оптимизация» — семь карточек (`OptimizerPage.jsx`, 03.10.2026).
+ * Полоса сверху и подсказки внизу — каркаса (`EditorShell`, раскладка
+ * «доска»); здесь — только карточки.
+ *
+ * Плитка — та же, что на полке редакторов мастерской
+ * (`.redux-visual-grid .redux-visual-card`): тот же угол, та же волосяная
+ * рамка и матовая плашка, имя и строка поверх низа кадра. Кадр здесь —
+ * сравнение «до/после» на матовой плашке (`--dragon-matte-base`, как под
+ * кадрами редакторов), в углу — переключатель. Под плиткой — состояние,
+ * метка FPS и состав. Включённая карточка отмечена рамкой, а не заливкой:
+ * кадры под ней должны читаться одинаково.
+ */
+
+.desktop-app .optimizer-page {
+  --workshop-opt-green: #55d6a7;
+  --workshop-opt-yellow: #f3cf42;
+  --workshop-opt-red: #ff8a7a;
+  color: var(--astral-ink);
+}
+
+.desktop-app .optimization-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Карточки ряда — одной высоты: подвал с длинным статусом («In der
+     Warteschlange…») переносит метку FPS на вторую строку, и без растяжки
+     соседи в ряду стояли на 24 px короче (сверка row-height, дизайн 12.10). */
+  align-items: stretch;
+  gap: 12px;
+}
+
+/* ── Плитка ─────────────────────────────────────────────────────────── */
+
+.desktop-app .optimization-card {
+  display: grid;
+  /* Лишняя высота растянутой карточки — подвалу, а не кадру. */
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--v5-line) 92%, transparent);
+  border-radius: var(--astral-radius-lg);
+  background: color-mix(in srgb, var(--v5-panel) 78%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 14px 36px rgba(0, 0, 0, 0.09);
+  transition: border-color 220ms ease;
+}
+
+.desktop-app .optimization-card[data-state="on"] {
+  border-color: color-mix(in srgb, var(--workshop-opt-green) 55%, var(--v5-line));
+}
+
+.desktop-app .optimization-card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+/* Низ кадра под имя — тот же скрим, что у плиток редакторов. */
+.desktop-app .optimization-card-shade {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(7, 7, 7, 0) 50%,
+    rgba(7, 7, 7, 0.38) 70%,
+    rgba(7, 7, 7, 0.92) 100%
+  );
+  pointer-events: none;
+}
+
+.desktop-app .optimization-card-copy {
+  position: absolute;
+  z-index: 3;
+  right: 72px;
+  bottom: 13px;
+  left: 16px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.desktop-app .optimization-card-copy h3 {
+  margin: 0;
+  overflow: hidden;
+  color: #fff;
+  font-family: Inter, Arial, sans-serif;
+  font-size: var(--astral-text-strong);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .optimization-card-copy p {
+  margin: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .optimization-card-switch {
+  position: absolute;
+  z-index: 3;
+  right: 14px;
+  bottom: 14px;
+}
+
+/* ── Кадры «до/после» ───────────────────────────────────────────────── */
+
+.desktop-app .optimization-shots {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+
+.desktop-app .optimization-shots-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 12%, rgba(255, 255, 255, 0.06), transparent 62%),
+    var(--fx-matte-stage, var(--dragon-matte-base, var(--astral-surface-strong, #141415)));
+  user-select: none;
+}
+
+.desktop-app .optimization-shots-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.desktop-app .optimization-shots-layer[data-side="before"] {
+  clip-path: inset(0 calc(100% - var(--optimization-split, 50%)) 0 0);
+}
+
+.desktop-app .optimization-shot-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Заглушка: подпись в своей половине кадра и над именем карточки, чтобы при
+   ползунке посередине читались обе. Штрих — чтобы её нельзя было принять за
+   кадр игры. */
+.desktop-app .optimization-shot-placeholder {
+  display: grid;
+  height: 100%;
+  box-sizing: border-box;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  padding: 30px 10px 58px;
+  border: 1px dashed color-mix(in srgb, var(--astral-ink) 16%, transparent);
+  background:
+    radial-gradient(120% 90% at 50% 12%, rgba(255, 255, 255, 0.05), transparent 62%),
+    var(--fx-matte-stage, var(--dragon-matte-base, var(--astral-surface-strong, #141415)));
+  color: var(--astral-ink-muted);
+  text-align: center;
+}
+
+.desktop-app .optimization-shot-placeholder[data-side="before"] {
+  padding-right: calc(50% + 8px);
+}
+
+.desktop-app .optimization-shot-placeholder[data-side="after"] {
+  padding-left: calc(50% + 8px);
+}
+
+.desktop-app .optimization-shot-placeholder svg {
+  width: 20px;
+  height: 20px;
+  color: var(--astral-ink-faint);
+}
+
+.desktop-app .optimization-shot-placeholder b {
+  color: var(--astral-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.desktop-app .optimization-shot-placeholder small {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.desktop-app .optimization-shot-placeholder code {
+  color: var(--astral-ink-faint);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.desktop-app .optimization-shots-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--optimization-split, 50%);
+  width: 2px;
+  translate: -1px 0;
+  background: color-mix(in srgb, var(--astral-ink) 75%, transparent);
+  pointer-events: none;
+}
+
+.desktop-app .optimization-shots-tag {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.desktop-app .optimization-shots-tag[data-side="before"] {
+  left: 8px;
+}
+
+.desktop-app .optimization-shots-tag[data-side="after"] {
+  right: 8px;
+}
+
+/* Ползунок — невидимый слой поверх кадра: тянется где угодно, а фокус
+   с клавиатуры виден рамкой всего кадра. */
+.desktop-app .optimization-shots-range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
+.desktop-app .optimization-shots-frame:has(.optimization-shots-range:focus-visible) {
+  outline: 2px solid var(--workshop-opt-green);
+  outline-offset: -2px;
+}
+
+/* ── Под плиткой: состояние, FPS, состав ────────────────────────────── */
+
+.desktop-app .optimization-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  /* Длинный статус («Включено 1 из 2») рядом с меткой «немного FPS» уходит
+     на вторую строку — подвал держит её высоту, и карточки ряда ровные
+     (сверка `row-height`; ТЗ 10.10, в зоне «Кастомизации»). */
+  min-height: 52px;
+  padding: 10px 12px 10px 14px;
+}
+
+.desktop-app .optimization-card-status {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 6px;
+  /* Не уже самого длинного слова: немецкое «In der Warteschlange…» при
+     `min-width: 0` вылезало из остатка строки рядом с меткой FPS; теперь
+     метка уходит на вторую строку подвала (дизайн 12.10). */
+  min-width: min-content;
+  color: var(--astral-ink-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* Отказ — длинная фраза: своей строкой под меткой и составом, а не
+   столбиком в остатке ширины. */
+.desktop-app .optimization-card-status[data-tone="error"] {
+  flex-basis: 100%;
+  order: 3;
+  align-items: flex-start;
+}
+
+/* «Вернуть россыпь штатной» — под отказом, своей строкой (бета 15.10). */
+.desktop-app .optimization-card-restore {
+  order: 4;
+}
+
+.desktop-app .optimization-card-status[data-tone="error"] svg {
+  margin-top: 1px;
+}
+
+.desktop-app .optimization-card-status[data-tone="error"] ~ .optimization-card-fps,
+.desktop-app .optimization-card-status[data-tone="error"] ~ .optimization-card-nofps {
+  margin-right: auto;
+}
+
+.desktop-app .optimization-card-status > span {
+  min-width: 0;
+}
+
+.desktop-app .optimization-card-status svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.desktop-app .optimization-card-status[data-tone="on"] {
+  color: var(--workshop-opt-green);
+}
+
+.desktop-app .optimization-card-status[data-tone="partial"] {
+  color: var(--workshop-opt-yellow);
+}
+
+.desktop-app .optimization-card-status[data-tone="error"] {
+  color: var(--workshop-opt-red);
+}
+
+.desktop-app .optimization-card-spin {
+  color: var(--workshop-opt-green);
+  animation: workshop-optimization-spin 800ms linear infinite;
+}
+
+@keyframes workshop-optimization-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+.desktop-app .optimization-card-fps {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.desktop-app .optimization-card-fps[data-fps="more"] {
+  background: color-mix(in srgb, var(--workshop-opt-green) 16%, transparent);
+  color: var(--workshop-opt-green);
+}
+
+.desktop-app .optimization-card-fps[data-fps="some"] {
+  background: color-mix(in srgb, var(--workshop-opt-yellow) 13%, transparent);
+  color: var(--workshop-opt-yellow);
+}
+
+.desktop-app .optimization-card-fps svg {
+  width: 11px;
+  height: 11px;
+}
+
+.desktop-app .optimization-card-nofps {
+  color: var(--astral-ink-faint);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.desktop-app .optimization-card-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-ink) 7%, transparent);
+  color: var(--astral-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.desktop-app .optimization-card-more:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+/*
+ * «Что входит» — большое просторное окно, как «Настройки» (ТЗ 06.10.2026,
+ * задача 6).
+ *
+ * Редизайн 17.10.2026 (владелец показал окно «Улицы» снимком): две колонки.
+ * Слева кадр «до/после» крупно, под ним — чей кадр показать и что снято (не
+ * поверх кадра: белым по светлому асфальту подпись не читалась). Справа —
+ * пункты карточки списком: знак, имя, тумблер, а что меняет — целиком, без
+ * многоточия. Список прокручивается сам, кадр стоит на месте.
+ */
+.desktop-app .ui-dialog.optimization-parts-dialog {
+  width: min(1440px, 100%);
+  height: min(900px, calc(100vh - 100px));
+  border-color: var(--astral-line-strong);
+  border-radius: var(--astral-radius-2xl);
+}
+
+.desktop-app .optimization-parts-dialog > header {
+  padding: 18px 22px 14px;
+}
+
+.desktop-app .optimization-parts-dialog > header > :first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+
+.desktop-app .optimization-parts-dialog > .ui-dialog-body {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 22px 18px;
+  overflow: hidden;
+}
+
+.desktop-app .optimization-parts-layout {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr) clamp(320px, 30%, 420px);
+  gap: 22px;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Сцена: кадр берёт всё место над строкой выбора, 16:9, пока хватает
+   высоты; на низком окне он становится шире, но не шире 2,6 : 1. */
+.desktop-app .optimization-parts-stage {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.desktop-app .optimization-parts-stage > .optimization-parts-shot-frame {
+  justify-self: center;
+  align-self: center;
+}
+
+.desktop-app .optimization-parts-stage {
+  container-type: size;
+}
+
+.desktop-app .optimization-parts-shot-frame {
+  position: relative;
+  overflow: hidden;
+  width: min(100cqw, 260cqh);
+  height: min(calc(100cqh - 60px), 56.25cqw);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-xl);
+  background: #050505;
+}
+
+/* Обрезка широкого кадра — больше сверху: внизу кадров улица, на ней то, что меняется. */
+.desktop-app .optimization-parts-shot-frame .optimization-shot-image {
+  object-position: 50% 62%;
+}
+
+.desktop-app .optimization-parts-shot-frame .optimization-shots-tag {
+  top: 12px;
+  padding: 4px 10px;
+  font-size: var(--astral-text-small);
+}
+
+.desktop-app .optimization-parts-shot-frame .optimization-shots-tag[data-side="before"] {
+  left: 12px;
+}
+
+.desktop-app .optimization-parts-shot-frame .optimization-shots-tag[data-side="after"] {
+  right: 12px;
+}
+
+.desktop-app .optimization-parts-shot-bar {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.desktop-app .optimization-parts-shots-chips {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.desktop-app .optimization-parts-shots-chips .ui-chip {
+  flex: 0 0 auto;
+}
+
+.desktop-app .optimization-parts-shot {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+/* Пункты — списком справа, прокручиваются сами. */
+.desktop-app .optimization-parts-rows {
+  min-height: 0;
+  margin-right: -8px;
+  padding-right: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.desktop-app .optimization-parts-rows > .optimization-parts-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+/* Пункт: знак, имя и тумблер в строку, ниже — что меняет, целиком. */
+.desktop-app .optimization-parts-grid > .optimization-part-tile {
+  grid-template-columns: 34px minmax(0, 1fr) 40px;
+  align-content: start;
+  align-items: center;
+  gap: 6px 12px;
+  min-height: 0;
+  padding: 12px 14px;
+}
+
+.desktop-app .optimization-part-tile > .ui-pick-media {
+  grid-row: 1;
+  grid-column: 1;
+  width: 34px;
+  height: 34px;
+  aspect-ratio: 1;
+  border-radius: var(--astral-radius);
+}
+
+.desktop-app .optimization-part-tile > .ui-pick-media > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.desktop-app .optimization-part-tile > .ui-pick-switch {
+  position: relative;
+  top: auto;
+  right: auto;
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.desktop-app .optimization-part-tile > .ui-pick-copy {
+  display: contents;
+}
+
+.desktop-app .optimization-part-tile > .ui-pick-copy > b {
+  grid-row: 1;
+  grid-column: 2;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.desktop-app .optimization-part-tile > .ui-pick-copy > small,
+.desktop-app .optimization-part-tile > .ui-pick-copy > em {
+  grid-row: 2;
+  grid-column: 2 / -1;
+  display: block;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  line-height: var(--astral-line-normal);
+  -webkit-line-clamp: unset;
+}
+
+/* Узкое окно: кадр сверху, список под ним, окно прокручивается целиком. */
+@media (max-width: 1100px) {
+  .desktop-app .optimization-parts-dialog > .ui-dialog-body {
+    overflow-y: auto;
+  }
+
+  .desktop-app .optimization-parts-layout {
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .desktop-app .optimization-parts-stage {
+    height: max(300px, 50vh);
+  }
+
+  .desktop-app .optimization-parts-rows {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 1279px) {
+  .desktop-app .optimization-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 979px) {
+  .desktop-app .optimization-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .desktop-app .optimization-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app .optimization-card-spin {
+    animation: none;
+  }
+}
+
+/* Разделы «Ухудшение текстур», «Дальность прорисовки», «ЧБ-мир» и «Стиль мира» — сцена, панель и плёнка — лежат в ленивом листе
+   `components/desktop/workshop/optimizer/optimizer-film.css` (дизайн 15.11.2026). */
+
+/* Плашка «Текстуры мира собраны прежней версией» (ТЗ 19.10.2026): над тремя вкладками пакета текстур. */
+.desktop-app .texture-rebuild-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--astral-warning);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-warning-soft);
+}
+.desktop-app .texture-rebuild-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.desktop-app .texture-rebuild-text p {
+  margin: 0;
+}
+.desktop-app .texture-rebuild-title {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+.desktop-app .texture-rebuild-detail {
+  margin-top: 4px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+}
+.desktop-app .texture-rebuild-detail[data-failed="true"] {
+  color: var(--astral-danger);
+}
+
+/* «Что входит» в библиотеке (ТЗ 10.10): части без тумблера. Знак стоящей
+   части — цветом отметки, выключенной — приглушён; слова — в строке под именем. */
+.desktop-app .optimization-part-tile.is-static > .ui-pick-media {
+  opacity: 0.45;
+}
+
+.desktop-app .optimization-part-tile.is-static.is-selected > .ui-pick-media {
+  color: var(--astral-accent);
+  opacity: 1;
+}

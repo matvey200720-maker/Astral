@@ -1,0 +1,10 @@
+{
+  "name": "@modovik/tracer-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./muzzle-stock.js": "./muzzle-stock.js"
+  }
+}

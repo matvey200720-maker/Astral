@@ -1,0 +1,121 @@
+/*
+ * «Интерьеры Majestic RP» (Хелпер 7, 25.10.2026): покрытия казино списком с образцом цвета, взятое покрытие сверху, режимы по
+ * ширине подписей (длинное «Перекрасить» рядом с коротким «Залить» не обрезается в узкой панели), заметка «собираем следующий
+ * зал» поверх прежнего кадра — сверху, чтобы не лечь на подпись кадра.
+ */
+.majestic-rows {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.majestic-rows .ui-nav-row.is-selected {
+  background: var(--astral-surface-strong);
+}
+
+.majestic-chip {
+  display: block;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--astral-radius-sm);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--astral-ink) 18%, transparent);
+}
+
+.majestic-chip.is-large {
+  width: 32px;
+  height: 32px;
+}
+
+/* «Как в игре»: штрих вместо цвета — правки на этом листе нет. */
+.majestic-chip.is-stock {
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--astral-ink) 14%, transparent) 0 4px, transparent 4px 8px);
+}
+
+.majestic-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.majestic-name > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.majestic-interiors-editor .model-stage-note.majestic-interiors-building {
+  inset: 12px 12px auto;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin-inline: auto;
+}
+
+/* Слова на месте кадра (нет файлов, собирается) стоят над подписью кадра, а не поверх неё: у них одна полоса снизу, и длинная фраза налезала на подпись. */
+.majestic-interiors-stage > .model-stage-note:not(.majestic-interiors-building) {
+  inset: auto 12px 56px;
+}
+
+/* Файлов нет: одна строка и кнопка («Выбрать папку», «Паки интерьеров») одной колонкой по центру кадра (п. 14 `design-qa.md`). */
+.majestic-interiors-stage > .model-stage-note.majestic-casino-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.majestic-casino-pick p {
+  margin: 0;
+}
+
+/*
+ * Переключатель помещений — цифры (срез B): у интерьера с семью помещениями кнопка «1» выходила уже мишени словаря (`hit-target`, 28 px),
+ * поэтому у цифры ширина не меньше этой мерки. Подписи залов казино длиннее, им она не мешает.
+ */
+.majestic-interiors-editor .ui-editor-scene .ui-segment {
+  min-width: 28px;
+}
+
+/* «Листы»: картинка взятого листа над режимами — квадрат по ширине колонки; нет картинки (плашка, нет игры) — сплошной цвет листа. */
+.majestic-sheet-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 220px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--astral-ink) 18%, transparent);
+}
+
+.majestic-sheet-preview canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/*
+ * Длинные списки листов (313 у Mission Row, 636 у Marabunta): строки вне окна не считаются раскладкой, пока их не прокрутили (`content-visibility`), —
+ * иначе каждый щелчок по кадру, вставляющий панель «Взятый лист» над списком, перекладывал сотни строк (≈250 мс «программы» на процессоре ×4).
+ */
+.majestic-rows > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
+}
+
+/* «Своя картинка» листа: значок вместо цветового образца в строке списка, картинка из студии — в превью взятого листа. */
+.majestic-chip.is-picture {
+  display: grid;
+  place-items: center;
+  color: var(--astral-ink);
+}
+
+.majestic-sheet-preview.is-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

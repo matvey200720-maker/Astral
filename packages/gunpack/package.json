@@ -1,0 +1,41 @@
+{
+  "name": "@modovik/gunpack",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./inventory": "./inventory.js",
+    "./slang": "./slang.js",
+    "./roles": "./roles.js",
+    "./checks": "./checks.js",
+    "./worker": "./worker.js",
+    "./package.json": "./package.json",
+    "./ids": "./ids.js",
+    "./post-key": "./post-key.js",
+    "./drafts": "./drafts.js",
+    "./scan": "./scan.js",
+    "./domain": "./domain.js",
+    "./model": "./model.js",
+    "./collage-layout": "./collage-layout.js",
+    "./crude-model": "./crude-model.js",
+    "./channel": "./channel.js",
+    "./looks": "./looks.js",
+    "./stock": "./stock.js",
+    "./game-weapon": "./game-weapon.js",
+    "./inscriptions": "./inscriptions.js",
+    "./weapon-outline": "./weapon-outline.js",
+    "./shader-colour": "./shader-colour.js",
+    "./lists": "./lists.js",
+    "./server-tags": "./server-tags.js"
+  },
+  "dependencies": {
+    "@modovik/publishing": "*",
+    "@modovik/rage-drawable": "*",
+    "@modovik/reticle-contract": "*",
+    "@modovik/rpf-inspector": "*",
+    "@modovik/ypt": "*",
+    "fflate": "0.8.3"
+  }
+}

@@ -1,0 +1,106 @@
+/*
+  Ожидание в карточке мода (`ModWait.jsx`, дизайн 15.11.2026, r8/loaders/loaders-card-*). Лист ленивый (карточка берёт компонент по `import()`),
+  поэтому всё лежит в одном слое. Сцена — куски «контура и света» (`light-contour.css`); движение — transform и opacity.
+*/
+@layer overrides {
+  .mod-wait {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
+    border-radius: inherit;
+    background:
+      radial-gradient(
+        70% 60% at 50% 40%,
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0) 70%
+      ),
+      var(--astral-surface-strong);
+    color: var(--astral-ink);
+  }
+
+  .mod-wait-scene {
+    position: relative;
+    min-height: 0;
+  }
+
+  .mod-wait-scene > .light-ring {
+    top: 70%;
+    width: min(360px, 90%);
+    height: min(360px, 90%);
+  }
+
+  .mod-wait-scene > .light-floor {
+    bottom: 14%;
+  }
+
+  .mod-wait-line {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: 0 16px 14px;
+  }
+
+  .mod-wait-line > b {
+    font-size: var(--astral-text-body);
+    font-weight: 650;
+  }
+
+  .mod-wait-percent {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .mod-wait-bar {
+    position: relative;
+    display: block;
+    grid-column: 1 / -1;
+    height: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .mod-wait-bar > b {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    transition: transform var(--astral-duration-fast) linear;
+  }
+
+  .mod-wait-note {
+    grid-column: 1 / -1;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: var(--astral-line-normal);
+  }
+
+  .mod-wait[data-state="error"] .mod-wait-note {
+    color: var(--astral-danger);
+  }
+
+  .mod-wait-note button {
+    margin-left: 10px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--astral-ink);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mod-wait-bar > b {
+      transition: none;
+    }
+  }
+}

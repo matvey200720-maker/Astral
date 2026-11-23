@@ -1,0 +1,21 @@
+{
+  "name": "@modovik/rage-drawable",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./glb": "./glb.js",
+    "./material-pixels": "./material-pixels.js",
+    "./package.json": "./package.json",
+    "./ped-alpha": "./ped-alpha.js",
+    "./pose": "./pose.js",
+    "./terrain-weights": "./terrain-weights.js",
+    "./vehicle": "./vehicle.js"
+  },
+  "dependencies": {
+    "@modovik/dds": "*",
+    "@modovik/ypt": "*"
+  }
+}

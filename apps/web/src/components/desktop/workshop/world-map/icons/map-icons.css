@@ -1,0 +1,420 @@
+/*
+ * «Иконки» большой карты (05.11.2026): сетка значков поверх кадра и колонка выбранного значка.
+ *
+ * Ленивый лист: едет вместе с редактором большой карты (`MapIconsTool.jsx` грузится из `WorldMapCustomizer.jsx`). Размеры и
+ * цвета — из словаря Astral; единственное исключение по существу — картинка значка: настоящие значки игры белые с тёмным
+ * контуром, поэтому лежат на тёмной подложке плитки.
+ */
+@layer overrides {
+  .wmc-icons-stage {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--dragon-matte-stage, var(--astral-surface-strong));
+    color: var(--astral-ink);
+  }
+
+  /* Под сеткой остаётся кадр карты: его органы (приближение, «Как в игре») прячутся, чтобы не торчать из-под неё. */
+  .wmc-stage:has(> .wmc-icons-stage) .wmc-stage-zoom {
+    visibility: hidden;
+  }
+
+  .wmc-icons-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--astral-line);
+  }
+
+  .wmc-icons-count {
+    margin-inline-end: auto;
+    padding-inline: 8px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  .wmc-icons-note {
+    margin: 0;
+    padding: 8px 16px 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: var(--astral-line-normal);
+  }
+
+  .wmc-icons-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    height: var(--astral-control-h-sm);
+    padding: 0 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-sunken);
+    color: var(--astral-ink-muted);
+  }
+
+  .wmc-icons-search.is-block {
+    display: flex;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .wmc-icons-search:focus-within {
+    border-color: var(--astral-line-focus);
+  }
+
+  .wmc-icons-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--astral-ink);
+    font: inherit;
+    font-size: var(--astral-text-body);
+  }
+
+  .wmc-icons-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 4px 16px 28px;
+  }
+
+  .wmc-icons-state,
+  .wmc-icons-empty {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    margin: 48px auto;
+    max-width: 44ch;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: var(--astral-line-normal);
+    text-align: center;
+  }
+
+  .wmc-icons-state p {
+    margin: 0;
+  }
+
+  .wmc-icons-section > header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 10px;
+  }
+
+  .wmc-icons-section h3 {
+    margin: 0;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .wmc-icons-section > header small {
+    margin-inline-end: auto;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-icons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px;
+  }
+
+  .wmc-icons-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 96px;
+    padding: 12px 6px 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--astral-duration-fast) var(--astral-ease),
+      border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .wmc-icons-tile:hover {
+    background: var(--astral-surface-hover);
+    color: var(--astral-ink);
+  }
+
+  .wmc-icons-tile:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .wmc-icons-tile.is-picked {
+    border-color: var(--astral-line-focus);
+    background: var(--astral-accent-wash);
+    color: var(--astral-ink);
+  }
+
+  .wmc-icons-tile.is-locked {
+    opacity: 0.6;
+  }
+
+  /* Правка есть: точка в углу плитки. */
+  .wmc-icons-tile.is-changed::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--astral-accent);
+  }
+
+  .wmc-icons-name {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    line-height: var(--astral-line-tight);
+    text-align: center;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .wmc-icons-pic {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+  }
+
+  .wmc-icons-pic i,
+  .wmc-icons-pic img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    object-fit: contain;
+  }
+
+  .wmc-icons-pic.is-hidden i {
+    opacity: 0.3;
+  }
+
+  /* Нет клетки в листе (векторный значок): пустая рамка — рисовать образец нечем, и выдумывать его незачем. */
+  .wmc-icons-pic.is-blank {
+    border: 1px dashed var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+  }
+
+  /* «Иконки сервера»: подпись длиннее («Автосалон эксклюзивного транспорта Majestic Motors») — три строки, целиком в подсказке. */
+  .wmc-icons-stage[data-view="server"] .wmc-icons-name {
+    -webkit-line-clamp: 3;
+  }
+
+  .wmc-icons-stage[data-view="server"] .wmc-icons-tile {
+    min-height: 112px;
+  }
+
+  .wmc-icons-views {
+    flex: none;
+  }
+
+  .wmc-icons-server-tag {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-icons-server-tag small {
+    color: var(--astral-ink-faint);
+  }
+
+  .wmc-icons-slash {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    color: var(--astral-ink);
+  }
+
+  /* Колонка справа ----------------------------------------------------------- */
+
+  .wmc-icons-inspector {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    padding: 16px;
+    color: var(--astral-ink);
+  }
+
+  .wmc-icons-inspector-head {
+    display: grid;
+    gap: 2px;
+  }
+
+  .wmc-icons-inspector-head small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-icons-inspector-head strong {
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+  }
+
+  .wmc-icons-card {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+
+  .wmc-icons-card h3 {
+    margin: 0;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .wmc-icons-sprite {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-icons-sprite code {
+    font-family: var(--astral-font-mono, ui-monospace, monospace);
+  }
+
+  .wmc-icons-servers {
+    display: grid;
+    gap: 4px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-icons-servers p {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .wmc-icons-servers p span:first-child {
+    flex: none;
+    color: var(--astral-ink-faint);
+  }
+
+  .wmc-icons-source {
+    color: var(--astral-ink-faint);
+    line-height: var(--astral-line-normal);
+  }
+
+  .wmc-icons-compare {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-sunken);
+  }
+
+  .wmc-icons-compare figure {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .wmc-icons-compare figcaption {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-icons-arrow {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-title);
+  }
+
+  .wmc-icons-warn {
+    margin: 0;
+    color: var(--astral-warning);
+    font-size: var(--astral-text-small);
+    line-height: var(--astral-line-normal);
+  }
+
+  .wmc-icons-hint {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: var(--astral-line-normal);
+  }
+
+  .wmc-icons-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .wmc-icons-ready {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 6px;
+    max-height: 280px;
+    padding: 6px;
+    overflow: auto;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-sunken);
+  }
+
+  .wmc-icons-ready-tile {
+    display: grid;
+    place-items: center;
+    padding: 4px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    cursor: pointer;
+    transition: background-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .wmc-icons-ready-tile:hover:not(:disabled) {
+    background: var(--astral-surface-hover);
+  }
+
+  .wmc-icons-ready-tile:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+  }
+
+  .wmc-icons-ready-tile.is-picked {
+    border-color: var(--astral-line-focus);
+    background: var(--astral-accent-wash);
+  }
+
+  .wmc-icons-ready-tile:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wmc-icons-tile,
+    .wmc-icons-ready-tile {
+      transition: none;
+    }
+  }
+}

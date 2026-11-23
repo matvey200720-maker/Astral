@@ -1,0 +1,422 @@
+/*
+  Одежда: выбор цели установки, цвета вещи и карточки проектов.
+  Лист ленивый, поэтому всё содержимое лежит в одном слое.
+  Компоненты идут снизу вверх по экрану: сводка выбора, плитки целей,
+  карточка проекта, левая колонка с обложкой и палитрой. Состояния вложены в свои компоненты.
+*/
+@layer overrides {
+  /* ---------- сводка выбранного ---------- */
+  .clothing-projects-summary {
+    min-inline-size: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 6px;
+    column-gap: 6px;
+    display: inline-flex;
+
+    &.is-empty {
+      font-size: var(--astral-text-small);
+      color: var(--astral-ink-faint);
+    }
+  }
+
+  .clothing-projects-pick {
+    max-inline-size: 240px;
+    min-block-size: 28px;
+    padding-block-start: 3px;
+    padding-block-end: 3px;
+    padding-inline-start: 4px;
+    padding-inline-end: 10px;
+    row-gap: 6px;
+    column-gap: 6px;
+    align-items: center;
+    display: inline-flex;
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(var(--astral-accent-rgb), 0.32);
+    background: var(--astral-accent-soft);
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink);
+
+    & > span {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  }
+
+  .clothing-projects-pick-mark {
+    flex: none;
+    inline-size: 20px;
+    block-size: 20px;
+    border-radius: var(--astral-radius-xs);
+
+    &.is-cover {
+      object-fit: cover;
+    }
+
+    &.is-contain {
+      object-fit: contain;
+    }
+  }
+
+  /* ---------- «ещё» и плитки целей установки ---------- */
+  .clothing-project-more {
+    font: inherit;
+    cursor: pointer;
+    min-block-size: 60px;
+    border-radius: var(--astral-radius);
+    border-width: 1px;
+    border-style: dashed;
+    border-color: var(--astral-line-strong);
+    background: transparent;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+
+    &:hover {
+      background: var(--astral-surface-raised);
+      color: var(--astral-ink);
+    }
+
+    &:focus-visible {
+      outline-offset: 2px;
+      outline: 2px solid var(--astral-line-focus);
+    }
+  }
+
+  .clothing-target-check {
+    transition-delay: 0s, 0s;
+    transition-timing-function: var(--astral-ease), var(--astral-ease);
+    transition-duration: var(--astral-duration-fast), var(--astral-duration-fast);
+    transition-property: border-color, background-color;
+    inline-size: 18px;
+    block-size: 18px;
+    box-sizing: border-box;
+    inset-inline-end: 9px;
+    inset-block-start: 9px;
+    position: absolute;
+    justify-items: center;
+    align-items: center;
+    display: grid;
+    border-radius: 50%;
+    border-width: 1.5px;
+    border-style: solid;
+    border-color: var(--astral-line-strong);
+    color: transparent;
+
+    & svg {
+      inline-size: 11px;
+      block-size: 11px;
+    }
+  }
+
+  .clothing-target-note {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+
+    &.is-occupied {
+      color: var(--astral-warning);
+    }
+  }
+
+  .clothing-target-title {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    overflow: hidden;
+    line-height: 1.3;
+    font-weight: 600;
+    font-size: var(--astral-text-body);
+
+    /* цель-вес: крупное число вместо названия */
+    .clothing-target.is-weight & {
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      font-size: var(--astral-text-title);
+    }
+  }
+
+  .clothing-target {
+    font: inherit;
+    transition-delay: 0s, 0s, 0s;
+    transition-timing-function: var(--astral-ease), var(--astral-ease), var(--astral-ease);
+    transition-duration: var(--astral-duration-fast), var(--astral-duration-fast), var(--astral-duration-fast);
+    transition-property: border-color, background-color, box-shadow;
+    cursor: pointer;
+    text-align: left;
+    box-sizing: border-box;
+    min-block-size: 60px;
+    min-inline-size: 0;
+    padding-block-start: 10px;
+    padding-block-end: 10px;
+    padding-inline-start: 12px;
+    padding-inline-end: 34px;
+    position: relative;
+    row-gap: 3px;
+    column-gap: 3px;
+    align-content: center;
+    display: grid;
+    border-radius: var(--astral-radius);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink);
+
+    &:hover {
+      border-color: var(--astral-line-strong);
+      background: var(--astral-surface-hover);
+    }
+
+    /* после :hover: у них равная специфичность, выбранная плитка обязана перебить */
+    &.is-selected {
+      border-color: var(--astral-accent);
+      background: var(--astral-accent-soft);
+      box-shadow: 0 8px 24px rgba(var(--astral-accent-rgb), 0.1);
+
+      & .clothing-target-check {
+        border-color: var(--astral-accent);
+        background: var(--astral-accent);
+        color: var(--astral-accent-ink);
+      }
+    }
+
+    &:focus-visible {
+      outline-offset: 2px;
+      outline: 2px solid var(--astral-line-focus);
+    }
+  }
+
+  .clothing-project-grid {
+    --cell-fill: auto-fill;
+    grid-auto-rows: 1fr;
+    row-gap: 8px;
+    column-gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(var(--cell-fill), minmax(148px, 1fr));
+  }
+
+  /* ---------- карточка проекта ---------- */
+  .clothing-project-skip {
+    font: inherit;
+    transition-delay: 0s, 0s;
+    transition-timing-function: var(--astral-ease), var(--astral-ease);
+    transition-duration: var(--astral-duration-fast), var(--astral-duration-fast);
+    transition-property: color, background-color;
+    cursor: pointer;
+    margin-inline-start: auto;
+    min-block-size: 28px;
+    padding-block-start: 0;
+    padding-block-end: 0;
+    padding-inline-start: 12px;
+    padding-inline-end: 12px;
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+    background: transparent;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-faint);
+
+    &:hover {
+      background: var(--astral-surface-raised);
+      color: var(--astral-ink);
+    }
+
+    &.is-selected {
+      background: var(--astral-surface-raised);
+      border-color: var(--astral-line-strong);
+      color: var(--astral-ink);
+    }
+
+    &:focus-visible {
+      outline-offset: 2px;
+      outline: 2px solid var(--astral-line-focus);
+    }
+  }
+
+  .clothing-project-count {
+    min-inline-size: 22px;
+    padding-block-start: 2px;
+    padding-block-end: 2px;
+    padding-inline-start: 7px;
+    padding-inline-end: 7px;
+    border-radius: 999px;
+    background: var(--astral-surface-raised);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--astral-text-micro);
+    color: var(--astral-ink-faint);
+  }
+
+  .clothing-project-mark {
+    flex: none;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: var(--astral-radius-sm);
+
+    &.is-cover {
+      object-fit: cover;
+    }
+
+    &.is-contain {
+      object-fit: contain;
+    }
+  }
+
+  .clothing-project-head {
+    min-block-size: 32px;
+    align-items: center;
+    row-gap: 10px;
+    column-gap: 10px;
+    display: flex;
+
+    & h4 {
+      margin: 0;
+      font-weight: 600;
+      font-size: var(--astral-text-strong);
+      color: var(--astral-ink);
+    }
+  }
+
+  .clothing-project {
+    --clothing-project-accent: var(--astral-accent);
+    /* подсветка угла и основа вынесены в псевдонимы, чтобы градиент читался */
+    --project-glow: color-mix(in srgb, var(--clothing-project-accent) 9%, transparent);
+    --project-base: var(--astral-surface);
+    transition-delay: 0s;
+    transition-timing-function: var(--astral-ease);
+    transition-duration: var(--astral-duration);
+    transition-property: border-color;
+    padding: 14px;
+    row-gap: 12px;
+    column-gap: 12px;
+    display: grid;
+    border-radius: var(--astral-radius-lg);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    background: radial-gradient(90% 120% at 0% 0%, var(--project-glow), transparent 55%), var(--project-base);
+
+    &.is-on {
+      border-color: rgba(var(--astral-accent-rgb), 0.32);
+    }
+  }
+
+  /* ---------- левая колонка: обложка и палитра ---------- */
+  .clothing-projects-colours-note {
+    margin: 0;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-faint);
+  }
+
+  .clothing-colour-swatch {
+    flex: none;
+    overflow: hidden;
+    inline-size: 24px;
+    block-size: 24px;
+    box-shadow: inset 0 0 0 1px var(--astral-line-strong);
+    border-radius: 50%;
+    background: var(--astral-surface-hover);
+
+    & img {
+      object-fit: cover;
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+
+  .clothing-colour {
+    font: inherit;
+    transition-delay: 0s, 0s;
+    transition-timing-function: var(--astral-ease), var(--astral-ease);
+    transition-duration: var(--astral-duration-fast), var(--astral-duration-fast);
+    transition-property: border-color, background-color;
+    cursor: pointer;
+    min-block-size: 32px;
+    padding: 3px;
+    padding-inline-end: 12px;
+    row-gap: 8px;
+    column-gap: 8px;
+    align-items: center;
+    display: inline-flex;
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    background: var(--astral-surface-raised);
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink);
+
+    &:hover {
+      border-color: var(--astral-line-strong);
+    }
+
+    /* после :hover: равная специфичность, выбранный цвет обязан перебить */
+    &.is-selected {
+      border-color: var(--astral-accent);
+      background: var(--astral-accent-soft);
+    }
+
+    &:focus-visible {
+      outline-offset: 2px;
+      outline: 2px solid var(--astral-line-focus);
+    }
+  }
+
+  .clothing-colour-list {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    column-gap: 6px;
+    display: flex;
+  }
+
+  .clothing-projects-colours {
+    row-gap: 8px;
+    column-gap: 8px;
+    display: grid;
+
+    & h4 {
+      margin: 0;
+      font-weight: 500;
+      font-size: var(--astral-text-small);
+      color: var(--astral-ink-muted);
+    }
+  }
+
+  .clothing-projects-cover {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--astral-radius-lg);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    background: var(--astral-surface-sunken);
+
+    & img {
+      object-fit: cover;
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+
+  .clothing-projects-aside {
+    align-content: start;
+    row-gap: 16px;
+    column-gap: 16px;
+    display: grid;
+  }
+
+  .clothing-projects-body {
+    align-content: start;
+    row-gap: 12px;
+    column-gap: 12px;
+    display: grid;
+  }
+}

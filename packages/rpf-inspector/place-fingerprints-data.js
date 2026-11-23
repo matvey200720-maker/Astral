@@ -1,0 +1,290 @@
+/*
+ * Отпечатки мест мастерской (план Б, 24.10.2026) — ГЕНЕРИРУЕТСЯ `scripts/build-place-fingerprints.mjs` из описей
+ * редакторов (`packages/climb-contract/recolor/inventory`). Руками не править: `node scripts/build-place-fingerprints.mjs`.
+ * Правила опознания — `place-fingerprints.js`.
+ */
+
+export const PLACE_FINGERPRINTS = Object.freeze(
+{
+ "arena": {
+  "gta5rp": {
+   "label": "GTA 5 RP",
+   "names": [
+    "sp1_10+hi.ytd",
+    "sp1_10.ytd",
+    "sp1_10_brand_01_cloth00.ydr",
+    "sp1_10_brand_01_cloth01.ydr",
+    "sp1_10_brand_01_cloth02.ydr",
+    "sp1_10_brand_01_cloth03.ydr",
+    "sp1_10_brand_01_cloth04.ydr",
+    "sp1_10_brand_01_cloth05.ydr",
+    "sp1_10_brand_01_cloth06.ydr",
+    "sp1_10_brand_01_cloth07.ydr",
+    "sp1_10_brand_01_cloth08.ydr",
+    "sp1_10_brand_01_cloth09.ydr",
+    "sp1_10_brand_01_cloth10.ydr",
+    "sp1_10_brand_01_cloth11.ydr",
+    "sp1_10_brand_01_cloth12.ydr",
+    "sp1_10_brand_01_cloth13.ydr",
+    "sp1_10_brand_01_cloth14.ydr",
+    "sp1_10_brand_01_cloth15.ydr",
+    "sp1_10_brand_01_cloth16.ydr",
+    "sp1_10_brand_01_cloth17.ydr",
+    "sp1_10_brand_01_wip_dontdelq+hidr.ytd",
+    "sp1_10_brand_01_wip_dontdelq.ydr",
+    "sp1_10_branding_shadow.ydr",
+    "sp1_10_fizza_01.ydr",
+    "sp1_10_int.ydr",
+    "sp1_10_mainwall_1.ydr",
+    "sp1_10_mainwall_sign.ydr",
+    "sp1_10_roof01.ydr",
+    "sp1_10_roofbars.ydr",
+    "sp1_10_roofshadow.ydr",
+    "sp1_10_sidebars_hd.ydr",
+    "sp1_10_sign_bars_hd.ydr",
+    "sp1_10_stadium+hi.ytd",
+    "sp1_10_stadium.ytd",
+    "sp1_10_wind01.ydr",
+    "sp1_10_wind02.ydr",
+    "sp1_10_wind03.ydr",
+    "sp1_10_wind04.ydr",
+    "v_62_aud_det01.ydr",
+    "v_62_aud_ovly+hidr.ytd",
+    "v_62_aud_ovly.ydr",
+    "v_62_audit_dec01.ydr",
+    "v_62_bannersx+hidr.ytd",
+    "v_62_bannersx.ydr",
+    "v_62_blinds+hidr.ytd",
+    "v_62_blinds.ydr",
+    "v_62_board01+hidr.ytd",
+    "v_62_board01.ydr",
+    "v_62_ceiling_rig.ydr",
+    "v_62_curtains+hidr.ytd",
+    "v_62_curtains.ydr",
+    "v_62_lob_det.ydr",
+    "v_62_lobby_ovly.ydr",
+    "v_62_lobby_wall.ydr",
+    "v_62_maze_dec01.ydr",
+    "v_62_signs01.ydr",
+    "v_62_spec_ov01+hidr.ytd",
+    "v_62_spec_ov01.ydr",
+    "v_62_spec_ov13.ydr",
+    "v_62_stadium_shell+hidr.ytd",
+    "v_62_stadium_shell.ydr",
+    "v_62_table.ydr",
+    "v_62_tunnel_ovly02.ydr",
+    "v_62_tunnel_paint01+hidr.ytd",
+    "v_62_tunnel_paint01.ydr",
+    "v_62_tv_ovl+hidr.ytd",
+    "v_62_tv_ovl.ydr",
+    "v_62_v_stadium_txd+hi.ytd",
+    "v_62_v_stadium_txd.ytd"
+   ],
+   "centre": [
+    -323.2,
+    -1966.8
+   ],
+   "radius": 172
+  },
+  "majestic": {
+   "label": "Majestic",
+   "names": [
+    "mazearena_global.ytd",
+    "mazearena_int_1.ytyp",
+    "mazearena_int_2.ytyp",
+    "mazearena_int_3.ytyp",
+    "mazearena_object_txd.ytd",
+    "mazearena_props.ytd",
+    "mj_gun_zone_prop.ydr",
+    "mj_ma_flags_a1.ydr",
+    "mj_ma_int1_door_a.ydr",
+    "mj_ma_int1_door_b.ydr",
+    "mj_ma_int1_doors.ydr",
+    "mj_ma_int1_shell.ydr",
+    "mj_ma_int23_rm13_festival_monitor_modified.ydr",
+    "mj_ma_int2_rm1_celling_1fl.ydr",
+    "mj_ma_int2_rm1_celling_2fl.ydr",
+    "mj_ma_int2_rm1_doorcover.ydr",
+    "mj_ma_int2_rm1_fake_screen_a.ydr",
+    "mj_ma_int2_rm1_light_decals_a.ydr",
+    "mj_ma_int2_rm1_light_decals_b.ydr",
+    "mj_ma_int2_rm1_light_decals_c.ydr",
+    "mj_ma_int2_rm1_navigation_decals.ydr",
+    "mj_ma_int2_rm1_palm_new.ydr",
+    "mj_ma_int2_rm1_round_seats.ydr",
+    "mj_ma_int2_shell.ydr",
+    "mj_ma_int3_rm1_cor_decor.ydr",
+    "mj_ma_int3_rm1_longscreen_a.ydr",
+    "mj_ma_int3_rm1_longscreen_b.ydr",
+    "mj_ma_int3_rm1_longscreen_c.ydr",
+    "mj_ma_int3_rm1_longscreen_d.ydr",
+    "mj_ma_int3_rm1_longscreen_e.ydr",
+    "mj_ma_int3_rm1_longscreen_f.ydr",
+    "mj_ma_int3_rm1_longscreen_g.ydr",
+    "mj_ma_int3_rm1_longscreen_h.ydr",
+    "mj_ma_int3_rm1_longscreen_i.ydr",
+    "mj_ma_int3_rm1_longscreen_j.ydr",
+    "mj_ma_int3_rm1_longscreen_k.ydr",
+    "mj_ma_int3_rm1_longscreen_l.ydr",
+    "mj_ma_int3_rm2_circle_screen.ydr",
+    "mj_ma_int3_rm2_circle_seats_b.ydr",
+    "mj_ma_int3_rm2_dec_a.ydr",
+    "mj_ma_int3_rm2_fake_screen_b.ydr",
+    "mj_ma_int3_rm2_lght.ydr",
+    "mj_ma_int3_rm2_liftbutton.ydr",
+    "mj_ma_int3_rm2_logo_cyberarena.ydr",
+    "mj_ma_int3_rm2_navigation_decals.ydr",
+    "mj_ma_int3_rm2_screen_touch.ydr",
+    "mj_ma_int3_rm3_airdrop_main_prop.ydr",
+    "mj_ma_int3_rm3_bakelight.ydr",
+    "mj_ma_int3_rm3_brstand.ydr",
+    "mj_ma_int3_rm3_decor.ydr",
+    "mj_ma_int3_rm3_djset.ydr",
+    "mj_ma_int3_rm3_dubg_maptable.ydr",
+    "mj_ma_int3_rm3_gamingbox_a.ydr",
+    "mj_ma_int3_rm3_gamingbox_b.ydr",
+    "mj_ma_int3_rm3_gamingmonitor_solo.ydr",
+    "mj_ma_int3_rm3_mn_house.ydr",
+    "mj_ma_int3_rm3_screen.ydr",
+    "mj_ma_int3_rm3_screen_rnx.ydr",
+    "mj_ma_int3_rm3_screen_tnt.ydr",
+    "mj_ma_int3_rm4_celling_d.ydr",
+    "mj_ma_int3_rm4_circle_seats_a4_decor.ydr",
+    "mj_ma_int3_rm4_circle_seats_d.ydr",
+    "mj_ma_int3_rm4_dec_b.ydr",
+    "mj_ma_int3_rm4_opwhl2_prop.ydr",
+    "mj_ma_int3_rm4_racer.ydr",
+    "mj_ma_int3_rm4_racer_helm.ydr",
+    "mj_ma_int3_rm4_racing_sign.ydr",
+    "mj_ma_int3_rm4_tv_a.ydr",
+    "mj_ma_int3_rm4_tv_b.ydr",
+    "mj_ma_int3_rm4_tv_c.ydr",
+    "mj_ma_int3_rm4_tv_d.ydr",
+    "mj_ma_int3_rm4_wp_recth.ydr",
+    "mj_ma_int3_shell.ydr",
+    "mj_ma_plane_uv.ydr",
+    "mj_ma_table_sign_a.ydr",
+    "mj_mcl_props.ydr",
+    "sp1_10_brand_01_cloth00.ydr",
+    "sp1_10_brand_01_cloth01.ydr",
+    "sp1_10_brand_01_cloth02.ydr",
+    "sp1_10_brand_01_cloth03.ydr",
+    "sp1_10_brand_01_cloth04.ydr",
+    "sp1_10_brand_01_cloth05.ydr",
+    "sp1_10_brand_01_cloth06.ydr",
+    "sp1_10_brand_01_cloth07.ydr",
+    "sp1_10_brand_01_cloth08.ydr",
+    "sp1_10_brand_01_cloth09.ydr",
+    "sp1_10_brand_01_cloth10.ydr",
+    "sp1_10_brand_01_cloth11.ydr",
+    "sp1_10_brand_01_cloth12.ydr",
+    "sp1_10_brand_01_cloth13.ydr",
+    "sp1_10_brand_01_cloth14.ydr",
+    "sp1_10_brand_01_cloth15.ydr",
+    "sp1_10_brand_01_cloth16.ydr",
+    "sp1_10_brand_01_cloth17.ydr",
+    "sp1_10_brand_01_wip_dontdelq.ydr",
+    "sp1_10_branding_shadow.ydr",
+    "sp1_10_fizza_01.ydr",
+    "sp1_10_ground_1.ydr",
+    "sp1_10_ground_2.ydr",
+    "sp1_10_int.ydr",
+    "sp1_10_mainwall_1.ydr",
+    "sp1_10_mainwall_sign.ydr",
+    "sp1_10_roof01.ydr",
+    "sp1_10_roofbars.ydr",
+    "sp1_10_roofshadow.ydr",
+    "sp1_10_sidebars_hd.ydr",
+    "sp1_10_sign_bars_hd.ydr",
+    "sp1_10_stadium.ytd",
+    "sp1_10_wind01.ydr",
+    "sp1_10_wind02.ydr",
+    "sp1_10_wind03.ydr",
+    "sp1_10_wind04.ydr"
+   ],
+   "centre": [
+    -322.4,
+    -1962.8
+   ],
+   "radius": 167
+  }
+ },
+ "hangar": {
+  "hangar": {
+   "label": "Ангар",
+   "names": [
+    "ap1_01_c_sthbld3+hidr.ytd",
+    "ap1_01_c_sthbld3.ydr",
+    "ap1_01_c_sthbld3_int.ydr",
+    "ap1_01_c_sthbld3_intc.ydr",
+    "ap1_01_c_sthbld3_lines.ydr",
+    "hei_ap1_01_c_ap41_01_c_detail.ydr",
+    "hei_ap1_01_c_sthbld3+hidr.ytd",
+    "hei_ap1_01_c_sthbld3.ydr",
+    "hei_ap1_01_c_sthbld3_int.ydr",
+    "hei_ap1_01_c_sthbld3_lines.ydr"
+   ],
+   "centre": [
+    -1276.8,
+    -3387.7
+   ],
+   "radius": 120
+  }
+ },
+ "atm": {
+  "atm": {
+   "label": "Банкоматы",
+   "names": [
+    "prop_atm_01+hifr.ytd",
+    "prop_atm_01.yft",
+    "prop_atm_02+hidr.ytd",
+    "prop_atm_02.ydr",
+    "prop_atm_03+hidr.ytd",
+    "prop_atm_03.ydr",
+    "prop_fleeca_atm+hidr.ytd",
+    "prop_fleeca_atm.ydr"
+   ]
+  }
+ },
+ "busstop": {
+  "busstop": {
+   "label": "Остановки",
+   "names": [
+    "prop_bus_stop_sign.yft",
+    "prop_busstop_02+hifr.ytd",
+    "prop_busstop_02.yft",
+    "prop_busstop_04+hifr.ytd",
+    "prop_busstop_04.yft",
+    "prop_busstop_05+hifr.ytd",
+    "prop_busstop_05.yft"
+   ]
+  }
+ },
+ "booth": {
+  "booth": {
+   "label": "Парковочные будки",
+   "names": [
+    "prop_parking_hut_2+hifr.ytd",
+    "prop_parking_hut_2.yft",
+    "prop_parking_hut_2b+hifr.ytd",
+    "prop_parking_hut_2b.yft"
+   ]
+  }
+ },
+ "gunshop": {
+  "gunshop": {
+   "label": "Ганшоп",
+   "names": [
+    "prop_ammunation_sign_01.ydr",
+    "v_gun.ydr",
+    "v_gun2.ydr",
+    "v_ilev_gc_grenades.ydr",
+    "v_ilev_gc_handguns.ydr",
+    "v_ilev_gc_weapons.ydr",
+    "v_int_22.ytyp",
+    "v_int_7.ytyp"
+   ]
+  }
+ }
+}
+);

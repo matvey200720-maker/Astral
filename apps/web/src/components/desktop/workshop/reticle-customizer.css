@@ -1,0 +1,268 @@
+/*
+ * Редактор прицела.
+ *
+ * Комната — мастерская «как в Photoshop» (`EditorShell` с инструментами):
+ * колонка инструментов, кадр на весь центр и панель взятого инструмента.
+ * Разделы, плитки видов и разбор «В игру уйдёт» носят вид мастерской
+ * эффектов (`effects-studio.css`, имя `fx-editor` рядом со своим). Здесь
+ * остаётся только своё: экран 16:9 внутри кадра, органы кадра в его углу,
+ * выбор фона, плитки видов с квадратным рисунком, стороны креста и строки
+ * выбора.
+ *
+ * Лист подключён раньше `effects-studio.css` в том же слое, поэтому общие
+ * правила переопределяются здесь с именем редактора впереди.
+ */
+
+/* ── Сцена ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Сцена занимает кадр каркаса целиком, без полей и своей рамки, как у мини-карты
+ * (владелец, 31.10.2026): рамку, скругление и матовый фон даёт кадр. Органы и
+ * подписи лежат поверх: правый верхний угол — выборы кадра (`StageBar`), правый
+ * нижний — подпись, левый нижний — подсказки.
+ */
+.reticle-stage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/*
+ * Кадр — экран игрока (форма из игры, по умолчанию 16:9), вписанный в сцену целиком:
+ * ширина берётся от высоты, если сцена шире экрана. Клетка знает оба своих размера
+ * (`container-type: size`), поэтому вписывание — одной строкой, без замеров
+ * в коде; пропорцию кадра в окне ставит разметка (`--reticle-screen-aspect`) — это
+ * холст формы экрана, у растянутого — вместе с растяжением (`GameScreenFrame`).
+ */
+.reticle-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  container-type: size;
+}
+
+.reticle-scene > .reticle-screen {
+  width: min(100%, calc(100cqh * var(--reticle-screen-aspect, 1.7778)));
+}
+
+/* Экран без своей рамки и подложки: под прицелом та же матовая поверхность, что и у кадра каркаса, — шва нет. */
+.reticle-live-preview .hud-preview-frame {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.reticle-live-preview .hud-preview-matte {
+  background: none;
+}
+
+/* Выборы кадра не сжимаются: обрезанный выбор не читается. */
+.reticle-stage-bar > * {
+  flex: none;
+}
+
+/* ── Готовые прицелы ───────────────────────────────────────────────────── */
+
+/* Полка и сетка — общий орган (`PresetShelf`, стили в ui.css). */
+
+.reticle-editor .reticle-preset {
+  background: var(--fx-matte);
+}
+
+.reticle-editor .reticle-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+.reticle-preset .ui-choice-media {
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  overflow: hidden;
+  background: none;
+}
+
+.reticle-preset-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Панель инструмента ────────────────────────────────────────────────── */
+
+/* Плитка вида: квадратный рисунок прицела вместо полосы следа трассера. */
+.reticle-editor .reticle-style {
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+}
+
+.reticle-style-preview {
+  display: block;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-sm);
+}
+
+/* Выключатель части — первой строкой раздела («В прицеле»); выключенная
+   часть — эта одна строка. */
+.reticle-toggle {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* Стороны креста: четыре кнопки в два ряда. */
+.reticle-arms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* Выбор из нескольких с подписью над ним: форма точки, части кольца. */
+.reticle-choice-row {
+  display: grid;
+  gap: 6px;
+}
+
+.reticle-choice-row > span {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.reticle-visibility {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* «В игре обводка выйдет …» — с образцом того цвета, что покажет игра. */
+.reticle-outline-note i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 4px -1px 0;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius-sm);
+}
+
+.reticle-outline-note code {
+  font-size: var(--astral-text-micro);
+}
+
+/* ── Варианты прицела на оружие ────────────────────────────────────────── */
+
+/* Рисунок в строке списка — как полоса следа в списке трассеров. */
+.reticle-variant-thumb {
+  display: block;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-sm);
+}
+
+/* Размер в пикселях — число, которое сравнивают с другими модами прицела. */
+.reticle-size-note {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Счётчик патронов (задача 12 ТЗ 10.10.2026) ───────────────────────── */
+
+/* Рамка счётчика в кадре — за неё его тянут в инструменте «Патроны». */
+.reticle-ammo-frame {
+  fill: transparent;
+  stroke: var(--astral-line-focus);
+  /* Линия рамки — в пикселях экрана, а не в точках группы: у счётчика в 10 % та же рамка в десять раз тоньше и пропадала (владелец, 16.11.2026). */
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+  touch-action: none;
+}
+
+/* Выключенный счётчик в инструменте виден, но бледно: в игру он не уйдёт. */
+.reticle-ammo-art.is-off {
+  opacity: 0.45;
+}
+
+/* Выключенный счётчик в игру не уходит — это сказано у выключателя. */
+.reticle-ammo-head .fx-hint.reticle-ammo-off {
+  color: var(--astral-warning);
+}
+
+.reticle-ammo-head,
+.reticle-ammo-section {
+  display: grid;
+  gap: 8px;
+}
+
+.reticle-ammo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Перезарядка: на немецком и польском три кнопки не влезают в ряд — переносим
+   кнопку целиком, а не слово посередине. */
+.reticle-reload-actions {
+  flex-wrap: wrap;
+}
+
+.reticle-reload-actions > * {
+  flex: 1 0 auto;
+}
+
+/* Счётчик урона: свой урон стволов — полями по два в ряд, под подписью группы. */
+.reticle-damage-group {
+  display: grid;
+  gap: 6px;
+}
+
+.reticle-damage-group-title {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.reticle-damage-weapons {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.reticle-damage-weapon {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--astral-text-small);
+}
+
+.reticle-damage-weapon dt {
+  min-width: 0;
+  color: var(--astral-ink-muted);
+}
+
+.reticle-damage-weapon dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.reticle-damage-art.is-off {
+  opacity: 0.45;
+}
+
+/* Индикатор перезарядки (14.11.2026): выключенный — бледный, как счётчики; быстрые места — кнопками по три в ряд. */
+.reticle-reload-art.is-off {
+  opacity: 0.45;
+}
+
+.reticle-reload-places {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* Четыре шрифта — плитками по две в ряд: названия не обрезаются. */
+.reticle-ammo-fonts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

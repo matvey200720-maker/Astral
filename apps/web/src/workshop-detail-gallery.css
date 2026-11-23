@@ -1,0 +1,402 @@
+/* Workshop detail galleries -------------------------------------------------
+ * A media-first composition for photographic Redux variants and a bounded
+ * artwork composition for symbolic categories. Loaded after legacy passes so
+ * detail media cannot accidentally become a full-viewport SVG again.
+ */
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media {
+  width: min(100%, 1480px);
+  margin-inline: auto;
+  padding: 12px clamp(18px, 3vw, 44px) 34px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 14px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-media {
+  order: 1;
+  width: 100% !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 8.4 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: var(--workshop-surface-strong) !important;
+  box-shadow: var(--workshop-card-shadow) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-media
+  > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: inherit !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-header {
+  order: 2;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 24px !important;
+  padding: 22px 24px !important;
+  overflow: hidden;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: color-mix(
+    in srgb,
+    var(--workshop-surface-strong) 94%,
+    transparent
+  ) !important;
+  box-shadow: var(--workshop-card-shadow) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-copy {
+  min-width: 0;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-copy
+  h1 {
+  max-width: 24ch;
+  margin: 5px 0 7px !important;
+  color: var(--workshop-ink) !important;
+  font-size: clamp(30px, 3.5vw, 52px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.04em !important;
+  text-wrap: balance;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-copy
+  p {
+  max-width: 70ch;
+  margin: 0 !important;
+  color: var(--workshop-ink-soft) !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-grid {
+  display: grid !important;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(230px, 20vw, 310px);
+  grid-template-columns: none !important;
+  gap: 12px !important;
+  margin-top: 18px !important;
+  padding: 0 0 8px !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 0 !important;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-grid
+  > button {
+  min-width: 0 !important;
+  height: auto !important;
+  aspect-ratio: 16 / 10 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: var(--workshop-surface-strong) !important;
+  scroll-snap-align: start;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-card-media,
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-card-media
+  > img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-card-copy {
+  background: linear-gradient(180deg, transparent 20%, rgba(7, 7, 7, 0.84));
+}
+
+/* Clothing details reuse the exact catalog asset used by their cards. The
+ * media remains contained, so wide SVG artwork never stretches into a giant
+ * icon when entering or leaving a category. */
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media {
+  width: min(100%, 1240px);
+  margin-inline: auto;
+  padding: 16px clamp(18px, 3vw, 42px) 34px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr) !important;
+  min-height: 420px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-2xl) !important;
+  background: var(--workshop-surface-strong) !important;
+  box-shadow: var(--workshop-card-shadow) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-hero-media {
+  order: 1;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  min-height: 420px !important;
+  display: grid !important;
+  place-items: center;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-right: 1px solid var(--workshop-outline) !important;
+  background:
+    radial-gradient(
+      circle at 50% 46%,
+      rgba(var(--workshop-tone), 0.14),
+      transparent 42%
+    ),
+    linear-gradient(145deg, rgba(23, 23, 23, 0.95), rgba(12, 12, 12, 0.99)) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-hero-media
+  > img {
+  position: relative !important;
+  inset: auto !important;
+  width: min(88%, 660px) !important;
+  height: min(82%, 360px) !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: var(--astral-radius-xl);
+  filter: var(--workshop-variant-filter, none);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.22),
+    0 0 54px rgba(var(--workshop-tone), 0.1);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-hero-header {
+  order: 2;
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch !important;
+  gap: 24px !important;
+  min-width: 0;
+  padding: clamp(26px, 4vw, 48px) !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-hero-copy
+  h1 {
+  color: var(--workshop-ink) !important;
+  font-size: clamp(32px, 4vw, 54px) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-hero-copy
+  p {
+  color: var(--workshop-ink-soft) !important;
+  line-height: 1.55 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-grid {
+  display: grid !important;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(160px, 16vw, 220px);
+  grid-template-columns: none !important;
+  gap: 12px !important;
+  margin-top: 14px !important;
+  padding: 0 0 8px !important;
+  overflow-x: auto;
+  border: 0 !important;
+  width: fit-content !important;
+  max-width: 100%;
+  background: transparent !important;
+  box-shadow: none !important;
+  scrollbar-width: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-grid
+  > button {
+  min-width: 0 !important;
+  height: auto !important;
+  aspect-ratio: 1 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: var(--workshop-surface-strong) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-library-catalog.is-artwork-media
+  .workshop-local-card-media
+  > img {
+  position: absolute !important;
+  inset: 10px 10px 42px !important;
+  width: calc(100% - 20px) !important;
+  height: calc(100% - 52px) !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  filter: var(--workshop-variant-filter, none);
+}
+
+@media (max-width: 900px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog.is-photo-media
+    .workshop-local-hero-header {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section="clothing"]
+    .workshop-library-catalog.is-artwork-media
+    .workshop-local-hero {
+    grid-template-columns: 1fr !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section="clothing"]
+    .workshop-library-catalog.is-artwork-media
+    .workshop-local-hero-media {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-height: 320px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--workshop-outline) !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section="clothing"]
+    .workshop-library-catalog.is-artwork-media
+    .workshop-local-hero-header {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog.is-photo-media
+    .workshop-local-hero-media {
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog.is-photo-media
+    .workshop-local-hero-header,
+  .desktop-app
+    .catalog-v3[data-workshop-section="clothing"]
+    .workshop-library-catalog.is-artwork-media
+    .workshop-local-hero-header {
+    padding: 20px !important;
+  }
+
+  .desktop-app .workshop-library-catalog .workshop-local-hero-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app
+    .workshop-library-catalog:is(.is-photo-media, .is-artwork-media)
+    *,
+  .desktop-app
+    .workshop-library-catalog:is(.is-photo-media, .is-artwork-media)
+    *::before,
+  .desktop-app
+    .workshop-library-catalog:is(.is-photo-media, .is-artwork-media)
+    *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

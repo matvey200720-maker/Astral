@@ -1,0 +1,9 @@
+{
+  "name": "@modovik/admin-store",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@modovik/json-repository": "*"
+  }
+}

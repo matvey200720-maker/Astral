@@ -1,0 +1,554 @@
+/*
+ * Заставка загрузки в кадре 3D (`StageLoader.jsx`, ТЗ 42В, 20.10.2026).
+ *
+ * Тёмная плашка поверх кадра, по центру — знак Astral с одной из четырёх своих
+ * анимаций (созвездие, каркас, скан-линия, орбиты), под ним — подпись и
+ * полоса прогресса. Всё движение — CSS (прозрачность, поворот, обводка): без
+ * скриптовых циклов, а после загрузки заставки нет в дереве. «Меньше
+ * движения» — те же рисунки без движения.
+ *
+ * Инструменты оболочки, пока кадр грузится, приглушены (`editor-shell.css`,
+ * `data-stage-busy`).
+ */
+
+.stage-loader {
+  position: absolute;
+  inset: 0;
+  /* Слой над всем, что кадр добавляет: холстом, плашками инструментов (z 6, идут позже в разметке) и подписями.
+     Свой контекст наложения — чтобы ни один потомок кадра не встал между карточкой и её фоном. */
+  z-index: 20;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  color: var(--astral-ink);
+  /* Фон плотный и тёмный, как в макете: сцена под карточкой не просвечивает, светлого неба и пятен нет. */
+  background: var(--astral-surface-strong);
+  /* Пока сцена не готова, кадр под заставкой не водят: полусобранную сцену не правят. */
+  pointer-events: auto;
+}
+
+.stage-loader.is-through {
+  pointer-events: none;
+}
+
+/*
+ * Кнопки «Повторить» и «Назад в мастерскую» нужны именно тогда, когда загрузка встала (23.10.2026, студия ствола:
+ * «Повторить не работает, закрыть нельзя»): сквозная карточка отдавала мышь кадру целиком, и кнопки не нажимались.
+ * Остальная карточка по-прежнему пропускает мышь к полке стволов.
+ */
+.stage-loader.is-through .stage-loader-actions {
+  pointer-events: auto;
+}
+
+.stage-loader[data-phase="out"] {
+  pointer-events: none;
+  animation: stage-loader-out 480ms var(--astral-ease) forwards;
+}
+
+.stage-loader-art {
+  width: min(190px, 44%);
+  min-width: 112px;
+  aspect-ratio: 1;
+  color: var(--astral-ink);
+}
+
+.stage-loader-art-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Знак Astral: четыре луча, заливка — свет в центре. */
+.stage-loader-mark {
+  fill: currentColor;
+  stroke: none;
+  transform-origin: 80px 80px;
+  filter: drop-shadow(0 0 10px rgba(var(--astral-accent-rgb), 0.5));
+}
+
+.stage-loader-mark.is-small {
+  transform: scale(0.5) translate(0, 0);
+}
+
+.stage-loader-dot {
+  fill: currentColor;
+  stroke: none;
+}
+
+.stage-loader-line,
+.stage-loader-ring {
+  stroke-opacity: 0.32;
+  stroke-width: 1;
+}
+
+.stage-loader-copy {
+  display: grid;
+  gap: 4px;
+  max-width: 340px;
+}
+
+.stage-loader-copy b {
+  font-size: var(--astral-text-body);
+  font-weight: 650;
+}
+
+.stage-loader-copy span {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-loader > small {
+  max-width: 340px;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  line-height: var(--astral-line-normal);
+}
+
+/* Полоса: заливка растёт по счёту (`scaleX`), без счёта — бегущий отрезок. */
+.stage-loader-bar {
+  position: relative;
+  width: min(280px, 70%);
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--astral-line);
+}
+
+.stage-loader-bar > i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--astral-accent);
+  box-shadow: 0 0 12px rgba(var(--astral-accent-rgb), 0.45);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  /* Полосу ведёт анимация `transform` на композиторе по ряду точек общего темпа (`use-loader-pace.js`): ход идёт, даже когда главный поток занят.
+     Без анимации (спокойный режим) — шаг в один процент, без движения между шагами. */
+}
+
+.stage-loader-bar.is-unknown > i {
+  inset: 0 auto 0 0;
+  width: 38%;
+  transform: translateX(-100%);
+  animation: stage-loader-slide 1.3s var(--astral-ease) infinite;
+}
+
+/* ── Созвездие: звезда дышит, точки мерцают, небо медленно поворачивается ── */
+[data-variant="star"] .stage-loader-sky {
+  transform-origin: 80px 80px;
+  animation: stage-loader-turn 26s linear infinite;
+}
+
+[data-variant="star"] .stage-loader-mark {
+  animation: stage-loader-breathe 2.4s ease-in-out infinite;
+}
+
+.stage-loader-dot.is-twinkle {
+  animation: stage-loader-twinkle 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--n, 0) * -0.31s);
+}
+
+/* ── Каркас: рёбра куба дорисовываются одно за другим и начинают заново ── */
+.stage-loader-edge {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: stage-loader-draw 3.6s var(--astral-ease) infinite;
+  animation-delay: calc(var(--n, 0) * 0.22s);
+}
+
+[data-variant="frame"] .stage-loader-mark {
+  animation: stage-loader-breathe 3.6s ease-in-out infinite;
+}
+
+/* ── Скан-линия: луч идёт по сетке, клетки за ним зажигаются ── */
+.stage-loader-cell {
+  fill: currentColor;
+  stroke: none;
+  opacity: 0.12;
+  animation: stage-loader-cell 2.8s ease-in-out infinite;
+  animation-delay: calc(var(--row, 0) * 0.34s);
+}
+
+.stage-loader-beam {
+  fill: currentColor;
+  stroke: none;
+  filter: drop-shadow(0 0 6px rgba(var(--astral-accent-rgb), 0.8));
+  animation: stage-loader-beam 2.8s ease-in-out infinite;
+}
+
+[data-variant="scan"] .stage-loader-mark.is-small {
+  transform-origin: 80px 80px;
+  opacity: 0.9;
+  animation: stage-loader-spark 2.8s ease-in-out infinite;
+}
+
+/* ── Орбиты: три кольца под углами, на каждом — частица своей скоростью ── */
+.stage-loader-turn {
+  transform-origin: 80px 80px;
+  animation: stage-loader-turn 3.2s linear infinite;
+  animation-delay: calc(var(--n, 0) * -0.9s);
+}
+
+[data-variant="orbit"] .stage-loader-mark {
+  animation: stage-loader-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes stage-loader-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes stage-loader-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+}
+
+@keyframes stage-loader-slide {
+  to {
+    transform: translateX(380%);
+  }
+}
+
+@keyframes stage-loader-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes stage-loader-breathe {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.86;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes stage-loader-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes stage-loader-draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  45%,
+  78% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes stage-loader-cell {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  35% {
+    opacity: 0.85;
+  }
+  70% {
+    opacity: 0.2;
+  }
+}
+
+@keyframes stage-loader-beam {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(74px);
+    opacity: 0;
+  }
+}
+
+@keyframes stage-loader-spark {
+  0%,
+  100% {
+    transform: scale(0.5);
+  }
+  50% {
+    transform: scale(0.62);
+  }
+}
+
+/*
+ * Тонкая полоса сверху кадра (П6.2, 22.10.2026): мелкая правка — шаблон воды, крыша маппинга, тип зоны — не закрывает кадр
+ * карточкой загрузки; прежний кадр стоит, а сверху идёт полоса. Ничего не ловит и не гасит инструменты.
+ */
+.stage-strip {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 19;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity var(--astral-duration) var(--astral-ease);
+}
+
+.stage-strip[data-phase="out"] {
+  opacity: 0;
+}
+
+.stage-strip > i {
+  display: block;
+  width: 38%;
+  height: 100%;
+  background: var(--astral-accent);
+  box-shadow: 0 0 8px rgba(var(--astral-accent-rgb), 0.5);
+  transform: translateX(-100%);
+  animation: stage-loader-slide 1.3s var(--astral-ease) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-strip > i {
+    width: 100%;
+    opacity: 0.5;
+    transform: none;
+    animation: none;
+  }
+
+  .stage-loader,
+  .stage-loader-card,
+  .stage-loader[data-phase="out"] {
+    animation: none;
+  }
+
+  .stage-loader[data-phase="out"] {
+    opacity: 0;
+  }
+
+  .stage-loader-art-svg *,
+  .stage-loader-bar.is-unknown > i {
+    animation: none !important;
+  }
+
+  .stage-loader-edge {
+    stroke-dashoffset: 0;
+  }
+
+  .stage-loader-cell {
+    opacity: 0.4;
+  }
+
+  .stage-loader-beam {
+    opacity: 0;
+  }
+
+  .stage-loader-bar.is-unknown > i {
+    width: 38%;
+    transform: none;
+  }
+}
+
+/* Карточка (макет «Ридезайна», 21.10.2026): плита поверх кадра, заголовок с процентом, полоса и четыре шага. */
+.stage-loader-card {
+  width: min(392px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px 18px;
+  text-align: left;
+  color: var(--astral-ink);
+  /* Плотная плита, не стекло: текст читается на любом фоне (токен всплывающих поверхностей — сплошная заливка). */
+  background: var(--astral-surface-float);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  /* Проявляется сама карточка, подложка уже сплошная: сцена под заставкой не просвечивает ни на одном кадре. */
+  animation: stage-loader-in var(--astral-duration-slow) var(--astral-ease) both;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.stage-loader-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.stage-loader-mark-svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  color: var(--astral-ink);
+}
+
+.stage-loader-titles {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stage-loader-titles b {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+
+.stage-loader-titles span {
+  font-size: var(--astral-text-small);
+  color: var(--astral-ink-muted);
+}
+
+.stage-loader-percent {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-loader-card .stage-loader-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.stage-loader-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage-loader-steps li {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--astral-text-small);
+  color: var(--astral-ink-faint);
+}
+
+.stage-loader-steps li[data-state="run"],
+.stage-loader-steps li[data-state="done"] {
+  color: var(--astral-ink);
+}
+
+.stage-loader-step-mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--astral-line-strong);
+}
+
+.stage-loader-steps li[data-state="done"] .stage-loader-step-mark {
+  position: relative;
+  background: rgba(var(--astral-accent-rgb), 0.5);
+  border-color: transparent;
+}
+
+/* Галочка на готовом шаге (макет, раздел 3). */
+.stage-loader-steps li[data-state="done"] .stage-loader-step-mark::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 4px;
+  height: 7px;
+  border: solid var(--astral-ink);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.stage-loader-steps li[data-state="run"] .stage-loader-step-mark {
+  border-color: var(--astral-accent);
+}
+
+.stage-loader-steps em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--astral-ink-muted);
+}
+
+.stage-loader-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--astral-line-tight);
+  font-size: var(--astral-text-micro);
+  color: var(--astral-ink-faint);
+}
+
+.stage-loader-foot small {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Долго и ошибка (макет, раздел 3): жёлтая и красная строки, под ними — действия. */
+.stage-loader-line {
+  margin: 0;
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+}
+
+.stage-loader-line.is-slow {
+  color: var(--astral-warning);
+}
+
+.stage-loader-line.is-error {
+  color: var(--astral-danger);
+}
+
+.stage-loader-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.stage-loader-actions button {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: var(--astral-text-small);
+  color: var(--astral-ink);
+  background: var(--astral-surface-raised);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  cursor: pointer;
+}
+
+.stage-loader-actions button:hover {
+  background: var(--astral-surface-hover);
+}

@@ -1,0 +1,261 @@
+/* Настройки, раздел «Хранилище»: обзор места, легенда, пути папок, предупреждения.
+   Лист подключается в слое components общего листа окна. */
+
+/* Короткие имена палитры: объявлены на корне каждого блока, который их читает
+   (потомки наследуют, правило без предка видит имя на самом элементе).
+   Значения те же, что в других листах настроек. */
+.settings-shell,
+.storage-overview-head,
+.storage-usage-meter,
+.storage-legend,
+.storage-dot,
+.storage-size,
+.storage-overview-note,
+.storage-copy-progress,
+.storage-settings-notice,
+.storage-row-notice,
+.storage-kinds-title {
+  --prefs-fg: var(--astral-ink);
+  --prefs-fg-dim: var(--astral-ink-muted);
+  --prefs-fg-faint: var(--astral-ink-faint);
+  --prefs-fs-s: var(--astral-text-small);
+  --prefs-fs-m: var(--astral-text-body);
+  --prefs-well: var(--astral-surface-sunken);
+  --prefs-r-xs: var(--astral-radius-xs);
+  --prefs-warn: var(--astral-warning);
+}
+
+.settings-shell .storage-settings {
+  min-inline-size: 0;
+  gap: 14px;
+  display: grid;
+}
+
+/* ===== Обзор: заголовок, полоса, легенда ===== */
+
+.storage-overview {
+  padding-block: 16px;
+  padding-inline: 16px;
+  gap: 10px;
+}
+
+.storage-overview-head {
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  display: flex;
+}
+
+.storage-overview-head b,
+.storage-size {
+  font-weight: 600;
+  color: var(--prefs-fg);
+}
+
+.storage-overview-head b {
+  font-size: var(--astral-text-strong);
+}
+
+.storage-overview-head span {
+  font-size: var(--prefs-fs-m);
+  color: var(--prefs-fg-dim);
+}
+
+.storage-usage-meter {
+  background: var(--prefs-well);
+  border-radius: var(--prefs-r-xs);
+  block-size: 14px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+}
+
+.storage-usage-meter > i {
+  block-size: 100%;
+  min-inline-size: 0;
+}
+
+/* Цвета долей: полоса, легенда и точка в строке. «Пульт» (15.11.2026): без цвета, четыре ступени серого, как у макета. */
+.is-mods.storage-dot,
+.storage-legend .is-mods,
+.storage-usage-meter .is-mods {
+  background-color: #ffffff;
+}
+
+.storage-legend .is-other,
+.storage-usage-meter .is-other {
+  background-color: #37373b;
+}
+
+.is-cache.storage-dot,
+.storage-legend .is-cache,
+.storage-usage-meter .is-cache {
+  background-color: #a6a6ac;
+}
+
+.is-backups.storage-dot,
+.storage-legend .is-backups,
+.storage-usage-meter .is-backups {
+  background-color: #5f5f66;
+}
+
+.storage-legend {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  list-style: none;
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 0;
+  padding-inline: 0;
+  row-gap: 6px;
+  column-gap: 18px;
+  flex-wrap: wrap;
+  display: flex;
+}
+
+.storage-legend li {
+  gap: 7px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.storage-dot,
+.storage-legend i {
+  border-radius: var(--prefs-r-xs);
+  inline-size: 8px;
+  block-size: 8px;
+  display: inline-block;
+}
+
+.storage-dot {
+  vertical-align: 1px;
+  margin-inline-end: 8px;
+}
+
+/* Не сжимаются в строке: размер, точка и квадрат легенды */
+.storage-size,
+.storage-dot,
+.storage-legend i {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+/* Приглушённые подписи */
+.storage-overview-note,
+.settings-shell .storage-folder-kind,
+.settings-shell .storage-kinds {
+  color: var(--prefs-fg-faint);
+}
+
+.storage-overview-note {
+  font-size: var(--prefs-fs-s);
+}
+
+.settings-shell .storage-kinds {
+  font-size: var(--astral-text-micro);
+}
+
+/* ===== Пути папок и размеры ===== */
+
+.storage-path {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.storage-path-pending {
+  font-style: italic;
+}
+
+.storage-size {
+  font-size: var(--prefs-fs-m);
+}
+
+.storage-copy-progress > b {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg);
+}
+
+.storage-copy-progress > i {
+  background: var(--prefs-well);
+  border-radius: 999px;
+  inline-size: 140px;
+  block-size: 6px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: block;
+}
+
+.storage-copy-progress > i > em {
+  background-color: var(--prefs-fg);
+  block-size: 100%;
+  display: block;
+}
+
+/* ===== Предупреждения ===== */
+
+.storage-settings-notice,
+.storage-row-notice {
+  font-size: var(--prefs-fs-s);
+  line-height: var(--astral-line-normal);
+  color: var(--prefs-warn);
+  gap: 8px;
+  align-items: flex-start;
+  display: flex;
+}
+
+.storage-row-notice {
+  font-style: normal;
+  font-weight: 600;
+  margin-block-start: 2px;
+}
+
+.storage-settings-notice {
+  margin-block: 0;
+  margin-inline: 0;
+}
+
+.settings-shell .storage-shortfall b > svg,
+.storage-settings-notice > svg,
+.storage-row-notice > svg {
+  inline-size: 15px;
+  block-size: 15px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 15px;
+}
+
+.storage-settings-notice > svg,
+.storage-row-notice > svg {
+  margin-block-start: 1px;
+}
+
+.settings-shell .storage-shortfall b > svg {
+  margin-block-start: 2px;
+}
+
+.settings-shell .storage-shortfall b {
+  color: var(--prefs-warn);
+  align-items: flex-start;
+  gap: 8px;
+  display: inline-flex;
+}
+
+/* ===== Карточка типов файлов ===== */
+
+.storage-kinds-card {
+  padding-block-start: 12px;
+}
+
+.storage-kinds-title {
+  font-weight: 600;
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  margin-block: 0 4px;
+  margin-inline: 0;
+  padding-block: 0;
+  padding-inline: 16px;
+}

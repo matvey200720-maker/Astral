@@ -1,0 +1,221 @@
+/* Карточка полки в окне приложения: плоская плитка «картинка + подпись». Правила слоя contracts, поэтому много !important. */
+
+/* Без анимации: картинка, кнопка и подпись не двигаются */
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app {
+    & .ui-shelf-card {
+      & :is(.ui-shelf-card-go, .ui-shelf-card-art > *) {
+        transition: none !important;
+      }
+    }
+  }
+}
+
+/* Сетка, в которой лежат такие карточки: свои промежутки */
+.redux-visual-grid {
+  .desktop-app &:has(> .ui-shelf-card) {
+    gap: 28px 16px !important;
+  }
+}
+
+.desktop-app {
+  /* Сама карточка. Короткие имена общих значений раздаются частям внутри. */
+  & .ui-shelf-card.ui-shelf-card {
+
+    aspect-ratio: auto !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    font: inherit;
+    color: var(--astral-ink);
+    height: auto !important;
+    transform: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    align-content: start !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    gap: 10px !important;
+    display: grid !important;
+    text-align: left;
+    cursor: pointer;
+    position: relative !important;
+
+    &:is(:focus-visible, :hover) {
+      transform: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      border: 0 !important;
+    }
+
+    &:focus-visible {
+      outline: 0;
+    }
+
+    /* псевдоэлементы и затемнение от обычной карточки здесь не нужны */
+    & > .ui-media-card-shade,
+    &::before,
+    &::after {
+      display: none !important;
+    }
+  }
+
+  & .ui-shelf-card {
+    /* картинка */
+    & .ui-shelf-card-art {
+      aspect-ratio: 16 / 10;
+      transition: var(--astral-ease) border-color var(--astral-duration-fast), var(--astral-ease) box-shadow var(--astral-duration-fast);
+      isolation: isolate;
+      background: #000;
+      box-shadow: var(--astral-highlight);
+      overflow: hidden;
+      border: var(--astral-line) solid 1px;
+      border-radius: var(--astral-radius-lg);
+      display: block;
+      position: relative;
+
+      /* всё внутри, кроме значка статуса и кнопки, растянуто на всю картинку */
+      & > :not(.ui-shelf-card-go, .workshop-card-status) {
+        inset: 0 !important;
+        transition: var(--astral-ease) transform var(--astral-duration-slow);
+        height: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        position: absolute !important;
+      }
+
+      & > img {
+        object-fit: cover !important;
+      }
+
+      & > .workshop-card-status {
+        inset: 10px auto auto 10px !important;
+        color: var(--astral-ink) !important;
+        background: rgba(0, 0, 0, .78) !important;
+        box-shadow: none !important;
+        z-index: 2;
+        border: rgba(255, 255, 255, .14) solid 1px !important;
+        position: absolute !important;
+      }
+    }
+
+    &:hover {
+      & .ui-shelf-card-art {
+        box-shadow: var(--astral-highlight), rgba(0, 0, 0, .55) 0 18px 40px;
+        border-color: var(--astral-line-strong);
+
+        & > :is(.workshop-cover, img) {
+          transform: scale(1.03);
+        }
+      }
+    }
+
+    &:focus-visible {
+      & .ui-shelf-card-art {
+        outline: var(--astral-line-focus) solid 2px;
+        outline-offset: 2px;
+      }
+    }
+
+    /* обложка-предмет (оружие, одежда): вписана целиком, с полями */
+    &.is-object-art {
+      & .ui-shelf-card-art > img {
+        object-fit: contain !important;
+        padding: 12px 20px 8px !important;
+        box-sizing: border-box;
+      }
+    }
+
+    /* кнопка-стрелка «открыть» в углу картинки */
+    & .ui-shelf-card-go {
+      opacity: 0;
+      transition: var(--astral-ease) opacity var(--astral-duration-fast), var(--astral-ease) transform var(--astral-duration-fast);
+      color: var(--astral-ink);
+      height: 32px;
+      width: 32px;
+      transform: translateY(-3px);
+      background: rgba(0, 0, 0, .62);
+      right: 10px;
+      top: 10px;
+      place-items: center;
+      z-index: 2;
+      border: rgba(255, 255, 255, .16) solid 1px;
+      border-radius: 999px;
+      display: grid;
+      position: absolute;
+
+      & svg {
+        height: 15px;
+        width: 15px;
+      }
+    }
+
+    &:is(:focus-visible, :hover) {
+      & .ui-shelf-card-go {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* подпись под картинкой */
+    & .ui-shelf-card-copy {
+      opacity: 1 !important;
+      min-width: 0;
+      inset: auto !important;
+      transform: none !important;
+      background: none !important;
+      z-index: auto !important;
+      padding: 0 2px !important;
+      display: grid !important;
+      gap: 2px !important;
+      position: static !important;
+
+      & h3 {
+        color: var(--astral-ink) !important;
+        margin: 0 !important;
+        line-height: var(--astral-line-tight);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-weight: 600 !important;
+        font-size: var(--astral-text-strong) !important;
+      }
+
+      & p {
+        -webkit-line-clamp: unset !important;
+        color: var(--astral-ink-faint) !important;
+        margin: 0 !important;
+        line-height: var(--astral-line-normal);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        display: block !important;
+        font-size: var(--astral-text-small) !important;
+      }
+    }
+
+    /* флажок выбора: в углу картинки */
+    & > .ui-media-card-select {
+      inset: 10px 10px auto auto !important;
+      z-index: 3;
+      position: absolute !important;
+    }
+
+    &[aria-pressed=true] {
+      & .ui-shelf-card-art {
+        box-shadow: var(--astral-highlight), var(--astral-accent) 0 0 0 1px;
+        border-color: var(--astral-accent);
+      }
+    }
+
+    /* карточку удаляют из библиотеки */
+    &[data-library-removing] {
+      opacity: .4;
+      cursor: progress;
+    }
+  }
+}

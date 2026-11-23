@@ -1,0 +1,221 @@
+/*
+ * Редактор прострелов.
+ *
+ * Вид — у мастерской эффектов (`effects-studio.css`) и залазов: редактор
+ * носит имя `fx-editor` рядом со своим, поэтому разделы панели и полка
+ * готовых наборов у него общие. Раскладка — мастерская «как в Photoshop»
+ * (`styles/editor-shell.css`): кадр каркаса — сама матовая плашка с рамкой,
+ * сцена занимает его целиком, органы и подпись кадра лежат поверх
+ * (`StageOverlay.jsx`). Здесь только своё: 3D-кадр укрытия, сетка плиток
+ * укрытий и список укрытий в панели.
+ *
+ * Литералы цвета — только у неба и земли кадра: это не страница лаунчера,
+ * а время суток сцены, и совпадают они с числами модели света
+ * (`wallbang-look.js`, SCENE_LIGHT) — иначе край холста и фон рамки
+ * разошлись бы на стыке.
+ */
+
+.wallbang-editor {
+  --wallbang-sky-day: linear-gradient(180deg, #86aee0 0%, #dbe5ef 100%);
+  --wallbang-sky-dusk: linear-gradient(180deg, #27305c 0%, #d88f63 100%);
+  --wallbang-sky-night: linear-gradient(180deg, #05070f 0%, #161d33 100%);
+  --wallbang-tile-plate: #121418;
+}
+
+/* ── Сцена ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Сцена — во весь кадр каркаса, без своей рамки, скругления и подложки: их
+ * даёт кадр. Небо — у самого 3D-кадра: это время суток сцены, а не рамка.
+ */
+.ui-editor-shell[data-layout="studio"] .wallbang-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  container-type: inline-size;
+}
+
+/*
+ * Кадр «Укрытие» на участке из игры (`WallbangPlotFrame.jsx`): во весь кадр каркаса, фон чёрный — за краем
+ * вырезанного куска карты ничего нет, и кадр не притворяется небом.
+ */
+.ui-editor-shell[data-layout="studio"] .wallbang-stage .model-stage-frame.wallbang-plot {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--astral-void);
+}
+
+/* Список укрытий в органах кадра — своей ширины: рядом с ним вид и время
+   суток. Ширина — постоянная, а не основа гибкой строки: органы переносятся
+   по основе раньше, чем сжимаются, и список уходил второй строкой, хотя
+   место было. Подписи у списка нет (она в имени для читалки), поэтому
+   колонка подписи ему не нужна. */
+.wallbang-stage .ui-stage-bar > .wallbang-object-select {
+  flex: none;
+  grid-template-columns: minmax(0, 1fr);
+  width: 190px;
+  margin: 0;
+}
+
+.wallbang-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--wallbang-sky-day);
+}
+
+.wallbang-frame.is-dusk {
+  background: var(--wallbang-sky-dusk);
+}
+
+.wallbang-frame.is-night {
+  background: var(--wallbang-sky-night);
+}
+
+/* Холст — поверх рамки, а не в потоке: его собственный размер меняется
+   при каждом `resize`, и в потоке он растил бы рамку по кругу. */
+.wallbang-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.wallbang-canvas:active {
+  cursor: grabbing;
+}
+
+.wallbang-canvas:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+/* Что с кадром (грузится форма, не открылся WebGL) — посреди кадра: углы
+   заняты органами, подсказками управления и подписью. */
+.wallbang-frame-note {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  max-width: min(420px, calc(100% - 48px));
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-void) 72%, transparent);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  text-align: center;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/*
+ * Все укрытия: шестнадцать плиток сеткой четыре на четыре. Сетка едет, если
+ * окно низкое, — плитки не сжимаются до значков. Сверху и снизу — поля под
+ * органы кадра, подсказки и подпись: они лежат поверх сетки.
+ */
+.wallbang-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(128px, 1fr);
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 60px 12px 56px;
+  scrollbar-width: none;
+}
+
+.wallbang-grid::-webkit-scrollbar {
+  display: none;
+}
+
+@container (max-width: 640px) {
+  .wallbang-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.wallbang-editor .wallbang-tile {
+  min-height: 0;
+  padding: 6px;
+  background: var(--fx-matte);
+}
+
+.wallbang-tile .ui-choice-media {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 72px;
+  background: var(--wallbang-tile-plate);
+}
+
+.wallbang-grid.is-day .ui-choice-media {
+  background: var(--wallbang-sky-day);
+}
+
+.wallbang-grid.is-dusk .ui-choice-media {
+  background: var(--wallbang-sky-dusk);
+}
+
+.wallbang-grid.is-night .ui-choice-media {
+  background: var(--wallbang-sky-night);
+}
+
+/* Картинка лежит в гнезде вписанной рамкой: высота гибкой плитки для
+   процентов не определена (та же ловушка, что у плиток залазов). */
+.wallbang-tile .ui-choice-media > img {
+  position: absolute;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  object-fit: contain;
+}
+
+.wallbang-tile.is-hidden .ui-choice-media > * {
+  opacity: 0.3;
+}
+
+/* Картинки укрытия нет — имя по центру плитки вместо пустого гнезда (владелец 31.10.2026). */
+.wallbang-tile.is-named {
+  justify-content: center;
+}
+
+/* ── Готовые прострелы (панель «Шаблоны») ──────────────────────────────── */
+
+/* Сетка — общая панели (два столбца); плитка — три укрытия набора на
+   дневном небе, клетками один к одному. */
+.wallbang-editor .wallbang-preset {
+  background: var(--fx-matte);
+}
+
+.wallbang-editor .wallbang-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+.wallbang-preset .ui-choice-media {
+  aspect-ratio: 3 / 1;
+  padding: 2px 4px;
+  background: var(--wallbang-sky-day);
+}
+
+.wallbang-preset .ui-choice-media > img {
+  object-fit: contain;
+}
+
+/* ── Панель инструмента ────────────────────────────────────────────────── */
+
+.wallbang-inspector .fx-hint.is-warning {
+  color: var(--astral-warning);
+}

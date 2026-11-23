@@ -1,0 +1,18 @@
+{
+  "name": "@modovik/vector-map",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@modovik/rage-drawable": "*",
+    "@modovik/climb-contract": "*"
+  },
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./pack-layers": "./pack-layers-api.js",
+    "./island": "./island-map.js",
+    "./blip-icons": "./blip-icons.js",
+    "./package.json": "./package.json"
+  }
+}

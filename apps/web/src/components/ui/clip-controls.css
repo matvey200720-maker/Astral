@@ -1,0 +1,293 @@
+/*
+ * Органы проигрывателя ролика (`ClipControls.jsx`, ТЗ владельца 29.10.2026: «как в YouTube»): затемнение снизу, тонкая полоса прогресса, строка ▶/время/звук/«во весь экран».
+ * Ленивый лист, едет вместе с плеером; слой overrides. Стекла нет (`attention-pause.test.js`): плашки — сплошные тёмные.
+ *
+ * Пока ролик играет и мышь стоит, строка и затемнение уходят, а полоса опускается к самому краю кадра тонкой чертой; двинул мышью — всё возвращается
+ * (`data-shown` у `.ui-clip-controls`, решает `ClipPlayer`).
+ */
+
+@layer overrides {
+  .ui-clip-controls {
+    --clip-row: 44px;
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 3;
+    display: grid;
+    pointer-events: none;
+  }
+
+  /* Затемнение под органами: подпись и значки читаются на любом кадре. */
+  .ui-clip-scrim {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: calc(var(--clip-row) + 56px);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.42) 55%, rgba(0, 0, 0, 0) 100%);
+    opacity: 0;
+    transition: opacity var(--astral-duration) var(--astral-ease);
+    pointer-events: none;
+  }
+
+  .ui-clip-controls[data-shown] .ui-clip-scrim {
+    opacity: 1;
+  }
+
+  /* Полоса: зона нажатия в палец (28 px, `HIT_TARGET_MIN`) над самой чертой, видимая черта — внизу зоны. Спрятались органы — зона уходит вниз, к краю кадра, и не ловит мышь. */
+  .ui-clip-seek {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    height: 28px;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+    pointer-events: none;
+    transform: translateY(var(--clip-row));
+    transition: transform var(--astral-duration) var(--astral-ease);
+    touch-action: none;
+  }
+
+  .ui-clip-controls[data-shown] .ui-clip-seek {
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .ui-clip-seek-track {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    transition: height var(--astral-duration-snap) var(--astral-ease);
+  }
+
+  .ui-clip-controls[data-shown] .ui-clip-seek-track {
+    height: 3px;
+  }
+
+  /* Толстеет при наведении и когда тянут; фокус с клавиатуры — то же. */
+  .ui-clip-controls[data-shown] .ui-clip-seek:hover .ui-clip-seek-track,
+  .ui-clip-controls[data-shown] .ui-clip-seek:focus-visible .ui-clip-seek-track,
+  .ui-clip-seek[data-scrubbing] .ui-clip-seek-track {
+    height: 6px;
+  }
+
+  .ui-clip-seek-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--astral-accent, #f4f4f5);
+    transform-origin: left center;
+    /* Время приходит четыре раза в секунду; линейный переход между отсчётами рисует ход плавным, не рывками. */
+    transition: transform var(--astral-duration-slow) linear;
+  }
+
+  .ui-clip-seek[data-scrubbing] .ui-clip-seek-fill {
+    transition: none;
+  }
+
+  .ui-clip-seek-thumb {
+    position: absolute;
+    top: 50%;
+    width: 13px;
+    height: 13px;
+    border-radius: 999px;
+    background: var(--astral-accent, #f4f4f5);
+    box-shadow: 0 0 0 2px rgba(12, 12, 14, 0.5);
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform var(--astral-duration-snap) var(--astral-ease);
+  }
+
+  .ui-clip-controls[data-shown] .ui-clip-seek:hover .ui-clip-seek-thumb,
+  .ui-clip-controls[data-shown] .ui-clip-seek:focus-visible .ui-clip-seek-thumb,
+  .ui-clip-seek[data-scrubbing] .ui-clip-seek-thumb {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .ui-clip-seek:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 0;
+  }
+
+  /* Подсказка со временем над местом, куда целишься. */
+  .ui-clip-seek-tip {
+    position: absolute;
+    bottom: 18px;
+    padding: 3px 8px;
+    border-radius: var(--astral-radius-xs);
+    background: rgba(12, 12, 14, 0.92);
+    color: #f4f4f5;
+    font-size: var(--astral-text-micro);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Строка органов. */
+  .ui-clip-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: var(--clip-row);
+    padding: 0 8px 4px 6px;
+    color: #f4f4f5;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--astral-duration) var(--astral-ease),
+      visibility 0s linear var(--astral-duration);
+  }
+
+  .ui-clip-controls[data-shown] .ui-clip-row {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+    pointer-events: auto;
+  }
+
+  .ui-clip-button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background var(--astral-duration-snap) var(--astral-ease);
+  }
+
+  .ui-clip-button:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .ui-clip-button:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -2px;
+  }
+
+  .ui-clip-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Звук выключен — значок перечёркнут. */
+  .ui-clip-button.is-muted {
+    position: relative;
+  }
+
+  .ui-clip-button.is-muted::after {
+    position: absolute;
+    width: 22px;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    box-shadow: 0 0 0 1.5px rgba(12, 12, 14, 0.7);
+    content: "";
+    transform: rotate(-45deg);
+  }
+
+  .ui-clip-time {
+    margin-left: 6px;
+    color: rgba(244, 244, 245, 0.94);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ui-clip-time i {
+    font-style: normal;
+    opacity: 0.6;
+  }
+
+  .ui-clip-gap {
+    flex: 1 1 auto;
+  }
+
+  /* Звук: значок, а ползунок выезжает рядом по наведению или фокусу. */
+  .ui-clip-volume {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ui-clip-volume-range {
+    width: 0;
+    height: 3px;
+    margin: 0;
+    border-radius: 2px;
+    background: linear-gradient(to right, #f4f4f5 var(--clip-volume, 100%), rgba(255, 255, 255, 0.3) var(--clip-volume, 100%));
+    opacity: 0;
+    cursor: pointer;
+    transition:
+      width var(--astral-duration) var(--astral-ease),
+      margin var(--astral-duration) var(--astral-ease),
+      opacity var(--astral-duration) var(--astral-ease);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .ui-clip-volume:hover .ui-clip-volume-range,
+  .ui-clip-volume:focus-within .ui-clip-volume-range {
+    width: 72px;
+    margin: 0 10px 0 2px;
+    opacity: 1;
+  }
+
+  .ui-clip-volume-range::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 999px;
+    background: #f4f4f5;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .ui-clip-volume-range:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 4px;
+  }
+
+  /* Проигрыватель берёт фокус от нажатия на кадр (клавиши пробел, K, F, M), но рамки фокуса у самого кадра нет: она у органов. */
+  .ui-clip-player:focus {
+    outline: none;
+  }
+
+  /* Играет, органы спрятались — и курсор тоже: кадр чист. */
+  .ui-clip-player[data-clip-quiet] .ui-clip-player-surface {
+    cursor: none;
+  }
+
+  /* Во весь экран (наш, не штатный): кадр занимает окно целиком, размеры места страницы не мешают. */
+  .ui-clip-player:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
+
+  .ui-clip-player:fullscreen .ui-clip-controls {
+    --clip-row: 52px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-clip-scrim,
+    .ui-clip-seek,
+    .ui-clip-seek-track,
+    .ui-clip-seek-fill,
+    .ui-clip-seek-thumb,
+    .ui-clip-row,
+    .ui-clip-button,
+    .ui-clip-volume-range {
+      transition: none;
+    }
+  }
+}

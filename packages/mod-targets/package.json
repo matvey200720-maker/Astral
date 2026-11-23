@@ -1,0 +1,11 @@
+{
+  "name": "@modovik/mod-targets",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./sky-files": "./sky-files.js",
+    "./water-files": "./water-files.js"
+  }
+}

@@ -1,0 +1,77 @@
+/*
+ * Штатные файлы квартала арены Maze Bank: имена с префиксами `v_62`, `sp1_10`, `xs_arena`
+ * (зал арены, квартал вокруг неё, пропсы арены), как они лежат в GTA V Legacy 1.0.3889 —
+ * 237 имён (v_62: 84, sp1_10: 114, xs_arena: 39). Снято 24.10.2026 с индекса игры владельца
+ * (`%LOCALAPPDATA%\Astral\cache\game-index.json`, только имена — содержимого файлов Rockstar здесь нет).
+ *
+ * Зачем: отпечаток арены (`arena-fingerprint.js`) отличает «штатная арена в новой раскраске» —
+ * все её файлы из этого списка — от «своей арены автора»: те же префиксы, но файлов, которых в
+ * игре нет. Список — справочник имён, а не доказательство сервера: квартал `sp1_10` у GTA 5 RP
+ * и Majestic общий.
+ */
+
+export const ARENA_STOCK_NAMES = new Set([
+  "sp1_10+hi.ytd", "sp1_10.ymap", "sp1_10.ytd", "sp1_10__fake_int.ydr", "sp1_10__roofbars_lod.ytd",
+  "sp1_10_brand_01_cloth00.yft", "sp1_10_brand_01_cloth00_lod.ydr", "sp1_10_brand_01_cloth01.yft",
+  "sp1_10_brand_01_cloth01_lod.ydr", "sp1_10_brand_01_cloth02.yft", "sp1_10_brand_01_cloth02_lod.ydr",
+  "sp1_10_brand_01_cloth03.yft", "sp1_10_brand_01_cloth03_lod.ydr", "sp1_10_brand_01_cloth04.yft",
+  "sp1_10_brand_01_cloth04_lod.ydr", "sp1_10_brand_01_cloth05.yft", "sp1_10_brand_01_cloth05_lod.ydr",
+  "sp1_10_brand_01_cloth06.yft", "sp1_10_brand_01_cloth06_lod.ydr", "sp1_10_brand_01_cloth07.yft",
+  "sp1_10_brand_01_cloth07_lod.ydr", "sp1_10_brand_01_cloth08.yft", "sp1_10_brand_01_cloth08_lod.ydr",
+  "sp1_10_brand_01_cloth09.yft", "sp1_10_brand_01_cloth09_lod.ydr", "sp1_10_brand_01_cloth10.yft",
+  "sp1_10_brand_01_cloth10_lod.ydr", "sp1_10_brand_01_cloth11.yft", "sp1_10_brand_01_cloth11_lod.ydr",
+  "sp1_10_brand_01_cloth12.yft", "sp1_10_brand_01_cloth12_lod.ydr", "sp1_10_brand_01_cloth13.yft",
+  "sp1_10_brand_01_cloth13_lod.ydr", "sp1_10_brand_01_cloth14.yft", "sp1_10_brand_01_cloth14_lod.ydr",
+  "sp1_10_brand_01_cloth15.yft", "sp1_10_brand_01_cloth15_lod.ydr", "sp1_10_brand_01_cloth16.yft",
+  "sp1_10_brand_01_cloth16_lod.ydr", "sp1_10_brand_01_cloth17.yft", "sp1_10_brand_01_cloth17_lod.ydr",
+  "sp1_10_brand_01_wip_dontdelq+hidr.ytd", "sp1_10_brand_01_wip_dontdelq.ydr", "sp1_10_branding_shadow.ydr",
+  "sp1_10_critical_0.ymap", "sp1_10_details+hi.ytd", "sp1_10_details.ytd", "sp1_10_details2.ydr",
+  "sp1_10_details3.ydr", "sp1_10_details4.ydr", "sp1_10_details5.ydr", "sp1_10_details6.ydr", "sp1_10_details7.ydr",
+  "sp1_10_fake_interior.ymap", "sp1_10_fake_interior_lod.ydr", "sp1_10_fake_interior_lod.ymap",
+  "sp1_10_fake_interior_slod.ydr", "sp1_10_fake_interior_slod_children.ydd", "sp1_10_fences_hd_01.ydr",
+  "sp1_10_fences_hd_02.ydr", "sp1_10_fences_hd_03.ydr", "sp1_10_fences_hd_04.ydr", "sp1_10_fences_hd_05.ydr",
+  "sp1_10_fences_hd_06.ydr", "sp1_10_fizza_01.ydr", "sp1_10_fizza_01_lod.ydr", "sp1_10_fpoles01.ydr",
+  "sp1_10_fpoles02.ydr", "sp1_10_fpoles03.ydr", "sp1_10_fpoles04.ydr", "sp1_10_fpoles05.ydr", "sp1_10_fpoles06.ydr",
+  "sp1_10_fpoles07.ydr", "sp1_10_fpoles08.ydr", "sp1_10_fpoles09.ydr", "sp1_10_fpoles10.ydr", "sp1_10_fpoles11.ydr",
+  "sp1_10_fpoles12.ydr", "sp1_10_grass_0.ymap", "sp1_10_ground_1+hidr.ytd", "sp1_10_ground_1.ydr",
+  "sp1_10_ground_2+hidr.ytd", "sp1_10_ground_2.ydr", "sp1_10_hedge01.ydr", "sp1_10_hedge02.ydr",
+  "sp1_10_hedge03.ydr", "sp1_10_int.ydr", "sp1_10_int_lod+hi.ytd", "sp1_10_int_lod.ytd", "sp1_10_int_slod.ytd",
+  "sp1_10_lod.ytd", "sp1_10_long_0.ymap", "sp1_10_mainwall_1.ydr", "sp1_10_mainwall_sign.ydr",
+  "sp1_10_props_int.ytd", "sp1_10_props_interior_slod.ydr", "sp1_10_props_interior_slod_children.ydd",
+  "sp1_10_real_interior.ymap", "sp1_10_real_interior_lod.ymap", "sp1_10_roof01.ydr", "sp1_10_roofbars.ydr",
+  "sp1_10_roofbars_slod_children.ydd", "sp1_10_roofshadow.ydr", "sp1_10_sidebars_hd.ydr", "sp1_10_sign_bars_hd.ydr",
+  "sp1_10_slod1_children.ydd", "sp1_10_stadium+hi.ytd", "sp1_10_stadium.ytd", "sp1_10_strm_0.ymap",
+  "sp1_10_strm_1.ymap", "sp1_10_wind01.ydr", "sp1_10_wind02.ydr", "sp1_10_wind03.ydr", "sp1_10_wind04.ydr",
+  "v_62_ao_stad_001.ydr", "v_62_aud_det01.ydr", "v_62_aud_door004.ydr", "v_62_aud_ovly+hidr.ytd",
+  "v_62_aud_ovly.ydr", "v_62_audit_dec01.ydr", "v_62_bannersx+hidr.ytd", "v_62_bannersx.ydr", "v_62_barrier01.ydr",
+  "v_62_barrier02.ydr", "v_62_barrier03.ydr", "v_62_blinds+hidr.ytd", "v_62_blinds.ydr", "v_62_board01+hidr.ytd",
+  "v_62_board01.ydr", "v_62_boom_mic.ydr", "v_62_bs_kiosk002.ydr", "v_62_bs_kiosk003.ydr", "v_62_cables.ydr",
+  "v_62_ceiling_rig.ydr", "v_62_corrscratches002.ydr", "v_62_corrscratches01.ydr", "v_62_corrspec002.ydr",
+  "v_62_corrspec004.ydr", "v_62_corrspec01.ydr", "v_62_corrspec03.ydr", "v_62_curt_dyn.yft", "v_62_curt_dyn001.yft",
+  "v_62_curt_dyn002.yft", "v_62_curtain_aud.yft", "v_62_curtains+hidr.ytd", "v_62_curtains.ydr",
+  "v_62_ecolacup002.ydr", "v_62_ecolacup003.ydr", "v_62_ecolacup01.ydr", "v_62_fos_props01.ydr",
+  "v_62_fos_props03.ydr", "v_62_frame_det01.ydr", "v_62_lightdummy002.ydr", "v_62_lightdummy01.ydr",
+  "v_62_lob_det.ydr", "v_62_lob_det02.ydr", "v_62_lobby_ovly.ydr", "v_62_lobby_wall.ydr", "v_62_lobmat.ydr",
+  "v_62_maze_dec003.ydr", "v_62_maze_dec004.ydr", "v_62_maze_dec01.ydr", "v_62_maze_dec02.ydr", "v_62_scratch01.ydr",
+  "v_62_shutter002.ydr", "v_62_shutter01.ydr", "v_62_signs01.ydr", "v_62_signs02.ydr", "v_62_sm_c02+hidr.ytd",
+  "v_62_sm_c02.ydr", "v_62_spec_ov01+hidr.ytd", "v_62_spec_ov01.ydr", "v_62_spec_ov13.ydr",
+  "v_62_stadium_shell+hidr.ytd", "v_62_stadium_shell.ydr", "v_62_stadium_shellprx.ydr", "v_62_stage_dec01.ydr",
+  "v_62_stage_dec02.ydr", "v_62_stairs01.ydr", "v_62_stairs02.ydr", "v_62_studio_light01.ydr",
+  "v_62_studio_light02.ydr", "v_62_studio_lights.ydr", "v_62_table.ydr", "v_62_tunnel_damage01.ydr",
+  "v_62_tunnel_damage02.ydr", "v_62_tunnel_det01.ydr", "v_62_tunnel_det02.ydr", "v_62_tunnel_det03.ydr",
+  "v_62_tunnel_ovly01.ydr", "v_62_tunnel_ovly02.ydr", "v_62_tunnel_paint01+hidr.ytd", "v_62_tunnel_paint01.ydr",
+  "v_62_tunnel_paint02.ydr", "v_62_tv_ovl+hidr.ytd", "v_62_tv_ovl.ydr", "v_62_v_stadium_txd+hi.ytd",
+  "v_62_v_stadium_txd.ytd", "xs_arena_banners_ipl.ymap", "xs_arena_interior.ymap", "xs_arena_interior_mod.ymap",
+  "xs_arena_interior_mod_2.ymap", "xs_arena_interior_vip.ymap", "xs_arenalights_arenastruc.ydr",
+  "xs_arenalights_atlantis_spin.ydr", "xs_arenalights_track_atlantis.ydr", "xs_arenalights_track_dyst01.ydr",
+  "xs_arenalights_track_dyst02.ydr", "xs_arenalights_track_dyst03.ydr", "xs_arenalights_track_dyst04.ydr",
+  "xs_arenalights_track_dyst05.ydr", "xs_arenalights_track_dyst06.ydr", "xs_arenalights_track_dyst07.ydr",
+  "xs_arenalights_track_dyst08.ydr", "xs_arenalights_track_dyst09.ydr", "xs_arenalights_track_dyst10.ydr",
+  "xs_arenalights_track_dyst11.ydr", "xs_arenalights_track_dyst12.ydr", "xs_arenalights_track_dyst13.ydr",
+  "xs_arenalights_track_dyst14.ydr", "xs_arenalights_track_dyst15.ydr", "xs_arenalights_track_dyst16.ydr",
+  "xs_arenalights_track_evening.ydr", "xs_arenalights_track_hell.ydr", "xs_arenalights_track_midday.ydr",
+  "xs_arenalights_track_morning.ydr", "xs_arenalights_track_night.ydr", "xs_arenalights_track_saccharine.ydr",
+  "xs_arenalights_track_sandstorm.ydr", "xs_arenalights_track_sfnight.ydr", "xs_arenalights_track_storm.ydr",
+  "xs_arenalights_track_toxic.ydr", "xs_arenalights_track_txd.ytd", "xs_arenawars_clothb.yft",
+  "xs_arenawars_clothc.yft", "xs_arenawars_clothd.yft", "xs_arenawarsbanners.ydr",
+]);

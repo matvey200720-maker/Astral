@@ -1,0 +1,143 @@
+/* Matte shell contract: a quiet studio backdrop replaces decorative geometry.
+   Glass is reserved for navigation and controls so content remains legible. */
+.desktop-app,
+.astral-matte-surface {
+  /* Sampled from assets/workshop/minimap/dragon-card.png. This neutral,
+     diagonal lift is the visual source of truth for every matte surface. */
+  /* Редизайн 17.10.2026: фон — чистый чёрный. Прежний диагональный подъём
+     #040404 → #131313 (снят с dragon-card.png) владелец называл «серым» и
+     «дешёвым»: на нём панели и карточки сливались с полем. */
+  --dragon-matte-base: #000000;
+  --dragon-matte-stage:
+    radial-gradient(
+      ellipse 62% 56% at 50% 43%,
+      rgba(255, 255, 255, 0.055) 0%,
+      rgba(255, 255, 255, 0.018) 38%,
+      transparent 74%
+    ),
+    var(--dragon-matte-base);
+  --matte-shell-background: var(--dragon-matte-base);
+  background: var(--matte-shell-background) !important;
+}
+
+.desktop-app[data-ambient="matte"],
+.astral-matte-surface[data-ambient="matte"] {
+  background: var(--dragon-matte-base) !important;
+}
+
+/* User preference selectors in the historical theme are more specific than
+   the root. Keep their toggles, but make the former cubes scene matte. */
+.desktop-app[data-ambient="matte"],
+.astral-matte-surface[data-ambient="matte"] {
+  background: var(--matte-shell-background) !important;
+}
+
+.desktop-app > .desktop-titlebar,
+.desktop-app .desktop-sidebar.compact-sidebar,
+.desktop-app .desktop-main > header {
+  background: rgba(8, 8, 9, 0.76) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.025);
+}
+
+/* Keep the primary action visually dense instead of stretching through the
+   entire inspector. The size remains directly under the verb. */
+/* Ширину кнопке задаёт колонка, а колонка одна: «сердце» из карточки мода
+   убрано, и пятидесятишестипиксельный слот под него держал «Установить» в 286
+   точках посреди 378-пиксельной колонки. */
+.desktop-app .mod-action-buttons {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.desktop-app .mod-action-buttons .redux-product-install {
+  justify-content: center !important;
+  padding-inline: 16px !important;
+}
+
+/* Only the two tracks move. Individual cards never run their older assembly
+   animation, which prevents overlaps and mid-transition jumps. */
+.desktop-app .mod-detail-recommended-viewport {
+  isolation: isolate;
+  contain: layout paint;
+}
+
+.desktop-app .mod-detail-recommended-track {
+  transform: translate3d(0, 0, 0);
+}
+
+.desktop-app .mod-detail-recommended-track.is-current.is-next {
+  animation: matte-recommendation-enter-next 480ms
+    cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+.desktop-app .mod-detail-recommended-track.is-leaving.is-next {
+  animation: matte-recommendation-leave-next 480ms cubic-bezier(0.4, 0, 0.2, 1)
+    both !important;
+}
+
+.desktop-app .mod-detail-recommended-track.is-current.is-previous {
+  animation: matte-recommendation-enter-previous 480ms
+    cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+.desktop-app .mod-detail-recommended-track.is-leaving.is-previous {
+  animation: matte-recommendation-leave-previous 480ms
+    cubic-bezier(0.4, 0, 0.2, 1) both !important;
+}
+
+@keyframes matte-recommendation-enter-next {
+  from {
+    opacity: 0;
+    transform: translate3d(4%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes matte-recommendation-leave-next {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-4%, 0, 0);
+  }
+}
+
+@keyframes matte-recommendation-enter-previous {
+  from {
+    opacity: 0;
+    transform: translate3d(-4%, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes matte-recommendation-leave-previous {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+@media (max-width: 900px) {
+  .desktop-app .mod-action-buttons {
+    grid-template-columns: minmax(0, 1fr) 56px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app .mod-detail-recommended-track {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

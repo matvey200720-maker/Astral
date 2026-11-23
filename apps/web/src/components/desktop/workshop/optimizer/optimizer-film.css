@@ -1,0 +1,1349 @@
+/*
+  «Оптимизация», четыре раздела с кадром (дизайн 15.11.2026, макеты r6/opt2/opt2-a-*, вариант A «Сцена и плёнка»): сцена слева с подписью на
+  своей полосе, панель справа и полоса под ними — плёнка шагов у «Ухудшения текстур» и «Дальности прорисовки», кадры предпросмотра и чёткость
+  у «ЧБ-мира», карточки стилей у «Стиля мира». Лист ленивый: его берут экраны раздела (`import` в `OptimizerStage.jsx`, `OptimizerFilm.jsx`),
+  в стартовый кусок окна он не попадает. Числа — из `a.css`/`o2.css` макета, кегли и радиусы — ближайшие ступени шкалы токенов.
+  Кадры рисуются как есть: без фильтров, затемнения и текста поверх; движение — только transform и opacity, при «меньше движения» его нет.
+*/
+@layer overrides {
+  /* ---------- сцена: кадр и подпись на своей полосе ---------- */
+  .opf-stage {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-xl);
+    background: #050506;
+  }
+
+  .opf-stage-frame {
+    position: relative;
+    height: var(--opf-frame-h, 352px);
+    overflow: hidden;
+    background: #050506;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .opf-stage[data-kind="distance"] {
+    --opf-frame-h: 419px;
+  }
+
+  .opf-stage[data-kind="gray"],
+  .opf-stage[data-kind="style"] {
+    --opf-frame-h: 350px;
+  }
+
+  .opf-stage-frame > canvas,
+  .opf-stage-frame > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--opf-pos, 50% 50%);
+  }
+
+  /* «Ухудшение текстур» показывает часть кадра в натуральную величину: холст 1280×720 сдвинут к стене гаража, края обрезаны рамкой. */
+  .opf-stage[data-kind="textures"] .opf-stage-frame > canvas,
+  .opf-stage[data-kind="textures"] .opf-stage-frame > img {
+    position: absolute;
+    top: -90px;
+    left: -150px;
+    width: 1280px;
+    max-width: none;
+    height: 720px;
+    object-fit: fill;
+  }
+
+  .opf-stage-missing {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    background: #0d0d0f;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    text-align: center;
+  }
+
+  .opf-stage-missing b {
+    color: #e8e8ea;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-stage-missing code {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+  }
+
+  .opf-cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px 14px;
+    padding: 9px 14px 10px;
+    border-top: 1px solid var(--astral-line);
+    background: var(--astral-surface-strong);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.42;
+  }
+
+  .opf-cap-pill {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: var(--astral-radius-sm);
+    background: #fff;
+    color: #000;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .opf-cap-pill.is-soft {
+    border: 1px solid var(--astral-line-strong);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .opf-cap-title {
+    flex: 1;
+    min-width: 0;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .opf-cap-hint {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-raised);
+    color: #e6e6e8;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .opf-cap-hint svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+
+  .opf-cap-desc {
+    flex-basis: 100%;
+    margin-top: 1px;
+  }
+
+  .opf-cap-desc span {
+    color: var(--astral-ink-faint);
+  }
+
+  /* ---------- панель справа ---------- */
+  .opf-pane {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .opf-pane > h3 {
+    margin: 0;
+    font: var(--astral-type-display-weight) var(--astral-text-page) / 1.08
+      var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .opf-lead {
+    margin: 9px 0 0;
+    color: #cfcfd4;
+    font-size: var(--astral-text-body);
+    line-height: 1.4;
+  }
+
+  .opf-sel {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  .opf-sel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+  }
+
+  .opf-sel-big {
+    white-space: nowrap;
+    font: var(--astral-type-display-weight) var(--astral-text-section) / 1
+      var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .opf-sel-side {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .opf-sel-text {
+    margin: 7px 0 10px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.42;
+  }
+
+  .opf-stt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 0;
+    color: #e8e8ea;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .opf-stt[data-tone="off"] {
+    color: var(--astral-ink-faint);
+  }
+
+  .opf-stt[data-tone="error"] {
+    color: var(--workshop-opt-red, #ff8a7a);
+  }
+
+  .opf-stt > svg {
+    flex: none;
+    width: 15px;
+    height: 15px;
+  }
+
+  .opf-stt-mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+  }
+
+  .opf-stt-mark svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .opf-stt em {
+    color: var(--astral-ink-muted);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .opf-acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .opf-acts .opf-stt {
+    margin: 0 0 0 6px;
+  }
+
+  .opf-steps {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 1.05fr;
+    gap: 6px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .opf-steps li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 5px 10px 5px 7px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.02);
+    color: #e2e2e5;
+    font-size: var(--astral-text-small);
+    line-height: 1.2;
+  }
+
+  .opf-steps i {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-hover);
+    font-size: var(--astral-text-micro);
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  .opf-steps b {
+    display: block;
+    font-weight: 600;
+  }
+
+  .opf-steps em {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+    font-style: normal;
+  }
+
+  .opf-steps em svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  /* Идёт установка: полоса доли и шаги столбиком (вместо ряда из трёх этапов). */
+  .opf-run {
+    margin-top: 14px;
+  }
+
+  .opf-run-bar {
+    height: 4px;
+    margin: 2px 0 12px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .opf-run-bar i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    transform-origin: left center;
+    transition: transform var(--astral-duration) var(--astral-ease);
+  }
+
+  .opf-stages {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .opf-stages li {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+  }
+
+  .opf-stages li[data-state="waiting"] {
+    opacity: 0.5;
+  }
+
+  .opf-stages li > i {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-hover);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  .opf-stages li > i svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .opf-stages li[data-state="done"] > i {
+    border-color: #fff;
+    background: #fff;
+    color: #000;
+  }
+
+  .opf-stages li[data-state="active"] > i {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: transparent;
+  }
+
+  .opf-stages b {
+    display: block;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .opf-stages small {
+    display: block;
+    margin-top: 2px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .opf-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 8px;
+    padding: 1px 6px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-xs);
+    color: #cfcfd4;
+    font-size: var(--astral-text-micro);
+    font-style: normal;
+    font-weight: 600;
+    vertical-align: 1px;
+  }
+
+  .opf-lock svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .opf-note {
+    margin: 7px 0 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  /* Короткие заметки под выбором: прежняя ступень, ЧБ-мир, «не поместилось» — плашкой, как в листе заметок макета. */
+  .opf-pane .texture-downgrade-legacy {
+    margin: 10px 0 0;
+    padding: 9px 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.45;
+  }
+
+  .opf-warn {
+    margin-top: 12px;
+    padding: 9px 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.42;
+  }
+
+  .opf-warn b {
+    display: block;
+    margin-bottom: 3px;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .opf-facts {
+    display: grid;
+    gap: 7px;
+    margin: 12px 0 0;
+  }
+
+  .opf-facts > div {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.4;
+  }
+
+  .opf-facts dt {
+    flex: none;
+    min-width: 104px;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .opf-facts dd {
+    margin: 0;
+  }
+
+  .opf-facts dd.is-strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .opf-plaque {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: #0f0f10;
+  }
+
+  .opf-plaque p {
+    flex: 1 1 240px;
+    min-width: 0;
+    margin: 0;
+    color: #fff;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  /* Стена тремя кадрами («Дальность прорисовки»). */
+  .opf-walls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .opf-wall-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: #050506;
+    color: #cfcfd4;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .opf-wall-card:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+
+  .opf-wall-card:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+
+  .opf-wall-card[aria-checked="true"] {
+    border: 2px solid #fff;
+    color: #fff;
+  }
+
+  .opf-wall-pic {
+    display: block;
+    height: 62px;
+    overflow: hidden;
+    background: #050506;
+  }
+
+  .opf-wall-pic > img,
+  .opf-wall-pic > canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .opf-wall-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 9px 7px;
+    background: var(--astral-surface-strong);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-radio {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    border-radius: 999px;
+  }
+
+  [aria-checked="true"] > .opf-wall-label .opf-radio,
+  [aria-checked="true"] .opf-radio {
+    border: 4px solid #fff;
+    background: #000;
+  }
+
+  /* Линейка дальности: туман с fog_start, сплошной к дальности, дальше far_clip мир не рисуется. */
+  .opf-ruler {
+    margin-top: 9px;
+  }
+
+  .opf-ruler-bar {
+    display: flex;
+    height: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .opf-ruler-bar i {
+    display: block;
+    height: 100%;
+  }
+
+  /* Подписи под отметками: левая начинается у метки тумана, правая кончается у метки «сплошной»; места между ними делят, длинная фраза
+     переносится, а не налезает (отступы — в процентах ширины линейки, как и сами отметки на полосе). */
+  .opf-ruler-marks {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 5px;
+    padding-top: 3px;
+  }
+
+  .opf-ruler-tick {
+    position: absolute;
+    top: -5px;
+    width: 1px;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .opf-ruler-mark {
+    flex: none;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.25;
+  }
+
+  .opf-ruler-mark.is-end {
+    flex: 1 1 0;
+    min-width: 0;
+    text-align: right;
+  }
+
+  .opf-ruler-marks b {
+    display: block;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* Выключатель карточкой («ЧБ-мир»). */
+  .opf-switch {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+    cursor: pointer;
+  }
+
+  .opf-switch + .opf-switch {
+    margin-top: 8px;
+  }
+
+  .opf-switch[data-on="true"] {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--astral-surface-raised);
+  }
+
+  .opf-switch-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .opf-switch-text b {
+    display: block;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .opf-switch-sub {
+    margin-top: 3px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .opf-switch-sub .opf-stt {
+    margin: 3px 0 0;
+    font-size: var(--astral-text-small);
+  }
+
+  /* ---------- плёнка под сценой ---------- */
+  .opf-strip-host {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .opf-strip-host:empty {
+    display: none;
+  }
+
+  .opf-film2 {
+    padding: 11px 18px 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .opf-film2-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 9px;
+    color: #d6d6da;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-film2-hint {
+    margin-left: 10px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+  }
+
+  .opf-notes-chip {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-width: 236px;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.02);
+    color: #e8e8ea;
+    font: 600 var(--astral-text-body) / 1 var(--astral-font);
+    cursor: pointer;
+  }
+
+  .opf-notes-chip:hover {
+    background: var(--astral-surface-raised);
+  }
+
+  .opf-notes-chip:focus-visible,
+  .opf-tile:focus-visible,
+  .opf-rail:focus-visible,
+  .opf-wall-card:focus-visible,
+  .opf-scene-tile:focus-visible,
+  .opf-style-card:focus-visible,
+  .opf-detail-card:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .opf-notes-chip svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+
+  .opf-notes-chip em {
+    color: var(--astral-ink-faint);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .opf-notes-caret {
+    margin-left: auto;
+    color: var(--astral-ink-muted);
+  }
+
+  .opf-notes-chip[aria-expanded="true"] .opf-notes-caret {
+    transform: rotate(180deg);
+  }
+
+  .opf-notes-body {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .opf-notes-body ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .opf-notes-body li {
+    display: flex;
+    gap: 10px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.42;
+  }
+
+  .opf-notes-body li::before {
+    flex: none;
+    width: 5px;
+    height: 5px;
+    margin-top: 7px;
+    border-radius: 999px;
+    background: #8a8a90;
+    content: "";
+  }
+
+  .opf-notes-body li b {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .opf-notes-body dl {
+    display: grid;
+    gap: 10px 24px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    margin: 0;
+  }
+
+  .opf-notes-body dt {
+    color: #fff;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-notes-body dd {
+    margin: 2px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.42;
+  }
+
+  /* Кадры плёнки, ручка под ними, подписи шагов. */
+  .opf-tiles,
+  .opf-labels {
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    gap: var(--g);
+  }
+
+  .opf-tiles {
+    margin-bottom: 8px;
+  }
+
+  .opf-tile {
+    position: relative;
+    display: block;
+    height: calc(var(--tile-h, 120px) + 2px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: #050506;
+    color: #fff;
+    cursor: pointer;
+    transition: transform var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .opf-tile:hover {
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-3px);
+  }
+
+  .opf-tile[aria-pressed="true"] {
+    border: 2px solid #fff;
+  }
+
+  .opf-tile > canvas,
+  .opf-tile > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--opf-pos, 50% 50%);
+  }
+
+  .opf-tile-mark {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    color: #000;
+  }
+
+  .opf-tile-mark svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .opf-rail {
+    position: relative;
+    height: 28px;
+    margin-bottom: 0;
+    container-type: inline-size;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    --opf-cw: calc((100cqw - (var(--n) - 1) * var(--g)) / var(--n));
+    --opf-step: calc(var(--opf-cw) + var(--g));
+  }
+
+  .opf-rail-track {
+    position: absolute;
+    top: 12px;
+    left: calc(var(--opf-cw) / 2);
+    width: calc((var(--n) - 1) * var(--opf-step));
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .opf-rail-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    transform: translateX(calc(-100% + var(--k) * var(--opf-step)));
+  }
+
+  .opf-rail-tick {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #555;
+    transform: translateX(
+      calc(var(--opf-cw) / 2 - 4px + var(--i) * var(--opf-step))
+    );
+  }
+
+  .opf-rail-tick[data-on="true"] {
+    background: #fff;
+  }
+
+  .opf-rail-knob {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    border: 3px solid #0a0a0b;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.5),
+      0 4px 14px rgba(0, 0, 0, 0.5);
+    transform: translateX(
+      calc(var(--opf-cw) / 2 - 11px + var(--k) * var(--opf-step))
+    );
+    transition: transform var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .opf-rail[data-drag="true"] .opf-rail-knob,
+  .opf-rail[data-drag="true"] .opf-rail-fill {
+    transition: none;
+  }
+
+  .opf-rail-fill {
+    transition: transform var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .opf-labels > div {
+    min-width: 0;
+    color: #c9c9ce;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .opf-labels b {
+    display: block;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-labels small {
+    display: block;
+    margin-top: 1px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .opf-labels [data-on="true"] b {
+    color: #fff;
+  }
+
+  /* ---------- «ЧБ-мир»: кадры предпросмотра и чёткость ---------- */
+  .opf-gray-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .opf-scenes {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .opf-scene-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--astral-ink-muted);
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .opf-scene-pic {
+    display: block;
+    height: 110px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: #050506;
+  }
+
+  .opf-scene-tile:hover .opf-scene-pic {
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+
+  .opf-scene-tile[aria-pressed="true"] .opf-scene-pic {
+    border: 2px solid #fff;
+  }
+
+  .opf-scene-pic > canvas,
+  .opf-scene-pic > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--opf-pos, 50% 50%);
+  }
+
+  .opf-scene-name {
+    display: block;
+    margin-top: 5px;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .opf-scene-tile[aria-pressed="true"] .opf-scene-name {
+    color: #fff;
+  }
+
+  .opf-detail-title {
+    margin: 0 0 8px;
+    color: #d6d6da;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-detail-title span {
+    margin-left: 8px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+  }
+
+  .opf-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .opf-detail-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+    color: var(--astral-ink-muted);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .opf-detail-card:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .opf-detail-card[aria-checked="true"] {
+    padding: 9px 11px;
+    border: 2px solid #fff;
+  }
+
+  .opf-detail-card:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .opf-detail-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-detail-tag {
+    margin-left: auto;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+  }
+
+  .opf-detail-card[aria-checked="true"] .opf-detail-tag {
+    color: #e8e8ea;
+  }
+
+  .opf-detail-card p {
+    margin: 6px 0 0;
+    font-size: var(--astral-text-small);
+    line-height: 1.42;
+  }
+
+  .opf-detail-note {
+    margin: 8px 0 0;
+    padding: 8px 11px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.42;
+  }
+
+  /* ---------- «Стиль мира»: шесть карточек стилей ---------- */
+  .opf-styles {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .opf-style-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: #050506;
+    color: #cfcfd4;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .opf-style-card:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.7);
+  }
+
+  .opf-style-card:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .opf-style-card[aria-checked="true"] {
+    border: 2px solid #fff;
+    color: #fff;
+  }
+
+  .opf-style-pic {
+    display: block;
+    height: 84px;
+    overflow: hidden;
+    background: #050506;
+  }
+
+  .opf-style-pic > img,
+  .opf-style-pic > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .opf-style-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 9px;
+    background: var(--astral-surface-strong);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-style-text {
+    display: block;
+    flex: 1;
+    margin: 0;
+    padding: 0 9px 8px;
+    background: var(--astral-surface-strong);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 400;
+    line-height: 1.38;
+  }
+
+  .opf-pending {
+    margin-top: 12px;
+  }
+
+  .opf-custom {
+    margin-top: 12px;
+  }
+
+  /* Выбор кадра, на котором смотрят стиль (в макете его нет): строка маленьких кнопок под карточками стилей. */
+  .opf-scene-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .opf-scene-row > span {
+    margin-right: 4px;
+  }
+
+  .opf-chip {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-raised);
+    color: #e6e6e8;
+    font: 600 var(--astral-text-small) / 1 var(--astral-font);
+    cursor: pointer;
+  }
+
+  .opf-chip:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .opf-chip[aria-pressed="true"] {
+    border-color: #fff;
+    background: #fff;
+    color: #000;
+  }
+
+  .opf-chip:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .opf-spin {
+    animation: opf-spin 1s linear 60;
+  }
+
+  @keyframes opf-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Панель уже 470 px (узкое окно): три этапа установки — столбиком, а не в ряд. */
+  @container opf-panel (max-width: 470px) {
+    .opf-steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 1300px) {
+    .opf-styles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .opf-gray-strip {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .opf-scenes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .opf-steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .opf-tile,
+    .opf-rail-knob,
+    .opf-rail-fill,
+    .opf-run-bar i {
+      transition: none;
+    }
+
+    .opf-tile:hover {
+      transform: none;
+    }
+
+    .opf-spin {
+      animation: none;
+    }
+  }
+}

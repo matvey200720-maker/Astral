@@ -1,0 +1,1938 @@
+/*
+ * Профиль в приложении — макет 15.11.2026 (`r6/profile-app/pa.css`): шапка с обложкой, рангом, значками
+ * и контактами, вкладки, боковые карточки «Доступ» и «Это устройство», панель «Настройки профиля»,
+ * медали значков. Без цвета: белое, серебро, графит; кнопки с радиусом приложения.
+ *
+ * Лист ленивый: его берёт `ProfilePage.jsx` по `import()`, в `main.css` он не попадает
+ * (`verify-web-architecture.js`, `lazyStyleSheets`). Все классы с приставкой `pf-`, чтобы не
+ * пересекаться со старыми листами окна.
+ *
+ * Кегли, радиусы и отклики — из шкалы `packages/astral-design/tokens.css`. Чего в шкале нет, а макет
+ * просит, заведено локальным свойством `--pf-*` внизу: имя, цифры сводки и инициалы аватара.
+ * Размытия стекла (`backdrop-filter`) из макета не взяты — на слабых видеокартах прокрутка шапки
+ * с ним дёргается; стекло передано тёмной подложкой чуть плотнее.
+ */
+@layer overrides {
+  /* Страница на всю ширину области справа от рейки: шапка идёт до краёв, поля у содержимого свои. */
+  .desktop-app .desktop-content[data-page="profile"] {
+    max-inline-size: none;
+    min-block-size: 0;
+    margin-block: 0;
+    margin-inline: 0;
+    padding-block: 0;
+    padding-inline: 0;
+  }
+
+  /* Панель «Настройки профиля» стоит в слое окна вне страницы, поэтому свойства раздаются и ей. */
+  .pf,
+  .pf-drawer.ui-dialog {
+    --pf-name: 46px;
+    --pf-big: 44px;
+    --pf-initials: 42px;
+    --pf-line: var(--astral-line);
+    --pf-line-2: var(--astral-line-strong);
+    --pf-glass: rgba(10, 10, 12, 0.72);
+    --pf-pad: 34px;
+  }
+
+  .pf {
+    position: relative;
+    isolation: isolate;
+    min-inline-size: 0;
+    color: var(--astral-ink);
+    background: #000;
+    font-family: var(--astral-font);
+  }
+
+  :is(.pf, .pf-drawer) *,
+  :is(.pf, .pf-drawer) *::before,
+  :is(.pf, .pf-drawer) *::after {
+    box-sizing: border-box;
+  }
+
+  :is(.pf, .pf-drawer) :where(h1, h2, h3, h4, p) {
+    margin: 0;
+  }
+
+  :is(.pf, .pf-drawer) :where(button) {
+    font-family: inherit;
+  }
+
+  :is(.pf, .pf-drawer) svg.i {
+    display: block;
+    flex: none;
+  }
+
+  .pf-eyebrow {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .pf-note {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 18px;
+  }
+
+  .pf-count {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  /* ---- кнопки: общий орган `Button`, размеры и заливка по макету ---- */
+  :is(.pf, .pf-drawer) .ui-button.pf-btn {
+    flex: none;
+    gap: 9px;
+    min-block-size: 40px;
+    padding-inline: 16px;
+    border-radius: var(--astral-radius);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-btn.is-sm {
+    min-block-size: 34px;
+    padding-inline: 13px;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-btn.is-secondary {
+    border-color: var(--pf-line);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-btn.is-secondary:hover:not(:disabled) {
+    border-color: var(--pf-line-2);
+    background: rgba(255, 255, 255, 0.11);
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-btn-confirm {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-btn.is-link {
+    min-block-size: 28px;
+    margin-inline: 0;
+    padding-inline: 0;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .pf-tab:focus-visible,
+  .pf-chip:focus-visible,
+  .pf-tile:focus-visible,
+  .pf-ib:focus-visible,
+  .pf-strip-x:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.75);
+    outline-offset: 2px;
+  }
+
+  /* ---- шапка ---- */
+  .pf-hero {
+    position: relative;
+    block-size: 312px;
+    overflow: hidden;
+    border-block-end: 1px solid var(--pf-line);
+    background: radial-gradient(120% 90% at 20% 0%, #1a1a1d, #050506 70%);
+  }
+
+  .pf-cover {
+    position: absolute;
+    inset: 0;
+  }
+
+  .pf-cover img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: 50% 38%;
+  }
+
+  .pf-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.88) 0%,
+        rgba(0, 0, 0, 0.66) 46%,
+        rgba(0, 0, 0, 0.28) 100%
+      ),
+      linear-gradient(0deg, rgba(0, 0, 0, 0.94) 0%, transparent 58%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 40%);
+  }
+
+  .pf-edit {
+    position: absolute;
+    inset-block-start: 20px;
+    inset-inline-end: var(--pf-pad);
+    z-index: 2;
+  }
+
+  .pf-id {
+    position: absolute;
+    inset-block-end: 86px;
+    inset-inline-start: var(--pf-pad);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    max-inline-size: calc(100% - 2 * var(--pf-pad) - 400px);
+    min-inline-size: 0;
+  }
+
+  .pf-av {
+    flex: none;
+    inline-size: 126px;
+    block-size: 126px;
+    padding: 4px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 210deg,
+      #fff,
+      #7d7d85 22%,
+      #f1f1f3 46%,
+      #56565d 68%,
+      #e8e8ea 88%,
+      #fff
+    );
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+  }
+
+  .pf-av-in {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 5px solid #000;
+    border-radius: 50%;
+    color: #fff;
+    background: radial-gradient(
+      120% 120% at 30% 18%,
+      #303035,
+      #0e0e10 62%,
+      #000
+    );
+    font-family: var(--astral-font-display);
+    font-size: var(--pf-initials);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    user-select: none;
+  }
+
+  .pf-av-in img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .pf-who {
+    min-inline-size: 0;
+  }
+
+  .pf-kick {
+    margin-block-end: 2px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .pf-name {
+    overflow: hidden;
+    font-family: var(--astral-font-display);
+    font-size: var(--pf-name);
+    font-weight: 400;
+    line-height: 52px;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pf-rank {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    block-size: 58px;
+    margin-block-start: 10px;
+    padding: 0 18px 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--astral-radius-lg);
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  .pf-rank-emblem {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 38px;
+    block-size: 42px;
+  }
+
+  .pf-rank-emblem svg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .pf-rank-emblem span {
+    position: relative;
+    color: #fff;
+    /* Греческих букв (α, β) в «Russo One» нет: запасной шрифт — Inter, а не Impact. */
+    font-family: "Russo One", Inter, sans-serif;
+    font-size: var(--astral-text-section);
+    line-height: 1;
+  }
+
+  .pf-rank small {
+    display: block;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 12px;
+    text-transform: uppercase;
+  }
+
+  .pf-rank b {
+    display: block;
+    margin-block-start: 1px;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+    line-height: 19px;
+  }
+
+  .pf-rank em {
+    display: block;
+    margin-block-start: 1px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    line-height: 15px;
+  }
+
+  /* контакты: чипы внизу шапки */
+  .pf-chips {
+    position: absolute;
+    inset-block-end: 26px;
+    inset-inline: var(--pf-pad);
+    z-index: 1;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-inline-size: 0;
+    overflow: hidden;
+  }
+
+  .pf-chip {
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 8px;
+    min-inline-size: 0;
+    max-inline-size: 220px;
+    block-size: 34px;
+    padding: 0 12px 0 11px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--astral-radius-sm);
+    color: #f1f1f3;
+    background: rgba(0, 0, 0, 0.66);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button.pf-chip {
+    cursor: pointer;
+  }
+
+  .pf-chip-go {
+    opacity: 0.5;
+    margin-inline-start: 1px;
+  }
+
+  .pf-chip-add {
+    flex: none;
+    border-style: dashed;
+    color: #d4d4d8;
+    background: rgba(0, 0, 0, 0.5);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .pf-chip-add:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* витрина значков в шапке */
+  .pf-show {
+    position: absolute;
+    inset-block-end: 80px;
+    inset-inline-end: var(--pf-pad);
+    z-index: 1;
+    inline-size: 378px;
+    padding: 12px 15px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--astral-radius-lg);
+    background: var(--pf-glass);
+  }
+
+  .pf-show-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-block-end: 9px;
+  }
+
+  .pf-show-head b {
+    font-size: var(--astral-text-body);
+    font-weight: 700;
+  }
+
+  .pf-show-head b span {
+    margin-inline-start: 6px;
+    color: var(--astral-ink-muted);
+    font-weight: 500;
+  }
+
+  .pf-show-head .pf-show-all {
+    color: #d4d4d8;
+  }
+
+  .pf-show-head .pf-show-all:hover {
+    color: #fff;
+  }
+
+  .pf-show-row {
+    display: flex;
+    gap: 11px;
+  }
+
+  .pf-show-medal {
+    position: relative;
+  }
+
+  .pf-new {
+    display: flex;
+    align-items: center;
+    block-size: 17px;
+    padding: 0 6px;
+    border-radius: var(--astral-radius-xs);
+    color: #000;
+    background: #fff;
+    font-size: var(--astral-text-micro);
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .pf-show-medal .pf-new {
+    position: absolute;
+    inset-block-start: -4px;
+    inset-inline-end: -3px;
+    z-index: 9;
+    box-shadow: 0 0 0 2px #0b0b0c;
+  }
+
+  .pf-show-next {
+    margin-block-start: 10px;
+    padding-block-start: 9px;
+    border-block-start: 1px solid var(--pf-line);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-show-next > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .pf-show-next b {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .pf-bar {
+    block-size: 4px;
+    margin-block-start: 8px;
+    overflow: hidden;
+    border-radius: var(--astral-radius-xs);
+    background: var(--astral-surface-hover);
+  }
+
+  .pf-bar i {
+    display: block;
+    block-size: 100%;
+    border-radius: var(--astral-radius-xs);
+    background: #fff;
+  }
+
+  /* ---- полоса «Привяжи Discord» ---- */
+  .pf-strip {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 20px var(--pf-pad) 0;
+    padding: 14px 16px 14px 14px;
+    border: 1px solid var(--pf-line-2);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface-raised);
+  }
+
+  .pf-strip-di {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 48px;
+    block-size: 48px;
+    border-radius: var(--astral-radius-lg);
+    color: #000;
+    background: #fff;
+  }
+
+  .pf-strip-tx {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .pf-strip-tx b {
+    display: block;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+  }
+
+  .pf-strip-tx p {
+    margin-block-start: 2px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 18px;
+  }
+
+  .pf-strip-lk {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-inline-end: 6px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-strip-lk b {
+    color: #e6e6e8;
+    font-size: var(--astral-text-body);
+  }
+
+  .pf-strip-lk small {
+    display: block;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-strip-x {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 36px;
+    block-size: 36px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink-muted);
+    background: none;
+    cursor: pointer;
+  }
+
+  .pf-strip-x:hover {
+    color: #fff;
+    background: var(--astral-surface-hover);
+  }
+
+  /* ---- вкладки ---- */
+  .pf-tabs {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    block-size: 56px;
+    padding: 0 var(--pf-pad);
+    border-block-end: 1px solid var(--pf-line);
+    background: #000;
+  }
+
+  .pf-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    block-size: 56px;
+    padding: 0;
+    border: 0;
+    color: var(--astral-ink-muted);
+    background: none;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--astral-duration-fast) ease;
+  }
+
+  .pf-tab:hover {
+    color: #fff;
+  }
+
+  .pf-tab em {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .pf-tab.is-on {
+    color: #fff;
+  }
+
+  .pf-tab.is-on em {
+    color: #d4d4d8;
+  }
+
+  .pf-tab.is-on::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px;
+    block-size: 2px;
+    background: #fff;
+  }
+
+  .pf-tablist {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .pf-tabs-rt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-inline-start: auto;
+  }
+
+  /* ---- содержимое ---- */
+  .pf-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 316px;
+    gap: 28px;
+    padding: 22px var(--pf-pad) 56px;
+  }
+
+  .pf-main {
+    min-inline-size: 0;
+  }
+
+  .pf-sync {
+    margin-block-end: 18px;
+  }
+
+  .pf-sec {
+    margin-block-start: 24px;
+  }
+
+  .pf-sync + .pf-sec {
+    margin-block-start: 0;
+  }
+
+  .pf-sec-h {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-block-end: 12px;
+  }
+
+  .pf-sec-h h2,
+  .pf-bgh h2 {
+    font-size: var(--astral-text-section);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .pf-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .pf-tile {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 10;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius);
+    color: inherit;
+    background: #101012;
+    text-align: start;
+  }
+
+  button.pf-tile {
+    cursor: pointer;
+    transition: border-color var(--astral-duration-fast) ease;
+  }
+
+  button.pf-tile:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .pf-tile-bg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .pf-tile-cl .pf-tile-bg {
+    object-position: 50% 30%;
+    transform: scale(1.12);
+    transform-origin: 50% 35%;
+  }
+
+  .pf-tile-blank,
+  .pf-mos-blank {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, 0.28);
+  }
+
+  .pf-tile::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.12) 56%,
+      rgba(0, 0, 0, 0.18) 100%
+    );
+  }
+
+  .pf-tile-t {
+    position: absolute;
+    inset-inline: 10px;
+    inset-block-end: 8px;
+    z-index: 2;
+    display: block;
+  }
+
+  .pf-tile-t h4 {
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pf-tile-t p {
+    margin-block-start: 2px;
+    overflow: hidden;
+    color: #cfcfd4;
+    font-size: var(--astral-text-micro);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pf-empty {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+    padding: 28px 24px;
+    border: 1px dashed var(--pf-line-2);
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .pf-empty b {
+    font-size: var(--astral-text-strong);
+  }
+
+  .pf-empty p {
+    margin-block-end: 10px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* ---- боковые карточки ---- */
+  .pf-side {
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+    gap: 14px;
+    min-inline-size: 0;
+  }
+
+  .pf-card {
+    padding: 16px 16px 14px;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .pf-card-h {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-block-end: 6px;
+  }
+
+  .pf-arow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-block-start: 1px solid var(--pf-line);
+  }
+
+  .pf-arow:first-of-type {
+    border-block-start: 0;
+  }
+
+  .pf-arow-i {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 32px;
+    block-size: 32px;
+    border: 1px solid var(--pf-line-2);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-raised);
+  }
+
+  .pf-arow.is-off .pf-arow-i {
+    border-style: dashed;
+    color: var(--astral-ink-faint);
+    background: transparent;
+  }
+
+  .pf-arow b {
+    display: block;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+  }
+
+  .pf-arow small {
+    display: block;
+    margin-block-start: 1px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-arow.is-off b,
+  .pf-arow.is-off small {
+    color: var(--astral-ink-faint);
+  }
+
+  .pf-arow code {
+    margin-inline-start: auto;
+    padding: 5px 8px;
+    border-radius: var(--astral-radius-sm);
+    color: #e6e6e8;
+    background: var(--astral-surface-hover);
+    font:
+      600 var(--astral-text-small) / 1.2 "JetBrains Mono",
+      Consolas,
+      "Cascadia Mono",
+      monospace;
+    white-space: nowrap;
+  }
+
+  .pf-arow.is-off code {
+    color: var(--astral-ink-faint);
+    background: transparent;
+    font-family: var(--astral-font);
+    font-weight: 500;
+  }
+
+  .pf-pdev {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0 12px;
+  }
+
+  .pf-pdev > svg {
+    color: #c9c9ce;
+  }
+
+  .pf-pdev > div {
+    min-inline-size: 0;
+  }
+
+  .pf-pdev b {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .pf-pdev small {
+    display: block;
+    margin-block-start: 1px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-pdev-on {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-inline-start: auto;
+    color: #d4d4d8;
+    font-size: var(--astral-text-small);
+    white-space: nowrap;
+  }
+
+  .pf-dot {
+    display: inline-block;
+    flex: none;
+    inline-size: 7px;
+    block-size: 7px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
+  }
+
+  .pf-cnts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .pf-cnts > div {
+    padding: 9px 4px 8px;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    text-align: center;
+  }
+
+  .pf-cnts b {
+    display: block;
+    font-family: var(--astral-font-display);
+    font-size: var(--astral-text-section);
+    font-weight: 400;
+  }
+
+  .pf-cnts small {
+    display: block;
+    margin-block-start: 2px;
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+    text-overflow: ellipsis;
+  }
+
+  .pf-size {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-block-start: 12px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  .pf-size b {
+    color: #fff;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+  }
+
+  /* ---- скелет боковых карточек: место цифр, пока они едут (владелец 18.11.2026) ---- */
+  .pf-skel-code {
+    margin-inline-start: auto;
+    inline-size: 58px;
+    block-size: 24px;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .pf-skel-line {
+    display: block;
+    inline-size: 74px;
+    block-size: 12px;
+    margin-block-start: 3px;
+  }
+
+  .pf-skel-num {
+    display: block;
+    inline-size: 1.3em;
+    block-size: 1.15em;
+    margin-inline: auto;
+  }
+
+  .pf-skel-size {
+    inline-size: 62px;
+    block-size: 18px;
+  }
+
+  /* ---- вкладка «Значки» ---- */
+  .pf-bsum {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 18px 22px;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .pf-bsum-big {
+    font-family: var(--astral-font-display);
+    font-size: var(--pf-big);
+    line-height: var(--pf-big);
+  }
+
+  .pf-bsum-big small {
+    margin-inline-start: 8px;
+    color: var(--astral-ink-muted);
+    font-family: var(--astral-font);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .pf-bsum-pr {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .pf-bar-lg {
+    block-size: 6px;
+    margin-block-start: 0;
+  }
+
+  .pf-bsum-lg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-block-start: 11px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-bsum-lg span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .pf-bsum-lg i {
+    display: inline-block;
+    inline-size: 9px;
+    block-size: 9px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .pf-bsum-lg i.p {
+    background: conic-gradient(#fff 0 62%, rgba(255, 255, 255, 0.28) 0);
+  }
+
+  .pf-bsum-lg i.c {
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    background: transparent;
+  }
+
+  .pf-soon {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-block-start: 12px;
+  }
+
+  .pf-soon .pf-eyebrow {
+    grid-column: 1 / -1;
+    margin-block-start: 8px;
+  }
+
+  .pf-soon-n {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-inline-size: 0;
+    padding: 10px 14px 10px 10px;
+    border: 1px dashed var(--pf-line-2);
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .pf-soon-n b {
+    display: block;
+    font-size: var(--astral-text-body);
+    font-weight: 700;
+  }
+
+  .pf-soon-n small {
+    display: block;
+    margin-block-start: 1px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-bgh {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 26px 0 12px;
+  }
+
+  .pf-bgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+  }
+
+  .pf-bc {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-block-size: 112px;
+    padding: 14px 14px 14px 12px;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .pf-bc.is-got {
+    border-color: var(--pf-line-2);
+    background: var(--astral-surface-raised);
+  }
+
+  .pf-bc.is-lock .pf-bc-nm,
+  .pf-bc.is-soon .pf-bc-nm {
+    color: #c9c9ce;
+  }
+
+  .pf-bc.is-lock .pf-bc-hw,
+  .pf-bc.is-soon .pf-bc-hw {
+    color: var(--astral-ink-faint);
+  }
+
+  .pf-bc-tx {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .pf-bc-nm {
+    display: block;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+    line-height: 19px;
+  }
+
+  .pf-bc-hw {
+    display: block;
+    margin-block-start: 3px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 17px;
+  }
+
+  .pf-bc-stt {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-block-start: 9px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    white-space: nowrap;
+  }
+
+  .pf-bc-stt b {
+    color: #e6e6e8;
+    font-weight: 600;
+  }
+
+  .pf-bc .pf-bar {
+    block-size: 4px;
+    margin-block-start: 7px;
+  }
+
+  .pf-bc-new {
+    position: absolute;
+    inset-block-start: 10px;
+    inset-inline-end: 10px;
+    block-size: 18px;
+  }
+
+  /* ---- вкладка «Сборки» ---- */
+  .pf-bld {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .pf-bl {
+    min-inline-size: 0;
+  }
+
+  .pf-mos {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 5px;
+    aspect-ratio: 16 / 10;
+    padding: 6px;
+    border: 1px solid var(--pf-line-2);
+    border-radius: var(--astral-radius-lg);
+    background: #0b0b0c;
+  }
+
+  .pf-mos > div {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--astral-radius);
+    background: #101012;
+  }
+
+  .pf-mos > div:first-child {
+    grid-row: 1 / 3;
+  }
+
+  .pf-mos-1 {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  .pf-mos-2 {
+    grid-template-rows: 1fr;
+  }
+
+  .pf-mos-2 > div:first-child,
+  .pf-mos-1 > div:first-child {
+    grid-row: auto;
+  }
+
+  .pf-mos img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .pf-mos-more {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.55);
+    font-size: var(--astral-text-section);
+    font-weight: 700;
+  }
+
+  .pf-bl h3 {
+    margin-block-start: 12px;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+  }
+
+  .pf-bl-ms {
+    margin-block-start: 3px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .pf-bl-nm {
+    margin-block-start: 6px;
+    overflow: hidden;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pf-bl-acts {
+    display: flex;
+    gap: 8px;
+    margin-block-start: 12px;
+  }
+
+  .pf-hint {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-block-start: 22px;
+    padding: 14px 18px 14px 14px;
+    border: 1px dashed var(--pf-line-2);
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .pf-hint-i {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 52px;
+    block-size: 52px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.5);
+    background: #111;
+  }
+
+  .pf-hint b {
+    display: block;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+  }
+
+  .pf-hint small {
+    display: block;
+    margin-block-start: 2px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* ---- панель «Настройки профиля» ---- */
+  .desktop-app > .desktop-overlay-host > .pf-drawer-backdrop {
+    inset: 40px 0 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.62);
+  }
+
+  .pf-drawer.ui-dialog {
+    inline-size: 560px;
+    max-inline-size: 100%;
+    block-size: 100%;
+    max-block-size: none;
+    border-width: 0 0 0 1px;
+    border-style: solid;
+    border-color: var(--astral-line-strong);
+    border-radius: 0;
+    background: var(--astral-surface-strong);
+    box-shadow: -28px 0 64px rgba(0, 0, 0, 0.7);
+    animation: pf-drawer-in var(--astral-duration-slow) ease both;
+  }
+
+  @keyframes pf-drawer-in {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .pf-drawer .pf-drawer-body.ui-dialog-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-block-size: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .pf-dh {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    block-size: 64px;
+    padding: 0 20px 0 26px;
+    border-block-end: 1px solid var(--pf-line);
+  }
+
+  .pf-dh h2 {
+    font-size: var(--astral-text-section);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .pf-ib {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: 36px;
+    block-size: 36px;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius-sm);
+    color: #e6e6e8;
+    background: rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+  }
+
+  .pf-ib:hover {
+    border-color: var(--pf-line-2);
+    background: rgba(255, 255, 255, 0.11);
+  }
+
+  .pf-db {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 20px;
+    min-block-size: 0;
+    padding: 20px 26px 0;
+    overflow-y: auto;
+  }
+
+  /* Нижняя полоса панели: «Отмена» и «Сохранить» справа, под линией (макет `profile-app-edit`). */
+  .pf-df {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 26px;
+    border-block-start: 1px solid var(--pf-line);
+  }
+
+  .pf-lb {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-block-end: 8px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .pf-lb span {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+  }
+
+  .pf-fld {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    min-inline-size: 0;
+    block-size: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--pf-line-2);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    font-size: var(--astral-text-strong);
+  }
+
+  .pf-fld > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pf-fld.is-locked {
+    border-style: dashed;
+    color: #c9c9ce;
+    background: transparent;
+  }
+
+  .pf-fld-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: auto;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    white-space: nowrap;
+  }
+
+  .pf-avrow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .pf-av2 {
+    flex: none;
+    inline-size: 68px;
+    block-size: 68px;
+    padding: 3px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 210deg,
+      #fff,
+      #7d7d85 22%,
+      #f1f1f3 46%,
+      #56565d 68%,
+      #e8e8ea 88%,
+      #fff
+    );
+  }
+
+  .pf-av2 .pf-av-in {
+    border-width: 3px;
+    font-size: var(--astral-text-page);
+  }
+
+  .pf-nf {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .pf-bt {
+    display: flex;
+    gap: 8px;
+    margin-block-start: 9px;
+  }
+
+  .pf-covs {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pf-cvt {
+    position: relative;
+    flex: 1;
+    min-inline-size: 0;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border: 1px solid var(--pf-line);
+    border-radius: var(--astral-radius-sm);
+    background: #101012;
+    opacity: 0.72;
+  }
+
+  .pf-cvt.is-on {
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #000;
+    opacity: 1;
+  }
+
+  .pf-cvt img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .pf-ck {
+    position: absolute;
+    inset-block-start: 5px;
+    inset-inline-end: 5px;
+    display: grid;
+    place-items: center;
+    inline-size: 18px;
+    block-size: 18px;
+    border-radius: 50%;
+    color: #000;
+    background: #fff;
+  }
+
+  .pf-cvt > span {
+    position: absolute;
+    inset-inline: 6px;
+    inset-block-end: 4px;
+    overflow: hidden;
+    color: #fff;
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 4px #000;
+    white-space: nowrap;
+  }
+
+  .pf-hintline {
+    margin-block-start: 8px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 17px;
+  }
+
+  .pf-crow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pf-crow + .pf-crow {
+    margin-block-start: 8px;
+  }
+
+  .pf-ci {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 44px;
+    block-size: 44px;
+    border: 1px solid var(--pf-line-2);
+    border-radius: var(--astral-radius);
+    color: #e6e6e8;
+    background: var(--astral-surface-raised);
+  }
+
+  .pf-addc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    block-size: 44px;
+    margin-block-start: 8px;
+    border: 1px dashed var(--pf-line-2);
+    border-radius: var(--astral-radius);
+    color: #d4d4d8;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .pf-addc.is-off {
+    color: var(--astral-ink-faint);
+  }
+
+  .pf-addc > span {
+    font-weight: 500;
+  }
+
+  .pf-quiet {
+    margin-block-start: auto;
+    padding: 12px 0 14px;
+    border-block-start: 1px solid var(--pf-line);
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-so {
+    color: var(--astral-ink-muted);
+    font-weight: 500;
+  }
+
+  :is(.pf, .pf-drawer) .ui-button.pf-so:hover {
+    color: #fff;
+  }
+
+  .pf-cf {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .pf-cf p {
+    flex: 1;
+    color: #d4d4d8;
+    font-size: var(--astral-text-body);
+    line-height: 18px;
+  }
+
+  .pf-cf p b {
+    display: block;
+    margin-block-end: 2px;
+    color: #fff;
+  }
+
+  .pf-cf .pf-bt {
+    flex: none;
+    margin-block-start: 0;
+  }
+
+  .pf-err {
+    display: block;
+    margin-block-start: 8px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+  }
+
+  /* ---- медали значков (макет: `r7/shared/badge-art.css`) ---- */
+  .ba {
+    --ba: 64px;
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--ba);
+    block-size: var(--ba);
+    border-radius: 50%;
+    color: #f6f6f7;
+    vertical-align: middle;
+    isolation: isolate;
+    transition: transform var(--astral-duration-slow)
+      cubic-bezier(0.22, 0.72, 0.24, 1);
+  }
+
+  .ba i,
+  .ba svg,
+  .ba b {
+    pointer-events: none;
+  }
+
+  .ba-ring {
+    position: absolute;
+    inset: 6.25%;
+    z-index: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 215deg,
+      #fff,
+      #8a8a92 16%,
+      #f1f1f3 34%,
+      #62626a 52%,
+      #e8e8ea 70%,
+      #7d7d85 86%,
+      #fff
+    );
+  }
+
+  .ba-in {
+    position: absolute;
+    inset: 11.5%;
+    z-index: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+      120% 120% at 30% 18%,
+      #3a3a40 0%,
+      #18181b 52%,
+      #0a0a0c 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .ba-g {
+    position: relative;
+    z-index: 2;
+    inline-size: 44%;
+    block-size: 44%;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ba-g .f {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .ba-pr {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+    fill: none;
+    transform: rotate(-90deg);
+  }
+
+  .ba-pr circle {
+    stroke-width: 2.4;
+  }
+
+  .ba-pr .t {
+    stroke: rgba(255, 255, 255, 0.14);
+  }
+
+  .ba-pr .a {
+    stroke: #fff;
+    stroke-linecap: round;
+  }
+
+  .ba-sh {
+    position: absolute;
+    inset: 6.25%;
+    z-index: 4;
+    overflow: hidden;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .ba-sh::before {
+    content: "";
+    position: absolute;
+    inset-block: -10%;
+    inset-inline-start: 0;
+    inline-size: 45%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.5),
+      transparent
+    );
+    opacity: 0;
+    transform: translateX(-160%) skewX(-18deg);
+  }
+
+  .ba-n {
+    position: absolute;
+    inset-block-end: -2%;
+    inset-inline-end: -2%;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    inline-size: max(16px, 31%);
+    block-size: max(16px, 31%);
+    border-radius: 50%;
+    color: #fff;
+    background: radial-gradient(120% 120% at 30% 20%, #2a2a2f, #0a0a0c);
+    box-shadow:
+      0 0 0 1.5px rgba(255, 255, 255, 0.88),
+      0 4px 10px rgba(0, 0, 0, 0.7);
+    font-family: var(--astral-font-display);
+    font-size: max(11px, calc(var(--ba) * 0.172));
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .ba-n svg {
+    inline-size: 56%;
+    block-size: 56%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ba-got .ba-ring {
+    box-shadow:
+      0 6px 18px -6px rgba(0, 0, 0, 0.9),
+      0 0 22px -8px rgba(255, 255, 255, 0.35);
+  }
+
+  .ba-prog .ba-ring {
+    background: conic-gradient(
+      from 215deg,
+      #8d8d94,
+      #4a4a50 16%,
+      #7c7c83 34%,
+      #35353a 52%,
+      #74747b 70%,
+      #44444a 86%,
+      #8d8d94
+    );
+  }
+
+  .ba-prog .ba-g {
+    color: #d9d9dd;
+  }
+
+  .ba-prog .ba-in {
+    background: radial-gradient(
+      120% 120% at 30% 18%,
+      #303035 0%,
+      #161618 52%,
+      #09090a 100%
+    );
+  }
+
+  .ba-lock .ba-ring {
+    opacity: 0.32;
+  }
+
+  .ba-lock .ba-in {
+    opacity: 0.72;
+  }
+
+  .ba-lock .ba-g {
+    color: rgba(246, 246, 247, 0.3);
+  }
+
+  .ba-lock .ba-n {
+    box-shadow:
+      0 0 0 1.5px rgba(255, 255, 255, 0.3),
+      0 4px 10px rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  @media (hover: hover) {
+    .ba.hv:hover {
+      transform: translateY(-3px) scale(1.06);
+    }
+
+    .ba-lock.hv:hover,
+    .ba-prog.hv:hover {
+      transform: translateY(-2px);
+    }
+
+    .ba-got.hv:hover .ba-sh::before {
+      animation: ba-shine 900ms cubic-bezier(0.22, 0.72, 0.24, 1) 1;
+    }
+  }
+
+  @keyframes ba-shine {
+    0% {
+      opacity: 1;
+      transform: translateX(-160%) skewX(-18deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateX(330%) skewX(-18deg);
+    }
+  }
+
+  .ba-xs .ba-n,
+  .ba-xs .ba-pr .t {
+    display: none;
+  }
+
+  .ba-xs .ba-g {
+    stroke-width: 2;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ba,
+    .ba-sh::before,
+    .pf-drawer.ui-dialog {
+      transition: none;
+      animation: none !important;
+    }
+  }
+
+  /* ---- узкое окно (минимум 1180): колонка «Доступ» уже, витрина значков компактнее ---- */
+  @media (max-width: 1280px) {
+    .pf {
+      --pf-pad: 28px;
+    }
+
+    .pf-cols {
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 24px;
+    }
+
+    .pf-show {
+      inline-size: 360px;
+    }
+
+    .pf-id {
+      max-inline-size: calc(100% - 2 * var(--pf-pad) - 380px);
+    }
+  }
+}
+
+/* «‹ Настройки» слева вверху (профиль открыт из Настроек): тонкая полоса над шапкой профиля. */
+.pf > .pf-back {
+  margin-block-end: 10px;
+}
+

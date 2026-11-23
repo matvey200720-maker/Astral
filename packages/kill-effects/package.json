@@ -1,0 +1,17 @@
+{
+  "name": "@modovik/kill-effects",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./compile.js": "./compile.js",
+    "./screen-hits.js": "./screen-hits.js",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@modovik/install-engine": "*",
+    "@modovik/timecycle": "*"
+  }
+}

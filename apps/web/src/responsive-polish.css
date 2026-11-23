@@ -1,0 +1,133 @@
+/* Final responsive and interaction layer. Keep viewport-specific fixes isolated. */
+
+.desktop-app .desktop-content,
+.desktop-app .desktop-page,
+.desktop-app .public-catalog-page,
+.desktop-app .public-catalog-results {
+  min-width: 0;
+}
+
+.desktop-app .desktop-content[data-page="catalog"] {
+  overflow-x: clip;
+}
+
+/* Catalog cards keep their photography natural while gaining a little height. */
+.desktop-app .public-catalog-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Раздел без публикаций больше не гаснет: восемь названий в одной строке
+   читаются как один список, а не как «эти рабочие, а эти сломанные». Метка
+   `is-empty` остаётся в разметке — она про содержимое раздела, а не про его
+   яркость. Разница по яркости в строке ровно одна: наведение и выбор. */
+
+/* One bottom notification system for downloads, errors and local actions. */
+.desktop-action-toast {
+  position: fixed;
+  z-index: 260;
+  right: 0;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 0;
+  display: flex;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 36px));
+  margin-inline: auto;
+  min-height: 46px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  color: var(--astral-ink);
+  background: var(--astral-glass-bg-strong);
+  box-shadow: var(--astral-shadow);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  animation: desktop-action-toast-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.desktop-action-toast > svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  /* The glyph is a cap-height mark beside the sentence, not a bullet floating
+     above it — flex centring alone left it visibly high against 12px type. */
+  align-self: center;
+}
+
+.desktop-action-toast.is-error {
+  border-color: color-mix(in srgb, var(--astral-danger) 40%, transparent);
+  color: var(--astral-ink);
+  background: var(--astral-glass-bg-strong);
+}
+
+.desktop-action-toast.is-error > svg {
+  color: var(--astral-danger);
+}
+
+.desktop-action-toast.is-info > svg {
+  color: var(--astral-positive);
+}
+
+@keyframes desktop-action-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 1180px) {
+  .desktop-app .public-catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .desktop-app {
+    width: 100%;
+    min-width: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .desktop-app .desktop-main {
+    width: 100%;
+    min-width: 0;
+    grid-column: 1 !important;
+  }
+
+  .desktop-app .desktop-content,
+  .desktop-app .public-catalog-page,
+  .desktop-app .public-catalog-results,
+  .desktop-app .public-catalog-grid {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .desktop-app .public-catalog-page {
+    display: grid;
+  }
+
+  .desktop-app .public-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+@media (max-width: 520px) {
+  .desktop-app .public-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-action-toast {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

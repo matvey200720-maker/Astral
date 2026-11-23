@@ -1,0 +1,629 @@
+/*
+ * Final workshop detail contract.
+ *
+ * Detail pages share one transparent, viewport-bound gallery. The preview and
+ * controls collapse while the catalog itself owns vertical scrolling. Keeping
+ * these rules last prevents older experimental workshop skins from restoring
+ * a second panel beneath the catalog.
+ */
+.desktop-app .catalog-v3[data-workshop-section].workshop-local-catalog-active {
+  /* `will-change: transform` creates a containing block for fixed children.
+     Disable it on the opened Redux page so the toolbar can align to the real
+     application viewport directly below the 40px Astral title bar. */
+  will-change: auto !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery {
+  min-height: 0 !important;
+  height: var(--workshop-gallery-height, calc(100dvh - 160px)) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  row-gap: var(--workshop-gallery-row-gap, 30px) !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* The detail topbar flows in the document, inside .desktop-main and after the
+   sidebar rail — exactly like the catalog's mod detail. It is never fixed:
+   pinning it to the viewport is what put the back control hard against the
+   window edge and forced the margin-top compensations below. */
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-slot-context {
+  position: relative !important;
+  inset: auto !important;
+  z-index: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 58px !important;
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--astral-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery::before,
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery::after {
+  display: none !important;
+  content: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-hero {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto !important;
+  gap: var(--workshop-gallery-hero-gap, 12px) !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  transform: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  :is(
+    .workshop-local-hero,
+    .workshop-local-hero-header,
+    .workshop-local-hero-media,
+    .workshop-local-catalog-tools,
+    .workshop-local-grid
+  ) {
+  border-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  :is(
+    .workshop-local-hero,
+    .workshop-local-catalog-tools,
+    .workshop-local-grid
+  )::before,
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  :is(
+    .workshop-local-hero,
+    .workshop-local-catalog-tools,
+    .workshop-local-grid
+  )::after {
+  display: none !important;
+  content: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-grid {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-auto-rows: max-content !important;
+  align-content: start !important;
+  gap: 14px !important;
+  width: min(100%, 1340px) !important;
+  min-height: 0 !important;
+  height: var(--workshop-gallery-grid-height, 112px) !important;
+  max-height: var(--workshop-gallery-grid-height, 112px) !important;
+  align-self: stretch !important;
+  margin: 0 auto !important;
+  padding: clamp(18px, 1.5vw, 26px) 4px clamp(22px, 2vw, 32px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  overflow-anchor: none !important;
+  scrollbar-width: none !important;
+  isolation: isolate !important;
+}
+
+/* The media rail must obey the value calculated from the current catalog
+   scroll position. Older map and weapon skins used fixed 880/1180px canvases. */
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-hero-media {
+  width: min(100%, var(--workshop-gallery-preview-width, 1180px)) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9 !important;
+  align-self: start !important;
+  justify-self: center !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-hero-media
+  > img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery.is-photo-media
+  .workshop-local-hero-media
+  > img {
+  object-fit: cover !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-hero-header {
+  order: 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: end !important;
+  gap: 24px !important;
+  width: min(100%, 1340px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin-inline: auto !important;
+  padding: var(--workshop-gallery-header-padding, 10px) 2px 0 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-catalog-tools {
+  order: 3 !important;
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  width: min(100%, 1340px) !important;
+  min-height: 48px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(18px, 2vw, 30px) !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery
+  .workshop-local-grid::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Reset legacy offsets so the preview rail is centered before it scales. */
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery.is-weapon-media
+  .workshop-local-hero-media {
+  inset: auto !important;
+  display: grid !important;
+  place-items: center !important;
+  margin-inline: auto !important;
+  transform: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section].workshop-local-catalog-active
+  .workshop-library-catalog.is-unified-gallery.is-weapon-media
+  .workshop-local-hero-media
+  > img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: scale(1.16) !important;
+  transform-origin: center !important;
+}
+
+/* Only cards own a surface. The catalog and its landing grid stay on the
+   application background so Redux, weapons and clothing use one visual rule. */
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .weapon-slot-grid,
+    .workshop-clothing-catalog,
+    .workshop-clothing-weapon-catalog,
+    .workshop-clothing-weapon-grid
+  ) {
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .weapon-slot-grid,
+    .workshop-clothing-catalog,
+    .workshop-clothing-weapon-catalog,
+    .workshop-clothing-weapon-grid
+  )::before,
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .weapon-slot-grid,
+    .workshop-clothing-catalog,
+    .workshop-clothing-weapon-catalog,
+    .workshop-clothing-weapon-grid
+  )::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Landing cards have exactly one visual plate. The article and catalogue are
+   layout-only; the inner button owns the border, fill and clipping. */
+.desktop-app
+  .catalog-v3[data-workshop-section]:is(
+    [data-workshop-section="gunpacks"],
+    [data-workshop-section="clothing"]
+  ):not(.workshop-local-catalog-active)
+  .weapon-slot-grid
+  .weapon-slot-card {
+  overflow: visible !important;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]:is(
+    [data-workshop-section="gunpacks"],
+    [data-workshop-section="clothing"]
+  ):not(.workshop-local-catalog-active)
+  .weapon-slot-card
+  > .weapon-slot-open {
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]:is(
+    [data-workshop-section="gunpacks"],
+    [data-workshop-section="clothing"]
+  ):not(.workshop-local-catalog-active)
+  .weapon-slot-card
+  > .weapon-slot-open::before {
+  inset: 0 !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-lg) !important;
+}
+
+/* Redux captions are part of the image card, not a second panel — the copy
+   sits on the picture. The card still keeps the shared plate underneath, so a
+   slow or missing preview reads as an empty card rather than a hole. */
+.desktop-app .catalog-v3[data-workshop-section="redux"] .redux-visual-card {
+  background-image: none !important;
+}
+
+/* Minimap variants read as outlined choices instead of permanent plates.
+   Only the selected variant receives a visible surface and emphasis. */
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"].workshop-local-catalog-active
+  .workshop-library-catalog.is-minimap-media
+  .workshop-local-variant {
+  border-color: rgba(163, 163, 163, 0.3) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"].workshop-local-catalog-active
+  .workshop-library-catalog.is-minimap-media
+  .workshop-local-variant:not(.is-selected):is(:hover, :focus-within) {
+  border-color: rgba(225, 225, 225, 0.58) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"].workshop-local-catalog-active
+  .workshop-library-catalog.is-minimap-media
+  .workshop-local-variant.is-selected {
+  border-color: rgba(246, 248, 252, 0.92) !important;
+  background: rgba(123, 123, 123, 0.14) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 0 3px rgba(143, 143, 143, 0.08) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"].workshop-local-catalog-active
+  .workshop-library-catalog.is-minimap-media
+  .workshop-local-variant
+  :is(.workshop-local-vanilla-card, .workshop-local-card-copy) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .redux-visual-card.is-empty
+  > .workshop-empty-mark {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border-radius: inherit !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .redux-visual-card.is-empty
+  > .redux-visual-shade {
+  display: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .redux-visual-card
+  > .workshop-card-copy {
+  min-height: 0 !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .weapon-slot-card
+  .workshop-empty-mark {
+  position: absolute !important;
+  inset: 18px 18px 74px !important;
+  display: grid !important;
+  place-items: center !important;
+  color: color-mix(in srgb, var(--text) 42%, transparent) !important;
+  border: 1px dashed color-mix(in srgb, var(--text) 14%, transparent) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]:is(
+    [data-workshop-section="gunpacks"],
+    [data-workshop-section="clothing"]
+  )
+  .weapon-slot-grid
+  > .weapon-slot-card
+  .weapon-slot-image {
+  left: 50% !important;
+  right: auto !important;
+  width: calc(100% - 20px) !important;
+  height: calc(100% - 76px) !important;
+  padding: 4px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  transform: translateX(-50%) scale(1.3) !important;
+  transform-origin: center !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]:is(
+    [data-workshop-section="gunpacks"],
+    [data-workshop-section="clothing"]
+  )
+  .weapon-slot-grid
+  > .weapon-slot-card:is(:hover, :focus-within)
+  .weapon-slot-image {
+  transform: translateX(-50%) translateY(-2px) scale(1.34) !important;
+}
+
+/* Clothing uses the same card rhythm and responsive bounds as weapons. */
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]:not(
+    .workshop-local-catalog-active
+  )
+  .workshop-clothing-weapon-grid {
+  width: min(100%, 1480px) !important;
+  margin-inline: auto !important;
+  padding-inline: clamp(18px, 2.2vw, 36px) !important;
+  box-sizing: border-box !important;
+}
+
+/* One matte presentation for every weapon card. This contract is intentionally
+   kept in the first cascade layer so older important workshop skins cannot
+   repaint individual slots. */
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]:not(
+    .workshop-local-catalog-active
+  )
+  .weapon-slot-grid
+  > .weapon-slot-card
+  > .weapon-slot-open::before {
+  border: 1px solid rgba(169, 169, 169, 0.15) !important;
+  background:
+    radial-gradient(
+      ellipse 54% 47% at 50% 39%,
+      rgba(var(--workshop-tone, 103, 143, 192), 0.13),
+      rgba(41, 41, 41, 0.055) 48%,
+      transparent 76%
+    ),
+    linear-gradient(152deg, #0d0d0d 0%, #070707 58%, #020305 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 0 0 46px rgba(126, 126, 126, 0.035),
+    0 16px 34px rgba(0, 0, 0, 0.24) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]:not(
+    .workshop-local-catalog-active
+  )
+  .weapon-slot-grid
+  > .weapon-slot-card
+  .weapon-slot-image {
+  filter: brightness(var(--weapon-preview-exposure, 1))
+    contrast(var(--weapon-preview-contrast, 0.96))
+    drop-shadow(0 0 12px rgba(var(--workshop-tone, 111, 151, 201), 0.16))
+    drop-shadow(0 14px 20px rgba(0, 0, 0, 0.42)) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]:not(
+    .workshop-local-catalog-active
+  )
+  .weapon-slot-grid
+  > .weapon-slot-card
+  > .weapon-slot-open
+  .weapon-slot-copy {
+  color: #f5f7fa !important;
+}
+
+@media (max-width: 1180px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section].workshop-local-catalog-active
+    .workshop-library-catalog.is-unified-gallery
+    .workshop-local-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section].workshop-local-catalog-active
+    .workshop-library-catalog.is-unified-gallery
+    .workshop-local-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section].workshop-local-catalog-active
+    .workshop-library-catalog.is-unified-gallery
+    .workshop-local-hero-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section].workshop-local-catalog-active
+    .workshop-library-catalog.is-unified-gallery {
+    row-gap: 16px !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section].workshop-local-catalog-active
+    .workshop-library-catalog.is-unified-gallery
+    .workshop-local-grid {
+    padding-top: 22px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section].workshop-local-catalog-active
+    .workshop-library-catalog.is-unified-gallery
+    .workshop-local-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/*
+ * Пластина «как в игре».
+ *
+ * Стандартный вариант слота нечем показать: игра и так выглядит так. Раньше на
+ * это место вставал крест во весь кадр — знак сломанной картинки на первом же
+ * экране каждой плитки мастерской. Теперь тут два слова, которые отвечают на
+ * вопрос «а что я вижу», и пунктирный круг вместо отказа.
+ *
+ * Подложка — общий мягкий подсвет `--astral-surface-wash`: тот же, что под
+ * витринами и пустыми состояниями всего продукта.
+ */
+.desktop-app .workshop-vanilla-plate {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  /* Колонка, а не сетка: у общего знака «снимка нет» один ребёнок и
+     `place-items: center`, здесь их трое — та же сетка растащила бы их по трём
+     рядам во всю высоту кадра. Поэтому и класс свой, а не его. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  /* Своя рама: без неё кадр «как в игре» растворялся в фоне страницы, и на
+     месте картинки оставалась пустота без границ — то же ощущение поломки,
+     только без креста. Рама говорит «здесь стояла бы картинка, и её нет». */
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  background: var(--astral-surface-wash), var(--astral-surface);
+  text-align: center;
+}
+
+.desktop-app .workshop-vanilla-plate > svg {
+  width: 34px;
+  height: 34px;
+  color: var(--astral-ink-faint);
+}
+
+.desktop-app .workshop-vanilla-plate > b {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.desktop-app .workshop-vanilla-plate > small {
+  max-width: 42ch;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+  line-height: var(--astral-line-normal);
+}

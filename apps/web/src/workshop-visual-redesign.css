@@ -1,0 +1,989 @@
+/*
+ * Workshop visual system.
+ *
+ * Structure and behavior remain in the shared workshop components. This file
+ * is the final, deliberately scoped visual layer for the workshop only.
+ */
+.desktop-app .catalog-v3[data-workshop-section] {
+  --workshop-surface: var(--astral-surface-strong);
+  --workshop-surface-strong: var(--astral-surface-strong);
+  --workshop-surface-soft: var(--astral-surface);
+  --workshop-outline: var(--astral-line);
+  --workshop-outline-strong: var(--astral-line-strong);
+  --workshop-ink: var(--astral-ink);
+  --workshop-ink-soft: var(--astral-ink-muted);
+  --workshop-ink-muted: var(--astral-ink-faint);
+  --workshop-glass-shadow: 0 22px 52px rgba(0, 0, 0, 0.22);
+  --workshop-card-shadow: none;
+}
+
+/* Six neon tones — cyan, blue, violet, amber, green, rose — were assigned per
+   slot and drove a radial wash on every card, a tinted hover border, two glows,
+   drop-shadow halos and a blurred coloured aura behind the clothing artwork.
+   Nothing about a slot's identity is carried by "this one is violet"; it was
+   decoration, and it is the loudest reason the workshop read as a different
+   product from the catalog. One neutral tone now serves every slot, so the
+   machinery that reads --workshop-tone keeps working and stops shouting.
+   data-workshop-tone stays on the markup: tests and semantics still use it. */
+.desktop-app .catalog-v3[data-workshop-section] [data-workshop-tone] {
+  --workshop-tone: 167, 177, 191;
+  --workshop-tone-secondary: 122, 133, 149;
+}
+
+/* Library catalog */
+.desktop-app .catalog-v3[data-workshop-section] .redux-visual-catalog {
+  padding: 4px 0 40px;
+}
+
+/* Shared cards */
+.desktop-app .catalog-v3[data-workshop-section] .redux-visual-grid,
+.desktop-app .catalog-v3[data-workshop-section] .catalog-v3-landing-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  padding: 0 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  ) {
+  position: relative !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  aspect-ratio: 16 / 10 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) auto !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: var(--workshop-surface) !important;
+  box-shadow: var(--workshop-card-shadow) !important;
+  isolation: isolate;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  )::before {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.66;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 34%,
+      rgba(9, 9, 9, 0.14) 58%,
+      rgba(9, 9, 9, 0.68) 100%
+    ),
+    radial-gradient(
+      circle at 16% 12%,
+      rgba(var(--workshop-tone), 0.2),
+      transparent 42%
+    );
+  transition: opacity var(--astral-duration-slow) ease;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  ):hover {
+  z-index: 3;
+  border-color: rgba(var(--workshop-tone), 0.52) !important;
+  transform: translateY(-4px) !important;
+  box-shadow:
+    0 22px 46px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(var(--workshop-tone), 0.14),
+    0 16px 40px rgba(var(--workshop-tone), 0.1) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  ):hover::before {
+  opacity: 0.82;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(.redux-visual-card, .catalog-v3-landing-grid > button)
+  > :is(
+    .redux-visual-image,
+    img,
+    .workshop-empty-mark,
+    .workshop-slot-artwork
+  ) {
+  position: relative !important;
+  z-index: 0;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 150px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: rgb(15, 15, 15) !important;
+  background-position: center !important;
+  background-size: cover !important;
+  object-fit: cover !important;
+  filter: saturate(0.82) contrast(1.03) brightness(0.74);
+  transform: scale(1.015);
+  transition:
+    transform 520ms cubic-bezier(0.16, 0.88, 0.24, 1),
+    filter var(--astral-duration-slow) ease !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  ):hover
+  > :is(.redux-visual-image, img) {
+  filter: saturate(1) contrast(1.04) brightness(0.86);
+  transform: scale(1.055);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .redux-visual-card
+  > .redux-visual-image.is-suggested-preview {
+  opacity: 0.78 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  )
+  > .workshop-card-copy {
+  position: relative !important;
+  z-index: 4;
+  inset: auto !important;
+  min-width: 0;
+  display: block !important;
+  padding: 15px 46px 16px 16px !important;
+  text-align: left;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--workshop-surface-strong) 76%, transparent),
+    var(--workshop-surface-strong)
+  ) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  )
+  .workshop-card-copy
+  h3 {
+  /* Кегль, вес и межбуквенное — у общей карточки (`.ui-media-card-copy h3`):
+     здесь они были переписаны на свои, и одна и та же плитка читалась в
+     мастерской иначе, чем в каталоге. Своим остаётся цвет: подпись мастерской
+     лежит на матовой полке, а не на фотографии. */
+  overflow: hidden;
+  margin: 0 !important;
+  color: var(--workshop-ink) !important;
+  line-height: 1.22 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  )
+  .workshop-card-copy
+  p {
+  overflow: hidden;
+  margin: 4px 0 0 !important;
+  color: var(--workshop-ink-soft) !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-card-arrow {
+  position: absolute;
+  z-index: 5;
+  right: 15px;
+  bottom: 18px;
+  width: 17px;
+  height: 17px;
+  color: rgba(var(--workshop-tone), 0.88);
+  opacity: 0.72;
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(.redux-visual-card, .catalog-v3-landing-grid > button):hover
+  .workshop-card-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* Weapon library */
+.desktop-app .catalog-v3[data-workshop-section] .weapon-slot-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  padding: 0 18px 42px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-grid
+  > .weapon-slot-card {
+  position: relative;
+  display: block !important;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 228px !important;
+  aspect-ratio: 0.92 / 1 !important;
+  padding: 0 !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background:
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(var(--workshop-tone), 0.12),
+      transparent 48%
+    ),
+    linear-gradient(155deg, rgba(31, 31, 31, 0.98), rgba(11, 11, 11, 0.99)) !important;
+  box-shadow: var(--workshop-card-shadow) !important;
+  transition:
+    border-color 220ms ease,
+    box-shadow var(--astral-duration-slow) ease,
+    transform var(--astral-duration-slow) cubic-bezier(0.2, 0.78, 0.24, 1);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-grid
+  > .weapon-slot-card:hover {
+  border-color: rgba(var(--workshop-tone), 0.55) !important;
+  transform: translateY(-4px) !important;
+  box-shadow:
+    0 24px 44px rgba(0, 0, 0, 0.2),
+    0 14px 40px rgba(var(--workshop-tone), 0.1) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  > .weapon-slot-open {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  > .weapon-slot-open::before {
+  position: absolute;
+  z-index: 0;
+  top: 10px;
+  right: 10px;
+  bottom: 72px;
+  left: 10px;
+  border: 1px solid rgba(226, 226, 226, 0.06);
+  border-radius: var(--astral-radius-lg);
+  background:
+    radial-gradient(
+      circle at 50% 46%,
+      rgba(var(--workshop-tone), 0.1),
+      transparent 56%
+    ),
+    linear-gradient(160deg, rgba(39, 39, 39, 0.96), rgba(18, 18, 18, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  content: "";
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-grid
+  > .weapon-slot-card
+  .weapon-slot-image {
+  z-index: 2;
+  inset: 17px 15px 80px !important;
+  width: calc(100% - 30px) !important;
+  height: calc(100% - 97px) !important;
+  padding: 6px !important;
+  object-fit: contain !important;
+  filter: brightness(0.78) contrast(1.12) saturate(0.84)
+    drop-shadow(0 15px 18px rgba(0, 0, 0, 0.38)) !important;
+  transform: scale(0.98) !important;
+  transition:
+    filter var(--astral-duration-slow) ease,
+    transform var(--astral-duration-slow) cubic-bezier(0.16, 0.88, 0.24, 1) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-grid
+  > .weapon-slot-card:hover
+  .weapon-slot-image {
+  filter: brightness(0.9) contrast(1.14) saturate(0.9)
+    drop-shadow(0 17px 21px rgba(0, 0, 0, 0.42)) !important;
+  transform: scale(1.035) translateY(-2px) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .weapon-slot-copy {
+  z-index: 4;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: auto !important;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px 44px 15px 15px !important;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(10, 10, 10, 0.97) 45%
+  ) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .weapon-slot-copy
+  h3 {
+  color: #f6f8fb !important;
+  font-size: var(--astral-text-strong) !important;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.38);
+}
+
+/*
+ * Пояснение под названием занимает две строки всегда.
+ *
+ * Иначе название стоит на разной высоте в соседних карточках: у «Масок»
+ * пояснение в одну строку, у «Сумок» — в две, и подписи ряда съезжают друг
+ * относительно друга на одну строку. Место под вторую строку резервируется
+ * даже когда её нет — ряд читается ровным, а не сбитым.
+ */
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .weapon-slot-copy
+  span {
+  min-height: calc(2 * var(--astral-text-micro) * 1.25);
+  color: rgba(226, 234, 244, 0.7) !important;
+  font-size: var(--astral-text-micro) !important;
+  line-height: 1.25;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .workshop-card-arrow {
+  display: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .weapon-slot-open:focus-visible {
+  outline: 2px solid rgba(var(--workshop-tone), 0.9);
+  outline-offset: -3px;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-clothing-catalog
+  .redux-visual-grid
+  > .redux-visual-card
+  > .redux-visual-image {
+  background-color: #161616 !important;
+  background-position: center 44% !important;
+  background-repeat: no-repeat !important;
+  background-size: 58% 58% !important;
+  filter: contrast(0.94) brightness(0.88) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-clothing-catalog
+  .redux-visual-card:hover
+  > :is(.redux-visual-image, .workshop-slot-artwork) {
+  background-size: 62% 62% !important;
+  filter: contrast(1) brightness(0.98) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-clothing-catalog
+  .redux-visual-card
+  > .workshop-slot-artwork {
+  position: relative !important;
+  display: grid !important;
+  place-items: center;
+  overflow: hidden;
+  color: rgb(var(--workshop-tone));
+  background:
+    radial-gradient(
+      circle at 50% 46%,
+      rgba(var(--workshop-tone), 0.18),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 74% 20%,
+      rgba(var(--workshop-tone-secondary), 0.1),
+      transparent 36%
+    ),
+    linear-gradient(145deg, #191919, #0d0d0d) !important;
+  filter: none !important;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-slot-artwork > svg {
+  position: relative;
+  z-index: 2;
+  width: clamp(56px, 36%, 92px);
+  height: clamp(56px, 36%, 92px);
+  stroke-width: 1.35;
+  filter: drop-shadow(0 14px 24px rgba(var(--workshop-tone), 0.24));
+  transition:
+    transform 420ms cubic-bezier(0.16, 0.88, 0.24, 1),
+    filter var(--astral-duration-slow) ease;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-slot-artwork-orbit {
+  position: absolute;
+  z-index: 1;
+  width: min(54%, 138px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(var(--workshop-tone), 0.18);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 16px rgba(var(--workshop-tone), 0.025),
+    0 0 0 34px rgba(var(--workshop-tone), 0.018);
+  transform: rotate(-18deg) scaleY(0.5);
+  transition:
+    transform 520ms cubic-bezier(0.16, 0.88, 0.24, 1),
+    border-color var(--astral-duration-slow) ease;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-clothing-catalog
+  .redux-visual-card:hover
+  .workshop-slot-artwork
+  > svg {
+  transform: translateY(-3px) scale(1.06);
+  filter: drop-shadow(0 18px 30px rgba(var(--workshop-tone), 0.34));
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-clothing-catalog
+  .redux-visual-card:hover
+  .workshop-slot-artwork-orbit {
+  border-color: rgba(var(--workshop-tone), 0.3);
+  transform: rotate(-10deg) scale(1.05, 0.54);
+}
+
+/* The compact line-art assets intentionally inherit color from their host.
+ * Keep their silhouette readable without creating separate theme-only files. */
+.desktop-app[data-theme="dark"]
+  .catalog-v3[data-workshop-section]
+  .workshop-clothing-catalog
+  .redux-visual-grid
+  > .redux-visual-card
+  > .redux-visual-image:is(
+    [style*="gloves.svg"],
+    [style*="masks.svg"],
+    [style*="tattoos.svg"]
+  ) {
+  background-color: #e8edf3 !important;
+  filter: invert(1) contrast(0.82) brightness(0.86) !important;
+}
+
+/* Empty media keeps hierarchy without looking like a failed image request. */
+.desktop-app .catalog-v3[data-workshop-section] .workshop-empty-mark {
+  display: grid !important;
+  place-items: center;
+  color: var(--workshop-ink-muted) !important;
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      rgba(var(--workshop-tone, 255, 255, 255), 0.05),
+      transparent 44%
+    ),
+    linear-gradient(
+      145deg,
+      var(--workshop-surface-soft),
+      var(--workshop-surface-strong)
+    ) !important;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-empty-mark > span {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--workshop-outline);
+  border-radius: var(--astral-radius-lg);
+  background: color-mix(
+    in srgb,
+    var(--workshop-surface-strong) 82%,
+    transparent
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-empty-mark svg {
+  width: 21px !important;
+  height: 21px !important;
+  stroke-width: 1.6;
+}
+
+/* Кадр не загрузился — причина словами под знаком, а не пустая плашка. */
+.desktop-app .catalog-v3[data-workshop-section] .workshop-empty-mark:has(.workshop-empty-note) {
+  align-content: center;
+  gap: 8px;
+  padding: 0 14px;
+}
+.desktop-app .catalog-v3[data-workshop-section] .workshop-empty-note {
+  max-width: 24ch;
+  font-size: var(--astral-text-micro);
+  line-height: 1.35;
+  text-align: center;
+  color: var(--workshop-ink-muted);
+}
+
+/* Detail view */
+.desktop-app .catalog-v3[data-workshop-section].workshop-local-catalog-active {
+  min-height: calc(100vh - 40px) !important;
+  padding: 0 20px 38px !important;
+  background: transparent !important;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-slot-context {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  width: fit-content;
+  max-width: calc(100% - 36px);
+  min-height: 50px;
+  margin: 0 0 14px;
+  padding: 5px 14px 5px 5px;
+  border: 1px solid var(--workshop-outline);
+  border-radius: var(--astral-radius-lg);
+  background: color-mix(
+    in srgb,
+    var(--workshop-surface-strong) 86%,
+    transparent
+  );
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-slot-title {
+  color: var(--workshop-ink) !important;
+  font-size: 12px;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-local-catalog.workshop-library-catalog {
+  width: min(100%, 1420px) !important;
+  min-height: auto !important;
+  gap: 16px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero {
+  min-height: clamp(520px, calc(100vh - 190px), 700px) !important;
+  height: auto !important;
+  display: grid !important;
+  grid-template-rows: minmax(380px, 1fr) auto !important;
+  overflow: hidden !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-2xl) !important;
+  background: var(--workshop-surface-strong) !important;
+  box-shadow: var(--workshop-glass-shadow) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-media {
+  grid-row: 1 !important;
+  min-height: 380px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(99, 99, 99, 0.2), transparent 48%),
+    linear-gradient(145deg, #191919, #0b0b0b) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-media
+  img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  filter: var(--workshop-variant-filter, none);
+  transform: scale(1.002);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog.is-map-media
+  .workshop-local-hero-media
+  img {
+  width: min(72%, 880px) !important;
+  height: min(82%, 600px) !important;
+  object-fit: contain !important;
+  border-radius: var(--astral-radius-xl) !important;
+  filter: var(--workshop-variant-filter, none)
+    drop-shadow(0 24px 36px rgba(0, 0, 0, 0.22));
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-header {
+  grid-row: 2 !important;
+  min-height: 126px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 24px !important;
+  padding: 20px 22px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--workshop-outline) !important;
+  background: var(--workshop-surface-strong) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-copy {
+  min-width: 0;
+  width: min(100%, 840px) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-copy
+  h1 {
+  overflow: hidden;
+  margin: 5px 0 1px !important;
+  padding-block: 2px 3px;
+  color: var(--workshop-ink) !important;
+  line-height: 1.06 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-copy
+  p {
+  overflow: hidden;
+  margin: 7px 0 0 !important;
+  color: var(--workshop-ink-soft) !important;
+  font-size: 12px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-local-downloads,
+.desktop-app .catalog-v3[data-workshop-section] .workshop-local-like {
+  min-height: 44px;
+  border-radius: var(--astral-radius) !important;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-local-downloads {
+  padding: 0 12px;
+  border: 1px solid var(--workshop-outline);
+  background: var(--workshop-surface-soft);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: var(--workshop-surface) !important;
+  box-shadow: var(--workshop-card-shadow) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button,
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button.is-selected {
+  min-width: 0 !important;
+  min-height: 148px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: var(--workshop-surface-soft) !important;
+  box-shadow: none !important;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    border-color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button:hover {
+  border-color: var(--workshop-outline-strong) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.13) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button.is-selected {
+  border-color: rgba(143, 143, 143, 0.72) !important;
+  box-shadow:
+    0 0 0 2px rgba(143, 143, 143, 0.14),
+    0 12px 26px rgba(78, 78, 78, 0.12) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-card-media {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  overflow: hidden !important;
+  border-radius: inherit !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-card-media
+  img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transform: scale(1.01);
+  transition: transform 420ms cubic-bezier(0.16, 0.88, 0.24, 1);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog.is-map-media
+  .workshop-local-card-media
+  img {
+  object-fit: contain !important;
+  padding: 10px;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button:hover
+  img {
+  transform: scale(1.055);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-card-copy {
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  min-height: 45px;
+  display: flex !important;
+  align-items: flex-end;
+  padding: 18px 11px 10px !important;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(9, 9, 9, 0.9)
+  ) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-card-copy
+  b {
+  overflow: hidden;
+  color: #f6f8fb !important;
+  font-size: 11px !important;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+@media (max-width: 1180px) {
+  .desktop-app .catalog-v3[data-workshop-section] .redux-visual-grid,
+  .desktop-app .catalog-v3[data-workshop-section] .catalog-v3-landing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-app .catalog-v3[data-workshop-section] .weapon-slot-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 880px) {
+  
+
+  .desktop-app .catalog-v3[data-workshop-section] .redux-visual-catalog {
+    padding-inline: 12px;
+  }
+
+  .desktop-app .catalog-v3[data-workshop-section] .redux-visual-grid,
+  .desktop-app .catalog-v3[data-workshop-section] .catalog-v3-landing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-app .catalog-v3[data-workshop-section] .weapon-slot-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    padding-inline: 12px !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-hero-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-hero-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  .desktop-app .catalog-v3[data-workshop-section] .redux-visual-grid,
+  .desktop-app .catalog-v3[data-workshop-section] .catalog-v3-landing-grid,
+  .desktop-app .catalog-v3[data-workshop-section] .weapon-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    :is(
+      .redux-visual-grid > .redux-visual-card,
+      .catalog-v3-landing-grid > button
+    ) {
+    grid-template-rows: minmax(118px, 1fr) auto !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    :is(
+      .redux-visual-grid > .redux-visual-card,
+      .catalog-v3-landing-grid > button,
+      .weapon-slot-grid > .weapon-slot-card,
+      .workshop-local-grid > button
+    ),
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    :is(.redux-visual-image, .weapon-slot-image, .workshop-local-grid img) {
+    transition: none !important;
+  }
+}

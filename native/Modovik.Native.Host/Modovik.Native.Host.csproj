@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Modovik.Native.Host</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeWalker.Core\CodeWalker.Core.csproj" />
+    <ProjectReference Include="..\RageLib.GTA5\RageLib.GTA5.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Кодек BC (AstralCodec.cs): готовая библиотека из git, рядом с хостом и в publish. -->
+    <None Include="..\astral-engine\prebuilt\astral_codec.dll" Link="astral_codec.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+/*
+ * «Куда поставить татуировки» (`TattooSetDialog.jsx`, круг 7, 30.10.2026): низ окна и строки состояния; сами строки — как у комплекта одежды (`clothing/replace-pair.css`).
+ * Лист едет с окном (ленивый кусок), а не в общем `main.css`.
+ */
+
+@layer overrides {
+  /* Низ окна: что осталось выбрать и «?» с пояснением. */
+  .tattoo-set-dialog .tattoo-set-foot {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tattoo-set-dialog .tattoo-set-note {
+    margin: 0 0 12px;
+  }
+
+  .tattoo-set-dialog .tattoo-set-status {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .tattoo-set-dialog .tattoo-set-status.is-problem {
+    color: var(--astral-ink);
+  }
+
+}

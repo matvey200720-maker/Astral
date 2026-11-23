@@ -1,0 +1,307 @@
+/*
+  Панель «Обвесы на стволе»: схема с точками мест, открытое место, плитки.
+  Лист подключает сама панель, поэтому весь он лежит в слое overrides.
+
+  Узлы идут от точки на схеме к плиткам; состояния вложены в свой узел.
+*/
+@layer overrides {
+
+  /* ── Точка места на схеме ── */
+  .gun-attach-spot {
+    --att-beat: var(--astral-duration-fast) var(--astral-ease);
+    box-sizing: border-box;
+    width: var(--astral-control-h-xs);
+    height: var(--astral-control-h-xs);
+    position: absolute;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    border: solid var(--astral-line-strong) 1px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--astral-surface-float);
+    font-size: var(--astral-text-strong);
+    color: var(--astral-ink-muted);
+    transition: color var(--att-beat), border-color var(--att-beat), background-color var(--att-beat), box-shadow var(--att-beat);
+
+    & svg {
+      height: 15px;
+      width: 15px;
+    }
+
+    /* порядок состояний важен: наведение, занято, открыто, не встал */
+    &:hover {
+      color: var(--astral-ink);
+      border-color: var(--astral-line-focus);
+    }
+
+    &.is-filled {
+      --att-on: var(--astral-accent);
+      border-color: var(--att-on);
+      color: var(--att-on);
+    }
+
+    &.is-active {
+      --att-on: var(--astral-accent);
+      --att-glow: rgba(var(--astral-accent-rgb), .18);
+      background: var(--att-on);
+      border-color: var(--att-on);
+      box-shadow: 0 0 0 4px var(--att-glow);
+      color: var(--astral-accent-ink);
+    }
+
+    &.is-warned {
+      --att-alert: var(--astral-warning);
+      color: var(--att-alert);
+      border-color: var(--att-alert);
+    }
+
+    &:focus-visible {
+      outline: solid var(--astral-line-focus) 2px;
+      outline-offset: 2px;
+    }
+  }
+
+  /* ── Рисунок ствола на схеме ── */
+  .gun-attach-scheme-gun {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+
+    & path {
+      fill: var(--astral-ink);
+      stroke: var(--astral-ink-faint);
+      stroke-linejoin: round;
+      fill-opacity: .09;
+      stroke-width: 1;
+    }
+
+    &.is-real path {
+      fill-rule: evenodd;
+      fill-opacity: .12;
+    }
+
+    & .gun-attach-scheme-rail {
+      stroke-dasharray: 2 3;
+      fill: none;
+    }
+  }
+
+  /* ── Подложка схемы, пропорция 320:110 ── */
+  .gun-attach-scheme {
+    --att-white: 255, 255, 255;
+    --att-glare: rgba(var(--att-white), .05);
+    --att-sheen: radial-gradient(120% 140% at 50% 0%, var(--att-glare), transparent 70%);
+    position: relative;
+    border: solid var(--astral-line) 1px;
+    aspect-ratio: 320/110;
+    background: var(--att-sheen), var(--astral-surface-sunken);
+    border-radius: var(--astral-radius);
+  }
+
+  /* ── Предупреждение «обвес не встал» ── */
+  .gun-attach-warn {
+    margin: 0;
+    padding-top: 8px;
+    padding-right: 10px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    align-items: flex-start;
+    display: flex;
+    gap: 8px;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-warning-soft);
+    line-height: 1.4;
+    color: var(--astral-warning);
+    font-size: var(--astral-text-small);
+
+    & svg {
+      margin-top: 2px;
+      flex: none;
+      height: 14px;
+      width: 14px;
+    }
+  }
+
+  /* ── Шапка открытого места ── */
+  .gun-attach-place {
+    gap: 8px;
+    display: grid;
+  }
+
+  .gun-attach-place-head {
+    min-width: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    & strong {
+      font-weight: 600;
+      flex: none;
+      font-size: var(--astral-text-body);
+    }
+  }
+
+  .gun-attach-place-value {
+    white-space: nowrap;
+    color: var(--astral-ink-muted);
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+  }
+
+  /* Глиф места стоит РАНЬШЕ общего значка: у равных свойств побеждает значок */
+  .gun-attach-place-glyph {
+    flex: none;
+    height: 26px;
+    width: 44px;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    font-size: var(--astral-text-title);
+    color: var(--astral-accent);
+    background: var(--astral-accent-soft);
+    border-radius: var(--astral-radius-sm);
+
+    &.is-ready {
+      background: transparent;
+    }
+  }
+
+  /* ── Значок с картинкой (место, плитка) ── */
+  .gun-attach-icon {
+    overflow: hidden;
+    box-sizing: border-box;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    background: var(--astral-surface-hover);
+    border-radius: var(--astral-radius-sm);
+
+    & img {
+      object-fit: contain;
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+
+    &.is-none {
+      background: transparent;
+      border: dashed var(--astral-line-strong) 1px;
+    }
+
+    &.is-ready {
+      background: transparent;
+    }
+
+    &.is-photo img {
+      object-fit: cover;
+    }
+  }
+
+  /* ── Сетка плиток и сама плитка ── */
+  .gun-attach-options {
+    --att-cell-min: 108px;
+    grid-template-columns: repeat(auto-fill, minmax(var(--att-cell-min), 1fr));
+    gap: 6px;
+    display: grid;
+  }
+
+  .gun-attach-option {
+    --att-beat: var(--astral-duration-fast) var(--astral-ease);
+    box-sizing: border-box;
+    min-height: 96px;
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    justify-items: center;
+    align-content: start;
+    padding-top: 8px;
+    padding-right: 6px;
+    padding-bottom: 10px;
+    padding-left: 6px;
+    font: inherit;
+    text-align: center;
+    color: var(--astral-ink);
+    cursor: pointer;
+    background: var(--astral-surface-raised);
+    border: solid var(--astral-line) 1px;
+    border-radius: var(--astral-radius);
+    transition: border-color var(--att-beat), background-color var(--att-beat);
+
+    &.is-selected {
+      border-color: var(--astral-accent);
+      background: var(--astral-accent-soft);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: .5;
+    }
+
+    &:focus-visible {
+      outline: solid var(--astral-line-focus) 2px;
+      outline-offset: 2px;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--astral-line-strong);
+      background: var(--astral-surface-hover);
+    }
+  }
+
+  .gun-attach-option-art {
+    max-width: 96px;
+    width: 100%;
+    height: 48px;
+  }
+
+  .gun-attach-option-name {
+    line-height: 1.25;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    font-size: var(--astral-text-small);
+    overflow: hidden;
+  }
+
+  .gun-attach-option-badge {
+    font-size: var(--astral-text-micro);
+    padding: 1px 7px;
+    background: var(--astral-surface-hover);
+    color: var(--astral-ink-faint);
+    border-radius: 999px;
+  }
+
+  /* ── «Вид из каталога» ── */
+  .gun-attach-looks {
+    padding-top: 8px;
+    gap: 6px;
+    display: grid;
+    border-top: solid var(--astral-line) 1px;
+  }
+
+  .gun-attach-looks-head {
+    flex-wrap: wrap;
+    display: flex;
+    row-gap: 2px;
+    column-gap: 8px;
+    align-items: baseline;
+
+    & .gun-hint {
+      margin: 0;
+    }
+
+    & strong {
+      font-weight: 600;
+      font-size: var(--astral-text-body);
+    }
+  }
+}

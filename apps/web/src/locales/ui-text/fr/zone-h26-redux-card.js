@@ -1,0 +1,42 @@
+/*
+ * Français pour la zone H26 du 10.11.2026 (`../zone-h26-redux-card.js`) : fiche de build. Chaîne russe → française.
+ * Avant les signes doubles l'espace insécable s'écrit en escape (code 00a0), jamais en symbole.
+ */
+
+export const frZoneH26ReduxCard = {
+  "Серые таймциклы": "Timecycles gris",
+  "Тёмные таймциклы": "Timecycles sombres",
+  "Светлые таймциклы": "Timecycles clairs",
+  "Яркие таймциклы": "Timecycles vifs",
+  "Без арены": "Sans arène",
+  "Входит в сборку": "Inclus dans le build",
+  "Отключён: при установке сборки пропускается": "Désactivé\u00a0: ignoré à l'installation du build",
+  "Не вышло: выбор возвращён как был": "Échec\u00a0: le choix a été rétabli",
+  "Все компоненты отключены": "Tous les composants sont désactivés",
+  "Отключить компонент": "Désactiver le composant",
+  "Включить компонент": "Activer le composant",
+  "Взять из другой сборки": "Prendre dans un autre build",
+  "Заменить компонент": "Remplacer le composant",
+  "Поставить вместо родной": "Utiliser à la place de l'original",
+  "Уже выбрана вместо родной": "Déjà choisi à la place de l'original",
+  "Вернуть родную часть": "Rétablir la partie d'origine",
+  "В других сборках такого компонента пока нет": "Aucun autre build ne contient encore ce composant",
+  "Сделана для другого проекта": "Conçu pour un autre projet",
+  "Часть другой сборки": "Partie d'un autre build",
+  "Заменён частью другой сборки": "Remplacé par une partie d'un autre build",
+  "Моя работа": "Mon travail",
+  "Из другой сборки": "D'un autre build",
+  "Своя работа": "Travail personnel",
+  "Сейчас стоит в игре": "Actuellement installé dans le jeu",
+  "Своих работ этого вида пока нет. Сделайте её в мастерской": "Vous n'avez pas encore de travail de ce type. Créez-en un dans l'atelier",
+  "Сделать в мастерской": "Créer dans l'atelier",
+  "Заменён своей работой": "Remplacé par votre travail",
+  "Работы больше нет": "Ce travail n'existe plus",
+  "Редактор этого вида не открылся": "L'éditeur de ce type ne s'est pas ouvert",
+  "Этот архив занимает несколько слотов, замена затронет их все": "Cette archive occupe plusieurs emplacements, le remplacement les touchera tous",
+  "Всё равно заменить": "Remplacer quand même",
+  "Зоны ВЗХ": "Zones VZH",
+  "ВЗХ-залазы": "Spots d'escalade VZH",
+  "Цвета интерфейса": "Couleurs de l'interface",
+  "Эта работа встанет на несколько слотов сразу, замена затронет их все": "Cette création ira sur plusieurs emplacements à la fois, le remplacement les touchera tous",
+};

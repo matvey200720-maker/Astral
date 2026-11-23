@@ -1,0 +1,294 @@
+/* Каркас первого запуска: заставка, карточки шагов и панель подготовки в углу.
+   Внутри правил свойства идут от эффектов к раскладке. */
+
+/* ── Общие значения ── */
+
+.preparation-dock {
+  border-radius: var(--astral-radius-lg);
+}
+
+:is(.preparation-dock-head) > span,
+.preparation-progress,
+.preparation-dock-body > button {
+  border-radius: var(--astral-radius);
+}
+
+:is(.preparation-dock-head) strong {
+  font-size: var(--astral-text-body);
+}
+
+.preparation-dock-head b,
+.preparation-dock-head small,
+.preparation-dock li small,
+.preparation-dock-body > button {
+  font-size: var(--astral-text-micro);
+}
+
+
+:is(.preparation-dock) li.active,
+.preparation-dock-body > button {
+  color: #fff;
+}
+
+:is(.preparation-dock) li.done,
+:is(.preparation-dock).ready :is(.preparation-dock-head) > span {
+  color: var(--astral-positive);
+}
+
+.preparation-dock-head b,
+.preparation-dock li b,
+.preparation-dock-body > button {
+  font-weight: 500;
+}
+
+
+:is(.preparation-dock-head) > span,
+.preparation-dock li > svg,
+.preparation-dock li > i {
+  flex: 0 0 auto;
+}
+
+:is(.preparation-dock-head),
+.preparation-dock li,
+.preparation-dock-body > button,
+.product-onboarding {
+  display: flex;
+}
+
+:is(.product-onboarding),
+.preparation-dock-body > button,
+.preparation-dock li,
+.preparation-dock-head {
+  align-items: center;
+}
+
+:is(.preparation-dock-head) > span {
+  place-items: center;
+  display: grid;
+}
+
+:is(.splash-only) {
+  flex-direction: column;
+}
+
+/* ── Панель подготовки ── */
+
+:is(.preparation-dock) {
+  box-shadow: 0px 24px 70px rgba(0, 0, 0, .42);
+  border-width: 1px;
+  border-style: solid;
+  border-color: #373737;
+  background-color: rgba(20, 20, 20, .96);
+  color: #f5f6f8;
+  overflow: hidden;
+  width: 380px;
+  z-index: 900;
+  bottom: 22px;
+  right: 22px;
+  position: fixed;
+}
+
+:is(.collapsed).preparation-dock {
+  width: 330px;
+}
+
+:is(.preparation-dock-head) {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  padding: 13px;
+  min-height: 74px;
+  width: 100%;
+  gap: 11px;
+}
+
+:is(.preparation-dock-head) > span {
+  background-color: #292929;
+  color: #afafaf;
+  height: 38px;
+  width: 38px;
+}
+
+:is(.preparation-dock-head) > span svg {
+  width: 18px;
+}
+
+:is(.preparation-dock-head) > div {
+  min-width: 0;
+  gap: 4px;
+  flex-direction: column;
+  display: flex;
+}
+
+:is(.preparation-dock-head) small {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #878787;
+  overflow: hidden;
+}
+
+:is(.preparation-dock-head) strong {
+  line-height: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+:is(.preparation-dock-head) > svg {
+  transition: var(--astral-duration);
+  width: 15px;
+}
+
+:is(.preparation-dock).open :is(.preparation-dock-head) > svg {
+  transform: rotate(180deg);
+}
+
+:is(.preparation-dock).ready :is(.preparation-dock-head) > span {
+  background-color: rgba(var(--astral-positive-rgb), .13);
+}
+
+:is(.preparation-dock).error :is(.preparation-dock-head) > span,
+:is(.preparation-dock).needs-action :is(.preparation-dock-head) > span {
+  background-color: rgba(255, 170, 86, .12);
+  color: #ffb66d;
+}
+
+:is(.preparation-dock-body) {
+  padding: 0 13px 13px;
+}
+
+:is(.preparation-progress) {
+  background-color: #303030;
+  overflow: hidden;
+  height: 3px;
+}
+
+:is(.preparation-progress) i {
+  transition-property: width;
+  transition-duration: .35s;
+  background-image: linear-gradient(90deg, #868686, #b7b7b7);
+  height: 100%;
+  display: block;
+}
+
+:is(.preparation-dock) ol {
+  list-style: none;
+  padding: 0;
+  margin-block: 12px;
+  margin-inline: 0;
+  display: grid;
+}
+
+:is(.preparation-dock) li {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #2a2a2a;
+  color: #6d6d6d;
+  min-height: 39px;
+  gap: 10px;
+}
+
+:is(.preparation-dock) li > i {
+  border-radius: 50%;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #404040;
+}
+
+:is(.preparation-dock) li > svg,
+.preparation-dock li > i {
+  height: 15px;
+  width: 15px;
+}
+
+:is(.preparation-dock) li span {
+  gap: 2px;
+  flex-direction: column;
+  display: flex;
+}
+
+:is(.preparation-dock) li b {
+  font-size: 11px;
+}
+
+:is(.preparation-dock) li small {
+  font-weight: 400;
+  color: var(--astral-ink-faint);
+}
+
+:is(.preparation-dock-body) > button {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #424242;
+  background-color: #272727;
+  height: 38px;
+  width: 100%;
+  gap: 8px;
+  justify-content: center;
+}
+
+:is(.preparation-dock-body) > button svg {
+  width: 14px;
+}
+
+/* ── Заставка ожидания ── */
+
+
+:is(.spin) {
+  animation-name: spin;
+  animation-duration: .9s;
+  animation-timing-function: linear;
+  animation-delay: 0s;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+  animation-fill-mode: none;
+  animation-play-state: running;
+}
+
+/* ── Корень первого запуска ──
+   Карточки шагов, форма и шапка переехали в `features/onboarding/first-run.css` (15.11.2026). */
+
+:is(.product-onboarding) {
+  background: transparent;
+  color: #f7f8fa;
+  font-family: Inter, Arial, sans-serif;
+  overflow: hidden;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  justify-content: center;
+}
+
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* Знак в доке «Подготовка GTA V» (`pages/ProductStartup.jsx`): контур знака Astral, залитый снизу вверх по ходу подготовки
+   (`--dock-level`). Рисунок — маска `brand/astral-mark.png`; знак занимает в ней 54 % ширины, поэтому маска увеличена. */
+
+:is(.dock-mark) {
+  -webkit-mask: url("/brand/astral-mark.png") center / 185% no-repeat;
+  mask: url("/brand/astral-mark.png") center / 185% no-repeat;
+  background: linear-gradient(to top, #f4f4f5 var(--dock-level, 0%), rgba(255, 255, 255, .16) var(--dock-level, 0%));
+  height: 29px;
+  width: 29px;
+  display: block;
+}
+
+/* ── Узкие окна ── */
+
+@media (max-width: 760px) {
+  :is(.preparation-dock) {
+    bottom: 10px;
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
+}

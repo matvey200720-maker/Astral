@@ -1,0 +1,104 @@
+/* Выбор языка в настройках (вариант A «Пульт», 15.11.2026): карточка из строк по 62 px, у каждой кружок слева,
+   язык жирным и «привет» на нём справа. Выбранная строка светлее, кружок белый с чёрной галочкой.
+   Числа — из макета `r6/settings-downloads/settings-a.css`; кегль 17 — ступень шкалы. */
+
+.settings-section-panel .language-settings-card {
+  min-inline-size: 0;
+  display: grid;
+}
+
+.settings-section-panel .language-choice-list {
+  display: grid;
+}
+
+/* ---- Строка языка ---- */
+
+.settings-section-panel .language-choice-row {
+  font: inherit;
+  text-align: left;
+  min-inline-size: 0px;
+  block-size: 62px;
+  padding-block: 0px;
+  padding-inline: 22px;
+  gap: 14px;
+  align-items: center;
+  display: flex;
+  cursor: pointer;
+  color: var(--astral-ink);
+  background-color: transparent;
+  border: 0px;
+  border-radius: 0px;
+  transition-property: background-color;
+  transition-duration: var(--astral-duration-fast);
+  transition-timing-function: var(--astral-ease);
+}
+
+.settings-section-panel .language-choice-row + .language-choice-row {
+  border-block-start: 1px solid var(--astral-line);
+}
+
+.settings-section-panel .language-choice-row:hover,
+.settings-section-panel .active.language-choice-row {
+  background-color: var(--astral-surface-hover);
+}
+
+.settings-section-panel .language-choice-row:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+.settings-section-panel .language-choice-radio {
+  inline-size: 20px;
+  block-size: 20px;
+  flex: none;
+  place-items: center;
+  display: grid;
+  color: #000;
+  border: 1.5px solid rgba(255, 255, 255, 0.26);
+  border-radius: 50%;
+}
+
+.settings-section-panel .active .language-choice-radio {
+  border-color: #fff;
+  background-color: #fff;
+}
+
+.settings-section-panel .language-choice-radio svg {
+  inline-size: 12px;
+  block-size: 12px;
+}
+
+.settings-section-panel .language-choice-row > b {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: var(--astral-text-title);
+  letter-spacing: 0px;
+  min-inline-size: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+}
+
+.settings-section-panel .language-choice-row > small {
+  white-space: nowrap;
+  margin-inline-start: auto;
+  font-weight: 400;
+  font-size: var(--astral-text-strong);
+  color: var(--astral-ink-muted);
+}
+
+.settings-section-panel .active.language-choice-row > small {
+  color: #fff;
+}
+
+/* ---- Подпись под списком ---- */
+
+.settings-section-panel .language-choice-note {
+  margin-block-start: 16px;
+  margin-inline: 4px;
+  line-height: 1.5;
+  font-size: var(--astral-text-body);
+  color: var(--astral-ink-muted);
+  max-inline-size: 72ch;
+}

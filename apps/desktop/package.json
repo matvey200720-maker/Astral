@@ -1,0 +1,183 @@
+{
+  "name": "@modovik/desktop",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/main.js",
+  "description": "Safe GTA V modification manager",
+  "author": "Astral",
+  "scripts": {
+    "dev": "node ../../scripts/ensure-rpf-helper.js && node ../../scripts/ensure-native-host.js && node ../../scripts/build-preload.js && electron .",
+    "dist": "node ../../scripts/build-preload.js && node ../../scripts/write-beta-build.mjs && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@modovik/api": "*",
+    "@modovik/awc": "*",
+    "@modovik/beta-pak": "*",
+    "@modovik/bloodfx": "*",
+    "@modovik/climb-contract": "*",
+    "@modovik/clothing": "*",
+    "@modovik/contracts": "*",
+    "@modovik/dds": "*",
+    "@modovik/fx-scenes": "*",
+    "@modovik/game-discovery": "*",
+    "@modovik/gfx": "*",
+    "@modovik/gun-studio": "*",
+    "@modovik/gunpack": "*",
+    "@modovik/install-engine": "*",
+    "@modovik/interior-contract": "*",
+    "@modovik/kill-effects": "*",
+    "@modovik/mega-mall-contract": "*",
+    "@modovik/mega-mall-renderer": "*",
+    "@modovik/minimap-contract": "*",
+    "@modovik/native-rs": "*",
+    "@modovik/optimizer": "*",
+    "@modovik/pack-intake": "*",
+    "@modovik/ptfx-studio": "*",
+    "@modovik/publishing": "*",
+    "@modovik/rage-drawable": "*",
+    "@modovik/reticle-contract": "*",
+    "@modovik/reticle-pack": "*",
+    "@modovik/rpf-inspector": "*",
+    "@modovik/rpf7": "*",
+    "@modovik/sound-studio": "*",
+    "@modovik/street-light-contract": "*",
+    "@modovik/street-light-renderer": "*",
+    "@modovik/timecycle": "*",
+    "@modovik/tracer-contract": "*",
+    "@modovik/vector-map": "*",
+    "@modovik/vegetation": "*",
+    "@modovik/water": "*",
+    "@modovik/weapon-sound-pack": "*",
+    "@modovik/ypt": "*",
+    "sharp": "^0.35.3",
+    "unzipper": "0.12.5"
+  },
+  "devDependencies": {
+    "electron": "43.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "app.astral.desktop",
+    "productName": "Astral",
+    "protocols": [
+      {
+        "name": "Astral Mod Link",
+        "schemes": [
+          "astral"
+        ]
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "afterPack": "../../scripts/after-pack.cjs",
+    "directories": {
+      "output": "../../release"
+    },
+    "files": [
+      "src/**/*",
+      "dist/preload.cjs",
+      "dist/beta-build.json",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web"
+      },
+      {
+        "from": "../../runtime/catalog-public.pem",
+        "to": "catalog-public.pem"
+      },
+      {
+        "from": "../../runtime/catalog-cloud-public.pem",
+        "to": "catalog-cloud-public.pem"
+      },
+      {
+        "from": "../../runtime/packages",
+        "to": "packages",
+        "filter": [
+          "**/*",
+          "!safeswitch-*{,/**/*}"
+        ]
+      },
+      {
+        "from": "../../tools/rpf-helper/publish",
+        "to": "rpf-helper"
+      },
+      {
+        "from": "../../resources/street-lights",
+        "to": "street-lights"
+      },
+      {
+        "from": "../../resources/climbs",
+        "to": "climbs"
+      },
+      {
+        "from": "../../resources/wallbang",
+        "to": "wallbang"
+      },
+      {
+        "from": "../../resources/recolor",
+        "to": "recolor"
+      },
+      {
+        "from": "../../resources/recolor-lod",
+        "to": "recolor-lod"
+      },
+      {
+        "from": "../../resources/recolor-local",
+        "to": "recolor-local"
+      },
+      {
+        "from": "../../resources/clothing",
+        "to": "clothing"
+      },
+      {
+        "from": "../../resources/game-vanilla",
+        "to": "game-vanilla"
+      },
+      {
+        "from": "../../resources/vegetation",
+        "to": "vegetation"
+      },
+      {
+        "from": "../../resources/optimization",
+        "to": "optimization"
+      },
+      {
+        "from": "../../resources/dlss5",
+        "to": "dlss5"
+      },
+      {
+        "from": "../../resources/msl-zones",
+        "to": "msl-zones"
+      },
+      {
+        "from": "../../native/publish",
+        "to": "native"
+      },
+      {
+        "from": "../../resources/update-stable",
+        "to": "update-stable"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico",
+      "artifactName": "Astral-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Astral",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

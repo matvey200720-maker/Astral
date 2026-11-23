@@ -1,0 +1,229 @@
+/* Workshop library refinement: stable controls, media-first details and
+   deliberately long preview catalogs for layout validation. */
+.desktop-app .workshop-slot-context {
+  position: sticky;
+  z-index: 36;
+  top: 10px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin: 10px 12px 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.desktop-app .workshop-slot-context > * {
+  pointer-events: auto;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media) {
+  width: min(100%, 1540px);
+  margin-inline: auto;
+  padding: 4px clamp(16px, 2.4vw, 36px) 38px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-hero {
+  display: grid !important;
+  min-height: 0 !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto auto !important;
+  gap: 12px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-hero-media {
+  order: 1;
+  position: relative !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  aspect-ratio: 16 / 7.1 !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-hero-media
+  > img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  filter: var(--workshop-variant-filter, none) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-photo-media
+  .workshop-local-hero-media
+  > img {
+  object-fit: cover !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-hero-header {
+  order: 2;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: end !important;
+  gap: 24px !important;
+  padding: 14px 4px 4px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-hero-copy
+  h1 {
+  max-width: 24ch;
+  margin: 5px 0 7px !important;
+  font-size: clamp(32px, 3.6vw, 52px) !important;
+  line-height: 0.98 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-grid {
+  display: grid !important;
+  width: 100% !important;
+  max-width: none !important;
+  grid-auto-flow: row !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+  padding: 0 0 12px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  scroll-snap-type: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-grid
+  > button {
+  position: relative !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  aspect-ratio: 16 / 10 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: transparent !important;
+  scroll-snap-align: none !important;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-grid
+  > button:hover {
+  border-color: color-mix(in srgb, var(--text) 26%, var(--line)) !important;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22) !important;
+  transform: translateY(-3px) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-card-media,
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-card-media
+  > img {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog.is-minimap-media
+  .workshop-local-card-media
+  > img {
+  padding: 18px !important;
+  object-fit: contain !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+  .workshop-local-card-copy {
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  padding: 32px 12px 11px !important;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(7, 7, 7, 0.88)
+  ) !important;
+}
+
+@media (max-width: 1180px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+    .workshop-local-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+    .workshop-local-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+    .workshop-local-hero-header {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    .workshop-library-catalog:is(.is-photo-media, .is-minimap-media)
+    .workshop-local-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

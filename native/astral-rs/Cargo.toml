@@ -1,0 +1,27 @@
+[package]
+name = "astral-rs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Тяжёлые модули Astral на Rust (задача 6 ТЗ 06.10.2026): сжатие ресурсов"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3", default-features = false, features = ["napi4", "dyn-symbols"] }
+napi-derive = "3"
+libdeflater = "1.26"
+# Ядра цвета травы (15.11.2026): арифметика живёт в крейте движка, здесь только мост к JS.
+astral-recolor = { path = "../astral-engine/crates/astral-recolor" }
+# Ядро блоков DXT (`src/dxt.rs`): тот же кодек, что в движке. Правки кодека — в крейте движка, не здесь.
+rage-res = { path = "../astral-engine/crates/rage-res" }
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = "symbols"

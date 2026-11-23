@@ -1,0 +1,380 @@
+export default Object.freeze({
+  "brand.beta": "Beta",
+
+  "window.minimize": "Згорнути",
+  "window.close": "Закрити вікно",
+
+  "lang.label": "Мова",
+
+  "common.continue": "Продовжити",
+  "common.cancel": "Скасувати",
+  "common.retry": "Повторити",
+  "common.close": "Закрити",
+  "common.copy": "Копіювати",
+  "common.copied": "Скопійовано",
+  "common.paste": "Вставити",
+  "common.openLogs": "Відкрити журнал",
+  "common.showDetails": "Показати деталі",
+  "common.hideDetails": "Приховати деталі",
+  "common.installer": "Інсталятор {version}",
+  "frame.badge": "Кадр з гри",
+  "frame.name": "Світанок над містом",
+  "common.version": "Версія {version}",
+
+  "steps.label": "Кроки встановлення",
+  "steps.code": "Код",
+  "steps.confirm": "Підтвердження",
+  "steps.install": "Встановлення",
+
+  "unit.b": "Б",
+  "unit.kb": "КБ",
+  "unit.mb": "МБ",
+  "unit.gb": "ГБ",
+  "unit.perSecond": "/с",
+  "unit.s": "с",
+  "unit.min": "хв",
+  "unit.h": "год",
+
+  "hero.welcome.title": "Закрита бета Astral",
+  "hero.welcome.sub": "Став моди. Роби свої.",
+  "hero.confirm.title": "Майже готово",
+  "hero.confirm.sub": "Залишився останній крок: підтвердіть на сайті.",
+  "hero.ready.title": "Усе готово",
+  "hero.ready.sub": "Виберіть ярлики, і почнемо.",
+  "hero.download.title": "Завантажуємо Astral",
+  "hero.download.sub": "Зазвичай це кілька хвилин.",
+  "hero.downloadQueue.title": "Чекаємо своєї черги",
+  "hero.downloadQueue.sub": "Встановлення продовжиться саме.",
+  "hero.install.title": "Встановлюємо",
+  "hero.install.sub": "Ще трохи.",
+  "hero.done.title": "Готово",
+  "hero.done.sub": "Приємної гри.",
+  "hero.error.title": "Щось пішло не так",
+  "hero.error.sub": "Таке зазвичай легко виправити.",
+  "hero.existing.title": "Astral вже у вас",
+  "hero.existing.sub": "Запустіть його або встановіть знову.",
+  "hero.update.title": "Оновлюємо Astral",
+  "hero.update.sub": "Це займе менше хвилини.",
+  "hero.updateDone.title": "Готово",
+  "hero.updateDone.sub": "Версія найновіша.",
+  "hero.updateFailed.title": "Оновлення не вдалося",
+  "hero.updateFailed.sub": "Усе працює, нічого не пропало.",
+  "hero.uninstall.title": "Видалення Astral",
+  "hero.uninstall.sub": "Видалимо програму, а файли гри та моди залишимо.",
+  "hero.uninstallDone.title": "Astral видалено",
+  "hero.uninstallDone.sub": "Дякуємо, що були з нами.",
+
+  "welcome.title": "Введіть код доступу",
+  "welcome.text":
+    "Код надсилає команда Astral у ваш особистий закритий канал Discord. Він одноразовий.",
+  "welcome.label": "Код бети",
+  "welcome.placeholder": "XXXX-XXXX-XXXX-XXXX",
+  "welcome.count": "{count} з {total}",
+  "welcome.rejected": "Прибрали зайві знаки: {chars}. Перевірте код.",
+  "welcome.truncated": "У коді не більше 16 знаків, зайве відрізали.",
+  "welcome.submit": "Продовжити",
+  "welcome.submitting": "Перевіряємо код…",
+  "welcome.help": "Де взяти код?",
+  "welcome.hintDefault": "Літери та цифри, регістр не важливий. Дефіси ставляться самі.",
+  "welcome.openSite": "Відкрити сайт",
+  "welcome.path": "Встановлення в {path}",
+  "welcome.free": "Вільно {size}",
+  "welcome.notice.expired":
+    "Час підтвердження минув. Введіть той самий код ще раз: його не витрачено.",
+
+  "existing.title": "{name} вже встановлено",
+  "existing.text":
+    "Версія {version}, гілка {channel}. Можна запустити Astral або встановити знову.",
+  "existing.launch": "Запустити Astral",
+  "existing.reinstall": "Перевстановити",
+  "existing.hint":
+    "Потрібен код перевстановлення. Його видає лише команда Astral.",
+
+  "confirm.title": "Підтвердьте в браузері",
+  "confirm.text":
+    "Ми відкрили сайт у браузері. Увійдіть через Discord і підтвердіть встановлення.",
+  "confirm.codeLabel": "Введіть цей код на сайті",
+  "confirm.waiting": "Чекаємо підтвердження з сайту…",
+  "confirm.offline": "Немає зв’язку, пробуємо знову…",
+  "confirm.expires": "Код діє ще {time}",
+  "confirm.reopen": "Відкрити сайт ще раз",
+  "confirm.cancel": "Скасувати",
+  "confirm.warning": "Встановлення почали не ви? Натисніть «Це не я» на сайті.",
+
+  "ready.title": "Встановлення підтверджено",
+  "ready.hello": "Вітаємо, {name}!",
+  "ready.helloAnon": "Вітаємо!",
+  "ready.text": "Встановлюємо Astral {version}, гілка {channel}.",
+  "ready.download": "Завантажити",
+  "ready.need": "Потрібно місця",
+  "ready.free": "Вільно",
+  "ready.desktop": "Ярлик на робочому столі",
+  "ready.menu": "Ярлик у меню «Пуск»",
+  "ready.install": "Встановити",
+  "ready.noSpace":
+    "Не вистачає місця: потрібно {need}, вільно {free}. Звільніть місце й повторіть.",
+  "ready.folder": "Тека",
+  "ready.change": "Змінити",
+  "ready.pickTitle": "Куди встановити Astral",
+  "ready.folderProtected":
+    "Ця тека захищена: для встановлення потрібні права адміністратора. Виберіть іншу, наприклад на диску D.",
+  "ready.folderReadOnly": "До цієї теки не можна записувати. Виберіть іншу.",
+  "ready.folderFailed": "Не вдалося вибрати теку. Спробуйте ще раз.",
+  "ready.noSpaceChoose":
+    "Не вистачає місця: потрібно {need}, вільно {free}. Звільніть місце або виберіть теку на іншому диску.",
+
+  "download.title": "Завантажуємо Astral",
+  "download.launcher": "Лаунчер",
+  "download.interface": "Інтерфейс",
+  "download.eta": "залишилось {time}",
+  "download.attempt": "Спроба {n} з {total}",
+  "download.offline": "Немає зв’язку. Продовжимо з того самого місця…",
+  "download.queue": "Зараз багато охочих — чекаємо своєї черги. Встановлення продовжиться саме. Наступна спроба через {time}.",
+  "download.queueNow": "Пробуємо знову…",
+  "download.cancel": "Скасувати встановлення",
+  "download.overall": "Усього",
+
+  "install.title": "Встановлюємо",
+  "install.verify": "Перевіряємо файли",
+  "install.unpack": "Розпаковуємо",
+  "install.shortcuts": "Створюємо ярлики",
+  "install.finalize": "Завершуємо",
+
+  "done.title": "Astral встановлено",
+  "done.text": "Версія {version}. Можна грати.",
+  "done.serial": "Номер активації",
+  "done.launch": "Запустити Astral",
+
+  "next.afterTitle": "Після встановлення",
+  "next.doneTitle": "Що далі",
+  "next.1.title": "Увійдіть через Discord",
+  "next.1.text": "Відкриється браузер. Пароль не потрібен.",
+  "next.2.title": "Astral знайде GTA V",
+  "next.2.text": "Якщо не знайде, теку оберете самі.",
+  "next.3.title": "Встановіть перший мод",
+  "next.3.text": "Відкрийте каталог і натисніть «Встановити».",
+  "done.warning.revoked":
+    "Сервер не прийняв позначку про встановлення: ваш доступ до бети відкликано. Файли на місці, але Astral, найімовірніше, не запуститься. Напишіть у підтримку.",
+  "done.warning.expired":
+    "Сервер не прийняв позначку про встановлення: минув термін підтвердження входу. Astral встановлено, але під час першого запуску може знадобитися новий код.",
+  "done.warning.report":
+    "Сервер не прийняв позначку про встановлення, але на роботу Astral це не впливає.",
+
+  "closing.title": "Перервати встановлення?",
+  "closing.text":
+    "Код прив’язано до цього ПК. Доки Astral жодного разу не запускали, встановлення можна повторити з тим самим кодом і знову підтвердити на сайті. Якщо запуск вже був, потрібен код перевстановлення від команди Astral.",
+  "closing.stay": "Продовжити встановлення",
+  "closing.quit": "Перервати й вийти",
+  "closing.cancel": "Перервати встановлення",
+  "closing.busyUpdateTitle": "Триває оновлення",
+  "closing.busyUpdateText":
+    "Перервати не можна, зачекайте: це займе менше хвилини.",
+  "closing.busyUninstallTitle": "Триває видалення",
+  "closing.busyUninstallText":
+    "Перервати не можна, зачекайте: це займе менше хвилини.",
+  "closing.ok": "Зрозуміло",
+
+  "update.title": "Оновлюємо Astral",
+  "update.download": "Завантажуємо оновлення",
+  "update.verify": "Перевіряємо файли",
+  "update.unpack": "Розпаковуємо",
+  "update.swap": "Замінюємо файли",
+  "update.start": "Запускаємо Astral",
+  "update.step.download": "Завантажено",
+  "update.step.verify": "Перевірено",
+  "update.step.unpack": "Розпакування",
+  "update.step.swap": "Заміна",
+  "update.step.start": "Запуск",
+  "update.steps": "Кроки оновлення",
+  "update.opens": "Astral відкриється сам",
+  "update.doneTitle": "Astral оновлено",
+  "update.doneText": "Оновлено до {version}.",
+  "update.failedTitle": "Оновлення не вдалося",
+  "update.failedText":
+    "Версія {version} не запустилася, тож ми повернули версію {restored}. Для вас нічого не змінилося.",
+
+  "uninstall.title": "Видалити {name}?",
+  "uninstall.text":
+    "Видалимо програму, ярлики й записи в реєстрі. Файли гри та ваші моди залишаться.",
+  "uninstall.deleteData": "Видалити й мої дані Astral",
+  "uninstall.deleteDataHint":
+    "Це налаштування, вхід і локальний кеш. Без прапорця після нового встановлення усе повернеться саме.",
+  "uninstall.folders": "Теки з даними",
+  "uninstall.running":
+    "Astral запущено, видалити не вийде. Закрийте й повторіть.",
+  "uninstall.confirm": "Видалити",
+  "uninstall.keep": "Скасувати",
+  "uninstall.willGo": "Буде видалено",
+  "uninstall.willGoText": "Програма, ярлики та записи в реєстрі",
+  "uninstall.willStay": "Залишиться",
+  "uninstall.stayAll": "Файли гри, ваші моди та дані Astral",
+  "uninstall.stayGame": "Файли гри та ваші моди",
+  "uninstall.progressTitle": "Видаляємо {name}",
+  "uninstall.files": "Видаляємо файли",
+  "uninstall.shortcuts": "Прибираємо ярлики",
+  "uninstall.registry": "Чистимо записи в реєстрі",
+  "uninstall.data": "Видаляємо дані",
+  "uninstall.doneTitle": "{name} видалено",
+  "uninstall.doneText": "Файли гри та моди не зачеплено.",
+  "uninstall.doneData": "Дані Astral теж видалено.",
+  "uninstall.doneKept":
+    "Дані Astral збережено: після нового встановлення усе буде як раніше.",
+
+  "error.supportCode": "Код для підтримки",
+  "error.factInstaller": "Версія інсталятора",
+  "error.support": "Якщо не виходить, напишіть у підтримку Astral у Discord і назвіть цей код.",
+  "error.restart": "Почати заново",
+
+  "field.CODE_FORMAT": "Перевірте код: після BETA- має бути 16 знаків.",
+  "field.BETA_CODE_INVALID":
+    "Такого коду немає. Можливо, скопійовано не весь код: перевірте.",
+  "field.BETA_CODE_USED":
+    "Цей код вже використано. Якщо потрібне повторне встановлення, напишіть команді Astral.",
+  "field.BETA_CODE_EXPIRED":
+    "Термін дії коду минув. Попросіть у команди Astral новий.",
+  "field.BETA_CODE_REVOKED": "Доступ за цим кодом відкликано.",
+  "field.BETA_NOT_REGISTERED":
+    "Спершу зареєструйтеся на сайті через Discord, потім поверніться до цього вікна.",
+  "field.RATE_LIMITED": "Забагато спроб. Зачекайте {seconds} с.",
+  "field.BETA_UNAVAILABLE":
+    "Сервіс бети тимчасово недоступний. Спробуйте трохи згодом.",
+  "field.SERVER_UNAVAILABLE": "Сервер не відповідає. Повторіть за хвилину.",
+  "field.NETWORK_UNAVAILABLE":
+    "Немає підключення до інтернету. Перевірте мережу й спробуйте знову.",
+  "field.UNSUPPORTED_OS": "Потрібна Windows 10 або новіша.",
+  "field.INTERNAL":
+    "Щось пішло не так. Спробуйте ще раз, а якщо не вийде, напишіть команді.",
+
+  "error.BETA_ACTIVATION_DENIED.title": "Встановлення відхилено",
+  "error.BETA_ACTIVATION_DENIED.text":
+    "На сайті натиснули «Це не я», тому встановлення відхилено. Якщо це помилка, почніть заново.",
+  "error.BETA_ACTIVATION_REVOKED.title": "Активацію відкликано",
+  "error.BETA_ACTIVATION_REVOKED.text":
+    "Доступ до бети відкликано. Якщо це помилка, напишіть команді Astral.",
+  "error.DPOP_INVALID.title": "Перевірте час на ПК",
+  "error.DPOP_INVALID.text":
+    "Годинник ПК не збігається з серверним, запит відхилено. Увімкніть у Windows автоматичне встановлення часу й почніть заново.",
+  "error.BETA_TICKET_INVALID.title": "Посилання на файли застаріло",
+  "error.BETA_TICKET_INVALID.text":
+    "Почніть встановлення заново з тим самим кодом на тому ж ПК. Це можливо, доки Astral не запускали.",
+  "error.BETA_UNAVAILABLE.title": "Сервіс бети недоступний",
+  "error.BETA_UNAVAILABLE.text":
+    "Спробуйте за пару хвилин: завантажене збережеться.",
+  "error.SERVER_UNAVAILABLE.title": "Сервер не відповідає",
+  "error.SERVER_UNAVAILABLE.text":
+    "Спробуйте за хвилину: завантажене не втратиться.",
+  "error.NETWORK_UNAVAILABLE.title": "Немає підключення",
+  "error.NETWORK_UNAVAILABLE.text":
+    "Зв’язок зник. Перевірте мережу й повторіть: завантажене збережено, завантаження продовжиться з того ж місця.",
+  "error.RATE_LIMITED.title": "Забагато запитів",
+  "error.RATE_LIMITED.text": "Зачекайте {seconds} с і повторіть.",
+  "error.DISK_FULL.title": "Мало місця на диску",
+  "error.DISK_FULL.text":
+    "Потрібно {need}, вільно {free}. Звільніть місце й повторіть.",
+  "error.ACCESS_DENIED.title": "Немає доступу до теки",
+  "error.ACCESS_DENIED.text":
+    "Не вдалося записати файли в {path}. Перевірте права на теку й антивірус.",
+  "error.FOLDER_BUSY.title": "Тека не порожня",
+  "error.FOLDER_BUSY.text":
+    "У теці «{name}» вже є сторонні файли. Виберіть інше місце або очистіть цю теку.",
+  "error.FOLDER_BUSY.action": "Вибрати теку",
+  "error.APP_RUNNING.title": "Astral запущено",
+  "error.APP_RUNNING.text": "Закрийте Astral і повторіть.",
+  "error.HASH_MISMATCH.title": "Файл пошкоджено під час завантаження",
+  "error.HASH_MISMATCH.text": "Контрольна сума не збіглася. Завантажте ще раз.",
+  "error.SIGNATURE_INVALID.title": "Підпис збірки не пройшов перевірку",
+  "error.SIGNATURE_INVALID.text":
+    "Ця збірка не потрапила на диск: можливо, файл пошкоджено або змінено. Завантажте свіжий інсталятор із сайту. Якщо не допоможе, напишіть команді Astral.",
+  "error.INSTALL_FAILED.title": "Встановлення не вдалося",
+  "error.INSTALL_FAILED.text":
+    "Щось завадило записати файли. Повторіть спробу, а якщо знову не вийде, надішліть файл журналу команді Astral.",
+  "error.UNSUPPORTED_OS.title": "Потрібна Windows 10 або новіша",
+  "error.UNSUPPORTED_OS.text": "Astral не працює на цій версії Windows.",
+  "error.INTERNAL.title": "Щось пішло не так",
+  "error.INTERNAL.text":
+    "Відкрийте файл журналу й передайте його команді Astral: ми розберемося.",
+
+  "hero.branch.title": "Яку гілку встановити?",
+  "hero.branch.sub": "Решту можна встановити поруч будь-коли.",
+  "hero.side.title": "Встановлюємо поруч",
+  "hero.side.sub": "Це займе кілька хвилин.",
+  "hero.sideDone.title": "Готово",
+  "hero.sideDone.sub": "Нова гілка вже поруч з іншими.",
+
+  "branch.label": "Гілки Astral",
+  "branch.title": "Виберіть гілку",
+  "branch.text":
+    "Кожна гілка встановлюється в свою теку. Спільні для всіх: вхід, майстерня й налаштування.",
+  "branch.version": "Версія {version}",
+  "branch.versionUnknown": "Точну версію дізнаємося під час встановлення.",
+  "branch.installed": "Встановлена",
+  "branch.continue": "Далі",
+  "branch.change": "Вибрати іншу гілку",
+
+  "ready.textBranch": "Встановлюємо {name} {version}.",
+  "ready.textBranchUnknown": "Встановлюємо свіжу версію {name}.",
+
+  "side.title": "Встановлюємо {name} поруч",
+  "side.download": "Завантажуємо файли",
+  "side.verify": "Перевіряємо файли",
+  "side.unpack": "Розпаковуємо",
+  "side.files": "Розкладаємо файли",
+  "side.shortcuts": "Створюємо ярлики",
+  "side.registry": "Записуємо в реєстр",
+  "side.doneTitle": "{name} встановлено поруч",
+  "side.doneText":
+    "Версія {version} встановлена поруч з іншими, дані в них спільні.",
+  "side.launch": "Запустити {name}",
+  "side.enterCode": "Ввести код",
+
+  "closing.busySideTitle": "Триває встановлення",
+  "closing.busySideText": "Перервати не можна, зачекайте: це кілька хвилин.",
+
+  "error.BETA_CHANNEL_DENIED.title": "Доступ до гілки знято",
+  "error.BETA_CHANNEL_DENIED.text":
+    "Ваш обліковий запис більше не має доступу до цієї гілки. На диску нічого не додалося й не видалилося. Виберіть іншу гілку або запитайте в команди Astral.",
+
+  "uninstall.deleteDataShared":
+    "Дані спільні з гілками {names}: поки встановлена хоч одна, вони залишаються. Тому прапорець недоступний.",
+
+  "error.DAILY_LIMIT.title": "Ліміт завантажень на сьогодні",
+  "error.DAILY_LIMIT.text": "На сьогодні ліміт завантажень для цього встановлення вичерпано. Спробуйте пізніше.",
+
+  // Открытый режим (19.11.2026): слова без ввода кода и без «беты»; окно берёт их вместо одноимённых, когда init.open.
+  "open.steps.code": "Старт",
+  "open.hero.welcome.title": "Встановлення Astral",
+  "open.welcome.title": "Встановимо Astral",
+  "open.welcome.text": "Код вводити не потрібно. Натисніть «Продовжити» й підтвердьте встановлення на сайті.",
+  "open.welcome.submitting": "Відкриваємо сайт…",
+  "open.how.title": "Як це пройде",
+  "open.how.1.title": "Відкриється сайт Astral",
+  "open.how.1.text": "Увійдіть через Discord, якщо ще не ввійшли.",
+  "open.how.2.title": "Підтвердьте встановлення",
+  "open.how.2.text": "Звірте код із цим вікном і натисніть «Підтвердити».",
+  "open.how.3.title": "Ми завантажимо й встановимо",
+  "open.how.3.text": "Зазвичай це кілька хвилин.",
+  "open.welcome.notice.expired": "Час підтвердження минув. Натисніть «Продовжити» ще раз.",
+  "open.existing.hint": "Для перевстановлення може знадобитися свіжий інсталятор: якщо цей уже використано, ми підкажемо, де завантажити новий.",
+  "open.again.title": "Завантажте інсталятор заново",
+  "open.again.text": "Ця копія інсталятора більше не підходить: у ній немає посилання для встановлення, термін минув, встановлення вже виконано або файл перейменували.",
+  "open.again.hint": "Завантажте інсталятор заново на сайті.",
+  "open.again.button": "Відкрити сторінку завантаження",
+  "open.offline.title": "Немає зв’язку із сервером",
+  "open.offline.text": "Не вдалося зв’язатися із сервером Astral. Перевірте інтернет і повторіть.",
+  "open.offline.hint": "Інсталятору потрібен інтернет: він підтверджує встановлення на сайті й завантажує Astral.",
+  "open.side.enterCode": "Продовжити встановлення",
+  "open.confirm.codeLabel": "Цей код має збігатися з кодом на сайті",
+  "open.redo.title": "Що зробити",
+  "open.redo.1.title": "Відкрийте сторінку завантаження",
+  "open.redo.1.text": "Натисніть кнопку нижче. За потреби увійдіть через Discord.",
+  "open.redo.2.title": "Завантажте й запустіть новий файл",
+  "open.redo.2.text": "Старий інсталятор можна видалити.",
+  "open.field.BETA_UNAVAILABLE": "Сервер зараз не приймає нові встановлення. Спробуйте пізніше.",
+  "open.error.BETA_ACTIVATION_REVOKED.title": "Доступ закрито",
+  "open.error.BETA_ACTIVATION_REVOKED.text": "Доступ до Astral для цього акаунта закрито. Якщо це помилка, напишіть у підтримку Astral.",
+  "open.error.BETA_TICKET_INVALID.text": "Почніть встановлення заново на цьому ж ПК. Це можливо, доки Astral не запускали.",
+  "open.error.BETA_UNAVAILABLE.title": "Сервіс Astral недоступний",
+  "open.done.warning.revoked": "Сервер не прийняв позначку про встановлення: доступ цього акаунта закрито. Файли на місці, але Astral, найімовірніше, не запуститься. Напишіть у підтримку.",
+  "open.done.warning.expired": "Сервер не прийняв позначку про встановлення: минув термін підтвердження входу. Astral встановлено, але перед першим запуском його може знадобитися встановити заново.",
+  "open.closing.text": "Доки Astral жодного разу не запускали, встановлення можна повторити: запустіть інсталятор ще раз і підтвердьте на сайті. Якщо запуск уже був, завантажте інсталятор на сайті наново.",
+});

@@ -1,0 +1,80 @@
+/*
+ * Контракт «матового стекла»: цвета поверхностей и то, какие панели окна их надевают.
+ * Порядок объявлений в листе: обводка, фон, тень. Фон везде пишется короткой записью
+ * с явным «none»: перебивки с !important должны сбрасывать и картинки, а не только цвет.
+ */
+
+/* ---- Палитра стекла: имена читают другие листы, значения не менять ---- */
+.astral-glass-surface,
+:root,
+.desktop-app {
+  --astral-glass-border-strong: var(--astral-line-strong);
+  --astral-glass-bg: #0b0b0c;
+  --astral-glass-shadow: rgba(0, 0, 0, 0.7);
+  --astral-glass-bg-soft: rgba(255, 255, 255, 0.03);
+  --astral-glass-border: var(--astral-line);
+  --astral-glass-bg-strong: #09090a;
+}
+
+/* ---- Шапка, левая колонка и полоса окна: чисто чёрные ---- */
+[data-theme].desktop-app .desktop-main > header,
+[data-theme].desktop-app > .desktop-titlebar,
+[data-theme].desktop-app .compact-sidebar.desktop-sidebar {
+  border-color: rgba(255, 255, 255, .07) !important;
+  background: #000000 none !important;
+  box-shadow: none !important;
+}
+
+/* ---- Обводка стекла: одна на все обычные панели ---- */
+[data-glass="panel"].astral-glass-surface,
+.astral-glass-surface,
+[data-theme].desktop-app :is(.settings-section-panel, .settings-glass-panel, .profile-summary, .settings-card, .settings-section),
+[data-theme].desktop-app :is(.desktop-profile-grid, .download-overview) > article,
+[data-theme].desktop-app .settings-page .clean-settings > article,
+[data-theme].desktop-app :is(.mod-action-plan-card, .ui-editor-inspector, .appearance-motion, .ui-panel),
+[data-theme].desktop-app :is(.mmc-preview-frame, .astral-glass-nested, .game-path) {
+  border-color: var(--astral-glass-border) !important;
+}
+
+/* ---- Поверхность по умолчанию ---- */
+.astral-glass-surface {
+  background: var(--astral-glass-bg-strong) none !important;
+  box-shadow: var(--astral-glass-shadow) 0 18px 46px !important;
+}
+
+/* ---- Крупные панели: настройки, профиль, загрузки ---- */
+[data-glass="panel"].astral-glass-surface,
+[data-theme].desktop-app :is(.settings-section-panel, .settings-glass-panel, .profile-summary, .settings-card, .settings-section),
+[data-theme].desktop-app :is(.desktop-profile-grid, .download-overview) > article,
+[data-theme].desktop-app .settings-page .clean-settings > article {
+  background: var(--astral-glass-bg) none !important;
+  box-shadow: var(--astral-glass-shadow) 0 24px 58px !important;
+}
+
+/* ---- Внутренние панели интерфейса ---- */
+[data-theme].desktop-app :is(.mod-action-plan-card, .ui-editor-inspector, .appearance-motion, .ui-panel) {
+  background: var(--astral-glass-bg) none !important;
+}
+
+/* Панель внутри панели рисуется поверхностью, а в инспекторах редактора прозрачна */
+[data-theme].desktop-app :is(.mod-action-plan-card, .astral-glass-surface, .settings-card, .ui-panel, .settings-section, .ui-editor-inspector) .ui-panel {
+  background: var(--astral-surface) none !important;
+}
+
+[data-theme].desktop-app .mmc-fine-body > .ui-panel,
+[data-theme].desktop-app :is(.ui-editor-inspector, .ui-editor-panel-content) > .ui-panel,
+[data-theme].desktop-app .ui-editor-panel-content > :is(.fx-inspector, :only-child) > .ui-panel {
+  background: transparent none !important;
+}
+
+/* ---- Вложенные плашки: путь к игре, рамка предпросмотра ---- */
+[data-theme].desktop-app :is(.mmc-preview-frame, .astral-glass-nested, .game-path) {
+  background: var(--astral-glass-bg-soft) none !important;
+}
+
+/* ---- Всплывающие меню, диалоги и тосты ---- */
+[data-theme].desktop-app :is(.weapon-viewer-dialog, .desktop-toast, .studio-dialog, .workshop-filter-menu, .restore-point-dialog, .ui-menu) {
+  border-color: var(--astral-glass-border-strong) !important;
+  background: var(--astral-glass-bg-strong) none !important;
+  box-shadow: var(--astral-glass-shadow) 0 30px 80px !important;
+}

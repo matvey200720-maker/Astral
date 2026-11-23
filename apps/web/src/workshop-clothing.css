@@ -1,0 +1,188 @@
+/* Workshop / clothing -----------------------------------------------------
+ * Clothing deliberately reuses the weapon card, grid, copy, favorite and
+ * hover contracts. This contract layer only places category artwork inside
+ * the same media area that a weapon model occupies.
+ */
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]:not(
+    .workshop-local-catalog-active
+  )
+  .workshop-clothing-catalog.workshop-clothing-weapon-catalog
+  > .weapon-slot-grid.workshop-clothing-weapon-grid {
+  padding: 0 18px 42px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]:not(
+    .workshop-local-catalog-active
+  )
+  .workshop-clothing-catalog.workshop-clothing-weapon-catalog
+  > .weapon-slot-grid.workshop-clothing-weapon-grid
+  > .weapon-slot-card.clothing-slot {
+  min-height: 210px !important;
+  aspect-ratio: 0.98 / 1 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]:not(
+    .workshop-local-catalog-active
+  )
+  .workshop-clothing-catalog.workshop-clothing-weapon-catalog
+  > .weapon-slot-grid.workshop-clothing-weapon-grid
+  > .weapon-slot-card.clothing-slot
+  .weapon-slot-copy {
+  min-height: 82px !important;
+  padding: 32px 44px 13px 12px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot
+  > .weapon-slot-open
+  > .workshop-slot-artwork {
+  position: absolute !important;
+  z-index: 2;
+  inset: 8px 6px 54px !important;
+  display: grid !important;
+  width: calc(100% - 12px) !important;
+  height: calc(100% - 62px) !important;
+  overflow: hidden !important;
+  color: rgb(var(--workshop-tone));
+  border: 0 !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: transparent !important;
+  place-items: center;
+  transform: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .workshop-slot-artwork-halo {
+  position: absolute;
+  width: min(48%, 104px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(var(--workshop-tone), 0.14);
+  filter: blur(26px);
+  opacity: 0.42;
+  transition:
+    opacity var(--astral-duration-slow) ease,
+    transform var(--astral-duration-slow) cubic-bezier(0.16, 0.88, 0.24, 1);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .workshop-slot-artwork
+  > svg {
+  position: relative;
+  z-index: 1;
+  width: min(52%, 98px) !important;
+  height: min(52%, 98px) !important;
+  color: currentColor;
+  fill: currentColor !important;
+  opacity: 0.92;
+  filter: drop-shadow(0 14px 20px rgba(var(--workshop-tone), 0.18));
+  transform: none !important;
+  transition:
+    opacity 220ms ease,
+    transform var(--astral-duration-slow) cubic-bezier(0.16, 0.88, 0.24, 1),
+    filter var(--astral-duration-slow) ease;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot:hover
+  .workshop-slot-artwork-halo {
+  opacity: 0.62;
+  transform: scale(1.08);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot:hover
+  .workshop-slot-artwork
+  > svg {
+  opacity: 1;
+  filter: drop-shadow(0 16px 24px rgba(var(--workshop-tone), 0.24));
+  transform: translateY(-2px) scale(1.035) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot:focus-within {
+  outline: 2px solid rgba(var(--workshop-tone), 0.9);
+  outline-offset: 2px;
+}
+
+/* Clothing PNGs and the interactive renderer share the same studio exposure.
+   This contract layer intentionally wins over legacy weapon-card filters. */
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot
+  .weapon-slot-image {
+  opacity: 1 !important;
+  filter: brightness(var(--weapon-preview-exposure, 1))
+    contrast(var(--weapon-preview-contrast, 0.94)) saturate(0.94)
+    drop-shadow(0 14px 18px rgba(0, 0, 0, 0.26)) !important;
+  transition:
+    filter 180ms ease,
+    transform var(--astral-duration-slow) cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot:is(:hover, :focus-within)
+  .weapon-slot-image {
+  filter: brightness(calc(var(--weapon-preview-exposure, 1) * 1.04))
+    contrast(var(--weapon-preview-contrast, 0.94)) saturate(1)
+    drop-shadow(0 17px 21px rgba(0, 0, 0, 0.3)) !important;
+}
+
+/* Clothing previews are transparent GLB renders: the application scene must
+   remain visible around every model in both themes. */
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot[data-preview-treatment="studio-transparent"]
+  .weapon-slot-image {
+  inset: 4px 6px 52px !important;
+  width: calc(100% - 12px) !important;
+  height: calc(100% - 56px) !important;
+  margin: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .workshop-clothing-weapon-grid
+  .clothing-slot[data-preview-treatment="studio-transparent"]:is(
+    :hover,
+    :focus-within
+  )
+  .weapon-slot-image {
+  transform: scale(1.015) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="clothing"]
+    .workshop-clothing-weapon-grid
+    .workshop-slot-artwork
+    * {
+    transition-duration: 1ms !important;
+  }
+}

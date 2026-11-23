@@ -1,0 +1,116 @@
+/*
+ * «Групповые метки» (задача 21 ТЗ 18.10.2026, вечер): кадр — кусок улицы из игры с меткой и
+ * подписью расстояния, справа — метки плитками и вид выбранной. Разделы и плитки носят вид
+ * мастерской эффектов (`fx-editor`); здесь только своё.
+ */
+
+/* Метки — строками, как разделы «Большой карты» (19.10.2026, вечер): рисунок из игры, имя и что с ней
+   сделано; строка открывает страницу метки. */
+.group-markers-rows {
+  display: grid;
+  gap: 2px;
+}
+
+.group-markers-row-art {
+  display: block;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.group-markers-where {
+  margin: 0;
+}
+
+/* Вид метки — плитки без картинки в две колонки; место под галочку и одинокая последняя плитка — у органа
+   (`ui-choice.is-bare`, `useLoneTail`). */
+.group-markers-modes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Надпись вместо метки: шрифты плитками по два в ряд, образец — сами слова этим шрифтом. */
+.group-markers-subhead {
+  margin: 8px 0 4px;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.group-markers-fonts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.group-markers-editor .group-markers-font {
+  padding: 6px 8px;
+  background: var(--fx-matte);
+}
+
+.group-markers-font .ui-choice-media {
+  height: 40px;
+  padding: 0 6px;
+  background: var(--fx-scene-line);
+}
+
+/* Образец не режет себя сам: высоту начертаниям с высокими выносными даёт строка, а длинную надпись обрезает гнездо плитки. */
+.group-markers-font-sample {
+  max-width: 100%;
+  color: #ffffff;
+  font-size: var(--astral-text-title);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/*
+ * Кадр накладок радара (доделка 21, 19.10.2026): мини-карта, как в редакторе «Мини-карта», с блипом бизнеса и накладкой
+ * поверх. Фон — чёрный, как у остальных кадров; радар по центру, не выше 80 % кадра, чтобы под полосой органов и
+ * подписью оставалось место.
+ */
+.group-markers-radar-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  container-type: size;
+  background: #000000;
+}
+
+.group-markers-radar {
+  position: relative;
+  width: min(86%, 760px, calc(80cqh * 191 / 136));
+  aspect-ratio: 191 / 136;
+}
+
+/* Кадр радара — общий (`RadarFrame`): здесь он во всю ширину коробки, без своей рамки и подписи. */
+.group-markers-radar > .wmc-radar-preview {
+  gap: 0;
+}
+
+.group-markers-radar .wmc-radar-screen {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Блип бизнеса и накладка стоят в долях сцены 191×136: положение задаёт разметка, здесь только вид. */
+.group-markers-radar-blip {
+  position: absolute;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.7));
+  pointer-events: none;
+}
+
+.group-markers-radar-blip > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.group-markers-radar-overlay {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}

@@ -1,0 +1,271 @@
+/*
+ * Страница «Графика»: редактор параметров, сводка, блок «Мышь» и полка шаблонов.
+ * Одинаковые куски (display, зазоры, цвет и размер подписей) вынесены в общие правила.
+ */
+
+/* ---------- общие правила: подписи ---------- */
+
+:is(.desktop-app) .graphics-game-line,
+:is(.desktop-app) .graphics-summary-card small,
+:is(.desktop-app) .graphics-summary-card span,
+:is(.desktop-app) .graphics-special p,
+:is(.desktop-app) .graphics-mouse p,
+:is(.desktop-app) .graphics-param-game,
+:is(.desktop-app) .graphics-param-special,
+:is(.desktop-app) .graphics-param-copy small,
+:is(.desktop-app) .graphics-special dl > div,
+:is(.desktop-app) .graphics-param-below,
+:is(.desktop-app) .graphics-param-note {
+  font-size: var(--astral-text-small);
+}
+
+:is(.desktop-app) .graphics-group > h2,
+:is(.desktop-app) .graphics-param-group > h2,
+:is(.desktop-app) .graphics-param-copy {
+  font-size: var(--astral-text-body);
+}
+
+:is(.desktop-app) .graphics-special dt,
+:is(.desktop-app) .graphics-group > h2,
+:is(.desktop-app) .graphics-game-line,
+:is(.desktop-app) .graphics-summary-card small,
+:is(.desktop-app) .graphics-summary-card span,
+:is(.desktop-app) .graphics-special p,
+:is(.desktop-app) .graphics-mouse p,
+:is(.desktop-app) .graphics-template-new .ui-choice-media {
+  color: var(--astral-ink-muted);
+}
+
+:is(.desktop-app) .graphics-param-game,
+:is(.desktop-app) .graphics-param-special,
+:is(.desktop-app) .graphics-param-copy small {
+  color: var(--astral-ink-faint);
+}
+
+:is(.desktop-app) .graphics-param-below,
+:is(.desktop-app) .graphics-param-note {
+  color: var(--astral-warning);
+  line-height: 1.35;
+}
+
+/* ---------- редактор: сетка и сводка ---------- */
+
+:is(.desktop-app) .graphics-editor-board,
+:is(.desktop-app) .graphics-summary,
+:is(.desktop-app) .graphics-group-grid {
+  gap: 12px;
+  display: grid;
+}
+
+:is(.desktop-app) .graphics-editor-board {
+  grid-template-columns: repeat(auto-fill, minmax(min(540px, 100%), 1fr));
+}
+
+:is(.desktop-app) .graphics-special,
+:is(.desktop-app) .graphics-summary {
+  grid-column-start: 1;
+  grid-column-end: -1;
+}
+
+:is(.desktop-app) .graphics-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+:is(.desktop-app) .graphics-summary-card {
+  padding-inline: 14px;
+  padding-block: 12px;
+  gap: 4px;
+  display: grid;
+}
+
+:is(.desktop-app) .graphics-summary-card b {
+  font-size: var(--astral-text-strong);
+}
+
+/* ---------- редактор: группы параметров ---------- */
+
+:is(.desktop-app) .graphics-param-group,
+:is(.desktop-app) .graphics-param-copy {
+  gap: 2px;
+  display: grid;
+}
+
+:is(.desktop-app) .graphics-param-group {
+  padding-block: 12px;
+  padding-inline: 14px;
+  align-content: start;
+}
+
+:is(.desktop-app) .graphics-param-group > h2 {
+  margin-inline: 0;
+  margin-block: 0 6px;
+}
+
+:is(.desktop-app) .graphics-param {
+  border-top: solid 1px var(--astral-line-tight);
+  padding-block: 4px;
+  padding-inline: 0;
+  min-height: var(--astral-control-h);
+  align-items: center;
+  display: grid;
+}
+
+:is(.desktop-app) .graphics-param:first-of-type {
+  border-top-style: none;
+  border-top-width: 0;
+  border-top-color: currentcolor;
+}
+
+:is(.desktop-app) .is-toggle.graphics-param,
+:is(.desktop-app) .is-level.graphics-param {
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+:is(.desktop-app) .is-share.graphics-param {
+  gap: 2px;
+}
+
+:is(.desktop-app) .graphics-param .ui-segmented .ui-segment {
+  flex-basis: auto;
+  flex-shrink: 0;
+  flex-grow: 1;
+}
+
+:is(.desktop-app) .graphics-param-copy {
+  min-width: 0;
+}
+
+:is(.desktop-app) .is-under.graphics-param-copy {
+  padding-block-end: 2px;
+}
+
+/* ---------- блоки «Особое» и «Мышь» ---------- */
+
+:is(.desktop-app) .graphics-mouse p,
+:is(.desktop-app) .graphics-special p {
+  line-height: 1.45;
+  margin-block: 0 8px;
+  margin-inline: 0;
+}
+
+:is(.desktop-app) .graphics-mouse-actions {
+  border-top: solid 1px var(--astral-line-tight);
+  padding-block-start: 8px;
+  gap: 8px;
+  flex-wrap: wrap;
+  display: flex;
+}
+
+:is(.desktop-app) .graphics-special dl {
+  margin: 0;
+  column-gap: 16px;
+  row-gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  display: grid;
+}
+
+:is(.desktop-app) .graphics-special dl > div {
+  gap: 12px;
+  justify-content: space-between;
+  display: flex;
+}
+
+:is(.desktop-app) .graphics-special dd {
+  font-variant-numeric: tabular-nums;
+  margin-block: 0;
+  margin-inline: 0;
+}
+
+/* ---------- полка шаблонов ---------- */
+
+:is(.desktop-app) .graphics-page,
+:is(.desktop-app) .graphics-shelf {
+  flex-direction: column;
+  display: flex;
+}
+
+:is(.desktop-app) .graphics-page {
+  min-height: 0;
+}
+
+:is(.desktop-app) .graphics-shelf {
+  padding-block-end: 8px;
+  gap: 16px;
+}
+
+:is(.desktop-app) .graphics-game-line {
+  margin-block: -6px 0;
+  margin-inline: 0;
+}
+
+:is(.desktop-app) .graphics-groups {
+  gap: 22px;
+  display: grid;
+}
+
+:is(.desktop-app) .graphics-group > h2 {
+  font-weight: 600;
+  margin-block: 0 10px;
+  margin-inline: 0;
+}
+
+:is(.desktop-app) .graphics-group-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+:is(.desktop-app) .graphics-group-grid > .graphics-template-grid {
+  display: contents;
+}
+
+:is(.desktop-app) .graphics-template {
+  border-radius: var(--astral-radius-lg);
+  padding: 12px;
+  min-height: 150px;
+}
+
+:is(.desktop-app) .graphics-template .ui-choice-media {
+  background: none;
+  padding-block: 4px;
+  padding-inline: 0;
+  height: 64px;
+}
+
+:is(.desktop-app) .graphics-template-new .ui-choice-media {
+  font-size: var(--astral-text-section);
+}
+
+:is(.desktop-app) .is-in-game.graphics-template .ui-choice-copy em {
+  color: var(--astral-positive);
+}
+
+:is(.desktop-app) .graphics-template:not(.is-in-game).is-recommended .ui-choice-copy em {
+  color: var(--astral-ink);
+}
+
+/* столбики-превью уровня: высота и яркость растут с --graphics-level */
+:is(.desktop-app) .graphics-bars {
+  height: 100%;
+  width: 100%;
+  gap: 6px;
+  align-items: flex-end;
+  display: flex;
+}
+
+:is(.desktop-app) .graphics-bars > i {
+  opacity: calc(var(--graphics-level, 0) * .65 + .35);
+  border-radius: var(--astral-radius-xs);
+  background-color: var(--astral-accent);
+  height: calc(var(--graphics-level, 0) * 88% + 12%);
+  flex-basis: 0px;
+  flex-shrink: 1;
+  flex-grow: 1;
+}
+
+/* узкое окно: сводка и уровень идут в одну колонку */
+@media (max-width: 1100px) {
+  :is(.desktop-app) .graphics-summary,
+  :is(.desktop-app) .is-level.graphics-param {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

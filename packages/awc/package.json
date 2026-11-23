@@ -1,0 +1,15 @@
+{
+  "name": "@modovik/awc",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./digest": "./digest.js",
+    "./digest.js": "./digest.js",
+    "./game-crypto": "./game-crypto.js",
+    "./game-crypto.js": "./game-crypto.js",
+    "./package.json": "./package.json"
+  }
+}

@@ -1,0 +1,1019 @@
+/*
+  Оболочка мастерской оружия и одежды: кадр, правая колонка, панели, полка шаблонов,
+  док «Куда поставить», окно клавиш. Слой overrides ставит подключающий лист.
+  Сверху — «ступени» (повторяющееся записано списками один раз), ниже — узлы по порядку
+  экрана. Пометка «раньше» значит: порядок равных по специфичности правил важен.
+*/
+
+/* ── палитра мастерской ─────────────────────────────────────────────────────── */
+.gun-studio {
+  --gsh-white: 255, 255, 255;
+  --gun-glass: rgba(var(--gsh-smoke), 0.72);
+  --gun-faint: var(--astral-ink-faint);
+  --gsh-smoke: 11, 11, 12;
+  color: var(--astral-ink);
+  --gun-line: var(--astral-line);
+  --gun-glass-ink: rgba(var(--gsh-white), 0.88);
+  --gun-muted: var(--astral-ink-muted);
+  --gun-glass-line: rgba(var(--gsh-white), 0.12);
+}
+
+/* ═════ ступени ════════════════════════════════════════════════════════════════ */
+
+/* вертикальные стопки */
+.gun-panel,
+.gun-panel .colour-effect-field,
+.gun-inspector,
+.gun-section-panel,
+.gun-sections button,
+.gun-model-panel,
+.gun-model-shape,
+.gun-own-verdict,
+.gun-own-facts,
+.gun-mask,
+.gun-pattern-group,
+.gun-pattern-tile,
+.gun-decoration-group,
+.gun-emblem-group,
+.gun-armed > span:nth-child(2),
+.gun-empty-stage,
+.gun-failure {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ряды в одну строку */
+.gun-stage,
+.gun-row,
+.gun-section-head,
+.gun-model-search,
+.gun-panel h2,
+.gun-decoration-set-art,
+.gun-preset-chromas,
+.gun-game-dock-target,
+.gun-game-dock-status,
+.gun-game-dock-files li,
+.gun-own-facts li,
+.gun-shortcuts dt {
+  display: flex;
+}
+
+/* сетки */
+.gun-armed,
+.gun-workspace,
+.gun-sections,
+.gun-seed,
+.gun-colour-grid,
+.gun-pattern-grid,
+.gun-decoration-grid,
+.gun-decoration-sets,
+.gun-emblem-grid,
+.gun-model-blank,
+.gun-game-dock,
+.gun-game-dock-files,
+.gun-game-dock-target span,
+.gun-shortcuts dl,
+.gun-shortcuts dl > div,
+.clothing-body-grid,
+.clothing-body-parts {
+  display: grid;
+}
+
+/* число столбцов: у каждой сетки своё, шаблон один */
+.gun-models,
+.clothing-body-grid,
+.gun-decoration-sets {
+  --gsh-cols: 2;
+}
+
+.gun-decoration-grid {
+  --gsh-cols: 3;
+}
+
+.gun-sections,
+.gun-pattern-grid {
+  --gsh-cols: 4;
+}
+
+.gun-emblem-grid {
+  --gsh-cols: 6;
+}
+
+.gun-emblem-grid,
+.gun-sections,
+.gun-decoration-grid,
+.gun-models,
+.gun-pattern-grid,
+.clothing-body-grid,
+.gun-decoration-sets {
+  grid-template-columns: repeat(var(--gsh-cols), minmax(0, 1fr));
+}
+
+/* выравнивание по центру поперёк */
+.gun-armed,
+.gun-section-head,
+.gun-sections button,
+.gun-panel h2,
+.gun-decoration-set-art,
+.gun-preset-chromas,
+.gun-game-dock-target,
+.gun-shortcuts dl > div {
+  align-items: center;
+}
+
+.gun-section-head,
+.gun-game-dock-files li,
+.gun-own-facts li {
+  justify-content: space-between;
+}
+
+/* зазоры по возрастанию; 12 стоит после 10 — этого требует пара «.gun-panel, затем .clothing-body-parts» */
+.gun-armed > span:nth-child(2),
+.gun-decoration-set-art,
+.gun-game-dock-files {
+  gap: 2px;
+}
+
+.gun-emblem-grid,
+.gun-failure,
+.gun-model-blank.is-failed,
+.gun-own-facts,
+.gun-pattern-tile,
+.gun-section-panel,
+.gun-sections,
+.gun-sections button,
+.gun-shortcuts dl,
+.gun-shortcuts dt {
+  gap: 4px;
+}
+
+.gun-decoration-grid,
+.gun-decoration-group,
+.gun-decoration-sets,
+.gun-emblem-group,
+.gun-game-dock-status,
+.gun-own-verdict,
+.gun-panel h2,
+.gun-pattern-grid,
+.gun-pattern-group,
+.gun-preset-key,
+.gun-row,
+.gun-seed {
+  gap: 6px;
+}
+
+.gun-colour-grid,
+.gun-game-dock,
+.gun-game-dock-files li,
+.gun-mask,
+.gun-model-search,
+.gun-own-facts li,
+.gun-section-head,
+.clothing-body-grid {
+  gap: 8px;
+}
+
+.gun-armed,
+.gun-empty-stage,
+.gun-game-dock-target,
+.gun-model-panel,
+.gun-model-shape,
+.gun-panel,
+.gun-panel .colour-effect-field,
+.gun-shortcuts dl > div,
+.gun-workspace {
+  gap: 10px;
+}
+
+.gun-inspector,
+.clothing-body-parts {
+  gap: 12px;
+}
+
+/* шрифт: три ступени */
+.gun-armed small,
+.gun-game-dock-eyebrow,
+.gun-game-dock-files,
+.gun-game-dock-files small,
+.gun-game-dock-status,
+.gun-game-dock-target small,
+.gun-model-blank.is-failed small,
+.gun-pattern-tile,
+.gun-preset-key,
+.gun-sections button,
+.gun-sections em,
+.gun-stage-hint {
+  font-size: var(--astral-text-micro);
+}
+
+.gun-hint,
+.gun-loading,
+.gun-own-facts,
+.gun-panel h2 small {
+  font-size: var(--astral-text-small);
+}
+
+.gun-shortcuts h3 {
+  font-size: var(--astral-text-small);
+}
+
+.gun-armed strong,
+.gun-empty-stage,
+.gun-failure,
+.gun-game-dock-target b,
+.gun-panel,
+.gun-shortcuts dd {
+  font-size: var(--astral-text-body);
+}
+
+/* цвет текста */
+.gun-armed small,
+.gun-hint,
+.gun-model-blank.is-failed small,
+.gun-own-facts span,
+.gun-panel h3,
+.gun-sections button {
+  color: var(--gun-muted);
+}
+
+.gun-pattern-tile,
+.gun-sections em,
+.gun-shortcuts dd {
+  color: var(--astral-ink);
+}
+
+.gun-preset-key,
+.gun-shortcuts h3 {
+  color: var(--astral-ink-muted);
+}
+
+.gun-panel h2 small,
+.gun-model-blank {
+  color: var(--gun-faint);
+}
+
+/* скругления */
+.gun-armed-glyph,
+.gun-list-glyph,
+.gun-loading,
+.gun-model-blank,
+.gun-sections button,
+.gun-sections em,
+.gun-emblem-grid button,
+.gun-pattern-tile {
+  border-radius: var(--astral-radius-sm);
+}
+
+.gun-empty-stage,
+.gun-failure,
+.gun-viewport {
+  border-radius: var(--astral-radius-lg);
+}
+
+.gun-armed,
+.gun-stage-picker {
+  border-radius: var(--astral-radius);
+}
+
+/* тонкая рамка: толщина и вид; цвет — у каждого свой */
+.gun-armed,
+.gun-empty-stage,
+.gun-failure,
+.gun-loading,
+.gun-stage-hint,
+.gun-stage-picker,
+.gun-viewport,
+.gun-sections button,
+.gun-emblem-grid button,
+.gun-pattern-tile {
+  border-style: solid;
+  border-width: 1px;
+}
+
+.gun-viewport,
+.gun-sections button,
+.gun-emblem-grid button,
+.gun-pattern-tile {
+  border-color: var(--gun-line);
+}
+
+/* фон плиток */
+.gun-pattern-tile,
+.gun-sections button {
+  background: var(--astral-surface);
+}
+
+/* тёмные колодцы под значки и превью */
+.gun-armed-glyph,
+.gun-list-glyph,
+.gun-emblem-grid button,
+.gun-decoration-grid .ui-choice-media,
+.gun-decoration-sets .ui-choice-media {
+  background: rgb(26 27 30);
+  display: grid;
+  align-items: center;
+  justify-items: center;
+}
+
+/* значки одного размера */
+.gun-armed-glyph,
+.gun-list-glyph {
+  inline-size: 28px;
+  block-size: 28px;
+}
+
+.gun-armed-glyph svg,
+.gun-list-glyph svg,
+.gun-model-blank.is-failed svg,
+.gun-sections svg {
+  block-size: 18px;
+  inline-size: 18px;
+}
+
+.gun-decoration-set-art svg,
+.gun-model-blank svg {
+  block-size: 26px;
+  inline-size: 26px;
+}
+
+/* ═════ кадр ═══════════════════════════════════════════════════════════════════ */
+
+.gun-workspace {
+  padding: 12px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%;
+  min-block-size: 0;
+}
+
+.gun-stage {
+  position: relative;
+  min-height: 0;
+}
+
+.gun-viewport {
+  container-name: gun-viewport;
+  container-type: inline-size;
+  flex: 1;
+  overflow: hidden;
+  min-height: 260px;
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgb(31 31 32) 0%,
+    rgb(12 12 13) 70%
+  );
+  position: relative;
+
+  & canvas {
+    cursor: crosshair;
+    touch-action: none;
+    block-size: 100%;
+    inline-size: 100%;
+    display: block;
+  }
+
+  /* орбита раньше наклейки: оба равны по специфичности */
+  &[data-tool="orbit"] canvas {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &[data-tool="sticker"] canvas {
+    cursor: copy;
+  }
+}
+
+/* в мастерской-студии кадр лежит на всём холсте */
+.ui-editor-shell[data-layout="studio"] {
+  .gun-stage {
+    display: block;
+    position: absolute;
+    container-name: gun-stage;
+    container-type: inline-size;
+    inset-block: 0;
+    inset-inline: 0;
+  }
+
+  .gun-viewport {
+    min-height: 0;
+    background: none;
+    inset-block: 0;
+    border: none;
+    position: absolute;
+    border-radius: 0;
+    inset-inline: 0;
+  }
+}
+
+/* угловая карточка занимает 300 px: панель органов её не закрывает */
+.ui-editor-canvas[data-holds~="stage-corner"] {
+  --gsh-corner: 300px;
+
+  & .ui-stage-bar {
+    max-width: calc(100% - var(--gsh-corner));
+  }
+}
+
+/* ── стеклянные плашки поверх кадра ─────────────────────────────────────────── */
+.gun-empty-stage,
+.gun-failure,
+.gun-loading,
+.gun-stage-hint {
+  --gsh-edge: calc(100% - 48px);
+  background: var(--gun-glass);
+  color: var(--gun-glass-ink);
+  border-color: var(--gun-glass-line);
+}
+
+/* плашки, что стоят по центру кадра */
+.gun-empty-stage,
+.gun-failure,
+.gun-loading {
+  inset-inline: 50% auto;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  inset-block: 50% auto;
+}
+
+.gun-loading,
+.gun-stage-hint {
+  padding-inline: 12px;
+  padding-block: 6px;
+}
+
+.gun-empty-stage,
+.gun-failure {
+  padding-inline: 20px;
+  width: min(420px, var(--gsh-edge));
+  align-items: flex-start;
+  padding-block: 18px;
+  line-height: 1.5;
+
+  & b {
+    font-size: var(--astral-text-strong);
+  }
+}
+
+.gun-failure {
+  margin: 0;
+}
+
+.gun-stage-hint {
+  bottom: 52px;
+  text-align: center;
+  border-radius: 999px;
+  z-index: 3;
+  pointer-events: none;
+  line-height: 1.4;
+  max-width: min(56ch, var(--gsh-edge));
+  inset-inline-start: 50%;
+  margin: 0;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+/* «Красить только вещь» (`ItemOnlyBar`): полоса над кадром — почему кисть не красит и как отметить вещь; стекло, как у плашек кадра. */
+.gun-item-only {
+  --gsh-edge: calc(100% - 48px);
+  position: absolute;
+  inset-block-start: 64px;
+  inset-inline-start: 50%;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  max-width: min(64ch, var(--gsh-edge));
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--gun-glass-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--gun-glass);
+  color: var(--gun-glass-ink);
+  font-size: var(--astral-text-micro);
+  line-height: 1.4;
+  transform: translateX(-50%);
+
+  & p {
+    margin: 0;
+    text-align: center;
+  }
+
+  /* Подсказка после пустого мазка: отдельной строкой под основным текстом, на всю ширину полосы. */
+  & .gun-item-only-hint {
+    flex: 1 0 100%;
+    color: var(--astral-warning);
+  }
+
+  &.is-closed {
+    border-color: var(--astral-warning);
+  }
+}
+
+.gun-item-only-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.gun-stage-picker {
+  --gsh-shade: 10, 10, 11;
+  border-color: var(--astral-line);
+  top: 12px;
+  position: absolute;
+  background: rgba(var(--gsh-shade), 0.72);
+  padding: 4px;
+  left: 12px;
+  z-index: 5;
+}
+
+/* ═════ правая колонка ═════════════════════════════════════════════════════════ */
+
+/* вкладки разделов */
+.gun-sections {
+  & button {
+    --gsh-lit: var(--astral-ink);
+    min-height: 52px;
+    position: relative;
+    justify-content: center;
+    cursor: pointer;
+    padding-inline: 2px;
+    padding-block: 6px;
+
+    /* наведение раньше выбранной: у обоих одна специфичность */
+    &:hover {
+      background: var(--astral-surface-hover);
+      color: var(--gsh-lit);
+    }
+
+    &.is-active {
+      color: var(--gsh-lit);
+      border-color: var(--astral-line-focus);
+      background: var(--astral-surface-raised);
+    }
+  }
+
+  & em {
+    font-style: normal;
+    line-height: 16px;
+    padding-block: 0;
+    padding-inline: 4px;
+    min-inline-size: 16px;
+    background: var(--astral-surface-strong);
+    inset-block-start: 3px;
+    inset-inline-end: 4px;
+    position: absolute;
+  }
+}
+
+/* ── панели ─────────────────────────────────────────────────────────────────── */
+.gun-panel {
+  & h2 {
+    margin: 0;
+
+    & small {
+      font-weight: 400;
+      margin-inline-start: auto;
+    }
+
+    & svg {
+      block-size: 16px;
+      inline-size: 16px;
+    }
+  }
+
+  & h3 {
+    margin: 4px 0 0;
+  }
+}
+
+.gun-hint {
+  line-height: 1.45;
+  margin: 0;
+
+  & svg {
+    vertical-align: -2px;
+    height: 13px;
+    width: 13px;
+  }
+
+  &.gun-own-refusal {
+    color: var(--astral-danger);
+  }
+}
+
+.gun-row-wrap {
+  flex-wrap: wrap;
+}
+
+.gun-mask {
+  border-block-start: 1px solid var(--gun-line);
+  padding-block-start: 10px;
+
+  & h3 {
+    margin: 0;
+  }
+}
+
+/* ── шаблоны (полка и расцветки) ────────────────────────────────────────────── */
+.gun-preset-cell {
+  grid-row: span 2;
+  min-width: 0;
+  row-gap: 2px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding-bottom: 8px;
+  grid-template-rows: subgrid;
+
+  > .ui-choice {
+    height: 100%;
+  }
+
+  &.is-selected .gun-preset-chromas button::before {
+    opacity: 100%;
+  }
+}
+
+.gun-presets .ui-preset-grid {
+  row-gap: 0;
+}
+
+.gun-preset-chromas {
+  --gsh-dot: var(--astral-control-h-xs);
+  margin-left: 5px;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  min-height: var(--gsh-dot);
+
+  & button {
+    flex: none;
+    inline-size: var(--gsh-dot);
+    position: relative;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    block-size: var(--gsh-dot);
+    border: none;
+
+    &::before {
+      content: "";
+      inset: 5px;
+      position: absolute;
+      border-radius: 50%;
+      opacity: 55%;
+      background: var(--chroma);
+      border-style: solid;
+      border-width: 1px;
+      border-color: var(--astral-line-strong);
+    }
+
+    &.is-active::before {
+      outline-style: solid;
+      outline-width: 2px;
+      outline-offset: 1px;
+      outline-color: var(--astral-accent);
+    }
+  }
+}
+
+/* значок «кубика» раньше значка скина, оба раньше значков украшений: у всех высота и ширина */
+.gun-preset-roll .ui-choice-media {
+  border-style: dashed;
+  border-width: 1px;
+  border-color: var(--astral-line-strong);
+
+  > svg {
+    inline-size: 32px;
+    color: var(--astral-ink);
+    block-size: 32px;
+  }
+}
+
+/* 16:9 раньше 4:3 украшений */
+.gun-preset .ui-choice-media {
+  aspect-ratio: 16 / 9;
+}
+
+.gun-preset-skin .ui-choice-media {
+  > svg {
+    block-size: 32px;
+    color: var(--astral-ink-muted);
+    inline-size: 32px;
+  }
+
+  & img {
+    object-fit: cover;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.gun-preset-key {
+  padding-left: 5px;
+}
+
+/* ── модели ─────────────────────────────────────────────────────────────────── */
+.gun-model-search {
+  align-items: flex-end;
+
+  /* поле растёт раньше, чем кнопка фиксируется */
+  > .ui-text-field {
+    flex: auto;
+    min-inline-size: 0;
+  }
+
+  > .ui-button {
+    flex: none;
+  }
+}
+
+.gun-model-blank,
+.gun-models .ui-choice-media img {
+  object-fit: contain;
+  aspect-ratio: 16 / 9;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.gun-models {
+  & .ui-choice {
+    min-width: 0;
+  }
+
+  & .ui-choice-copy > b {
+    overflow-wrap: anywhere;
+  }
+
+  & .ui-choice-media img {
+    display: block;
+  }
+}
+
+.gun-model-blank {
+  justify-items: center;
+  background: var(--astral-surface-sunken);
+  align-items: center;
+
+  &.is-failed {
+    padding: 6px 8px;
+    align-content: center;
+    text-align: center;
+
+    & small {
+      overflow: hidden;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+  }
+}
+
+/* ── своя модель: приговор ──────────────────────────────────────────────────── */
+.gun-own-facts,
+.gun-game-dock-files {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+
+.gun-own-facts {
+  & li {
+    min-width: 0;
+  }
+
+  & strong {
+    overflow-wrap: anywhere;
+    text-align: right;
+    font-weight: 600;
+  }
+}
+
+/* ── узоры ──────────────────────────────────────────────────────────────────── */
+.gun-pattern-tile {
+  cursor: pointer;
+  padding: 4px;
+
+  &:hover {
+    background: var(--astral-surface-hover);
+  }
+
+  &.is-active {
+    border-color: var(--astral-line-focus);
+  }
+
+  > span {
+    hyphens: auto;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  & canvas {
+    width: 100%;
+    border-radius: var(--astral-radius-xs);
+    display: block;
+    aspect-ratio: 72 / 44;
+  }
+}
+
+/* ── украшения ──────────────────────────────────────────────────────────────── */
+.gun-decoration-grid .ui-choice-media,
+.gun-decoration-sets .ui-choice-media {
+  aspect-ratio: 4 / 3;
+}
+
+.gun-decoration-grid .ui-choice-media svg {
+  inline-size: 34px;
+  block-size: 34px;
+}
+
+.gun-decoration-set-art {
+  justify-content: center;
+}
+
+/* ── вещь «в руке» ──────────────────────────────────────────────────────────── */
+.gun-armed {
+  padding-inline: 10px;
+  border-color: var(--astral-line-focus);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding-block: 8px;
+  background: var(--astral-surface-raised);
+
+  & small {
+    line-height: 1.4;
+  }
+}
+
+/* ── эмблемы ────────────────────────────────────────────────────────────────── */
+.gun-emblem-grid {
+  & button {
+    aspect-ratio: 1;
+    cursor: pointer;
+
+    &.is-active {
+      box-shadow: 0 0 0 1px var(--astral-accent);
+      border-inline-color: var(--astral-accent);
+      border-block-color: var(--astral-accent);
+    }
+
+    &:disabled {
+      opacity: 40%;
+      cursor: default;
+    }
+
+    &:hover:not(:disabled) {
+      border-inline-color: var(--astral-line-strong);
+      border-block-color: var(--astral-line-strong);
+    }
+  }
+
+  & svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* ── цвет, зерно ────────────────────────────────────────────────────────────── */
+.gun-colour-grid {
+  --gsh-min: 184px;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, var(--gsh-min)), 1fr)
+  );
+}
+
+.gun-seed {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.clothing-body-grid {
+  grid-auto-rows: 1fr;
+}
+
+/* ── док «Куда поставить» ───────────────────────────────────────────────────── */
+.gun-game-dock {
+  padding: 12px;
+}
+
+.gun-game-dock-eyebrow,
+.gun-game-dock-files small,
+.gun-game-dock-target small {
+  --gsh-dim: 255, 255, 255;
+  color: rgba(var(--gsh-dim), 0.56);
+}
+
+.gun-game-dock-eyebrow {
+  font-weight: 600;
+}
+
+.gun-game-dock-files li {
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+
+  /* «совпало» раньше «отличается» и «нет» */
+  &[data-state="match"] {
+    --gsh-tone: var(--astral-positive);
+
+    & small {
+      color: var(--gsh-tone);
+    }
+  }
+
+  &[data-state="different"],
+  &[data-state="missing"] {
+    --gsh-tone: var(--astral-warning, var(--astral-danger));
+
+    & small {
+      color: var(--gsh-tone);
+    }
+  }
+}
+
+.gun-game-dock-status {
+  --gsh-dim: 255, 255, 255;
+  color: rgba(var(--gsh-dim), 0.72);
+  align-items: flex-start;
+  margin: 0;
+
+  & svg {
+    margin-block-start: 1px;
+    flex: none;
+  }
+
+  /* хорошо раньше плохо */
+  &.is-good {
+    --gsh-tone: var(--astral-positive);
+
+    & svg {
+      color: var(--gsh-tone);
+    }
+  }
+
+  &.is-bad {
+    --gsh-tone: var(--astral-warning, var(--astral-danger));
+
+    & svg {
+      color: var(--gsh-tone);
+    }
+  }
+}
+
+.gun-game-dock-target {
+  & b {
+    overflow-wrap: anywhere;
+    font-weight: 600;
+  }
+
+  & img {
+    object-fit: contain;
+    block-size: 26px;
+    inline-size: 52px;
+  }
+
+  & span {
+    min-inline-size: 0;
+  }
+}
+
+/* ── окно горячих клавиш ────────────────────────────────────────────────────── */
+.gun-shortcuts {
+  & h3 {
+    margin: 0 0 6px;
+  }
+
+  & section + section {
+    margin-top: 14px;
+  }
+
+  & dl {
+    margin: 0;
+
+    > div {
+      grid-template-columns: 132px 1fr;
+    }
+  }
+
+  & dt {
+    flex-wrap: wrap;
+  }
+
+  & dd {
+    margin: 0;
+  }
+}
+
+/* ── узкий кадр: у органов показа остаются значки ───────────────────────────── */
+@container gun-stage (max-width: 640px) {
+  .gun-stage {
+    & .ui-stage-bar {
+      & .ui-button-label {
+        display: none;
+      }
+    }
+  }
+}

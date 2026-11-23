@@ -1,0 +1,96 @@
+/* Экран «Ганпак» мастерской оружия: кадр со всеми стволами и их список. Плашки кадра — те же, что у редактора ствола (`gun-studio.css`). */
+
+@layer overrides {
+  .gun-pack-viewport {
+    overflow: hidden;
+  }
+
+  .gun-pack-viewport .gun-pack-canvas {
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .gun-pack-viewport .gun-pack-canvas:active {
+    cursor: grabbing;
+  }
+
+  .gun-pack-label {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    left: 0;
+    padding: 4px 10px;
+    border: 1px solid var(--gun-glass-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--gun-glass);
+    color: var(--gun-glass-ink);
+    font-size: var(--astral-text-small);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .gun-pack-label[hidden] {
+    display: none;
+  }
+
+  .gun-pack-empty {
+    align-items: center;
+    width: max-content;
+    max-width: calc(100% - 48px);
+    text-align: center;
+  }
+
+  .gun-pack-panel .ui-layer-thumb img,
+  .gun-pack-menu .ui-layer-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Карточка «Ствол» в редакторе раскрывается столбиком под собой: те же строки, что в списке экрана «Ганпак». Матовая подложка, как у меню, без прозрачности. */
+  .gun-pack-menu {
+    position: absolute;
+    z-index: 6;
+    top: calc(100% + 6px);
+    left: 0;
+    box-sizing: border-box;
+    width: 300px;
+    max-width: calc(100vw - 48px);
+    max-height: min(60vh, 460px);
+    padding: 6px;
+    overflow-y: auto;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-float);
+    box-shadow: var(--astral-shadow-float);
+    animation: ui-menu-in var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .gun-pack-panel .ui-layer-foot .ui-button {
+    width: 100%;
+  }
+
+  /* Карандаш и корзина видны всегда: имя ствола обрывается перед ними, а не под ними. */
+  .gun-pack-panel .ui-layer-row.has-tools > .ui-layer-tools {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .gun-pack-panel .ui-layer-row.has-tools .ui-layer-pick {
+    padding-right: calc(var(--ui-layer-tools-w) + 12px);
+  }
+
+  .gun-pack-panel .ui-layer-row.has-tools .ui-layer-copy {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* На этом экране над полкой нет органов кадра: она занимает весь кадр от верха. */
+  .gun-pack-board .weapon-pick-sheet {
+    inset: 0;
+  }
+
+  .gun-pack-board .weapon-pick-tools {
+    padding-top: 16px;
+  }
+}

@@ -1,0 +1,455 @@
+/* Настройки: журнал приложения (settings-logs-*) и журнал падений игры (settings-crash*).
+   Правила собраны по свойствам, а не по элементам: общее у двух журналов лежит одним
+   списком селекторов, отдельные узлы получают свой блок. В конце модификаторы и узкое окно. */
+
+/* ───── Каркас: сетки, промежутки, отступы записей ───── */
+
+/* раскрывающийся блок записи занимает правую часть */
+.settings-logs-entry details {
+  grid-column-start: 3;
+  grid-column-end: -1;
+}
+
+/* промежуток между блоками журнала */
+.settings-logs {
+  column-gap: 12px;
+  row-gap: 12px;
+}
+
+/* корни колонок не распирают родителя */
+.settings-crashes,
+.settings-logs,
+.settings-crash {
+  min-width: 0px;
+}
+
+/* одна запись падения */
+.settings-crash {
+  padding-block: 12px;
+  padding-inline: 14px;
+}
+
+/* одна запись журнала: колонки время, уровень, источник, текст */
+.settings-logs-entry {
+  padding-inline: 14px;
+  padding-block: 8px;
+  grid-template-columns: 112px 112px max-content minmax(0, 1fr);
+  column-gap: 12px;
+}
+
+/* сетки: корни, списки, запись журнала, факты */
+.settings-crash,
+.settings-crash-facts,
+.settings-crashes,
+.settings-crashes-list,
+.settings-logs,
+.settings-logs-entry,
+.settings-logs-list {
+  display: grid;
+}
+
+/* таблица фактов: имя и значение */
+.settings-crash-facts {
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 14px;
+  margin-inline: 0;
+  margin-block: 6px;
+  row-gap: 2px;
+}
+
+/* промежуток между блоками падений и в строке заголовка записи */
+.settings-crashes,
+.settings-crash-top {
+  column-gap: 10px;
+  row-gap: 10px;
+}
+
+/* стандартный зазор в рядах и абзацах с иконкой */
+.settings-crash,
+.settings-crash-actions,
+.settings-crash-suspect,
+.settings-crash-suspect p,
+.settings-crashes-actions,
+.settings-crashes-head,
+.settings-logs-actions,
+.settings-logs-bar,
+.settings-logs-note,
+.settings-logs-confirm {
+  row-gap: 8px;
+  column-gap: 8px;
+}
+
+/* ───── Ряды: перенос, выравнивание, прижатие вправо ───── */
+
+.settings-logs-note svg {
+  height: 15px;
+  width: 15px;
+}
+
+/* сегментный переключатель растягивается в панели */
+.settings-logs-bar .ui-segment {
+  flex-basis: auto;
+  flex-shrink: 0;
+  flex-grow: 1;
+}
+
+/* текст плашки подтверждения забирает свободное место */
+.settings-logs-confirm > span {
+  flex-grow: 1;
+  flex-basis: 24ch;
+  flex-shrink: 1;
+}
+
+.settings-crash-hint {
+  align-self: center;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.settings-crash-suspect small {
+  display: block;
+}
+
+/* абзац подозреваемого файла: значок слева, текст справа */
+.settings-crash-suspect p {
+  flex-grow: 1;
+  flex-basis: 28ch;
+  flex-shrink: 1;
+}
+
+.settings-crash-suspect p svg {
+  height: 16px;
+  width: 16px;
+}
+
+.settings-logs-actions {
+  justify-content: flex-end;
+}
+
+/* значки не сжимаются */
+.settings-logs-note svg,
+.settings-crash-suspect p svg {
+  flex-basis: auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* кнопки прижаты вправо */
+.settings-crashes-actions,
+.settings-logs-actions {
+  margin-inline-start: auto;
+}
+
+.settings-crash-actions,
+.settings-crash-suspect,
+.settings-crash-suspect p,
+.settings-crash-top,
+.settings-crashes-actions,
+.settings-crashes-head,
+.settings-logs-actions,
+.settings-logs-bar,
+.settings-logs-confirm,
+.settings-logs-note {
+  display: flex;
+}
+
+.settings-crash-top,
+.settings-logs-entry {
+  align-items: baseline;
+}
+
+/* шапки, панели кнопок, плашки переносятся */
+.settings-crash-actions,
+.settings-crash-suspect,
+.settings-crash-top,
+.settings-crashes-actions,
+.settings-crashes-head,
+.settings-logs-actions,
+.settings-logs-confirm,
+.settings-logs-bar {
+  flex-flow: wrap;
+}
+
+.settings-crash-suspect,
+.settings-crashes-head,
+.settings-logs-confirm,
+.settings-logs-bar {
+  align-items: center;
+}
+
+/* ───── Плашки, рамки, подложки ───── */
+
+/* блоки кода: утопленная подложка */
+.settings-crash pre,
+.settings-logs-entry pre {
+  border-radius: var(--astral-radius-sm);
+  padding-block: 8px;
+  overflow-x: auto;
+  padding-inline: 10px;
+  white-space: pre-wrap;
+  background-color: var(--astral-surface-sunken);
+  overflow-y: auto;
+}
+
+.settings-logs-entry pre {
+  margin-inline: 0;
+  margin-block: 6px 0;
+  max-height: 220px;
+}
+
+/* плашка подтверждения: красноватая */
+.settings-logs-confirm {
+  border: 1px solid rgba(var(--astral-danger-rgb), 0.32);
+  background-color: var(--astral-danger-soft);
+  padding-block: 10px;
+  padding-inline: 12px;
+}
+
+/* списки в рамке */
+.settings-logs-list,
+.settings-crashes-list {
+  background-color: var(--astral-surface);
+  overflow-y: hidden;
+  padding: 0px;
+  list-style: none;
+  overflow-x: hidden;
+  border-style: solid;
+}
+
+.settings-crashes-list,
+.settings-logs-confirm,
+.settings-logs-empty,
+.settings-logs-list,
+.settings-crash-suspect {
+  border-radius: var(--astral-radius);
+}
+
+.settings-crashes-list,
+.settings-logs-list,
+.settings-logs-empty {
+  border-color: var(--astral-line);
+  border-width: 1px;
+}
+
+/* плашка подозреваемого файла: жёлтая */
+.settings-crash-suspect {
+  border: 1px solid rgba(var(--astral-warning-rgb), 0.32);
+  justify-content: space-between;
+  padding-inline: 10px;
+  background-color: var(--astral-warning-soft);
+  padding-block: 8px;
+}
+
+/* пустой журнал: пунктирная рамка */
+.settings-logs-empty {
+  padding-inline: 12px;
+  border-style: dashed;
+  padding-block: 18px;
+  text-align: center;
+}
+
+/* линия между соседними записями */
+.settings-crash + .settings-crash,
+.settings-logs-entry + .settings-logs-entry {
+  border-top-style: solid;
+  border-top-color: var(--astral-line);
+  border-top-width: 1px;
+}
+
+.settings-crash pre {
+  margin-block: 4px 0;
+  margin-inline: 0;
+  max-height: 200px;
+}
+
+/* «Сверка с игрой»: запись читает человек из поддержки — видна целиком, без прокрутки и обрезки по высоте
+   (аудит «Подпись обрезана»); длинные строки переносятся (`pre-wrap` и `overflow-wrap: anywhere` ниже). */
+.settings-crash[data-reconcile-record] pre {
+  max-height: none;
+  overflow: visible;
+}
+
+/* ───── Текст: кегль, начертание, межстрочный, переносы ───── */
+
+.settings-crash details summary,
+.settings-crash-facts,
+.settings-crash-note,
+.settings-crash-suspect p,
+.settings-crash-top,
+.settings-crashes-lede,
+.settings-logs-count,
+.settings-logs-empty,
+.settings-logs-entry,
+.settings-logs-note,
+.settings-logs-status,
+.settings-logs-confirm {
+  font-size: var(--astral-text-small);
+}
+
+.settings-crash pre,
+.settings-crash-note,
+.settings-crash-reason,
+.settings-crash-suspect p,
+.settings-crashes-lede,
+.settings-logs-entry pre,
+.settings-logs-note,
+.settings-logs-entry p {
+  line-height: var(--astral-line-normal);
+}
+
+/* причина падения и заголовок шапки */
+.settings-crashes-head h3,
+.settings-crash-reason {
+  font-size: var(--astral-text-body);
+}
+
+.settings-logs-entry summary {
+  font-family: var(--astral-font);
+}
+
+.settings-crash-reason {
+  font-weight: 500;
+}
+
+.settings-logs-level,
+.settings-crash-where {
+  font-weight: 600;
+}
+
+/* заголовки «summary»: строка в 28 пикселей, курсор-рука */
+.settings-crash details summary,
+.settings-logs-entry summary {
+  min-height: 28px;
+  width: fit-content;
+  line-height: 28px;
+  cursor: pointer;
+}
+
+/* цифры не прыгают */
+.settings-crash-top time,
+.settings-logs-entry time,
+.settings-logs-repeat,
+.settings-logs-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-crash pre,
+.settings-crash-suspect small,
+.settings-logs-entry pre,
+.settings-logs-repeat,
+.settings-crash-evidence-title {
+  font-size: var(--astral-text-micro);
+}
+
+/* моноширинный: запись журнала и код падения */
+.settings-logs-entry,
+.settings-crash pre {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+/* длинные строки переносятся где угодно */
+.settings-crash pre,
+.settings-crash-facts dd,
+.settings-crash-reason,
+.settings-crash-suspect p,
+.settings-logs-entry p,
+.settings-logs-entry pre {
+  overflow-wrap: anywhere;
+}
+
+/* ───── Поля ───── */
+
+/* без внешнего отступа */
+.settings-crash-facts dd,
+.settings-crash-note,
+.settings-crash-reason,
+.settings-crash-suspect p,
+.settings-crashes-head h3,
+.settings-crashes-lede,
+.settings-logs-empty,
+.settings-logs-entry p,
+.settings-logs-list,
+.settings-logs-note,
+.settings-logs-status,
+.settings-crashes-list {
+  margin: 0px;
+}
+
+.settings-logs-count {
+  padding-inline-start: 4px;
+}
+
+.settings-crash-evidence-title {
+  margin-inline: 0;
+  margin-block: 6px 0;
+}
+
+/* ───── Цвет текста ───── */
+
+/* основной */
+.settings-crash-reason,
+.settings-logs-entry p,
+.settings-crash-where {
+  color: var(--astral-ink);
+}
+
+/* приглушённый: подписи, счётчики, статусы, пустые состояния */
+.settings-crash details summary,
+.settings-crash-evidence-title,
+.settings-crash-note,
+.settings-crash-suspect small,
+.settings-crashes-lede,
+.settings-logs-count,
+.settings-logs-empty,
+.settings-logs-entry summary,
+.settings-logs-level,
+.settings-logs-note,
+.settings-logs-repeat,
+.settings-logs-status,
+.is-late.settings-crash-suspect p {
+  color: var(--astral-ink-muted);
+}
+
+/* бледный: время, источник, имена полей */
+.settings-crash-facts dt,
+.settings-crash-top time,
+.settings-logs-entry time,
+.settings-logs-source {
+  color: var(--astral-ink-faint);
+}
+
+/* тревожный: тип падения и ошибки журнала */
+.is-error.settings-logs-entry .settings-logs-level,
+.settings-crash-kind,
+.is-error.settings-logs-status {
+  color: var(--astral-danger);
+}
+
+/* предупреждение: уровень warn и значок в плашке */
+.is-warn.settings-logs-entry .settings-logs-level,
+.settings-crash-suspect p svg {
+  color: var(--astral-warning);
+}
+
+/* ───── Модификаторы ───── */
+
+/* поздняя запись: плашка растворяется */
+.is-late.settings-crash-suspect {
+  padding-inline: 0;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+/* ───── Узкое окно ───── */
+
+@media (max-width: 1100px) {
+  .settings-logs-entry {
+    grid-template-columns: 104px 104px minmax(0, 1fr);
+  }
+
+  .settings-logs-entry details,
+  .settings-logs-entry p {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@modovik/fx-scenes",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./format.js": "./format.js",
+    "./depth.js": "./depth.js",
+    "./camera.js": "./camera.js",
+    "./synthetic.js": "./synthetic.js",
+    "./png.js": "./png.js"
+  }
+}

@@ -1,0 +1,1298 @@
+/*
+ * Редакторы перекраски: «Зоны», «Завод», «Ангар», «Маппинг», «Вода».
+ *
+ * Один лист на все — у них один кадр (`ModelStage.jsx`), одна полоса
+ * органов, одна колонка правок и одна полка готовых видов; своё у каждого
+ * только содержимое. Вид — у мастерской эффектов и прострелов: редактор
+ * носит имя `fx-editor` рядом со своим, поэтому сцена с полосой органов,
+ * разделы и полка у них общие с остальной мастерской.
+ *
+ * Фон кадра — матовая плашка сцены мастерской (`--fx-matte-stage`, та же,
+ * что под эффектами, фонарями и залазами), с мягким светом сверху, чтобы
+ * модель не висела в плоской черноте. Никакого неба и радуги: превью во всех
+ * вкладках на одном матовом фоне.
+ */
+
+/* ── Кадр ──────────────────────────────────────────────────────────────── */
+
+.model-stage-frame {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--fx-scene-line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--astral-radius);
+  background:
+    radial-gradient(120% 90% at 50% 12%, rgba(255, 255, 255, 0.06), transparent 62%),
+    var(--fx-matte-stage, var(--fx-matte, #141415));
+}
+
+/*
+ * Имя того, что под курсором (`StageHoverTip`), — как всплывашка «Большой карты»: едет за курсором `transform`ом без раскладки, мышь не
+ * ловит, появляется и гаснет прозрачностью.
+ */
+.model-stage-hover-tip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  max-width: 240px;
+  padding: 5px 9px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-surface) 92%, transparent);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity var(--astral-duration-fast) ease;
+}
+
+.model-stage-hover-tip.is-shown {
+  opacity: 1;
+}
+
+/*
+ * Вещь кадра в руке (протяжка мышью): внизу по центру — какие клавиши двигают её вперёд и назад. Мышь не ловит и кадр не двигает.
+ */
+.model-stage-hold-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 4;
+  max-width: calc(100% - 28px);
+  margin: 0;
+  padding: 5px 10px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-surface) 92%, transparent);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/*
+ * Пульс перерисовки (опыт `keep-frames`, `keep-frames.js`): элемент 1×1 в правом нижнем углу рамки ПОД холстом (в DOM стоит перед ним, `mountKeepFrames`; `z-index` рамке и ему не нужен), мышь не ловит, подписи нет.
+ * Кадр игры не меняется ни на пиксель: непрозрачный холст накрывает точку целиком. Таймер раз в N мс меняет `data-phase`, а с ним цвет заливки — перерисовка страницы, которая не даёт окну замереть после покоя;
+ * даёт ли перерисовка под холстом кадр окна, проверяется замером в Electron. Цвет — матовая плашка кадра (та же, что фон рамки) в доле 1 % и 2 %: там, где холст прозрачен или скрыт (`is-settling`, заставка), она ложится
+ * на ту же плашку рамки, и цвет тот же. Перехода нет: нужна именно смена краски.
+ */
+.model-stage-keepalive {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  background-color: color-mix(in srgb, var(--fx-matte-stage, var(--fx-matte, var(--astral-surface-strong))) 1%, transparent);
+}
+
+.model-stage-keepalive[data-phase="1"] {
+  background-color: color-mix(in srgb, var(--fx-matte-stage, var(--fx-matte, var(--astral-surface-strong))) 2%, transparent);
+}
+
+/* Холст — поверх рамки, а не в потоке: его размер меняется при каждом
+   `resize`, и в потоке он растил бы рамку по кругу. */
+.model-stage-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Вид «Под водой» у воды и экран эффектов попадания (задача 3) —
+   постановочный холст на всю рамку, по центру. */
+.screen-hits-frame canvas,
+.water-under canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Картинки следа — плитки выбора по две в ряд, маска квадратом. */
+.screen-hits-shapes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Плитки одной высоты в любом языке (ТЗ 22.10.2026, п. 3). */
+  grid-auto-rows: 1fr;
+  gap: 6px;
+}
+
+.screen-hits-tile {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--astral-radius-xs);
+}
+
+.screen-hits-shape .screen-hits-tile {
+  aspect-ratio: 1;
+}
+
+/*
+ * «Трава вблизи» (задача 4 ТЗ 06.10.2026, вечер): лист земли полем под
+ * студийным небом. Поле рисует WebGL на прозрачном холсте (`grass-field.js`),
+ * небо — этот градиент; дымка у горизонта — того же цвета, что туман поля.
+ */
+.vegetation-ground {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #18202b 0%, #34424f 24%, #6f7c88 40%, #6f7c88 100%);
+}
+
+.vegetation-ground-plane {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.vegetation-ground.is-missing .vegetation-ground-plane {
+  visibility: hidden;
+}
+
+.vegetation-ground-note {
+  position: absolute;
+  inset: auto 12px 50% 12px;
+  z-index: 1;
+  margin: 0;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  text-align: center;
+}
+
+/* Кусок карты из игры показывается, когда листы приехали (`ModelStage.jsx`, `is-settling`), и проявляется мягко. */
+.model-stage-canvas {
+  transition: opacity var(--astral-duration) ease;
+}
+
+.model-stage-frame.is-settling .model-stage-canvas {
+  opacity: 0;
+}
+
+/*
+ * Пока идёт подгрузка (сцена читается или листы едут), кадр под заставкой не показывается: сцену без текстур не показываем (решение владельца
+ * 13.11.2026), даже пока заставка ждёт своих `SHOW_AFTER_MS` (140 мс) — иначе быстрая подгрузка (листы в кэше окна) мигала сценой в среднем цвете.
+ * Класс держится ровно столько, сколько ждёт заставка (`useStageLoad().waiting`); холст отрисовывается и под ним (первая отрисовка отпускает комнату
+ * редактора), а открывается сразу и целиком: `visibility` без перехода, под уходящей заставкой.
+ */
+.model-stage-frame.is-covered .model-stage-canvas {
+  visibility: hidden;
+}
+
+.model-stage-canvas:active {
+  cursor: grabbing;
+}
+
+/* Арена изнутри (ТЗ 41-А, 20.10.2026: «чёрные панели вместо текстур»): стеклянные стены зала
+   смотрят на улицу, а за ними в кадре — чёрная пустота, и стекло читалось чёрной панелью.
+   Здесь за стеклом — спокойный дневной свет без неба и красок: кадр остаётся матовым. */
+.recolor-stage[data-backdrop="daylight"] .model-stage-canvas {
+  background: linear-gradient(180deg, #8fa3b8 0%, #c9d5e0 68%, #aeb8b0 100%);
+}
+
+/* Холст кадра берёт фокус сам (клавиши полёта, щелчок по части), и браузер обводил весь кадр белой рамкой (ТЗ 23.10.2026,
+   п. I: белых рамок выделения не показываем нигде). Клавиши работают и без рамки: у холста нет подписи, которую она
+   читала бы, а у органов вокруг кадра своя обводка фокуса. */
+.model-stage-canvas:focus-visible {
+  outline: none;
+}
+
+/* Часть, выбранная щелчком в кадре, в колонке правок отмечается мягкой подложкой, а не рамкой (п. I): подложка гаснет
+   сама, пока смотришь, — раздел виден, и белой линии вокруг нет. */
+.recolor-section.is-picked {
+  background: var(--astral-surface-hover);
+}
+
+.recolor-section {
+  transition: background var(--astral-duration-slow) var(--astral-ease);
+}
+
+.model-stage-note {
+  position: absolute;
+  inset: auto 12px 12px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-void) 72%, transparent);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  text-align: center;
+}
+
+/* Подсказка режима «двигать по стенам» — поверх кадра, сверху по центру. */
+.recolor-stage-placing {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 4px 4px 4px 12px;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-void) 78%, transparent);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  transform: translateX(-50%);
+}
+
+.recolor-stage-placing > span {
+  min-width: 0;
+}
+
+.recolor-stage-placing-label {
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+/*
+ * В мастерской «как в Photoshop» плашка — в левом верхнем углу, как плашка
+ * полёта: середина верха свободна, а полоса органов справа её не задевает.
+ * Клавиши здесь говорит строка подсказок внизу кадра — на плашке только
+ * «что в руке» и «Готово»; для читалки клавиши остаются в разметке.
+ */
+.ui-editor-shell[data-layout="studio"] .recolor-stage-placing {
+  left: 12px;
+  z-index: 6;
+  /* Справа от плашки — полоса органов (~320 px): длинная подпись (в немецком у «Расписания» — шире кадра) переносится, а не лезет под неё. */
+  max-width: calc(100% - 344px);
+  transform: none;
+}
+
+.ui-editor-shell[data-layout="studio"] .recolor-stage-placing-label {
+  white-space: normal;
+}
+
+.ui-editor-shell[data-layout="studio"] .recolor-stage-placing-keys {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Сцена с полосой органов ───────────────────────────────────────────── */
+
+.recolor-editor .fx-stage {
+  height: clamp(380px, 60vh, 700px);
+  container-type: inline-size;
+}
+
+.recolor-stage .fx-stage-bar {
+  flex-wrap: nowrap;
+}
+
+.recolor-stage .fx-stage-bar > * {
+  flex: none;
+}
+
+.recolor-stage .fx-stage-bar > .recolor-stage-select {
+  flex: 0 1 240px;
+  min-width: 160px;
+  margin: 0;
+}
+
+.recolor-stage .fx-stage-bar > .recolor-stage-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+  font-size: var(--astral-text-micro);
+}
+
+.recolor-stage-foot {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.recolor-stage-plan {
+  margin: 0;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ── Готовые виды ──────────────────────────────────────────────────────── */
+
+.recolor-editor .recolor-presets .ui-preset-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+/* Свёрнутая полка «Готовые виды» в «Облике» маппинга (ТЗ 22.10) — строка-переключатель с мишенью в палец, а не в 22 точки. */
+.mapping-editor .recolor-presets > summary {
+  min-height: 36px;
+  align-content: center;
+}
+
+/* В панели «Шаблоны» (мастерская «как в Photoshop») — два столбца: колонка
+   320, и одна плитка в ряд выходила бы баннером. */
+.recolor-editor .ui-editor-panel-content .recolor-presets .ui-preset-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* ── Кадр в раскладке «как в Photoshop» ────────────────────────────────── */
+
+/*
+ * Кадр каркаса (`.ui-editor-canvas`) — сам матовая плашка с рамкой: сцена
+ * занимает его целиком, без своей рамки и своей высоты. Органы кадра и
+ * подпись лежат поверх (`StageOverlay.jsx`).
+ */
+.ui-editor-shell[data-layout="studio"] .recolor-stage.is-studio {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: auto;
+}
+
+.ui-editor-shell[data-layout="studio"] .recolor-stage.is-studio .model-stage-frame {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.recolor-editor .recolor-preset {
+  background: var(--fx-matte);
+}
+
+.recolor-editor .recolor-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+/* Плитка — на той же матовой плашке, что кадр: без неба и радуги. */
+.recolor-preset .ui-choice-media {
+  aspect-ratio: 25 / 12;
+  padding: 0;
+  background: var(--fx-matte-stage, var(--fx-matte));
+}
+
+.recolor-preset .ui-choice-media > img {
+  object-fit: contain;
+}
+
+/* ── Колонка правок ────────────────────────────────────────────────────── */
+
+.recolor-inspector .fx-hint.is-warning {
+  color: var(--astral-warning);
+}
+
+.recolor-group {
+  display: grid;
+  gap: 2px;
+}
+
+.recolor-subhead {
+  margin: 6px 0 2px;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+/* Строка списка — кнопка выбора на всю ширину: мишень не меньше строки. */
+.recolor-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: var(--astral-control-h-sm);
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: none;
+  color: var(--astral-ink);
+  font: inherit;
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-control-h-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.recolor-row:hover {
+  background: color-mix(in srgb, var(--astral-ink) 5%, transparent);
+}
+
+.recolor-row.is-selected {
+  background: color-mix(in srgb, var(--astral-ink) 8%, transparent);
+}
+
+.recolor-row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recolor-row > small {
+  flex: none;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.recolor-row:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+/* ── Своя картинка (эмблема ангара) ────────────────────────────────────── */
+
+/* Подраздел внутри раздела (части корпуса завода) — под чертой. */
+.recolor-subsection {
+  display: grid;
+  /* Колонка — по панели, а не по самому широкому органу внутри: иначе
+     длинная строка (направления градиента, ряд образцов) уводила цвета за
+     край (задача 4 ТЗ 06.10.2026, вечер). */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--astral-line);
+}
+
+.recolor-emblem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Картинка на шахматке: прозрачный фон PNG виден как прозрачный. */
+.recolor-emblem > img,
+.recolor-emblem > i {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background:
+    repeating-conic-gradient(rgba(255, 255, 255, 0.08) 0% 25%, transparent 0% 50%) 0 0 / 12px 12px,
+    var(--fx-matte);
+}
+
+.recolor-emblem > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recolor-emblem b {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recolor-emblem small {
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Список эмблем и надписей: строка выбора и кнопки порядка рядом. */
+.recolor-emblem-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recolor-emblem-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  border-radius: var(--astral-radius-sm);
+}
+
+.recolor-emblem-row.is-selected {
+  background: color-mix(in srgb, var(--astral-ink) 8%, transparent);
+}
+
+.recolor-emblem-pick {
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  line-height: normal;
+}
+
+.recolor-emblem-pick > img,
+.recolor-emblem-pick > i {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background:
+    repeating-conic-gradient(rgba(255, 255, 255, 0.08) 0% 25%, transparent 0% 50%) 0 0 / 8px 8px,
+    var(--fx-matte);
+}
+
+.recolor-emblem-pick > span {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recolor-emblem-pick b {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recolor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 3D-снимок на плитке готового вида и на обложке — во всю плитку. */
+.recolor-preset .ui-choice-media > .scene-thumb,
+.workshop-cover > .workshop-cover-canvas > .scene-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Снимок той же пропорции, что плитка (`thumbSize`): не растягивается, а
+     при расхождении в сотые доли чуть подрезается — поле кадра шире. */
+  object-fit: cover;
+}
+
+/* Снимок шаблона ещё снимается — серая плита скелета с бликом (`.ui-skeleton`, те же цвета), а не чёрная дыра (критик 31.10.2026:
+   «Готовые виды» маппинга через 0,9 с после входа — семь чёрных мест, сцене моделей мода нужно ~1,3 с при ×4, под нагрузкой дольше).
+   Холст без псевдоэлементов — блик фоном; не вечный, как у «Дирижаблей»: вечный `background-position` на десятках плиток держал главный
+   поток. */
+.recolor-preset .ui-choice-media > .scene-thumb:not([data-ready]) {
+  background-color: var(--ui-skeleton-base, var(--astral-surface-hover));
+  background-image: linear-gradient(100deg, transparent 18%, var(--ui-skeleton-sheen, var(--astral-line)) 50%, transparent 82%);
+  background-repeat: no-repeat;
+  background-size: 220% 100%;
+  animation: recolor-thumb-loading 2.3s var(--astral-ease) 10 both;
+}
+
+@keyframes recolor-thumb-loading {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recolor-preset .ui-choice-media > .scene-thumb:not([data-ready]) {
+    animation: none;
+  }
+}
+
+/* Цвет места в строке списка (маппинг). */
+.recolor-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-lg);
+  vertical-align: -1px;
+}
+
+/* ── Отделка поверхности (узор, картинка, градиент) ─────────────────────── */
+
+.finish-field {
+  display: grid;
+  gap: 10px;
+}
+
+.finish-patterns {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 6px;
+}
+
+.finish-pattern {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  background: var(--fx-matte);
+  color: #fff;
+  cursor: pointer;
+}
+
+.finish-pattern > canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.finish-pattern > svg {
+  position: relative;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+}
+
+.finish-pattern.is-active {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 1px;
+}
+
+.finish-pattern:focus-visible,
+.finish-gradient:focus-visible {
+  outline: 2px solid var(--astral-ink);
+  outline-offset: 2px;
+}
+
+.finish-gradients {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+  gap: 6px;
+}
+
+.finish-gradient {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-height: var(--astral-control-h-xs);
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: var(--astral-radius-sm);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+
+.finish-gradient.is-active {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 1px;
+}
+
+.finish-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.finish-image > canvas {
+  flex: none;
+  width: 96px;
+  height: 64px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--fx-matte-stage, var(--fx-matte));
+}
+
+.finish-image > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.finish-image b {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finish-image small {
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+}
+
+/* ── Вайнвуд: буквы своего цвета (задача 6 ТЗ 05.10.2026) ──────────────── */
+
+/* Буквы слова — общий набор отметок (`ui-toggles`), по ширине букв. */
+.vinewood-letter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Мишень — не уже квадрата органа: «I» и «1» — тоже под палец. */
+.vinewood-letter-row .ui-toggle {
+  min-width: var(--astral-control-h-sm);
+}
+
+/* Свой цвет буквы — полосой под ней. */
+.vinewood-letter {
+  display: inline-block;
+  min-width: 1ch;
+  font-weight: 700;
+}
+
+.vinewood-letter[data-own="true"] {
+  box-shadow: 0 3px 0 var(--vinewood-letter);
+}
+
+/*
+ * Места арены по одному (задача 10): место — строка с переключателем и
+ * «Раскрыть», элементы раскрытого места — плитки по две в ряд, правка
+ * взятого элемента — под местом.
+ */
+.arena-place {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--astral-line);
+}
+
+.arena-place:last-child {
+  border-bottom: 0;
+}
+
+.arena-element-editor {
+  padding: 8px;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-ink) 4%, transparent);
+}
+
+/* «Предметы зала» (задача 10): карточка выбранного предмета и список моделей зала одним столбцом с прокруткой. */
+.arena-item-head {
+  display: grid;
+  gap: 2px;
+}
+
+/* Снимок предмета в панели (макет 81091a472): плита 16:9, подпись слева сверху, «Найти в зале» справа сверху. */
+.arena-item-shot {
+  margin: 0;
+  display: grid;
+}
+
+.arena-item-plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-strong);
+}
+
+.arena-item-plate img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.arena-item-plate-state {
+  margin: 0;
+  padding: 0 16px;
+  text-align: center;
+}
+
+.arena-item-plate-caption {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-surface-strong) 85%, transparent);
+  font-size: var(--astral-text-body);
+}
+
+.arena-item-plate-find {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* Режимы «Этот / В комнате / Во всей арене»: подпись переносится, а не обрезается (во всех пяти языках). */
+.arena-items-scope .ui-segment-label {
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
+}
+
+/* Цвет стен: квадрат только у выбранного цвета; до выбора выбиратель скрыт, его открывает кнопка. */
+.arena-shell-paint-colour {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.arena-shell-paint-picker {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Страница «Заменить картинку у всех» (макет 02): роды экранов, картинка, превью по пропорции рода. */
+.arena-mass {
+  display: grid;
+  gap: 12px;
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.arena-mass-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.arena-mass-type {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--astral-radius);
+  background: color-mix(in srgb, var(--astral-ink) 4%, transparent);
+}
+
+.arena-mass-type b,
+.arena-mass-type small {
+  display: block;
+}
+
+.arena-mass-type b {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+
+.arena-mass-type small,
+.arena-mass-ratio {
+  color: color-mix(in srgb, var(--astral-ink) 62%, transparent);
+  font-size: var(--astral-text-body);
+}
+
+.arena-mass-head strong {
+  font-size: var(--astral-text-strong);
+  font-weight: 650;
+}
+
+.arena-mass-picture,
+.arena-mass-fits {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.arena-mass-fit {
+  display: grid;
+  gap: 6px;
+  width: 120px;
+}
+
+.arena-mass-preview {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-strong);
+}
+
+.arena-mass-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.arena-mass-picture .arena-mass-preview {
+  width: 64px;
+}
+
+.arena-mass-name {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+
+.arena-mass-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arena-mass-exclude summary {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  font-size: var(--astral-text-body);
+  cursor: pointer;
+}
+
+/* Название карточки предмета — по шкале: 15 px (название карточки), модель — моноширинным. */
+.arena-item-head strong {
+  font-size: var(--astral-text-strong);
+  font-weight: 650;
+}
+
+.arena-item-body,
+.arena-item-detail,
+.arena-item-screens {
+  display: grid;
+  gap: 8px;
+}
+
+.arena-items-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+/* Шаблоны арены (ТЗ 12.10.2026): полки групп одна под другой, плитка — картинка экранов шаблона во всю плитку. */
+.arena-templates {
+  display: grid;
+  gap: 12px;
+}
+
+.arena-template .ui-choice-media > .arena-template-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.arena-template .ui-choice-media > .arena-template-art > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Район списка зон — свёрнутой строкой с числом зон и уголком, как ветка
+   слоёв «Большой карты» (18.10.2026). */
+.zones-district-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: var(--astral-control-h-sm);
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: none;
+  color: var(--astral-ink);
+  font: inherit;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.zones-district-head:hover {
+  background: color-mix(in srgb, var(--astral-ink) 5%, transparent);
+}
+
+.zones-district-head:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+.zones-district-head > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zones-district-head > small {
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.zones-district-head > svg {
+  width: 12px;
+  height: 12px;
+  color: var(--fx-faint);
+  transition: transform var(--astral-duration-fast) var(--astral-ease);
+}
+
+.zones-district.is-open > .zones-district-head > svg {
+  transform: rotate(180deg);
+}
+
+.zones-district.is-open > .recolor-row {
+  padding-left: 16px;
+}
+
+/* Значок строки расписания — в плашке значка строки группы (`ListGroup`, 30.10.2026): «выше», «ниже» и «удалить» теперь строками
+   внизу панели, у взятой строки. */
+.schedule-editor .schedule-row-thumb {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+/* Образец цвета табло: у сервера тёмные цвета (значки #000000, фон), и рамка образца в 8 % белого на чёрной колонке пропадала —
+   чёрный квадрат на чёрном (четвёртый круг критика 31.10.2026). */
+.schedule-editor .ui-color input[type="color"] {
+  border-color: var(--astral-line-strong);
+}
+
+/*
+ * Шрифты надписи образцами (`EmblemSection`: `FontControls`): каждое имя — своим
+ * шрифтом, как список шрифтов «Большой карты». Две колонки; выбранный — белой
+ * рамкой.
+ */
+.emblem-fonts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.emblem-font {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 10px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: var(--astral-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.emblem-font:hover {
+  background: color-mix(in srgb, var(--astral-ink) 6%, transparent);
+}
+
+.emblem-font.is-selected {
+  border-color: var(--astral-ink);
+  background: color-mix(in srgb, var(--astral-ink) 10%, transparent);
+}
+
+.emblem-font-sample {
+  overflow: hidden;
+  font-size: var(--astral-text-body);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Откуда свой шрифт (`FontSources`, ТЗ 23.10.2026, п. F): ряд из двух кнопок под любым списком шрифтов и окно
+ * «Шрифты на этом компьютере» — поиск и столбик названий; список едет сам, окно остаётся на месте.
+ */
+.font-sources {
+  flex-wrap: wrap;
+}
+
+.font-installed {
+  display: grid;
+  gap: 2px;
+  max-height: 46vh;
+  margin-top: 10px;
+  overflow-y: auto;
+}
+
+.font-installed-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: var(--astral-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.font-installed-row:hover,
+.font-installed-row:focus-visible {
+  background: color-mix(in srgb, var(--astral-ink) 8%, transparent);
+}
+
+/*
+ * Поле правки надписи прямо по её буквам в 3D-кадре (`StageTextField.jsx`).
+ * Размер, кегль, толщину обводки и матрицу перспективы ставит скрипт каждый
+ * кадр; здесь — вид: буквы цветом надписи с обводкой и подложкой (пока идёт
+ * набор, их рисует поле, а не кадр), синее выделение и белая штриховая рамка
+ * — как у надписи «Большой карты» и табло «Расписания».
+ */
+
+.stage-text-field {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  outline: 1px dashed color-mix(in srgb, var(--astral-ink) 92%, transparent);
+  outline-offset: 2px;
+  display: grid;
+  background: var(--stage-text-backdrop, transparent);
+  transform-origin: 0 0;
+  /* Не `visibility: hidden`: скрытое поле не берёт фокус, а набор должен начаться сразу. */
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.stage-text-field-stroke,
+.stage-text-field-input {
+  grid-area: 1 / 1;
+  opacity: var(--stage-text-opacity, 1);
+}
+
+.stage-text-field-stroke {
+  overflow: hidden;
+  color: transparent;
+  line-height: inherit;
+  text-align: center;
+  white-space: pre;
+  -webkit-text-stroke: var(--stage-text-stroke, 0) var(--stage-text-outline, transparent);
+  pointer-events: none;
+}
+
+.stage-text-field-input {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  color: var(--stage-text-fill, var(--astral-ink));
+  caret-color: var(--stage-text-caret, var(--stage-text-fill, var(--astral-ink)));
+  font-size: inherit;
+  font-weight: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: pre;
+}
+
+.stage-text-field-input::selection {
+  background: rgba(96, 150, 255, 0.42);
+  color: var(--stage-text-fill, var(--astral-ink));
+}
+
+/* Буквы рисует сам кадр (живая проекция наклейки у оружия): у поля — только
+   каретка, выделение и рамка, как у табло «Расписания». */
+.stage-text-field.is-caret-only .stage-text-field-input,
+.stage-text-field.is-caret-only .stage-text-field-input::selection {
+  color: transparent;
+}
+
+/* ── Арена мода: листы мода списком с превью (Хелпер 7, 25.10.2026) ─────── */
+
+.arena-mod-sheets {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arena-mod-thumb {
+  display: block;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-strong);
+  object-fit: cover;
+}
+
+.arena-mod-thumb.is-large {
+  width: 32px;
+  height: 32px;
+}
+
+.arena-mod-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.arena-mod-name > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.arena-mod-sheets .ui-nav-row.is-selected {
+  background: var(--astral-surface-strong);
+}
+
+/*
+ * «{имя} за кадром · Показать» (`use-selection-offstage.jsx`; раздел сессии arena-parts, 29.10.2026, вечер): выбранное ушло из кадра или его
+ * заслонили — тихая плашка внизу по центру кадра у всех редакторов с «Предметами». Та же плашка, что у органов кадра (`ui-stage-bar`), только
+ * внизу; без размытия подложки.
+ */
+.ui-stage-bar.stage-offstage {
+  top: auto;
+  right: auto;
+  bottom: 16px;
+  left: 50%;
+  max-width: calc(100% - 32px);
+  transform: translateX(-50%);
+  gap: 10px;
+  padding-left: 12px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.stage-offstage-name {
+  overflow: hidden;
+  color: var(--astral-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Плитка готовой воды — гладь крупно: кадр у Венис-Бич в 1,6 раза, левая нижняя часть (вода и причал) — без неба и пляжа, где
+   виды не отличаются. Начало обрезки по высоте — треть кадра: `transform-origin` = 0,32 × 1,625 / 0,625. */
+.water-editor .recolor-preset .ui-choice-media {
+  overflow: hidden;
+}
+
+.recolor-preset .ui-choice-media > img.water-preset-art {
+  transform: scale(1.625);
+  transform-origin: 0 83%;
+}

@@ -1,0 +1,154 @@
+/*
+ * Каталог «через карандаш» (`ComponentPickBar.jsx`, `PencilCreateTile.jsx`; «Взять из другого редукса», владелец 12.11.2026, чистовой набор 2, 15.11.2026): без меню разделов, поиска и сортировки,
+ * сверху «← Назад к «<редукс>»», заголовок раздела и «меняем часть «<вид>»», первая плитка — «Создать свой в мастерской», под курсором у карточки «Поставить вместо части».
+ *
+ * Лист ленивый, едет вместе с шапкой, пока запрос выбора есть; правила — целиком в слое `overrides`, как у `mod-components.css`.
+ */
+@layer overrides {
+  /* Меню в этом режиме нет, и выдача занимает всю ширину. */
+  .desktop-app .public-catalog-page.is-pencil {
+    display: block;
+  }
+
+  .desktop-app .public-catalog-page.is-pencil .catalog-main {
+    max-width: none;
+    padding-inline: 0;
+  }
+
+  .desktop-app .pencil-head {
+    display: grid;
+    justify-items: start;
+    gap: 0;
+    margin-block-end: 22px;
+  }
+
+  .desktop-app .pencil-head .pencil-back {
+    margin-inline-start: -6px;
+    margin-block-end: 18px;
+  }
+
+  .desktop-app .pencil-head h1 {
+    margin: 0;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-display);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  .desktop-app .pencil-head p {
+    margin: 8px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-strong);
+  }
+
+  /* «Создать свой в мастерской»: чёрная плитка с пунктиром и гаечным ключом. */
+  .desktop-app .pencil-tile {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .desktop-app .pencil-tile-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    aspect-ratio: 16 / 10;
+    padding: 0 18px;
+    border: 1.5px dashed var(--astral-line-focus);
+    border-radius: var(--astral-radius);
+    background: #000;
+    color: var(--astral-ink);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      border-color var(--astral-duration-fast) var(--astral-ease),
+      background var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .pencil-tile-box:hover,
+  .desktop-app .pencil-tile-box:focus-visible {
+    border-color: var(--astral-ink);
+    background: var(--astral-surface-strong);
+  }
+
+  .desktop-app .pencil-tile-box:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .pencil-tile-wrench {
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 999px;
+    background: var(--astral-ink);
+    color: #0a0a0b;
+  }
+
+  .desktop-app .pencil-tile-wrench svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .desktop-app .pencil-tile-box b {
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+  }
+
+  .desktop-app .pencil-tile > small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* Под курсором годная карточка берёт белую рамку, внизу — «Поставить вместо части». */
+  .desktop-app .astral-store-card[data-pick="on"] {
+    position: relative;
+  }
+
+  .desktop-app .astral-store-card[data-pick="on"]:hover,
+  .desktop-app .astral-store-card[data-pick="on"]:focus-visible {
+    outline: 2px solid var(--astral-ink);
+    outline-offset: -2px;
+  }
+
+  .desktop-app .astral-pick-put {
+    position: absolute;
+    inset-inline: 12px;
+    inset-block-end: 12px;
+    z-index: 2;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    border-radius: var(--astral-radius);
+    background: var(--astral-ink);
+    color: #0a0a0b;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  .desktop-app .astral-store-card[data-pick="on"]:hover .astral-pick-put,
+  .desktop-app
+    .astral-store-card[data-pick="on"]:focus-visible
+    .astral-pick-put {
+    display: flex;
+  }
+
+  .desktop-app .astral-pick-put svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Карточка, которую выбрать нельзя (в режиме её уже нет в выдаче; правило страхует тесты и промежуток, пока разбор едет). */
+  .desktop-app .astral-store-card.is-pick-off {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+}

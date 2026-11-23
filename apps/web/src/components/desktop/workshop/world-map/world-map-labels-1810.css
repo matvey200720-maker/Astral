@@ -1,0 +1,35 @@
+/*
+ * Каталог «Подписи» (18.10): сетка наборов-карт по страницам, первая карточка —
+ * «Без подписей». Остальной вид карточек — у `world-map-redesign.css`.
+ */
+
+/*
+ * Ленивый лист (18.10): едет вместе с редактором большой карты по `import()`
+ * (импорт — `WorldMapCustomizer.jsx`), а не в стартовом `main.css` (потолок
+ * 190 KiB, `scripts/verify-web-architecture.js`). Слой тот же, `overrides`;
+ * лист приходит после `main.css`, порядок листов карты — порядок импортов.
+ */
+@layer overrides {
+  .wmc-set-none {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--astral-ink-muted);
+    pointer-events: none;
+  }
+
+  .wmc-set-none > svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Страницы под сеткой наборов. */
+  .wmc-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding-top: 4px;
+  }
+}

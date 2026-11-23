@@ -1,0 +1,1142 @@
+/* Настройки, вариант A «Пульт» (владелец, 15.11.2026): страница во всю область справа от рейки.
+   Слева — заголовок, поиск и разделы с живыми значениями, справа — шапка раздела и карточки со строками.
+   Лист подключается в слое components общего листа окна; числа — из макета `r6/settings-downloads/settings-a.css`.
+   Кегли и радиусы макета, которых нет в шкале, заведены локальными свойствами и названы по размеру. */
+
+/* ===== Короткие имена палитры =====
+   Объявлены на корне каждого блока, который их читает: потомки наследуют, а
+   правило без предка в селекторе видит имя на самом элементе. Значения общие
+   для листов настроек. */
+
+.settings-shell,
+.settings-nav,
+.settings-nav-item,
+.settings-nav-dot,
+.settings-nav-title,
+.settings-search,
+.settings-search-clear,
+.settings-crumbs,
+.settings-section-head,
+.settings-section-panel,
+.settings-results,
+.settings-item-reset,
+.settings-profile,
+.settings-profile-mark,
+.account-mark,
+.settings-toast,
+.settings-window {
+  --prefs-fg: var(--astral-ink);
+  --prefs-fg-dim: var(--astral-ink-muted);
+  --prefs-fg-faint: var(--astral-ink-faint);
+  --prefs-fs-s: var(--astral-text-small);
+  --prefs-fs-m: var(--astral-text-body);
+  --prefs-fs-l: var(--astral-text-strong);
+  --prefs-edge: var(--astral-line);
+  --prefs-edge-hi: var(--astral-line-strong);
+  --prefs-edge-top: rgba(255, 255, 255, 0.26);
+  --prefs-ring: var(--astral-line-focus);
+  --prefs-hover: var(--astral-surface-hover);
+  --prefs-well: var(--astral-surface-sunken);
+  --prefs-panel: var(--astral-surface-strong);
+  --prefs-card: var(--astral-surface);
+  --prefs-field: var(--astral-surface-raised);
+  --prefs-r-xs: var(--astral-radius-xs);
+  --prefs-r-sm: var(--astral-radius-sm);
+  --prefs-r: var(--astral-radius);
+  --prefs-r-lg: var(--astral-radius-lg);
+  --prefs-leading: var(--astral-line-normal);
+  --prefs-ctl: var(--astral-control-h-sm);
+  --prefs-ease: var(--astral-ease);
+  --prefs-fast: var(--astral-duration-fast);
+  --prefs-slow: var(--astral-duration-slow);
+  --prefs-pos: var(--astral-positive);
+  --prefs-warn: var(--astral-warning);
+  --prefs-bad: var(--astral-danger);
+  /* Размеры макета между ступенями шкалы. */
+  --prefs-fs-14: 14px;
+  /* Заголовки настроек (владелец, 16.11.2026: «не надо везде делать огромные тексты, это всё только отпугивает»): 30 → 24 и 36 → 28. */
+  --prefs-fs-title: 24px;
+  --prefs-fs-head: 28px;
+  --prefs-nav-w: 262px;
+}
+
+/* ===== Каркас страницы ===== */
+
+.settings-page .settings-unified-glass {
+  min-block-size: calc(100vh - 168px);
+}
+
+.settings-shell {
+  min-inline-size: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--prefs-nav-w) minmax(0px, 1fr);
+}
+
+/* Заголовок страницы виден только скринридерам: на глаз он стоит в левой колонке */
+.settings-page-title {
+  white-space: nowrap;
+  font-size: var(--astral-text-page);
+  clip-path: inset(50%);
+  inline-size: 1px;
+  block-size: 1px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  position: absolute;
+}
+
+/* ===== Левая колонка ===== */
+
+.settings-nav {
+  border-inline-end: 1px solid var(--prefs-edge);
+  background: var(--astral-bg);
+  padding-block: 22px 24px;
+  padding-inline: 16px 12px;
+  min-inline-size: 0;
+  flex-direction: column;
+  display: flex;
+}
+
+.settings-nav-title {
+  margin-block-end: 16px;
+  padding-inline: 2px;
+}
+
+.settings-nav-title b {
+  font-family: var(--astral-font-display);
+  font-weight: 400;
+  font-size: var(--prefs-fs-title);
+  line-height: 28px;
+  letter-spacing: -0.01em;
+  color: var(--prefs-fg);
+  display: block;
+}
+
+.settings-nav-title small {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-faint);
+  margin-block-start: 4px;
+  display: block;
+}
+
+/* Кнопки колонки: без рамки и заливки, приглушённый цвет */
+.settings-item-reset,
+.settings-search-clear,
+.settings-nav-item {
+  color: var(--prefs-fg-dim);
+  cursor: pointer;
+  background-color: transparent;
+  border: 0;
+}
+
+.settings-search input,
+.settings-item-reset,
+.settings-nav-item {
+  font: inherit;
+}
+
+/* Эти элементы не сжимаются в строке */
+.settings-shell .settings-row-control,
+.settings-shell .settings-row > .ui-select.ui-field,
+.account-mark,
+.settings-profile-mark,
+.settings-nav-dot,
+.settings-nav-item > svg,
+.settings-search-clear,
+.settings-search .ui-kbd,
+.settings-search > svg {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+/* ===== Поиск по настройкам ===== */
+
+.settings-search {
+  color: var(--prefs-fg-faint);
+  background: var(--prefs-field);
+  border: solid 1px var(--prefs-edge-hi);
+  border-radius: var(--prefs-r);
+  min-block-size: 42px;
+  padding-block: 0;
+  padding-inline: 14px 10px;
+  gap: 10px;
+  align-items: center;
+  display: flex;
+  transition-property: border-color;
+  transition-duration: var(--prefs-fast);
+  transition-timing-function: var(--prefs-ease);
+  transition-delay: 0s;
+  transition-behavior: normal;
+}
+
+.settings-search:focus-within {
+  border-color: var(--prefs-ring);
+}
+
+.settings-search > svg {
+  color: var(--prefs-fg);
+  inline-size: 17px;
+  block-size: 17px;
+}
+
+.settings-search input {
+  font-size: var(--prefs-fs-m);
+  color: var(--prefs-fg);
+  background-color: transparent;
+  border: 0;
+  outline: 0;
+  block-size: 40px;
+  min-inline-size: 0;
+  padding: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
+
+.settings-search input::placeholder {
+  color: var(--prefs-fg-faint);
+}
+
+.settings-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.settings-search-clear {
+  border-radius: var(--prefs-r-sm);
+  min-inline-size: 28px;
+  min-block-size: 28px;
+  padding: 0;
+  place-content: center;
+  align-items: center;
+  display: inline-flex;
+}
+
+.settings-search-clear:focus-visible {
+  outline: 2px solid var(--prefs-ring);
+  outline-offset: 2px;
+}
+
+/* ===== Группы и разделы ===== */
+
+.settings-nav-groups {
+  gap: 14px;
+  margin-block-start: 14px;
+  display: grid;
+}
+
+.settings-nav-group {
+  gap: 2px;
+  display: grid;
+}
+
+.settings-crumbs,
+.settings-shell .settings-group-title,
+.settings-nav-group-title {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-faint);
+}
+
+.settings-nav-group-title {
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding-block: 0 5px;
+  padding-inline: 10px;
+}
+
+.settings-nav-item {
+  font-weight: 500;
+  font-size: var(--prefs-fs-14);
+  text-align: left;
+  color: #c4c4c9;
+  border-radius: var(--prefs-r-sm);
+  min-block-size: 38px;
+  padding-block: 0;
+  padding-inline: 10px;
+  inline-size: 100%;
+  position: relative;
+  gap: 11px;
+  align-items: center;
+  display: flex;
+  transition-property: color, background-color, opacity;
+  transition-duration: var(--prefs-fast), var(--prefs-fast), var(--prefs-fast);
+  transition-timing-function:
+    var(--prefs-ease), var(--prefs-ease), var(--prefs-ease);
+  transition-delay: 0s, 0s, 0s;
+  transition-behavior: normal, normal, normal;
+}
+
+.settings-nav-item > svg {
+  color: #8f8f96;
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+/* Знак Rockstar Games: рисунок из public/brands — маской в цвет строки, того же размера, что значки набора. */
+.settings-nav-item > .settings-nav-mark,
+.settings-result-icon .settings-nav-mark {
+  background-color: currentColor;
+  -webkit-mask: url("/brands/rockstar-games.svg") center / contain no-repeat;
+  mask: url("/brands/rockstar-games.svg") center / contain no-repeat;
+  inline-size: 18px;
+  block-size: 18px;
+  flex: none;
+}
+
+.settings-nav-item > .settings-nav-mark {
+  color: #8f8f96;
+}
+
+.settings-nav-name {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-inline-size: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Что стоит в разделе: слово, цветная точка состояния, номер версии. */
+.settings-nav-meta {
+  font-weight: 400;
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-faint);
+  white-space: nowrap;
+  margin-inline-start: auto;
+  gap: 6px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.settings-nav-state {
+  border-radius: 999px;
+  background-color: var(--prefs-fg-faint);
+  inline-size: 8px;
+  block-size: 8px;
+  flex: none;
+}
+
+.settings-nav-state.is-pos {
+  background-color: var(--prefs-pos);
+}
+
+.settings-nav-state.is-warn {
+  background-color: var(--prefs-warn);
+}
+
+.settings-nav-state.is-bad {
+  background-color: var(--prefs-bad);
+}
+
+/* Белая точка у «О программе»: есть что поставить. */
+.settings-nav-update {
+  background-color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+  inline-size: 8px;
+  block-size: 8px;
+  flex: none;
+}
+
+.settings-nav-count {
+  font-weight: 700;
+  font-size: var(--astral-text-micro);
+  color: #000;
+  background-color: #fff;
+  border-radius: 999px;
+  min-inline-size: 20px;
+  block-size: 20px;
+  padding-inline: 6px;
+  margin-inline-start: auto;
+  place-content: center;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Наведение. Правило стоит раньше активного пункта: вес у них одинаковый */
+.settings-item-reset:hover,
+.settings-nav-item:hover {
+  color: var(--prefs-fg);
+  background-color: var(--prefs-hover);
+}
+
+.settings-nav-item:hover > svg {
+  color: var(--prefs-fg);
+}
+
+.is-active.settings-nav-item {
+  color: #fff;
+  background-color: var(--prefs-hover);
+}
+
+.is-active.settings-nav-item > svg {
+  color: #fff;
+}
+
+/* В поиске раздел без совпадений гаснет, но остаётся на месте и нажимается. */
+.is-dim.settings-nav-item {
+  opacity: 0.3;
+}
+
+.is-dim.settings-nav-item:hover {
+  opacity: 0.7;
+}
+
+.settings-item-reset:focus-visible,
+.settings-nav-item:focus-visible {
+  outline-style: solid;
+  outline-width: 2px;
+  outline-color: var(--prefs-ring);
+  outline-offset: -2px;
+}
+
+.settings-nav-dot {
+  background-color: var(--prefs-fg-dim);
+  border-radius: 999px;
+  inline-size: 6px;
+  block-size: 6px;
+  margin-inline-start: auto;
+}
+
+.settings-nav-dot + .settings-nav-meta,
+.settings-nav-dot + .settings-nav-count {
+  margin-inline-start: 8px;
+}
+
+/* ===== Правая часть: секция, шапка, хлебные крошки ===== */
+
+.settings-shell > .settings-section-stage {
+  padding-block: 22px 28px;
+  padding-inline: 36px;
+  min-inline-size: 0;
+  position: relative;
+  gap: 0;
+  align-content: start;
+  grid-column: auto;
+  display: grid;
+}
+
+.settings-page .settings-shell .settings-section-panel > article {
+  min-block-size: 0 !important;
+  padding-block: 0;
+  padding-inline: 0;
+}
+
+.settings-section-head {
+  margin-block-end: 16px;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: flex-end;
+  display: flex;
+}
+
+.settings-section-head-copy {
+  min-inline-size: 0;
+  display: grid;
+}
+
+.settings-crumbs {
+  font-size: var(--prefs-fs-m);
+  color: var(--prefs-fg-dim);
+  gap: 8px;
+  align-items: center;
+  display: flex;
+}
+
+.settings-crumbs svg {
+  inline-size: 12px;
+  block-size: 12px;
+}
+
+.settings-crumbs [aria-current] {
+  color: var(--prefs-fg-dim);
+}
+
+.settings-section-head h2 {
+  font-family: var(--astral-font-display);
+  font-weight: 400;
+  font-size: var(--prefs-fs-head);
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  color: var(--prefs-fg);
+  margin-block: 6px 3px;
+  margin-inline: 0;
+}
+
+.settings-section-head p {
+  font-size: var(--prefs-fs-14);
+  color: var(--prefs-fg-dim);
+  margin-block: 0;
+  margin-inline: 0;
+}
+
+.settings-item-reset {
+  font-weight: 500;
+  font-size: var(--prefs-fs-s);
+  border-radius: var(--prefs-r-xs);
+  min-block-size: var(--astral-control-h-xs);
+  margin-inline-start: 10px;
+  padding-block: 0;
+  padding-inline: 8px;
+  align-items: center;
+  display: inline-flex;
+}
+
+/* Подсвеченная настройка после перехода из поиска */
+.settings-section-panel .is-found[data-setting] {
+  border-radius: var(--prefs-r);
+  box-shadow: var(--prefs-ring) 0 0 0 2px;
+  transition-property: box-shadow;
+  transition-duration: var(--prefs-slow);
+  transition-timing-function: var(--prefs-ease);
+  transition-delay: 0s;
+  transition-behavior: normal;
+}
+
+/* ===== Результаты поиска ===== */
+
+.settings-results {
+  min-inline-size: 0;
+  display: grid;
+}
+
+.settings-results-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--prefs-edge);
+  border-radius: var(--prefs-r-lg);
+  background: var(--prefs-card);
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: grid;
+}
+
+.settings-results-list li + li {
+  border-block-start: 1px solid var(--prefs-edge);
+}
+
+.settings-result {
+  font: inherit;
+  text-align: left;
+  color: var(--prefs-fg);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  inline-size: 100%;
+  padding-block: 13px;
+  padding-inline: 18px;
+  gap: 14px;
+  align-items: center;
+  display: flex;
+  transition-property: background-color;
+  transition-duration: var(--prefs-fast);
+  transition-timing-function: var(--prefs-ease);
+}
+
+.settings-result:hover,
+.settings-result.is-first {
+  background: var(--prefs-hover);
+}
+
+.settings-result:focus-visible {
+  outline: 2px solid var(--prefs-ring);
+  outline-offset: -2px;
+}
+
+.settings-result-icon {
+  color: #d4d4d8;
+  background: var(--prefs-hover);
+  border-radius: var(--prefs-r-sm);
+  inline-size: 36px;
+  block-size: 36px;
+  flex: none;
+  place-items: center;
+  display: grid;
+}
+
+.settings-result-icon svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.settings-result-copy {
+  min-inline-size: 0;
+  display: grid;
+}
+
+.settings-result-copy b {
+  font-weight: 600;
+  font-size: var(--prefs-fs-l);
+}
+
+.settings-result-copy small {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  margin-block-start: 1px;
+}
+
+.settings-result-where {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  white-space: nowrap;
+  margin-inline-start: auto;
+  gap: 8px;
+  align-items: center;
+  display: flex;
+}
+
+.settings-result-where svg {
+  inline-size: 12px;
+  block-size: 12px;
+}
+
+/* Совпавшая часть слова: белая плашка, как в макете. */
+.settings-results mark {
+  color: #000;
+  background-color: #fff;
+  border-radius: var(--prefs-r-xs);
+  padding-block: 0;
+  padding-inline: 2px;
+  margin-inline: -1px;
+}
+
+/* Ничего не нашлось */
+.settings-results-empty {
+  border: 1px dashed var(--prefs-edge-hi);
+  border-radius: var(--prefs-r-lg);
+  block-size: 260px;
+  text-align: center;
+  place-content: center;
+  justify-items: center;
+  display: grid;
+}
+
+.settings-results-empty b {
+  font-weight: 600;
+  font-size: var(--astral-text-title);
+}
+
+.settings-results-empty > span:not(.settings-results-empty-icon) {
+  font-size: var(--prefs-fs-m);
+  color: var(--prefs-fg-dim);
+  margin-block-start: 6px;
+}
+
+.settings-results-empty-icon {
+  color: #d4d4d8;
+  background: var(--prefs-hover);
+  border-radius: var(--prefs-r-lg);
+  inline-size: 56px;
+  block-size: 56px;
+  margin-block-end: 14px;
+  place-items: center;
+  display: grid;
+}
+
+.settings-results-empty-icon svg {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.settings-results-clear.ui-button {
+  margin-block-start: 16px;
+}
+
+/* ===== Группы, карточки, строки ===== */
+
+.settings-shell .settings-group {
+  min-inline-size: 0;
+  gap: 7px;
+  display: grid;
+}
+
+.settings-shell .settings-group-title {
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding-inline-start: 4px;
+  align-items: center;
+  display: flex;
+}
+
+.settings-shell .settings-card {
+  background: var(--prefs-card);
+  border: solid 1px var(--prefs-edge);
+  border-radius: var(--prefs-r-lg);
+  min-inline-size: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: grid;
+}
+
+.settings-shell .settings-row {
+  min-block-size: 60px;
+  min-inline-size: 0;
+  padding-block: 12px;
+  padding-inline: 18px;
+  gap: 14px;
+  align-items: center;
+  display: flex;
+}
+
+.settings-shell .settings-row + .settings-row {
+  border-block-start: 1px solid var(--prefs-edge);
+}
+
+.settings-shell .settings-row-copy {
+  min-inline-size: 0;
+  gap: 2px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  display: grid;
+}
+
+.settings-nav-empty b,
+.settings-shell .settings-row-copy b {
+  font-weight: 600;
+  font-size: var(--prefs-fs-l);
+  line-height: 20px;
+  color: var(--prefs-fg);
+}
+
+.settings-nav-empty small,
+.settings-shell .settings-row-copy small {
+  font-size: var(--prefs-fs-s);
+  line-height: 18px;
+  color: var(--prefs-fg-dim);
+}
+
+.settings-shell .settings-row-note,
+.settings-shell .settings-row-error {
+  font-style: normal;
+  font-size: var(--prefs-fs-s);
+}
+
+.settings-shell .settings-row-note {
+  color: var(--prefs-fg-dim);
+}
+
+.settings-shell .settings-row-error {
+  color: var(--astral-danger);
+}
+
+.settings-shell .settings-row > .ui-select.ui-field {
+  grid-template-columns: minmax(0px, 1fr);
+}
+
+.settings-shell .settings-row-control {
+  min-inline-size: 0;
+  gap: 8px;
+  align-items: center;
+  display: flex;
+}
+
+.settings-shell .settings-row-control .ui-segmented {
+  flex-grow: 1;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+/* Переключатель, сегменты и выпадающий список по макету: белая «включено», белый выбранный сегмент. */
+.settings-shell .ui-switch {
+  inline-size: 42px;
+  block-size: 28px;
+  flex-basis: 42px;
+  border: 0;
+  background: transparent;
+}
+
+/* Дорожка 42 × 24, как в макете; кнопка чуть выше неё, чтобы в неё было легче попасть. */
+.settings-shell .ui-switch::before {
+  content: "";
+  position: absolute;
+  inset-block: 2px;
+  inset-inline: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  transition-property: background-color;
+  transition-duration: var(--prefs-fast);
+  transition-timing-function: var(--prefs-ease);
+}
+
+.settings-shell .ui-switch > i {
+  inline-size: 18px;
+  block-size: 18px;
+  inset-block-start: 5px;
+  background: #d4d4d8;
+}
+
+.settings-shell .ui-switch.is-on::before {
+  background: #fff;
+}
+
+.settings-shell .ui-switch.is-on > i {
+  background: #000;
+  transform: translateX(18px);
+}
+
+.settings-shell .ui-switch:focus-visible {
+  outline: 2px solid var(--prefs-ring);
+  outline-offset: 2px;
+}
+
+.settings-shell .ui-segmented {
+  background: var(--prefs-field);
+  border-color: var(--prefs-edge);
+}
+
+.settings-shell .ui-segmented .ui-segment {
+  font-weight: 600;
+  font-size: var(--prefs-fs-m);
+  color: #b8b8be;
+  border-radius: var(--prefs-r-sm);
+  min-block-size: 32px;
+  padding-inline: 14px;
+}
+
+.settings-shell .ui-segmented .ui-segment.is-active {
+  color: #000;
+  background: #fff;
+  border-color: transparent;
+}
+
+.settings-shell .ui-segmented .ui-segment:hover:not(:disabled):not(.is-active) {
+  color: var(--prefs-fg);
+}
+
+.settings-row-icon {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  display: grid;
+  color: #d4d4d8;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-hover);
+}
+
+.settings-row-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Метка «Установлена», «Открыта сейчас»: плашка с белой точкой. */
+.settings-tag {
+  font-weight: 600;
+  font-size: var(--astral-text-micro);
+  color: #d4d4d8;
+  background: var(--prefs-hover);
+  border-radius: var(--prefs-r-sm);
+  block-size: 22px;
+  padding-inline: 8px;
+  white-space: nowrap;
+  gap: 6px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.settings-tag i {
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  inline-size: 8px;
+  block-size: 8px;
+}
+
+/* Выпадающий список по макету: высота 40, 13 px/600, белая стрелка вправо. */
+.settings-shell .ui-select > .ui-select-control > select {
+  font-weight: 600;
+  font-size: var(--prefs-fs-m);
+  background: var(--prefs-field);
+  border-color: var(--prefs-edge-hi);
+  border-radius: var(--prefs-r);
+  min-block-size: 40px;
+  padding-inline: 14px 34px;
+}
+
+.settings-shell .ui-select > .ui-select-control > svg {
+  color: var(--prefs-fg-dim);
+  inline-size: 15px;
+  block-size: 15px;
+  inset-inline-end: 12px;
+}
+
+/* Профиль, «О программе», обслуживание, внешний вид */
+.settings-about,
+.settings-shell .settings-maintenance,
+.settings-profile {
+  gap: 12px;
+  display: grid;
+}
+
+.settings-appearance {
+  min-inline-size: 0;
+  gap: 22px;
+  display: grid;
+}
+
+.settings-profile .settings-profile-card .settings-row-copy b {
+  font-size: var(--astral-text-title);
+}
+
+.settings-profile-mark {
+  color: var(--prefs-fg-dim);
+  inline-size: 36px;
+  block-size: 36px;
+}
+
+/* Аватар: размер задаёт локальная переменная */
+.account-mark {
+  --account-mark-size: 36px;
+  font-weight: 600;
+  font-size: var(--prefs-fs-s);
+  line-height: 1;
+  color: var(--prefs-fg);
+  user-select: none;
+  background: var(--prefs-well);
+  border: solid 1px var(--prefs-edge-hi);
+  border-radius: 50%;
+  inline-size: var(--account-mark-size);
+  block-size: var(--account-mark-size);
+  overflow-x: hidden;
+  overflow-y: hidden;
+  align-items: center;
+  justify-items: center;
+  display: inline-grid;
+}
+
+[data-size="lg"].account-mark {
+  --account-mark-size: 48px;
+  font-size: var(--prefs-fs-l);
+}
+
+.account-mark img {
+  object-fit: cover;
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+}
+
+/* ===== Тост «Сохранено · Отменить» ===== */
+
+.settings-toast {
+  font-weight: 500;
+  font-size: var(--prefs-fs-14);
+  color: var(--prefs-fg);
+  background: var(--astral-surface-float);
+  border: solid 1px var(--prefs-edge-hi);
+  border-radius: var(--prefs-r);
+  box-shadow: var(--astral-shadow-float);
+  min-block-size: 46px;
+  padding-block: 0;
+  padding-inline: 14px 10px;
+  position: fixed;
+  inset-block-end: 22px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 40;
+  gap: 12px;
+  align-items: center;
+  display: flex;
+  animation-name: settings-toast-in;
+  animation-duration: var(--prefs-slow);
+  animation-timing-function: var(--prefs-ease);
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+}
+
+/* Белая галочка в кружке. */
+.settings-toast > svg {
+  color: #000;
+  background: #fff;
+  border-radius: 50%;
+  padding: 4px;
+  inline-size: 22px;
+  block-size: 22px;
+  flex: none;
+}
+
+@keyframes settings-toast-in {
+  from {
+    transform: translate(-50%, 8px);
+    opacity: 0;
+  }
+}
+
+/* ===== Окно настроек: страница поверх приложения =====
+   Окно остаётся окном (Esc, прогрев, возврат фокуса), но на глаз — страница «Пульта»: оно занимает всю область справа от рейки
+   и ниже строки заголовка, рейка остаётся на месте и нажимается (смена страницы закрывает настройки). */
+
+.desktop-app > .desktop-overlay-host > .settings-window-backdrop {
+  background: var(--astral-bg);
+  inset: 40px 0 0 72px;
+  display: block;
+  padding-block: 0;
+  padding-inline: 0;
+}
+
+.settings-window.ui-dialog {
+  background: var(--astral-bg);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  block-size: 100%;
+  inline-size: 100%;
+  max-block-size: none;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  animation-name: settings-window-in;
+  animation-duration: var(--prefs-fast);
+}
+
+@keyframes settings-window-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-window.ui-dialog > .settings-window-body {
+  padding-block: 0;
+  padding-inline: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+}
+
+.settings-window-body > .settings-hub {
+  inline-size: 100%;
+  min-block-size: 0;
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 0 !important;
+  padding-inline: 0 !important;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
+
+.settings-window .settings-page {
+  block-size: 100%;
+}
+
+.settings-window .settings-page .settings-unified-glass {
+  block-size: 100%;
+  min-block-size: 0;
+  margin-block: 0;
+  margin-inline: 0;
+  grid-template-rows: minmax(0px, 1fr);
+}
+
+.settings-window .settings-shell {
+  min-block-size: 0;
+}
+
+.settings-window .settings-nav {
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.settings-window .settings-shell > .settings-section-stage {
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  grid-auto-rows: max-content;
+}
+
+/* Тост стоит над правой частью, по её середине: рамка настроек — его предок с положением. */
+.settings-window .settings-toast {
+  position: absolute;
+  inset-block-end: 22px;
+  inset-inline-start: calc(
+    var(--prefs-nav-w) + (100% - var(--prefs-nav-w)) / 2
+  );
+}
+
+/* ===== Плитки, списки и журналы внутри настроек ===== */
+
+.settings-shell .settings-logs-list,
+.settings-shell .settings-tools-state,
+.settings-shell .settings-tools-list,
+.settings-shell .settings-tile {
+  background: var(--prefs-card);
+  border-color: var(--prefs-edge);
+}
+
+.settings-shell .settings-tools-list li {
+  background: transparent;
+}
+
+.settings-shell button.settings-tile:hover {
+  background: var(--prefs-field);
+  border-color: var(--prefs-edge-hi);
+}
+
+/* ===== Узкие окна ===== */
+
+@media (max-width: 1100px) {
+  .settings-shell {
+    --prefs-nav-w: 240px;
+  }
+
+  .settings-shell > .settings-section-stage {
+    padding-block: 20px 24px;
+    padding-inline: 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .settings-shell {
+    grid-template-columns: minmax(0px, 1fr);
+  }
+
+  .settings-nav {
+    border-block-end: 1px solid var(--prefs-edge);
+    border-inline-end: none;
+  }
+
+  .desktop-app > .desktop-overlay-host > .settings-window-backdrop {
+    inset: 40px 0 0 0;
+  }
+
+  .settings-window .settings-page .settings-unified-glass {
+    overflow-y: auto;
+  }
+
+  .settings-window .settings-shell {
+    block-size: auto;
+  }
+
+  .settings-window .settings-nav,
+  .settings-window .settings-shell > .settings-section-stage {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+}
+
+/*
+ * Кнопки в Настройках меньше (владелец, 16.11.2026): малая кнопка и поле 34 → 30 px, обычная кнопка — 36 px. Ниже 28 нельзя: это мишень пальца (`HIT_TARGET_MIN` в
+ * `@astral/design/conformance`). Меняется только окно настроек: общая палитра делится с сайтом и установщиком и остаётся прежней.
+ */
+.settings-window {
+  --astral-control-h-sm: 30px;
+}
+
+.settings-window .ui-button.is-sm {
+  min-block-size: 30px;
+  padding-inline: 10px;
+}
+
+.settings-window .ui-button:not(.is-sm, .is-lg, .is-icon-only, .is-link) {
+  min-block-size: 36px;
+}
+

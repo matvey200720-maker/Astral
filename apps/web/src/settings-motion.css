@@ -1,0 +1,295 @@
+/*
+ * Движение страницы настроек — один лист на всю хореографию.
+ *
+ * ПОЧЕМУ ОТДЕЛЬНЫЙ ЛИСТ. Прежняя сборка страницы лежала в appearance-settings.css
+ * и была мертва: её верхнее правило искало `.clean-settings > article`, а между
+ * ними давно встали ряд вкладок и сцена панели. Половина задержек отсчитывалась
+ * от карточки, которой на странице нет. Рядом семью проходами (V9…V15) был
+ * переписан переключатель темы: пять разных длительностей хода, два набора
+ * поворотов иконок и «прилёт» с перелётом на 8% — от него кнопка и подскакивала.
+ * Всё это оттуда убрано, а здесь написано один раз.
+ *
+ * ЧЕМ ЭТО ОТЛИЧАЕТСЯ. Ни одного перелёта: каждое движение приходит в своё место
+ * и останавливается. Сдвиги мелкие (6–12 px), масштаб не ниже 0.96, поворотов
+ * нет вовсе. Порядок читается сверху вниз — заголовок, ряд вкладок, панель,
+ * группы внутри неё, — и вся сборка укладывается примерно в 0,8 с.
+ *
+ * ВЫКЛЮЧАТЕЛЬ ДВИЖЕНИЯ. Отдельных правил здесь нет: `[data-motion="off"]` из
+ * motion-switch.css гасит эти анимации вместе со всеми остальными.
+ */
+
+.settings-hub {
+  /* Один разгон на весь лист: быстрый съём, длинное успокоение, без отскока. */
+  --settings-ease: cubic-bezier(0.22, 0.68, 0.24, 1);
+  /* Шаг между группами и шаг между плитками внутри группы — разные величины:
+     групп на странице вдвое меньше, и они крупнее. */
+  --settings-step: 28ms;
+  --settings-tile-step: 30ms;
+}
+
+/* Сборка страницы ---------------------------------------------------------
+   Заголовок, ряд вкладок и панель приходят одной волной; группы внутри панели
+   идут следом с шагом. */
+
+.settings-hub .ui-page-heading {
+  animation: settings-in-heading 460ms var(--settings-ease) backwards;
+}
+
+.settings-hub .settings-nav {
+  animation: settings-in-rise 420ms var(--settings-ease) 40ms backwards;
+}
+
+/* Группы меню приходят с шагом, сверху вниз. */
+.settings-hub .settings-nav-group {
+  animation: settings-in-tab 380ms var(--settings-ease) backwards;
+  animation-delay: calc(70ms + var(--settings-step) * var(--settings-index, 0));
+}
+
+.settings-hub .settings-nav-group:nth-child(2) {
+  --settings-index: 1;
+}
+
+.settings-hub .settings-nav-group:nth-child(3) {
+  --settings-index: 2;
+}
+
+.settings-hub .settings-nav-group:nth-child(4) {
+  --settings-index: 3;
+}
+
+.settings-hub .settings-nav-group:nth-child(n + 5) {
+  --settings-index: 4;
+}
+
+/* Панель ------------------------------------------------------------------
+   Первое открытие страницы и переход между вкладками — разные события, и
+   выглядят они по-разному. Страница собирается по группам; переход между
+   вкладками меняет только содержимое, поэтому там короткое общее проявление,
+   а не вторая полная сборка на каждый щелчок по ряду. */
+
+.settings-hub .settings-section-panel {
+  --settings-panel-in: 90ms;
+  --settings-panel-body: 140ms;
+  animation: settings-in-panel 500ms var(--settings-ease)
+    var(--settings-panel-in) backwards;
+}
+
+.settings-hub .settings-section-panel[data-settings-entry="switch"] {
+  --settings-panel-in: 0ms;
+  --settings-panel-body: 60ms;
+  --settings-step: 16ms;
+  --settings-tile-step: 18ms;
+  animation-duration: 280ms;
+}
+
+/* Группы внутри панели: подпись, строка, ряд плиток — каждая своим шагом. */
+.settings-hub .settings-section-panel > :is(article, section) > * {
+  animation: settings-in-group 420ms var(--settings-ease) backwards;
+  animation-delay: calc(
+    var(--settings-panel-body) + var(--settings-step) * var(--settings-index, 0)
+  );
+}
+
+.settings-hub
+  .settings-section-panel[data-settings-entry="switch"]
+  > :is(article, section)
+  > *,
+.settings-hub
+  .settings-section-panel[data-settings-entry="switch"]
+  .language-choice-row {
+  animation-duration: 260ms;
+}
+
+.settings-hub .settings-section-panel > :is(article, section) > :nth-child(2) {
+  --settings-index: 1;
+}
+
+.settings-hub .settings-section-panel > :is(article, section) > :nth-child(3) {
+  --settings-index: 2;
+}
+
+.settings-hub .settings-section-panel > :is(article, section) > :nth-child(4) {
+  --settings-index: 3;
+}
+
+.settings-hub .settings-section-panel > :is(article, section) > :nth-child(5) {
+  --settings-index: 4;
+}
+
+/* Дальше шаг не растёт: иначе низ панели ждал бы верх почти секунду. */
+.settings-hub
+  .settings-section-panel
+  > :is(article, section)
+  > :nth-child(n + 6) {
+  --settings-index: 5;
+}
+
+/* Строки языка приходят по одной — и начинают не
+   от начала панели, а от той секунды, когда до их группы дошла очередь.
+   Номер группы приезжает сюда наследованием (`--settings-index`), номер плитки
+   внутри группы — свой (`--settings-tile`). */
+.settings-hub .language-choice-list > .language-choice-row {
+  animation: settings-in-tile 380ms var(--settings-ease) backwards;
+  animation-delay: calc(
+    var(--settings-panel-body) + var(--settings-step) *
+      var(--settings-index, 0) + 60ms + var(--settings-tile-step) *
+      var(--settings-tile, 0)
+  );
+}
+
+.settings-hub .language-choice-list > .language-choice-row:nth-child(2) {
+  --settings-tile: 1;
+}
+
+.settings-hub .language-choice-list > .language-choice-row:nth-child(3) {
+  --settings-tile: 2;
+}
+
+.settings-hub .language-choice-list > .language-choice-row:nth-child(4) {
+  --settings-tile: 3;
+}
+
+.settings-hub .language-choice-list > .language-choice-row:nth-child(n + 5) {
+  --settings-tile: 4;
+}
+
+/* Раздел «Инструменты» ----------------------------------------------------
+   Здесь появляется не то, что уже лежит в панели, а то, что ещё едет: набор
+   приходит ответом настольного моста, а тот читает семь файлов и считает у них
+   SHA-256. Панель к этому времени собрана и пуста, а ответ приходит разом —
+   куском в полтысячи пикселей. Карточка настроек вырастала на него одним
+   кадром, и список возникал целиком: это и было резко.
+
+   Поэтому у ответа своя, вторая волна, и отсчитывается она не от начала
+   панели, а от той секунды, когда ответ дошёл: паузы `--settings-panel-body`
+   ей не нужно — ожидание человек уже отсидел. Порядок — порядок чтения:
+   строка «готов / не хватает столько-то», следом файлы сверху вниз, последним
+   путь к папке.
+
+   Сам список раскрывается по высоте: рост карточки — самое крупное движение
+   на этом экране, и он обязан быть движением, а не скачком. Строки при этом
+   только проявляются: кромка раскрытия и так везёт их сверху вниз, и
+   собственный сдвиг сложился бы с ней. Шаг подобран так, чтобы строка успевала
+   выйти примерно на восемь десятых, когда кромка её открывает: раньше — и
+   лестница строк не читается вовсе, позже — список открывает пустые места. */
+
+.settings-tools {
+  --tools-open-in: 20ms;
+  --tools-open: 380ms;
+  /* Кромке — своя кривая, не общая `--settings-ease`. Ход к `auto` идёт не по
+     прямой: высота растёт как КВАДРАТ хода анимации — с `linear` за половину
+     времени открывается четверть списка (мерено на стенде). Общий разгон и сам
+     по себе плавный, но в квадрате он даёт хвост: последняя строка открывалась
+     бы впятеро дольше тех, что над ней. Эта кривая в квадрате и даёт то, чем
+     общий разгон выглядит сам по себе, — быстрый съём и мягкую остановку. */
+  --tools-open-ease: cubic-bezier(0.35, 0.8, 0.45, 1);
+  --tools-row-step: 30ms;
+  --tools-row-time: 200ms;
+}
+
+/* Ответ и беда очереди не ждут: и то и другое — прямой ответ на нажатие. */
+.settings-hub
+  .settings-section-panel
+  > .settings-tools
+  > :is(.settings-tools-state, .settings-tools-error) {
+  animation-delay: 0ms;
+}
+
+.settings-hub .settings-section-panel > .settings-tools > .settings-tools-list {
+  /* Свойство наследуемое: в `:root` оно включило бы анимации к `auto` по
+     всему продукту, поэтому объявлено на самом списке. */
+  interpolate-size: allow-keywords;
+  animation-name: settings-in-list;
+  animation-duration: var(--tools-open);
+  animation-delay: var(--tools-open-in);
+  animation-timing-function: var(--tools-open-ease);
+}
+
+.settings-hub .settings-tools-list > li {
+  animation: settings-in-fade var(--tools-row-time) var(--settings-ease)
+    backwards;
+  animation-delay: calc(var(--tools-row-step) * var(--tools-row, 0));
+}
+
+/* Путь к папке ждёт, пока кромка встанет: он лежит под списком, и, приди он
+   раньше, его собственное появление читалось бы как сползание вниз — вниз его
+   в это время везёт растущий список. */
+.settings-hub .settings-section-panel > .settings-tools > .settings-tools-path {
+  animation-duration: 260ms;
+  animation-delay: calc(var(--tools-open-in) + var(--tools-open));
+}
+
+@keyframes settings-in-heading {
+  from {
+    opacity: 0;
+    transform: translate3d(-10px, 0, 0);
+  }
+}
+
+@keyframes settings-in-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+}
+
+@keyframes settings-in-tab {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0) scale(0.97);
+  }
+}
+
+@keyframes settings-in-panel {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.988);
+  }
+}
+
+@keyframes settings-in-group {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+}
+
+@keyframes settings-in-tile {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.965);
+  }
+}
+
+@keyframes settings-in-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Ноль здесь — не пустая рамка, а её отсутствие: от списка остаётся волосок в
+   две его границы, и раскрытие ведёт вниз нижнюю. Прозрачности тут нет
+   намеренно: гаснуть нечему, а строкам она добавилась бы вторым множителем —
+   и они выходили бы бледнее, чем рассчитано. */
+@keyframes settings-in-list {
+  from {
+    height: 0;
+  }
+}
+
+/* Смена темы --------------------------------------------------------------
+   Растворение делает браузер: снимок прежнего кадра гаснет ровно настолько,
+   насколько проявляется новый. Прозрачность линейная и в сумме даёт единицу —
+   с разгоном середина перехода просела бы по яркости. Имена анимаций здесь
+   намеренно не переопределяются: у штатных стоит `plus-lighter`, и без него
+   вместо растворения выходит провал в серое. */
+
+::view-transition-group(root) {
+  animation-duration: 420ms;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: linear;
+}

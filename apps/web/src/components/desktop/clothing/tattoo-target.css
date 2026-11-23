@@ -1,0 +1,52 @@
+/*
+ * Плитка тату на сетке «Сделать заменёнку» (`TattooTargetDialog.jsx`): та же `.clothing-item-tile`, что у вещей (`clothing-target-picker.css`), только картинка — тушь на прозрачном: подложка серая, как у плитки тату в панели.
+ */
+
+@layer overrides {
+  .clothing-item-tile.is-tattoo {
+    background: color-mix(in srgb, var(--astral-ink) 52%, var(--astral-surface));
+  }
+
+  .clothing-item-tile.is-tattoo:hover:not(:disabled),
+  .clothing-item-tile.is-tattoo.is-selected {
+    background: color-mix(in srgb, var(--astral-ink) 60%, var(--astral-surface));
+  }
+
+  .clothing-item-tile.is-tattoo .wear-tattoo-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    box-sizing: border-box;
+    padding: 10px 10px 54px;
+  }
+
+  /*
+   * Раскладка плитки тату: рисунок во всю плитку, имя поверх него слева внизу на тёмной дымке (так плитку держит `clothing-target-picker.css`).
+   * Макет «Витрина» окна (`clothing-replace.css`) написан под плитку вещи — кадр `.clothing-item-frame` сверху, имя и код под ним; у тату кадра нет,
+   * рисунок лежит прямо в плитке, и сетка «кадр + подпись» сжимала его в нулевую строку. Раньше это прикрывала неслойная копия листа плиток,
+   * которую `TattooTargetDialog.jsx` подтягивал вторым импортом (убрана 17.11.2026): правила без слоя выигрывают у слоя при любой специфичности.
+   * Селектор на ступень выше листа окна (`is-pick` у окна): порядок листов по чанкам не гарантирован, победа не должна от него зависеть.
+   */
+  .clothing-install-dialog.is-pick.is-tattoo-pick .clothing-item-tile.is-pick.is-tattoo {
+    display: block;
+    aspect-ratio: 4 / 5;
+
+    & .clothing-item-copy {
+      position: absolute;
+      padding: 30px 10px 9px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.86) 28%, rgba(0, 0, 0, 0));
+      pointer-events: none;
+    }
+
+    & .clothing-item-name {
+      font-size: var(--astral-text-small);
+      font-weight: 600;
+      line-height: var(--astral-line-tight);
+    }
+  }
+
+  /* Слева — рисунок: тушь на прозрачном, чёрный блэкворк на чёрной подложке баннера не виден. */
+  .clothing-install-dialog.is-tattoo-pick .clothing-model-pane.is-flat {
+    background: color-mix(in srgb, var(--astral-ink) 52%, var(--astral-surface));
+  }
+}

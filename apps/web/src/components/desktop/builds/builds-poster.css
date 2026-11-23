@@ -1,0 +1,490 @@
+/*
+  «Сборки» — афиша (дизайн 15.11.2026, макет r3/builds/builds-B-list): сборка в игре крупно, ниже карточки и две пунктирные плитки.
+  Лист ленивый (`BuildsHero.jsx`, `BuildsTiles.jsx` едут в куске страницы сборок), поэтому всё лежит в одном слое.
+*/
+@layer overrides {
+  /* ---------- сборка в игре ---------- */
+  .desktop-app .builds-hero {
+    position: relative;
+    height: 290px;
+    margin: 0 0 22px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-xl);
+    background: #050506;
+  }
+
+  .desktop-app .builds-hero-cover {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Кадр героя — одна плитка обложки на весь герой, без швов мозаики. */
+  .desktop-app .builds-hero-cover > *,
+  .desktop-app .builds-hero-thumb > * {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .desktop-app .builds-hero-cover > img {
+    object-position: 50% 62%;
+  }
+
+  /* Остальные плитки обложки — квадраты справа внизу (макет: 96 px, рамка в 1 px, промежуток 8). */
+  .desktop-app .builds-hero-thumbs {
+    position: absolute;
+    right: 30px;
+    bottom: 30px;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+  }
+
+  .desktop-app .builds-hero-thumb {
+    width: 96px;
+    height: 96px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-sunken);
+  }
+
+  .desktop-app .builds-hero-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.88) 0%,
+        rgba(0, 0, 0, 0.55) 40%,
+        rgba(0, 0, 0, 0) 80%
+      ),
+      linear-gradient(0deg, rgba(0, 0, 0, 0.55), transparent 55%);
+    pointer-events: none;
+  }
+
+  .desktop-app .builds-hero-live {
+    position: absolute;
+    top: 22px;
+    right: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--astral-radius-sm);
+    background: rgba(0, 0, 0, 0.62);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .desktop-app .builds-hero-live i {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #fff;
+  }
+
+  .desktop-app .builds-hero-copy {
+    position: absolute;
+    bottom: 28px;
+    left: 36px;
+    display: grid;
+    justify-items: start;
+    max-width: 560px;
+  }
+
+  .desktop-app .builds-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--astral-radius-sm);
+    background: rgba(255, 255, 255, 0.14);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .desktop-app .builds-hero-copy h2 {
+    margin: 12px 0 18px;
+    font: var(--astral-type-display-weight) var(--astral-text-display) / 1.02
+      var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .desktop-app .builds-hero-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* ---------- плитка «Создать сборку»: карточка-витрина с пунктирным кадром ---------- */
+  /* Кадр — как обложка сборки (`.builds-card.is-store > .builds-cover`: 16 : 10, рамка 1 px, радиус `lg`), только пунктиром и с «плюсом»; подпись и строка под ним — штатные (`media-card.css`, `is-store`). Ширина 100 % — как у `.builds-card`. */
+  .desktop-app .builds-new {
+    width: 100%;
+  }
+
+  .desktop-app .builds-new > .builds-new-frame {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    border: 1.5px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--astral-radius-lg);
+    background: transparent;
+    transition:
+      border-color var(--astral-duration-fast) var(--astral-ease),
+      background var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .builds-new:hover > .builds-new-frame,
+  .desktop-app .builds-new:focus-visible > .builds-new-frame {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .builds-new:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .builds-new-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--astral-radius-lg);
+    background: #fff;
+    color: #000;
+  }
+
+  .desktop-app .builds-new-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* ---------- пустая страница: надпись и две крупные плитки одного размера ---------- */
+  .desktop-app .builds-page.is-empty {
+    display: grid;
+    align-content: center;
+    min-height: calc(100vh - 160px);
+  }
+
+  .desktop-app .builds-empty {
+    display: grid;
+    justify-items: center;
+    padding: 0 0 24px;
+    text-align: center;
+  }
+
+  .desktop-app .builds-empty h1 {
+    margin: 0;
+    font: var(--astral-type-display-weight) var(--astral-text-hero) / 1.1
+      var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .desktop-app .builds-empty p {
+    max-width: 520px;
+    margin: 10px 0 28px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-strong);
+    line-height: 1.45;
+  }
+
+  .desktop-app .builds-empty-tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 360px));
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .desktop-app .builds-empty-tile {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 6px;
+    min-height: 260px;
+    padding: 24px;
+    border: 1.5px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--astral-radius-lg);
+    background: #000;
+    color: var(--astral-ink);
+    cursor: pointer;
+    transition:
+      border-color var(--astral-duration-fast) var(--astral-ease),
+      background var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .builds-empty-tile:hover,
+  .desktop-app .builds-empty-tile:focus-visible {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .builds-empty-tile:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .builds-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 10px;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .desktop-app .builds-empty-tile.is-new .builds-empty-icon {
+    background: #fff;
+    color: #000;
+  }
+
+  .desktop-app .builds-empty-tile.is-code .builds-empty-icon {
+    border: 1px solid var(--astral-line-strong);
+    background: var(--astral-surface-hover);
+  }
+
+  .desktop-app .builds-empty-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .desktop-app .builds-empty-tile b {
+    font-size: var(--astral-text-section);
+    font-weight: 700;
+  }
+
+  .desktop-app .builds-empty-tile small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .builds-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  @media (max-width: 820px) {
+    .desktop-app .builds-empty-tiles {
+      grid-template-columns: minmax(0, 360px);
+    }
+  }
+
+  /* Большой экран (1700 px и шире): плитки и надпись крупнее, чтобы блок занимал экран, а не терялся посередине. Ступенями токенов, без плавных кеглей. */
+  @media (min-width: 1700px) {
+    .desktop-app .builds-empty h1 {
+      font-size: var(--astral-text-display);
+    }
+
+    .desktop-app .builds-empty p {
+      max-width: 640px;
+      margin: 12px 0 36px;
+      font-size: var(--astral-text-title);
+    }
+
+    .desktop-app .builds-empty-tiles {
+      grid-template-columns: repeat(2, minmax(0, 480px));
+      gap: 28px;
+    }
+
+    .desktop-app .builds-empty-tile {
+      min-height: 330px;
+      gap: 8px;
+    }
+
+    .desktop-app .builds-empty-icon {
+      width: 72px;
+      height: 72px;
+    }
+
+    .desktop-app .builds-empty-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .desktop-app .builds-empty-tile b {
+      font-size: var(--astral-text-hero);
+    }
+
+    .desktop-app .builds-empty-tile small {
+      font-size: var(--astral-text-strong);
+    }
+  }
+
+  /* ---------- шапка: «Сборки», вкладки «Мои» и «По коду» ---------- */
+  .desktop-app .builds-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 48px;
+    margin: 0 0 20px;
+  }
+
+  .desktop-app .builds-head-left {
+    display: flex;
+    align-items: baseline;
+    gap: 26px;
+    min-width: 0;
+  }
+
+  .desktop-app .builds-head h1 {
+    margin: 0;
+    font: var(--astral-type-display-weight) var(--astral-text-hero) / 1
+      var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .desktop-app .builds-head-tabs {
+    display: flex;
+    gap: 26px;
+  }
+
+  .desktop-app .builds-head-tabs button {
+    min-height: 28px;
+    padding: 0 0 4px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-head-tabs button em {
+    margin-left: 6px;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .desktop-app .builds-head-tabs button:hover {
+    color: #fff;
+  }
+
+  .desktop-app .builds-head-tabs button.is-active {
+    border-bottom-color: #fff;
+    color: #fff;
+  }
+
+  .desktop-app .builds-head-tabs button:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  /* ---------- «Пришли по коду» ---------- */
+  /* Ряд на тех же колонках, что сетка сборок выше: карточка занимает две колонки и кончается на краю второй; подпись — в левом поле страницы. */
+  .desktop-app .builds-got {
+    position: relative;
+    margin-top: 22px;
+  }
+
+  .desktop-app .builds-got h2 {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -26px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transform: rotate(180deg);
+    writing-mode: vertical-rl;
+  }
+
+  .desktop-app .builds-got-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .desktop-app .builds-got-card {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 10px 16px 10px 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+    color: var(--astral-ink);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .builds-got-card:hover,
+  .desktop-app .builds-got-card:focus-visible {
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  .desktop-app .builds-got-card:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .builds-got-cover {
+    display: block;
+    flex: none;
+    width: 112px;
+    height: 70px;
+    overflow: hidden;
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-sunken);
+  }
+
+  .desktop-app .builds-got-cover > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  .desktop-app .builds-got-text {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .desktop-app .builds-got-text b {
+    overflow: hidden;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-got-text span {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  /* По коду пока ничего нет: подсказка вместо сетки. */
+  .desktop-app .builds-code-empty {
+    margin: 0 0 18px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .builds-new > .builds-new-frame,
+    .desktop-app .builds-empty-tile,
+    .desktop-app .builds-got-card {
+      transition: none;
+    }
+  }
+}

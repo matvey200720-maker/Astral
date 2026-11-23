@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru" data-app-mode="%MODE%">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
+    <meta
+      name="description"
+      content="Astral — интерактивные сборки и безопасные настройки GTA V в один клик."
+    />
+    <link rel="icon" href="/brand/astral-icon.jpg" />
+    <title>Astral — твоя GTA, твои правила</title>
+    <!-- Первый кадр заставки запуска: знак и ореол видны до всяких скриптов, на том же месте, что и в слое заставки
+         (src/features/onboarding/splash/): ничего не прыгает, когда слой встаёт на его место и снимает его. Включает его
+         theme-bootstrap.js (data-boot="start" — запуск, "wake" — пробуждение после сна, "off" — разработка и песочница). -->
+    <style>
+      #boot-splash {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        overflow: hidden;
+        pointer-events: none;
+        --w: clamp(180px, min(19vw, 29vh), 290px);
+        --s: min(14vw, 22vh);
+        background:
+          radial-gradient(
+            60% 55% at 50% 42%,
+            #0d0d0e 0%,
+            #050505 55%,
+            #000 100%
+          ),
+          #000;
+      }
+      html[data-boot="start"] #boot-splash,
+      html[data-boot="wake"] #boot-splash {
+        display: block;
+      }
+      #boot-splash > * {
+        position: absolute;
+        left: 50%;
+        top: 40.5%;
+        translate: -50% -50%;
+      }
+      #boot-splash .bs-halo {
+        width: calc(var(--w) * 2.0833);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        opacity: 0.08;
+        background: radial-gradient(
+          closest-side,
+          rgba(255, 255, 255, 0.5),
+          rgba(255, 255, 255, 0.12) 45%,
+          rgba(255, 255, 255, 0)
+        );
+      }
+      #boot-splash .bs-star {
+        width: var(--w);
+        aspect-ratio: 288 / 263;
+        overflow: visible;
+        fill: rgba(255, 255, 255, 0.035);
+        stroke: rgba(255, 255, 255, 0.2);
+        stroke-width: 1.1;
+        stroke-dasharray: 2 5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #boot-splash .bs-wake,
+      #boot-splash .bs-whalo {
+        display: none;
+        top: 44%;
+      }
+      html[data-boot="wake"] #boot-splash {
+        background: radial-gradient(closest-side at 50% 44%, #0f0f10, #050505);
+      }
+      html[data-boot="wake"] #boot-splash :is(.bs-halo, .bs-star) {
+        display: none;
+      }
+      html[data-boot="wake"] #boot-splash :is(.bs-wake, .bs-whalo) {
+        display: block;
+      }
+      #boot-splash .bs-whalo {
+        width: calc(var(--s) * 2.2);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        opacity: 0.5;
+        background: radial-gradient(
+          closest-side,
+          rgba(255, 255, 255, 0.36),
+          rgba(255, 255, 255, 0.09) 55%,
+          rgba(255, 255, 255, 0)
+        );
+      }
+      #boot-splash .bs-wake {
+        width: var(--s);
+        aspect-ratio: 288 / 263;
+        overflow: visible;
+      }
+      #boot-splash .bs-dim {
+        fill: rgba(255, 255, 255, 0.07);
+        stroke: rgba(255, 255, 255, 0.3);
+        stroke-width: 1.3;
+        stroke-linejoin: round;
+      }
+    </style>
+    <script src="/theme-bootstrap.js"></script>
+  </head>
+  <body>
+    <div id="boot-splash" aria-hidden="true">
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <path
+            id="bs-a"
+            d="M111 251C160 242 192 241 215 208C231 184 244 145 259 125C253 167 239 215 251 231C264 247 309 241 399 251C322 258 283 259 258 274C233 290 211 334 181 388C195 333 209 287 199 270C189 254 151 258 111 251Z"
+          />
+          <path
+            id="bs-b"
+            d="M231 371C230 326 242 291 274 275C304 260 344 257 399 263C347 266 310 273 283 288C256 303 238 333 231 371Z"
+          />
+          <linearGradient id="bs-g" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#c8c8ce" />
+            <stop offset="1" stop-color="#fff" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="bs-halo"></div>
+      <svg class="bs-star" viewBox="111 125 288 263" focusable="false">
+        <use href="#bs-a" />
+        <use href="#bs-b" />
+      </svg>
+      <div class="bs-whalo"></div>
+      <svg class="bs-wake" viewBox="111 125 288 263" focusable="false">
+        <g class="bs-dim">
+          <use href="#bs-a" />
+          <use href="#bs-b" />
+        </g>
+        <g fill="url(#bs-g)">
+          <use href="#bs-a" />
+          <use href="#bs-b" />
+        </g>
+      </svg>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

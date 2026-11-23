@@ -1,0 +1,126 @@
+{
+  "format": "astral-map-template",
+  "version": 1,
+  "assets": "akio-homa",
+  "pack": "Best_Map_GTA5RP_Homa_Guides_Akio_Mods",
+  "kind": "vector",
+  "author": "akiooo",
+  "grid": {
+    "columns": 2,
+    "rows": 3
+  },
+  "tileSide": 1024,
+  "tiles": [
+    {
+      "row": 0,
+      "column": 0,
+      "file": "tile-0-0.webp",
+      "side": 1024,
+      "bytes": 79404,
+      "sha256": "1d8707d6fdd180a461f549c081d73ca3f947de8a09d885e39168f971ff7c20bd"
+    },
+    {
+      "row": 0,
+      "column": 1,
+      "file": "tile-0-1.webp",
+      "side": 1024,
+      "bytes": 94078,
+      "sha256": "5d799b8c46698a50dde6c96adeb44046d8a755e32628c7d2717ceb1780182921"
+    },
+    {
+      "row": 1,
+      "column": 0,
+      "file": "tile-1-0.webp",
+      "side": 1024,
+      "bytes": 171188,
+      "sha256": "1fcd8664006a1967a816f1685b5f583746188f5664a12fafa7e431d92f155a45"
+    },
+    {
+      "row": 1,
+      "column": 1,
+      "file": "tile-1-1.webp",
+      "side": 1024,
+      "bytes": 159356,
+      "sha256": "e03fa445ff08c021241f3c4ea6692719f00514f5b3ffd4a5b8f8d1b378f0dc29"
+    },
+    {
+      "row": 2,
+      "column": 0,
+      "file": "tile-2-0.webp",
+      "side": 1024,
+      "bytes": 96030,
+      "sha256": "ef9cc6b5e70cff64061529d715a55a2d2ee1e24a5c828c8b69c678e0633d005f"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "file": "tile-2-1.webp",
+      "side": 1024,
+      "bytes": 86246,
+      "sha256": "0b60da402b7cdb0bf05687609cf20311bb51a624f1d0673cad2e887ab252f4c0"
+    }
+  ],
+  "map": {
+    "file": "map.webp",
+    "width": 2048,
+    "height": 3072,
+    "bytes": 569300,
+    "sha256": "a7cb09f143562af8e77da6f11a1ba4ef2ad41d2b580c095afd58af85c8980d95"
+  },
+  "card": {
+    "file": "card.webp",
+    "width": 640,
+    "height": 400
+  },
+  "state": {
+    "file": "state.webp",
+    "width": 512,
+    "height": 768
+  },
+  "vectorTiles": 0,
+  "geometry": {
+    "file": "geometry.apgz",
+    "bytes": 1682735,
+    "sha256": "bdbe43f30482211fed12f4ca24dc056a8223b789686c03b6d42ddd0c77dd9cfb",
+    "tiles": 65,
+    "triangles": 319169,
+    "groups": 146
+  },
+  "zoom": [
+    {
+      "scale": 2.73,
+      "tiles": [
+        44,
+        44
+      ]
+    },
+    {
+      "scale": 2.8,
+      "tiles": [
+        44,
+        44
+      ]
+    },
+    {
+      "scale": 8,
+      "tiles": [
+        9,
+        4
+      ]
+    },
+    {
+      "scale": 24,
+      "tiles": [
+        3,
+        2
+      ]
+    },
+    {
+      "scale": 82,
+      "tiles": [
+        2,
+        1
+      ]
+    }
+  ]
+}

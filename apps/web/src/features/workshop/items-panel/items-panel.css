@@ -1,0 +1,181 @@
+/* Комнаты с предметами */
+.items-groups {
+  display: grid;
+  gap: 12px;
+}
+
+.items-room-title {
+  align-items: baseline;
+  justify-content: space-between;
+  display: flex;
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+  gap: 8px;
+  margin: 0 0 6px;
+
+  & > small {
+    color: var(--astral-ink-muted);
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+  }
+}
+
+.items-room {
+  & + .items-room {
+    margin-top: 12px;
+  }
+}
+
+/* Страница и её шапка */
+.items-page {
+  display: grid;
+  gap: 14px;
+}
+
+.items-page-actions {
+  align-items: center;
+  display: inline-flex;
+  gap: 0;
+  margin: -4px -6px 0 0;
+}
+
+.items-help > svg,
+.items-page-icon svg {
+  height: 16px;
+  width: 16px;
+}
+
+/* Кнопки-значки в шапке страницы */
+.items-page-icon {
+  &.ui-button {
+    background: transparent;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink-muted);
+    height: var(--astral-control-h-xs);
+    min-height: var(--astral-control-h-xs);
+    min-width: var(--astral-control-h-xs);
+    padding: 0;
+    transition:
+      color var(--astral-duration-snap) var(--astral-ease),
+      background var(--astral-duration-snap) var(--astral-ease);
+    width: var(--astral-control-h-xs);
+
+    &:hover {
+      background: var(--astral-surface-hover);
+      color: var(--astral-ink);
+    }
+  }
+}
+
+/* Область применения */
+.items-scope-line {
+  & > .fx-switch {
+    min-height: var(--astral-control-h);
+  }
+
+  & .fx-switch small {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.items-scope {
+  & .ui-segment-label {
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+.items-scope-block {
+  display: grid;
+  gap: 8px;
+}
+
+/* Строка состояния */
+.items-status-row {
+  align-items: center;
+  background: var(--astral-surface-raised);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  display: flex;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 10px;
+
+  > .ui-button {
+    flex: none;
+  }
+}
+
+.items-status-dot {
+  border-radius: 50%;
+  flex: none;
+  height: 8px;
+  margin: 0 4px;
+  outline: 1.5px dashed var(--astral-ink-faint);
+  outline-offset: -1.5px;
+  width: 8px;
+}
+
+.items-status-copy {
+  display: grid;
+  flex: auto;
+  gap: 2px;
+  min-width: 0;
+
+  & > b {
+    font-weight: 500;
+    font-size: var(--astral-text-body);
+  }
+
+  & > small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+}
+
+/* Редактор предмета */
+.items-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.items-editor-title {
+  font-weight: 600;
+  font-size: var(--astral-text-body);
+  margin: 0;
+}
+
+/* Кнопка подсказки */
+.items-help {
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-faint);
+  cursor: help;
+  display: inline-grid;
+  height: var(--astral-control-h-sm);
+  justify-self: end;
+  place-items: center;
+  transition: color var(--astral-duration-fast) var(--astral-ease);
+  width: 28px;
+
+  &:hover {
+    color: var(--astral-ink);
+  }
+
+  &:focus-visible {
+    color: var(--astral-ink);
+    outline: 2px solid var(--astral-line-focus);
+  }
+}
+
+/* Картинка предмета арены */
+.arena-item-picture {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Смещение рамки фокуса у подсказки */
+.items-help:focus-visible {
+  outline-offset: 1px;
+}

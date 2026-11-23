@@ -1,0 +1,93 @@
+/*
+ * «Подробности» и «Открыть логи» под отказом в «Загрузках» (`FailureDetails`).
+ * Тихие, как ссылки: отказ уже сказал, что делать, это — для тикета.
+ */
+.failure-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 14px;
+  margin-top: 6px;
+  color: #a5a5a5;
+  font-size: var(--astral-text-micro);
+}
+
+.failure-details summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 4px;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.failure-details summary:hover {
+  color: var(--astral-ink);
+}
+
+.failure-details details {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Сырой текст движка: переносится и выделяется, чтобы его можно было
+   показать в поддержке, даже если буфер обмена недоступен. */
+.failure-details pre {
+  margin: 6px 0;
+  padding: 8px 10px;
+  max-height: 120px;
+  overflow: auto;
+  border: 1px solid var(--astral-glass-border);
+  border-radius: var(--astral-radius-sm);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+/*
+ * «Оставить своё или заменить» (`ForeignBuildChoice`, задача 1 ТЗ
+ * 07.10.2026): список спорных файлов сборки и две кнопки под отказом.
+ */
+.foreign-build-choice {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--astral-glass-border);
+  border-radius: var(--astral-radius-sm);
+  font-size: var(--astral-text-micro);
+}
+
+.foreign-build-choice p {
+  margin: 0;
+  color: var(--astral-ink);
+}
+
+.foreign-build-choice ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--astral-ink-muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.foreign-build-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Пояснение вопроса — целиком, а не строкой с многоточием, как подписи строки. */
+.foreign-build-choice p {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}

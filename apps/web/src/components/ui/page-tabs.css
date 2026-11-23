@@ -1,0 +1,257 @@
+/* Ряд вкладок: свои переменные и раскладка */
+.ui-page-tabs {
+  --page-tab-ease: var(--rail-ease, var(--ux-curve));
+  --page-tab-glyph: 17px;
+  --page-tab-h: var(--astral-control-h-sm);
+  --page-tab-hover: var(--ux-hover);
+  --page-tab-ink: var(--ux-ink);
+  --page-tab-ink-active: var(--rail-pill-ink, #ffffff);
+  --page-tab-ink-hover: var(--ux-ink-hover);
+  --page-tab-pill: var(--ux-pill);
+  --page-tab-pill-hover: var(--rail-pill-hover, rgba(255, 255, 255, 0.17));
+  --page-tab-radius: var(--ux-r);
+  --page-tab-spring: var(--rail-spring, var(--ux-bounce));
+  --ux-bounce: cubic-bezier(0.32, 1.24, 0.4, 1);
+  --ux-curve: cubic-bezier(0.22, 0.86, 0.28, 1);
+  --ux-focus: 2px solid var(--astral-line-focus);
+  --ux-leap: 420ms var(--page-tab-spring);
+  align-items: center;
+  display: inline-flex;
+  flex: 0 1 auto;
+  gap: 4px;
+  isolation: isolate;
+  margin: 0;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Плашка под выбранной вкладкой: размер и место приходят из style */
+.ui-page-tabs-plate {
+  background-color: var(--page-tab-pill);
+  block-size: var(--plate-h, 0px);
+  border-radius: var(--page-tab-radius);
+  inline-size: var(--plate-w, 0px);
+  opacity: 1;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate3d(var(--plate-x, 0px), var(--plate-y, 0px), 0);
+  z-index: 0;
+}
+
+/* Вкладка */
+.ui-page-tab {
+  background-image: none;
+  background-color: transparent;
+  block-size: var(--page-tab-h);
+  border: 0;
+  border-radius: var(--page-tab-radius);
+  box-shadow: none;
+  color: var(--page-tab-ink);
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  font-weight: 500;
+  font-size: var(--astral-text-body);
+  font-family: var(--astral-font);
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  margin-inline: 0;
+  margin-block: 0;
+  min-inline-size: var(--page-tab-h);
+  padding-inline: 11px 14px;
+  padding-block: 0;
+  position: relative;
+  scale: none;
+  transition:
+    color var(--ux-fast) ease,
+    transform var(--astral-duration) var(--page-tab-ease);
+  translate: none;
+  white-space: nowrap;
+  z-index: 1;
+  /* Только подпись, без значка: ровные поля с обеих сторон */
+  &:not(:has(> svg)) {
+    padding-inline: 13px;
+  }
+  &:not(:disabled):active {
+    transform: scale(0.96);
+    transition-duration: var(--ux-snap);
+  }
+  & > .astral-glyph {
+    block-size: var(--page-tab-glyph);
+    flex: none;
+    inline-size: var(--page-tab-glyph);
+    position: relative;
+    transform-origin: 50% 50%;
+  }
+  &:focus-visible {
+    outline: var(--ux-focus);
+    outline-offset: 2px;
+  }
+}
+
+.ui-page-tabs:not([data-plate]) > .ui-page-tabs-plate {
+  opacity: 0;
+}
+
+/* Подсветка под курсором лежит позади содержимого */
+.ui-page-tab::before {
+  background-color: var(--page-tab-hover);
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity var(--ux-fast) ease;
+  z-index: -1;
+}
+
+.ui-page-bar-actions .ui-button:is(.is-secondary, .is-ghost),
+.ui-page-heading-actions .ui-button:is(.is-secondary, .is-ghost) {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--ux-ink);
+}
+
+/* Наведение */
+.ui-page-tab:not(:disabled, .is-active):hover {
+  color: var(--page-tab-ink-hover);
+}
+
+/* Выбранная вкладка и включённая кнопка органов */
+.is-active.ui-page-tab {
+  color: var(--page-tab-ink-active);
+}
+
+.ui-page-tab:not(:disabled, .is-active):hover::before {
+  opacity: 1;
+}
+
+.ui-page-tabs:has(> .is-active.ui-page-tab:active) > .ui-page-tabs-plate {
+  transform: translate3d(var(--plate-x, 0px), var(--plate-y, 0px), 0)
+    scale(0.96);
+  transition-duration: var(--ux-snap);
+}
+
+.ui-page-tab-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ui-page-tabs[data-live] {
+  /* Движение: плашка едет пружиной, значок выбранной вкладки подпрыгивает */
+  & > .ui-page-tabs-plate {
+    transition:
+      transform var(--ux-leap),
+      width var(--ux-leap),
+      opacity var(--astral-duration) ease,
+      background-color var(--ux-fast) ease;
+  }
+  & > .ui-page-tab.is-active > .astral-glyph {
+    animation: ui-page-tab-pop 0.56s var(--page-tab-spring);
+  }
+}
+
+/*
+* Вкладки шапки страницы с плашкой-выделением, строка шапки и органы справа.
+* Лист подключается в слой components. Цвета рельсы читаются из --rail-*
+* с запасными значениями.
+* Порядок: общие переменные, покой всех частей, затем наведение, нажатие,
+* выбранная и недоступная вкладка, затем движение.
+*/
+/* Цвета рельсы и размеры один раз на корне каждой из трёх групп: вкладки, органы строки, органы шапки */
+.ui-page-tabs,
+.ui-page-bar-actions,
+.ui-page-heading-actions {
+  --ux-fast: var(--astral-duration-fast);
+  --ux-hover: var(--rail-hover, var(--astral-surface-raised));
+  --ux-ink: var(--rail-ink, var(--astral-ink-muted));
+  --ux-ink-hover: var(--rail-ink-hover, var(--astral-ink));
+  --ux-pill: var(--rail-pill, rgba(255, 255, 255, 0.14));
+  --ux-r: var(--astral-radius);
+  --ux-snap: var(--astral-duration-snap);
+}
+
+/* Недоступная вкладка, нажатие и фокус */
+.ui-page-tab:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.ui-page-tabs:has(> .is-active.ui-page-tab:hover) > .ui-page-tabs-plate {
+  background-color: var(--page-tab-pill-hover);
+}
+
+/* Строка шапки: вкладки слева, органы справа */
+.ui-page-bar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0 0 8px;
+  min-inline-size: 0;
+  padding: 4px 0;
+}
+
+/* Кнопки органов: строка шапки и шапка страницы одной высоты и цвета рельсы */
+.ui-page-bar-actions .ui-button:is(.is-lg, .is-md, .is-sm),
+.ui-page-heading-actions .ui-button:is(.is-lg, .is-md, .is-sm) {
+  block-size: var(--astral-control-h-sm);
+  border-radius: var(--ux-r);
+  font-size: var(--astral-text-body);
+  min-block-size: var(--astral-control-h-sm);
+  padding-inline: 12px 14px;
+  padding-block: 0;
+  translate: none;
+}
+
+.ui-page-bar-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* Дитя-подзаголовок в тексте шапки страницы (settings-heading) идёт столбиком */
+.ui-page-heading-copy > span {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ui-page-bar-actions .is-active.ui-button:is(.is-secondary, .is-ghost),
+.ui-page-heading-actions .is-active.ui-button:is(.is-secondary, .is-ghost) {
+  background-color: var(--ux-pill);
+  border-color: transparent;
+  color: var(--rail-pill-ink, rgb(255, 255, 255));
+}
+
+.ui-page-bar-actions
+  .ui-button:hover:not(:disabled):is(.is-secondary, .is-ghost),
+.ui-page-heading-actions
+  .ui-button:hover:not(:disabled):is(.is-secondary, .is-ghost) {
+  background-color: var(--ux-hover);
+  color: var(--ux-ink-hover);
+}
+
+@keyframes ui-page-tab-pop {
+  from {
+    transform: scale(0.82);
+  }
+  45% {
+    transform: scale(1.12);
+  }
+  to {
+    transform: none;
+  }
+}

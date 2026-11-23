@@ -1,0 +1,212 @@
+/*
+ * Карточка мода в каталоге «афишей» (ТЗ 24.10.2026, п. 12; образец — скрин 31).
+ *
+ * Картинка — вся карточка. Имя — на ней, снизу, на тёмной подложке. Справа вверху — сердечко; знаков проектов на карточке
+ * нет (ТЗ 24.10.2026, вечер, п. A): для какого проекта мод — в панели фактов его страницы и в фильтре каталога.
+ *
+ * Низ у всех карточек один (ТЗ 29.10.2026-e, «как было»: скрин 75 — строка стояла всегда, и владелец её убрал): в покое — только имя,
+ * аккуратно в левом нижнем углу. Под курсором и по фокусу (клавиатура, касание) имя плавно поднимается ровно на строку фактов, и под
+ * ним выезжает строка: сколько раз скачали и сколько весит — точно или примерно «≈ 10–30 МБ» (у пака звуков и набора маппинга —
+ * сколько в нём). Одинаково у всех карточек (сетка, полки «Похожие моды», страница автора). Чего у мода нет, того в строке нет.
+ *
+ * Разметка и классы карточки — прежние (`MediaCard`, `is-store`): правила рендера ствола и вещи (`is-weapon-media`,
+ * `astral-store-render`) работают как были. Здесь — только то, что `is-store` делал «подписью под плитой»: оно
+ * возвращается к подписи на картинке. Лист идёт после `media-card.css` в том же слое.
+ */
+
+.desktop-app .ui-media-card.is-store.is-poster {
+  /* Низ карточки: поле до края и на сколько имя поднимается, когда под ним выезжает строка фактов (одинаково у всех карточек). */
+  --poster-pad: 12px;
+  --poster-lift: 22px;
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  background: #0b0b0c;
+  box-shadow: var(--astral-highlight);
+  transition: border-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.desktop-app .ui-media-card.is-store.is-poster:hover,
+.desktop-app .ui-media-card.is-store.is-poster:focus-visible {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.desktop-app .ui-media-card.is-store.is-poster:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+/* Картинка — во всю карточку, а не отдельной плитой над подписью. */
+.ui-media-card.is-store.is-poster > .ui-media-card-frame {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ui-media-card.is-store.is-poster:hover > .ui-media-card-frame {
+  border-color: transparent;
+}
+
+/* Подложка под именем: вверху картинка чистая, к низу — тёмная, чтобы белое имя читалось на любом кадре. */
+.ui-media-card.is-store.is-poster > .ui-media-card-shade {
+  display: block;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 38%,
+    rgba(0, 0, 0, 0.5) 68%,
+    rgba(0, 0, 0, 0.88) 100%
+  );
+}
+
+/* Имя — в левом нижнем углу; под курсором и по фокусу поднимается ровно на строку фактов (плавно: токен длительности, при выключенных анимациях — мгновенно). */
+.ui-media-card.is-store.is-poster > .ui-media-card-copy {
+  position: absolute;
+  right: 14px;
+  bottom: var(--poster-pad);
+  left: 14px;
+  gap: 2px;
+  padding: 0;
+  transition: transform var(--astral-duration) var(--astral-ease);
+}
+
+.ui-media-card.is-store.is-poster:is(:hover, :focus-visible, :focus-within).has-trailing > .ui-media-card-copy {
+  transform: translateY(calc(-1 * var(--poster-lift)));
+}
+
+.desktop-app .ui-media-card.is-store.is-poster .ui-media-card-copy h3 {
+  color: var(--poster-ink, #fff) !important;
+  font-size: var(--astral-text-strong);
+  font-weight: 650;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
+}
+
+.desktop-app .ui-media-card.is-store.is-poster .ui-media-card-copy small {
+  color: var(--poster-ink-muted, rgba(255, 255, 255, 0.66)) !important;
+}
+
+.desktop-app .ui-media-card.is-store.is-poster .ui-media-card-copy p {
+  color: var(--poster-ink-muted, rgba(255, 255, 255, 0.7)) !important;
+}
+
+/* Строка фактов: на месте имени до наведения, видна только под курсором и по фокусу (имя к тому времени уже поднялось).
+   В покое её в раскладке нет (`display: none`): в строке одиннадцать узлов на карточку (два факта, три значка из десятка фигур), а карточек в окне
+   на 3000 модах сорок — невидимые, они стоили стиля, раскладки и свойств отрисовки на каждом сдвиге ряда (30.10.2026). Выезжает и прячется
+   прежним переходом: `@starting-style` даёт начало выезду, `display` в списке переходов держит строку до конца ухода. */
+.ui-media-card.is-store.is-poster > .ui-media-card-trailing {
+  top: auto;
+  right: 14px;
+  bottom: var(--poster-pad);
+  left: 14px;
+  margin-top: 0;
+  display: none;
+  gap: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity var(--astral-duration) var(--astral-ease),
+    transform var(--astral-duration) var(--astral-ease),
+    display var(--astral-duration) allow-discrete;
+}
+
+.ui-media-card.is-store.is-poster:is(:hover, :focus-visible, :focus-within) > .ui-media-card-trailing {
+  display: flex;
+  opacity: 1;
+  transform: none;
+}
+
+@starting-style {
+  .ui-media-card.is-store.is-poster:is(:hover, :focus-visible, :focus-within) > .ui-media-card-trailing {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.desktop-app .ui-media-card.is-store.is-poster > .ui-media-card-trailing {
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: var(--astral-text-small);
+}
+
+.ui-media-card.is-store.is-poster .poster-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ui-media-card.is-store.is-poster .poster-fact svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ui-media-card.is-store.is-poster .poster-fact {
+  white-space: nowrap;
+}
+
+/* Примерный вес («≈ 10–30 МБ», `features/catalog/size-estimate.js`): строка фактов сама мышь не ловит, а у этого факта
+   есть подсказка «примерно, точный вес после скачивания» — ему мышь нужна, но только когда строка видна (под курсором и по фокусу). Щелчок по нему идёт в карточку как обычно. */
+.ui-media-card.is-store.is-poster:is(:hover, :focus-visible, :focus-within) .poster-fact[data-approximate] {
+  pointer-events: auto;
+}
+
+/* Сердечко — справа вверху и видно всегда, как на образце (у плиты под подписью оно появлялось под курсором). Вид и ход щелчка — `favorite-heart.css`. */
+.ui-media-card.is-store.is-poster > .ui-media-card-like {
+  top: 10px;
+  right: 10px;
+  opacity: 1;
+}
+
+/* Знак проекта в меню фильтра (`ProjectFilter`): на карточках каталога знаков больше нет (ТЗ 24.10.2026, вечер, п. A). */
+.catalog-project-badge {
+  display: block;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--astral-radius-sm);
+  background: rgba(13, 13, 13, 0.74);
+  object-fit: cover;
+}
+
+/* Эмблема на прозрачном (звезда GTA 5 RP) стоит на своей тёмной плитке и не касается её краёв. */
+.catalog-project-badge.is-contain {
+  padding: 4px;
+  object-fit: contain;
+}
+
+/* Подпись теперь на картинке, а не под ней: воздуха между рядами «на имя ниже» не нужно — ряды стоят так же плотно, как колонки. */
+.desktop-app .public-catalog-page.is-navigator .public-catalog-grid {
+  row-gap: 16px;
+}
+
+/*
+ * Карта на карточке (большая и мини-карта, `is-contained-media`; 26.10.2026, владелец: «вмещаются полностью в превьюшку, не
+ * обрезаются ни с какой стороны»): вид сверху — целиком (`contain`), не режется ни по ширине, ни по высоте при любых пропорциях
+ * плитки; поле плитки то же, что у обложки, шва нет. 31.10.2026 (владелец: карты «посередине», без огромного зазора снизу):
+ * рисунок по центру всей плитки, полоса под подпись (была 34 % высоты) убрана; имя лежит поверх, под ним лёгкая подложка.
+ */
+.ui-media-card.is-store.is-poster.is-contained-media > .ui-media-card-frame {
+  inset: 0;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* Поле обложки (#0c0c0c со светом) светлее поля плитки: края рисунка растворяются в плитку, а не стоят светлой плитой. */
+  -webkit-mask-image: radial-gradient(ellipse 50% 62% at 50% 50%, #000 66%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 62% at 50% 50%, #000 66%, transparent 100%);
+}
+
+/* Большая карта (круг 7, 30.10.2026): обложка на прозрачном фоне, поля нет — растворять в плитку нечего, а маска подтачивала бы концы острова (север у Палето, юг у аэропорта). */
+.ui-media-card.is-store.is-poster.is-bigmap-media > .ui-media-card-frame {
+  /* Остров занимает 94 % высоты обложки и 36 % ширины, поля по бокам пусты: кадр по высоте плитки, а не `contain` по её ширине (31.10.2026, владелец: «чутка побольше», «посредине»). */
+  background-size: auto 104%;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.ui-media-card.is-store.is-poster.is-contained-media > .ui-media-card-shade {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 64%, rgba(0, 0, 0, 0.6) 100%);
+}

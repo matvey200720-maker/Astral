@@ -1,0 +1,235 @@
+/*
+ * Окно «Закрыть Astral?», пока идёт скачивание (макет В1 «Короткий вопрос», 16.11.2026, update-designs.html).
+ * Размеры — cqw рамки макета в пикселях окна 1280 (`--ca-u` = 12,8 px): окно не растягивается с шириной, сверка `__astralAudit()` одинакова на любом
+ * размере. От макета отличаются тремя мелочами ради сверки: радиусы взяты со ступеней шкалы (28 и 12 вместо 25,6 и 12,8), подпись галочки светлее
+ * (4,5:1 вместо 3:1), мишень «Отмена» не меньше 28 px (лишнее поле гасится отрицательным отступом, строка стоит где в макете).
+ * Фон притушен тем же .62, без размытия: размытие всего окна дорого на слабых ПК. Движется только прозрачность и сдвиг (transform).
+ */
+@layer overrides {
+  .close-ask {
+    --ca-ink: #f4f4f6;
+    --ca-muted: #9a9aa3;
+    --ca-faint: #85858f;
+    --ca-line: rgba(255, 255, 255, 0.15);
+    --ca-card: #0e0e11;
+    --ca-btn: #18181c;
+    container-type: inline-size;
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(0, 0, 0, 0.62);
+    color: var(--ca-ink);
+    font-family: Inter, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .close-ask-card {
+    --ca-u: 12.8px;
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    translate: -50% -50%;
+    width: calc(var(--ca-u) * 44);
+    max-width: calc(100% - 32px);
+    /* Как в макете: размеры (44cqw, поля 3cqw, высота кнопки 3,6cqw) — это размеры содержимого, рамка и поля идут сверх них. */
+    box-sizing: content-box;
+    padding: calc(var(--ca-u) * 3);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--ca-u) * 1.6);
+    background: var(--ca-card);
+    border: 1px solid var(--ca-line);
+    border-radius: var(--astral-radius-2xl, 28px);
+    box-shadow: 0 calc(var(--ca-u) * 3) calc(var(--ca-u) * 8) rgba(0, 0, 0, 0.9);
+  }
+
+  .close-ask-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: calc(var(--ca-u) * 6);
+    height: calc(var(--ca-u) * 6);
+  }
+
+  .close-ask-ring svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+  }
+
+  .close-ask-ring circle {
+    fill: none;
+    stroke-width: 1.6;
+  }
+
+  .close-ask-ring .t {
+    stroke: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Свечение дуги — один статичный drop-shadow, как в макете; дуга не анимируется в цикле. */
+  .close-ask-ring .a {
+    stroke: #fff;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+  }
+
+  .close-ask-ring img {
+    display: block;
+    width: calc(var(--ca-u) * 2.8);
+    height: auto;
+  }
+
+  .close-ask-title {
+    margin: 0;
+    font-family: "Russo One", "Arial Black", system-ui, sans-serif;
+    font-size: calc(var(--ca-u) * 2.8);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .close-ask-text {
+    margin: 0;
+    color: var(--ca-muted);
+    font-size: calc(var(--ca-u) * 1.35);
+    line-height: 1.55;
+  }
+
+  .close-ask-text b {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .close-ask-buttons {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--ca-u) * 1);
+    margin-top: calc(var(--ca-u) * 0.6);
+  }
+
+  .close-ask-spacer {
+    flex: 1;
+  }
+
+  .close-ask-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: content-box;
+    height: calc(var(--ca-u) * 3.6);
+    padding: 0 calc(var(--ca-u) * 1.8);
+    border-radius: var(--astral-radius, 12px);
+    border: 1px solid var(--ca-line);
+    background: var(--ca-btn);
+    color: #fff;
+    font: inherit;
+    font-size: calc(var(--ca-u) * 1.3);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .close-ask-btn.is-main {
+    background: #fff;
+    border-color: #fff;
+    color: #000;
+  }
+
+  .close-ask-link {
+    padding: calc(var(--ca-u) * 0.7) calc(var(--ca-u) * 1);
+    margin: calc(var(--ca-u) * -0.7) calc(var(--ca-u) * -1);
+    border: 0;
+    background: none;
+    color: var(--ca-muted);
+    font: inherit;
+    font-size: calc(var(--ca-u) * 1.3);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .close-ask-link:hover,
+  .close-ask-btn:not(.is-main):hover {
+    color: #fff;
+  }
+
+  .close-ask-btn:focus-visible,
+  .close-ask-link:focus-visible,
+  .close-ask-check:has(input:focus-visible) {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
+  .close-ask-check {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--ca-u) * 0.9);
+    width: fit-content;
+    color: var(--ca-faint);
+    font-size: calc(var(--ca-u) * 1.15);
+    cursor: pointer;
+    border-radius: calc(var(--ca-u) * 0.35);
+  }
+
+  .close-ask-check input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .close-ask-check .box {
+    display: grid;
+    place-items: center;
+    box-sizing: content-box;
+    width: calc(var(--ca-u) * 1.5);
+    height: calc(var(--ca-u) * 1.5);
+    border: 1px solid var(--ca-line);
+    border-radius: calc(var(--ca-u) * 0.35);
+  }
+
+  .close-ask-check .box svg {
+    width: 70%;
+    height: 70%;
+    opacity: 0;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .close-ask-check input:checked + .box {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .close-ask-check input:checked + .box svg {
+    opacity: 1;
+  }
+
+  .close-ask-check input:checked ~ .label {
+    color: var(--ca-muted);
+  }
+
+  @keyframes close-ask-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes close-ask-card-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0);
+    }
+  }
+
+  :root:not([data-motion="off"]) .close-ask {
+    animation: close-ask-in var(--astral-duration, 180ms) ease-out both;
+  }
+
+  :root:not([data-motion="off"]) .close-ask-card {
+    animation: close-ask-card-in 220ms ease-out both;
+  }
+}

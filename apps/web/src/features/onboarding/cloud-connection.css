@@ -1,0 +1,62 @@
+/*
+ * Строка связи в заголовке окна (`CloudConnectionStatus`).
+ *
+ * Заголовок — полоса перетаскивания окна, и справа в нём стоят системные
+ * кнопки окна (отступ полосы 142px держит под них место). Строка встаёт
+ * справа от бренда, у этого отступа, и выключает перетаскивание только у
+ * себя — иначе «Повторить» нельзя было бы нажать.
+ */
+.desktop-titlebar .cloud-connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: auto;
+  padding: 0 0 0 10px;
+  border: 1px solid rgba(var(--astral-warning-rgb), 0.28);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-warning-soft);
+  color: var(--astral-warning);
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.desktop-titlebar .cloud-connection-status > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.desktop-titlebar .cloud-connection-copy {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Свои классы, а не `b`/`small`: заголовок красит их под бренд через
+   `!important` из ранних слоёв, и перебить это отсюда нельзя. */
+.desktop-titlebar .cloud-connection-title {
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.desktop-titlebar .cloud-connection-hint {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.desktop-titlebar .cloud-connection-retry {
+  flex: none;
+}
+
+/* В узком окне остаётся главное: что случилось и кнопка. */
+@media (max-width: 900px) {
+  .desktop-titlebar .cloud-connection-hint {
+    display: none;
+  }
+}

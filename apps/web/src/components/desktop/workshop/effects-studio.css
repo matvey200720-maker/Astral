@@ -1,0 +1,1529 @@
+/*
+ * Мастерская попаданий и трассеров.
+ *
+ * Экран держит две вещи: сцену, где эффект действительно происходит, и
+ * колонку, где его настраивают. Сцена главная — она занимает всё, что
+ * остаётся, потому что решение принимается глазами, а не по числам в
+ * ползунке.
+ *
+ * Цвета берутся из tokens.css. Собственные литералы допущены только внутри
+ * сцены: под ней ночное стрельбище и силуэт цели — слой игры, а не страница
+ * лаунчера, и палитра интерфейса там читается как ошибка.
+ */
+
+.fx-editor {
+  --fx-panel: var(--astral-surface-raised);
+  --fx-card: var(--astral-surface);
+  --fx-sunken: var(--astral-surface-sunken);
+  --fx-line: var(--astral-line);
+  --fx-muted: var(--astral-ink-muted);
+  --fx-faint: var(--astral-ink-faint);
+  /*
+   * Слой игры — это только то, что лежит ПОВЕРХ кадра: плашка текстуры на
+   * видео. Сама сцена — обычная поверхность приложения; своя синева у рамки
+   * читалась как чужой экран.
+   */
+  --fx-scene-line: rgba(255, 255, 255, 0.1);
+  --fx-scene-ink: rgba(255, 255, 255, 0.82);
+  /*
+   * Подложка под текстуру эффекта. У текстур альфа, и на светлой теме без
+   * подложки видно белое пятно вместо следа, — поэтому она остаётся тёмной в
+   * обеих темах. Но тёмная она ровно того же чёрного, что и фон приложения:
+   * свой синеватый #0b0e15 читался как чужая плитка в нейтральном лаунчере.
+   */
+  --fx-plate: var(--astral-bg);
+  /*
+   * Подложка образца эффекта попадания — чёрная в обеих темах, как у шаблонов
+   * килл-эффекта: искры, вспышки и вода светятся сами, и на светлой плитке от
+   * них не остаётся ничего. Это слой игры, а не страница лаунчера.
+   */
+  --fx-sample-plate: #070708;
+  /*
+   * Матовая пластина панелей.
+   *
+   * Поверхности оболочки полупрозрачные: сквозь инспектор и карточки
+   * просвечивает сцена лаунчера вместе с персонажем, и колонку настроек
+   * приходится читать сквозь него. Здесь решение принимается по цвету и
+   * толщине следа, и всё, что подмешивается снизу, врёт о цвете. Пластина —
+   * плотная поверхность продукта; большим панелям достаётся тот же матовый
+   * материал, что и матовой сцене предпросмотра. Стекло остаётся навигации.
+   */
+  --fx-matte: var(--astral-surface-strong, #141415);
+  --fx-matte-stage: var(--dragon-matte-base, var(--fx-matte));
+  color: var(--astral-ink);
+}
+
+.fx-editor .ui-editor-inspector,
+.fx-editor .fx-stage {
+  background: var(--fx-matte-stage);
+}
+
+.fx-editor .fx-preset {
+  background: var(--fx-matte);
+}
+
+.fx-editor .fx-preset:hover {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+/*
+ * Сцена — строка своей высоты, пресеты — всё, что осталось под ней. Раскрытые
+ * пресеты прокручиваются в своём остатке и не залезают на фигуру
+ * (владелец, 23.09.2026): прежде их строка была `auto` и росла на всю сетку.
+ * Только у прежней раскладки: в мастерской «как в Photoshop» (`data-layout`)
+ * середина — сам кадр, и `min-height: 0` отсюда (лист в позднем слое)
+ * отнимал у неё 420 точек узкого окна.
+ */
+.fx-editor:not([data-layout]) .ui-editor-canvas {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+/*
+ * Высота сцены задаётся здесь, а не наследуется от оболочки: страница
+ * каталога прокручиваемая и высоты не ограничивает, поэтому «занять всё
+ * оставшееся» превратилось бы в «вырасти до размеров содержимого» — силуэт на
+ * полтора экрана и пресеты, до которых нужно доскроллить.
+ */
+.fx-stage {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
+  height: clamp(320px, 54vh, 620px);
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius-lg);
+  background: var(--fx-sunken);
+}
+
+/*
+ * Полоса органов над кадром.
+ *
+ * Она есть не в каждой вкладке — в попаданиях кадр неподвижен сам по себе, и
+ * останавливать нечего, — поэтому строку под неё заводит модификатор, а не
+ * постоянная третья дорожка: `null` вместо полосы не создаёт элемента сетки, и
+ * дорожки разъехались бы ролями. Кадр получил бы `auto` вместо своей единицы и
+ * сжался до содержимого — то есть до нуля.
+ */
+.fx-stage.has-bar {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+/*
+ * Кадр попаданий: фигура одна, а с раскрытым листом — фигура и причал листа
+ * рядом. Причал берёт треть кадра, но не меньше ширины холста с органами;
+ * фигура ужимается сама.
+ */
+.fx-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+
+.fx-scene > .fx-body {
+  min-width: 0;
+}
+
+.fx-stage-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Строка состояния ужимается, а не переносится: полоса — одна строка, и вторая
+   отняла бы высоту у кадра, ради которого сюда пришли. */
+.fx-stage-bar small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fx-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Стрельбище ─────────────────────────────────────────────────────────── */
+
+/*
+ * Стрельбище — это общее двумерное окно предпросмотра плюс уголок с текстурой
+ * поверх него. Своей рамки и своей обрезки у него больше нет: кадр держит
+ * окно, и вторая рамка вокруг первой читалась бы как вложенный экран.
+ */
+.fx-range {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.fx-range-window .hud-preview-frame {
+  border-color: var(--fx-line);
+  border-radius: calc(var(--astral-radius-lg) - 4px);
+}
+
+/*
+ * Холст занимает слой целиком: его размер в пикселях ставит код по замеру
+ * окна, а вёрстка только растягивает результат на слой. Своей высоты у него
+ * нет — она пришла бы в спор с прямоугольником, который посчитало окно.
+ */
+.fx-range-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/*
+ * Кадр игры с глубиной (FX-сцены, `features/workshop/fx-frame/`): рамка ровно по пропорции кадра, вписанная кодом в место редактора;
+ * холст рисует и сам кадр, и эффект поверх него.
+ */
+.fx-frame {
+  place-items: center;
+}
+
+/* Сцена ещё скачивается: на её месте — карточка загрузки (`FxSceneWait.jsx`), а не прежняя сцена редактора. Заполняет то же место, что и кадр. */
+.fx-scene-wait {
+  position: absolute;
+  inset: 0;
+}
+
+.fx-frame-box {
+  position: relative;
+}
+
+.fx-frame-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--astral-radius-lg) - 4px);
+}
+
+/* Следы урона на экране поверх кадра игры: рамка по центру, след — холст ровно по границам кадра, мышь сквозь него идёт под него. */
+.fx-screen-frame {
+  display: grid;
+  place-items: center;
+}
+
+.fx-frame-box > canvas.fx-screen-frame-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: calc(var(--astral-radius-lg) - 4px);
+}
+
+/* Килл-эффект на кадре игры: рамка кадра по центру места, экранный эффект — холст поверх кадра ровно по его границам. */
+.fx-kill-frame {
+  display: grid;
+  place-items: center;
+}
+
+.fx-frame-box > canvas.kill-frame-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: calc(var(--astral-radius-lg) - 4px);
+}
+
+
+
+
+
+/* ── Силуэт ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Силуэт и холст занимают одну и ту же клетку целиком, а не подгоняются по
+ * пропорции: `height: 100%` у центрированного элемента сетки считается от
+ * содержимого, и фигура вырастала за пределы сцены. SVG вписывается сам
+ * (`preserveAspectRatio`), а холст повторяет ту же вписанную рамку в коде —
+ * иначе брызги улетали бы мимо той кости, по которой щёлкнули.
+ */
+.fx-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 6px;
+  min-height: 0;
+  padding: 8px;
+}
+
+/*
+ * Под фигурой — чёрная подложка в обеих темах. Искры, вспышки и брызги воды
+ * светятся сами (в игре они складываются со светом кадра), и на светлой
+ * поверхности приложения от них не осталось бы ничего: человек в светлой теме
+ * выбирал бы эффект вслепую.
+ */
+.fx-body-layers {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  border-radius: var(--astral-radius);
+  background: var(--fx-sample-plate);
+}
+
+.fx-body-photo,
+.fx-body-scene,
+.fx-body-tint,
+.fx-body-figure,
+.fx-body-canvas {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Сцена частиц (WebGL) рисует и фигуру с подсветкой зон, и выброс: так
+ * брызги ложатся на фон в том же HDR, что в игре, и заслоняются рельефом
+ * тела. Щелчки ловит SVG зон поверх неё.
+ */
+.fx-body-scene {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.fx-body-scene[hidden] {
+  display: none;
+}
+
+/* Рендер лежит в SVG с тем же viewBox, что у зон: оба вписываются одинаково
+   (contain по центру), иначе зоны разъехались бы с телом, по которому их
+   снимали. */
+.fx-body-photo {
+  pointer-events: none;
+  user-select: none;
+}
+
+.fx-body-tint,
+.fx-body-canvas {
+  pointer-events: none;
+}
+
+/*
+ * Фигуры зон — только области клика. Всю подсветку — заливку по силуэту и
+ * кант по контуру тела — рисует канвас .fx-body-tint масками из альфы
+ * рендера, поэтому у самих фигур нет ни заливки, ни обводки. Прозрачная (а
+ * не отсутствующая) заливка обязательна: без неё SVG не ловит щелчки.
+ */
+.fx-body-zone {
+  cursor: pointer;
+  fill: transparent;
+  stroke: none;
+}
+
+/* Клавиатуре нужен видимый фокус; мышиных состояний это не касается. */
+.fx-body-zone:focus-visible {
+  outline: none;
+  stroke: var(--astral-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+/*
+ * Попадания в 3D (задача 4А ТЗ 18.10.2026): сцена боя на весь кадр, и камера
+ * ловит мышь сама (`stage-camera.js`). Булавки зон и метка «куда летит» лежат
+ * поверх холста на проекциях точек мира; сами они не перехватывают ничего,
+ * кроме собственных нажатий.
+ */
+.fx-body-scene.is-live {
+  pointer-events: auto;
+  touch-action: none;
+  outline: none;
+}
+
+.fx-body-scene.is-live:focus-visible {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: -2px;
+}
+
+/* Вторая полоса органов — снизу слева: стрелок и свет настраивают реже, а в
+   верхнем углу они закрывали бы голову персонажа. */
+.ui-stage-bar.fx-combat-bar-low {
+  top: auto;
+  right: auto;
+  bottom: 12px;
+  left: 12px;
+  justify-content: flex-start;
+  max-width: calc(100% - 360px);
+}
+
+/*
+ * Кадр попаданий (18.10.2026, владелец: «рамка наезжает на нижние панели»).
+ * Рамка фокуса идёт по кадру и панели не пересекает.
+ */
+.effects-studio .fx-body.fx-combat {
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 0;
+}
+
+/* Кольцо фокуса — внутри кадра, с отступом от его края и от рамки самой
+   сцены: две белые линии рядом не слипаются, а органы кадра (12 пикселей от
+   края) под кольцо не попадают. */
+.effects-studio .fx-combat .fx-body-scene.is-live:focus-visible {
+  outline-offset: -6px;
+}
+
+.fx-combat-aim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fx-combat-aim-ray {
+  stroke: var(--astral-accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.fx-combat-aim-grip {
+  fill: color-mix(in srgb, var(--astral-accent) 34%, transparent);
+  stroke: var(--astral-accent);
+  stroke-width: 2;
+  pointer-events: all;
+  cursor: grab;
+  transition: fill var(--astral-duration-fast) var(--astral-ease);
+}
+
+.fx-combat-aim-grip:hover,
+.fx-combat-aim-grip[data-dragging] {
+  fill: color-mix(in srgb, var(--astral-accent) 62%, transparent);
+}
+
+.fx-combat-aim-grip[data-dragging] {
+  cursor: grabbing;
+}
+
+.fx-combat-aim-grip:focus-visible {
+  outline: none;
+  stroke: var(--astral-ink);
+  stroke-width: 3;
+}
+
+/*
+ * Следы урона на экране в 3D: метки лежат поверх сцены боя тем же холстом, что
+ * и у плоского экрана, но сквозь них камера продолжает ловить мышь.
+ */
+.screen-hits-frame canvas.screen-hits-overlay {
+  pointer-events: none;
+  object-fit: fill;
+}
+
+/*
+ * Килл-эффект в 3D: сцена боя на весь кадр, а эффект экрана — холст поверх неё
+ * (он рисует снимок кадра сцены с эффектом и перекрывает её целиком, поэтому не
+ * ловит мышь: камера слушает сцену под ним).
+ */
+.kill-combat {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.kill-combat > canvas.fx-body-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.kill-combat > canvas.kill-combat-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.kill-combat > .ui-stage-bar {
+  z-index: 2;
+}
+
+/* ── Что мешает «Применить» ──────────────────────────────────────────── */
+
+/* Короткая строка в подвале панели: ошибка разбора или то, что человеку
+   исправлять (`EffectsPlanSummary`). Разбор «В игру уйдёт»
+   владелец убрал 18.10.2026. */
+.fx-plan-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--astral-warning);
+  font-size: var(--astral-text-micro);
+  line-height: 1.45;
+}
+
+.fx-plan-line svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.fx-plan-line.is-error {
+  color: var(--astral-danger);
+}
+
+/* ── Инспектор ──────────────────────────────────────────────────────────── */
+
+/*
+ * Прокрутка колонки — у каркаса, а не здесь.
+ *
+ * Свой `max-height` со своим `overflow` давал вторую прокручиваемую коробку
+ * внутри колонки каркаса: у неё был свой край, и край этот обрывался ровно по
+ * нижней границе панели — закрытая коробка, по которой не понять, что под ней
+ * ещё десять ползунков. Редактор объявляет `fit="window"`, и дальше колонка
+ * едет сама, а каркас распускает её край там, где за ним есть продолжение.
+ */
+.fx-inspector {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+}
+
+.fx-section {
+  display: grid;
+  gap: 10px;
+}
+
+/* Раздел из строк-переходов (`ui/NavRow.jsx`) — сплошным списком, как у
+   «Большой карты»: строки плотно, без воздуха раздела между ними
+   (18.10.2026). */
+.fx-section:has(> .ui-nav-row) {
+  row-gap: 0;
+}
+
+.fx-section:has(> .ui-nav-row) > h3 {
+  margin-bottom: 6px;
+}
+
+.fx-section > .ui-nav-row.ui-button {
+  min-height: 48px;
+  padding-block: 6px;
+}
+
+/* Заголовок раздела — общий на все редакторы, см. `styles/editor-shell.css`.
+   Здесь он был строчными и приглушённым: рядом с соседями это читалось как
+   другой продукт. */
+
+/*
+ * Флажки редактора.
+ *
+ * Настоящий `input` спрятан, но не выключен: он ловит табуляцию и пробел и
+ * называет себя читалке экрана. Видимый знак — общий `SelectionMark`, тот же,
+ * что в настройках; нативный чекбокс рядом с ним читался бы как кусок другой
+ * программы.
+ */
+/* Спрятанный `input` флажка — общий (`.ui-checkbox-input` в дизайн-системе):
+   он держит фокус и пробел везде одинаково. */
+
+/* Ниже, чем была (18.10.2026, владелец: «по высоте меньше… меньше текста»):
+   поля тоньше, пояснение — одной строкой, целиком — подсказкой под курсором
+   (`titleClippedHint` в `ui/EditorShell.jsx`). */
+.fx-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius);
+  background: var(--fx-card);
+  cursor: pointer;
+}
+
+.fx-switch:hover {
+  border-color: var(--astral-line-strong);
+}
+
+/* Знак уходит к правому краю: подпись читается первой, состояние — последним,
+   как в настройках приложения. */
+.fx-switch span {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Подпись строки-выключателя. Кегль у неё свой: `b` без правила наследовал
+   набор страницы и стоял 16-м рядом с 11-м пояснением под ним. */
+.fx-switch span > b {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.fx-switch small {
+  overflow: hidden;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Виды — списком, а не плиткой в две колонки.
+ *
+ * Колонка правок — 336 px, раздел забирает свои 14 с каждой стороны, и
+ * на две колонки оставалось по 125: название «Дымный след» уже в две
+ * строки, описание — в пять по два слова. В одну колонку та же карточка
+ * читается строкой: значок, название, описание целиком — так же, как
+ * выбирают в мини-карте.
+ */
+.fx-style-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.fx-style {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 8px;
+  /* Описания разной длины: значок держится верха, а не плавает
+     по середине карточки вслед за числом строк. */
+  align-items: start;
+  padding: 8px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius);
+  background: var(--fx-card);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fx-style:hover {
+  border-color: var(--astral-line-strong);
+}
+
+.fx-style.is-active {
+  border-color: var(--astral-accent);
+  background: color-mix(in srgb, var(--astral-accent) 12%, var(--fx-card));
+}
+
+/* Холст с текстурой вида: вписывается целиком, поля — цвет подложки. */
+.fx-style-preview {
+  display: block;
+  width: 28px;
+  height: 44px;
+  border-radius: var(--astral-radius-sm);
+  background-color: var(--fx-plate);
+  object-fit: contain;
+}
+
+.fx-style-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fx-style-copy b {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/*
+ * Описание вида не режется вовсе.
+ *
+ * Здесь единственное место, где сказано, чем «Плазма» отличается от
+ * «Кометы», и обрезанное двумя строками описание обрывалось ровно на
+ * том слове, ради которого его читают («Мягкая полоса с расширением
+ * к…»). Карточки от этого разной высоты — сетка равняет их по ряду, а
+ * прочитанное описание стоит ровного края.
+ */
+.fx-style-copy small {
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  line-height: 1.3;
+}
+
+.fx-zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  opacity: 0.35;
+}
+
+.fx-zone-dot.is-on {
+  opacity: 1;
+}
+
+/* Метка стоит перед названием зоны в переключателе: цвет — чем зона отметится
+   в игре, яркость — включён ли у неё свой эффект. */
+.fx-editor .ui-segment > .fx-zone-dot {
+  flex: none;
+  margin-right: 6px;
+}
+
+.fx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fx-chip {
+  display: inline-flex;
+  min-height: var(--astral-control-h-xs);
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--fx-line);
+  border-radius: 999px;
+  background: var(--fx-card);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.fx-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Флажок спрятан, но фокус с клавиатуры у него настоящий — видно его на
+   самой плашке. Именно `:focus-visible` флажка, а не `:focus-within`
+   плашки: щелчок по подписи тоже отдаёт фокус флажку, и тогда кольцо
+   оставалось на только что нажатой плашке, будто её выбрали иначе, чем
+   соседей. Так же, как у общего флажка (`.ui-checkbox-input:focus-visible`). */
+.fx-chip:has(> input:focus-visible) {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+/* Отмеченный флажок и выбранная закладка семейства выглядят одинаково: это
+   одно и то же «вот это сейчас». Без правила для закладки пятнадцать семейств
+   стояли ровным рядом, и понять, чьи ползунки открыты, было нельзя. */
+.fx-chip.is-on,
+.fx-chip.is-active {
+  border-color: var(--astral-accent);
+  background: color-mix(in srgb, var(--astral-accent) 16%, var(--fx-card));
+}
+
+/* Закладка — кнопка: шрифт и цвет у неё общие с плашкой-флажком. */
+button.fx-chip {
+  color: inherit;
+  font-family: inherit;
+}
+
+button.fx-chip:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+/* Группы стволов трассера — строками-переходами на свои страницы, сплошным
+   списком, как разделы «Большой карты» (18.10.2026). */
+.fx-weapon-pages {
+  display: grid;
+}
+
+.fx-weapons {
+  display: grid;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius);
+  background: var(--fx-sunken);
+}
+
+.fx-weapon-group h4 {
+  margin: 0 0 4px;
+  color: var(--fx-faint);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.fx-check {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* В плотном списке оружия знак мельче: двадцать две строки подряд с полным
+   квадратом превращаются в сетку из квадратов, а не в список. */
+.fx-check .ui-check {
+  width: 16px;
+  height: 16px;
+  font-size: var(--astral-text-micro);
+}
+
+/* ── Пресеты ────────────────────────────────────────────────────────────── */
+
+/* Полка, сетка и метки — общий орган (`PresetShelf`, стили в ui.css). */
+
+/* ── Раздел с кнопкой в шапке («Дальность» → «Как в игре») ─────────────── */
+
+.fx-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+
+/* «Настройка вылета»: слова направления разной длины («От попадания»,
+   «Entlang der Kugel») — доля по подписи, а не поровну, и в узкой панели строка
+   переносится, а не режет слово до «Entlang …». */
+.fx-launch .ui-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.fx-launch .ui-segmented > .ui-segment {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+.fx-launch .fx-section-head > .fx-subhead {
+  margin: 0;
+}
+
+.fx-section-head > h3 {
+  margin: 0;
+}
+
+/* ── Список эффектов игры: свёрнут до выбранного ────────────────────────── */
+
+.fx-template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.fx-template-list > summary {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius);
+  background: var(--fx-card);
+  cursor: pointer;
+  list-style: none;
+}
+
+.fx-template-list > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fx-template-list > summary:hover {
+  border-color: var(--astral-accent);
+}
+
+.fx-template-list > summary > .fx-sample {
+  overflow: hidden;
+  border-radius: var(--astral-radius-sm);
+}
+
+.fx-template-list > summary > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fx-template-list > summary b {
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fx-template-list > summary small {
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+}
+
+/* Карточка пресета — общая плитка выбора. Своим у неё остаётся гнездо
+   картинки без подложки: в нём ряд цветных меток, по ним пресет и узнают. */
+.fx-preset .ui-choice-media {
+  padding: 0;
+  background: none;
+}
+
+/* ---------- окружение: спрайт ядра под правкой ---------- */
+.fx-environment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+}
+/*
+ * Кадр занимает то, что осталось от ряда листов и подписи, и остаётся
+ * квадратом: ширина считается от высоты. Жёсткие 420 пикселей выталкивали
+ * ряд листов за край сцены на невысоком окне.
+ */
+.fx-environment-frame {
+  position: relative;
+  display: grid;
+  flex: 1 1 0;
+  place-items: center;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+  max-height: 420px;
+  aspect-ratio: 1;
+  border-radius: var(--astral-radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Тёмная шахматка: и прозрачность, и свечение видно на ней одинаково честно. */
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%) 0 0 /
+      24px 24px,
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%) 0
+      12px / 24px 24px,
+    #0b0d12;
+  overflow: hidden;
+}
+/*
+ * Лист лежит в кадре, а не растягивает его.
+ *
+ * Здесь жил «чёрный квадрат вместо огненных хвостов». Холст стоял в потоке
+ * сетки с `place-items: center`, то есть с высотой по содержимому, и его
+ * `height: 100%` считать было не от чего — процент от автоматической высоты
+ * это `auto`. Высота бралась из собственных пропорций листа: у `ptfx_fire_tail`
+ * кадр 48×192, ширина кадра 311 — и холст выходил 311×1246 в коробке 313×313
+ * с `overflow: hidden`. Видно было верхнюю четверть вчетверо растянутого
+ * пламени, а верх у него чёрный. Ряд листов под кадром при этом показывал тот
+ * же лист правильно: там кнопка 48×48 с определённой высотой, и процент было
+ * от чего считать. Отсюда и «в ряду видно, в кадре нет».
+ *
+ * Вне потока процент считается от коробки кадра, а она определена всегда.
+ */
+.fx-environment-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+/*
+ * Листы игры ещё читаются — на месте кадра серое место с бликом, а не рисуется образец, который через секунду
+ * сменился бы настоящим листом. Это орган скелета (`components/ui/Skeleton.jsx`, `docs/3D.md`, правило 22): блик идёт
+ * двенадцать проходов на композиторе и потом стоит, бесконечной своей анимации у огня нет. Кадр — коробка на весь
+ * лист, плита ложится в неё целиком.
+ */
+.fx-environment-loading {
+  --ui-skeleton-radius: 0;
+}
+/* Для читалки экрана: слова вместо плиты, места на кадре не занимает. */
+.fx-environment-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/*
+ * Ряд листов семейства. Каждый — кадр настоящего листа из игры игрока под той
+ * же правкой, что и крупный: «перекрасить огонь» видно сразу на всех его
+ * листах, а не на одном образце.
+ */
+.fx-environment-sheets {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 560px;
+}
+
+.fx-environment-sheet {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--fx-sample-plate);
+  cursor: pointer;
+}
+
+.fx-environment-sheet:hover {
+  border-color: var(--astral-line-strong);
+}
+
+.fx-environment-sheet.is-active {
+  border-color: var(--astral-accent);
+}
+
+.fx-environment-sheet:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.fx-environment-sheet > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Группа семейств в инспекторе: подзаголовок и ряд её плашек. */
+.fx-family-group {
+  display: grid;
+  gap: 6px;
+}
+
+.fx-family-group > h4 {
+  margin: 0;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.fx-environment-note {
+  display: block;
+  margin-top: 8px;
+  color: var(--astral-text-muted, #9aa3b2);
+  font-size: 12px;
+}
+.fx-environment-summary {
+  margin: 4px 0 0;
+  color: var(--astral-text-muted, #9aa3b2);
+  font-size: 12px;
+}
+/* Семейство убрано (ТЗ 23.10.2026, п. E): имя зачёркнуто, а точка «правлено» — тихая. */
+.fx-chip.is-removed {
+  text-decoration: line-through;
+}
+.fx-chip.is-removed::after {
+  background: var(--astral-text-muted, #9aa3b2);
+}
+.fx-chip.is-changed::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--astral-accent, #7cf0b8);
+  vertical-align: middle;
+}
+
+/* Две строки у ползунка с пояснением задаются один раз — `.ui-slider.is-stacked`
+   в дизайн-системе. Здесь они жили своим правилом, таким же слово в слово. */
+
+/*
+ * Своя картинка эффекта.
+ *
+ * Строка, а не карточка: у неё одно состояние («есть» или «нет») и две кнопки,
+ * и карточка вокруг двух кнопок только отодвинула бы её от сетки видов, к
+ * которой она относится.
+ */
+.fx-stamp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--fx-line, rgba(226, 232, 242, 0.09));
+  border-radius: var(--astral-radius);
+}
+.fx-stamp > div {
+  flex: 1;
+  min-width: 0;
+}
+.fx-stamp b {
+  display: block;
+  font-size: var(--astral-text-body);
+  font-weight: 500;
+}
+.fx-stamp small {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+  color: var(--astral-ink-faint);
+  text-overflow: ellipsis;
+}
+/* Предупреждение янтарное, а не красное: вид выбран правильно, просто работа
+   не закончена. */
+.fx-stamp-warning {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px dashed rgba(217, 171, 99, 0.45);
+  border-radius: var(--astral-radius);
+  color: #d9ab63;
+  font-size: var(--astral-text-small);
+  line-height: 1.5;
+}
+
+/*
+ * «Ядра нет» над ползунками.
+ *
+ * Отказ, а не подсказка: пока слотов Astral в core.ypt нет, ни один ползунок
+ * этого редактора в игру не уедет. Поэтому плашка стоит первой в инспекторе и
+ * выглядит как предупреждение, а не как сноска.
+ */
+.fx-core-missing {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 12px;
+  padding: 12px 13px;
+  border: 1px solid
+    color-mix(in srgb, var(--astral-accent) 40%, var(--astral-line));
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface);
+  color: var(--astral-ink-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.fx-core-missing b {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}
+.fx-core-missing code {
+  font-size: var(--astral-text-small);
+}
+
+/* ── Эффекты попадания ──────────────────────────────────────────────────── */
+
+/* ── Стопка слоёв ───────────────────────────────────────────────────────── */
+
+/*
+ * Слои зоны и трассеры — общий список слоёв (`components/ui/LayerList.jsx`,
+ * лист `components/ui/layer-list.css`): строки сверху вниз, как они лягут в
+ * правило игры, — первый задаёт длительность и дальность. Своих правил у
+ * стопки здесь больше нет: вид у всех таких списков один.
+ */
+
+/* Подзаголовок внутри раздела: «Из чего капли» под цветом крови. */
+.fx-subhead {
+  margin: 2px 0 0;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.fx-sheet-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.fx-sheet {
+  gap: 6px;
+  padding: 6px;
+}
+
+.fx-sheet .ui-choice-copy > b {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.fx-template-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fx-picture-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.fx-template,
+.fx-picture {
+  gap: 6px;
+  padding: 6px;
+}
+
+.fx-template .ui-choice-copy > b,
+.fx-picture .ui-choice-copy > b {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+/*
+ * Образец — кадр той же симуляции, что идёт на сцене. Подложка тёмная в обеих
+ * темах: искры и вспышки светятся, и на светлой плитке от них осталось бы
+ * белое пятно.
+ */
+.fx-sample {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  place-items: center;
+  background: var(--fx-sample-plate);
+  color: var(--fx-scene-ink);
+}
+
+.fx-sample > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fx-sample > svg {
+  width: 38%;
+  height: 38%;
+}
+
+.fx-hint {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.45;
+}
+
+/* Выключатель внутри раздела — строка раздела, а не отдельная карточка. */
+.fx-switch.is-inline {
+  padding: 6px 10px;
+}
+
+/*
+ * Подпись сцены. Нарисованное вместо кадра из игры — сказано прямо, внизу
+ * сцены, где её читают вместе с самим эффектом.
+ */
+.fx-body-note {
+  margin: 0;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* Какая кровь: шесть плиток по три в ряд, у каждой кадр своего правила. */
+.fx-variant-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fx-variant {
+  gap: 6px;
+  padding: 6px;
+}
+
+.fx-variant .ui-choice-copy > b {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+/* Эффекты игры разложены по видам: заголовок вида над своей сеткой. */
+.fx-template-group {
+  display: grid;
+  gap: 6px;
+}
+
+.fx-template-group + .fx-template-group {
+  margin-top: 8px;
+}
+
+
+/* ── Трассеры: список, переход цветов, поиск стволов ─────────────────────── */
+
+/*
+ * Строка трассера — та же, что строка слоя попадания: образец, имя и что он
+ * берёт. В образце — полоса самого следа на тёмной подложке, головой вправо.
+ */
+.fx-tracer-sample > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* «Показать ещё» — под сеткой видов, у левого края, как продолжение списка. */
+.fx-more {
+  justify-self: start;
+}
+
+/*
+ * Переход цветов: опорные точки рядом, как в градиенте редактора картинок,
+ * под ними — полоса, как цвета лягут на след от головы к хвосту.
+ */
+.fx-stops {
+  display: grid;
+  gap: 8px;
+}
+
+.fx-stop-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fx-stop {
+  width: var(--astral-control-h-xs);
+  height: var(--astral-control-h-xs);
+  padding: 0;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  cursor: pointer;
+}
+
+/* Выбранная точка — обводкой снаружи: заливка у неё — сам цвет. */
+.fx-stop.is-active {
+  outline: 2px solid var(--astral-ink);
+  outline-offset: 2px;
+}
+
+.fx-stop.is-add {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  background: transparent;
+  color: var(--fx-muted);
+}
+
+.fx-stop.is-add:hover {
+  border-color: var(--astral-ink);
+  color: var(--astral-ink);
+}
+
+.fx-stop-bar {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.fx-stop-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -4px;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+}
+
+/* Поиск стволов: поле с лупой, как поиск в галерее слота. */
+.fx-weapon-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--astral-control-h-sm);
+  padding: 0 10px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius);
+  background: var(--fx-sunken);
+  color: var(--fx-muted);
+}
+
+.fx-weapon-search:focus-within {
+  border-color: var(--astral-line-focus);
+}
+
+.fx-weapon-search > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--astral-ink);
+  font: inherit;
+  font-size: var(--astral-text-small);
+}
+
+.fx-weapon-search > input::placeholder {
+  color: var(--fx-faint);
+}
+
+/* Шестьдесят стволов по группам: окно списка выше прежнего. */
+.fx-weapons.fx-weapons {
+  max-height: 320px;
+}
+
+/* Строка группы — отметить весь вид разом: «все снайперские». */
+.fx-check.is-group {
+  margin-bottom: 2px;
+}
+
+.fx-check.is-group > span {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.fx-check.is-group b {
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+}
+
+.fx-check.is-group small {
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+}
+
+/* Часть группы отмечена — знак наполовину. */
+.fx-check .ui-check.is-mixed {
+  border-color: var(--astral-accent);
+  background: color-mix(in srgb, var(--astral-accent) 32%, transparent);
+}
+
+/* Имя ствола и его игровое имя строкой ниже: так его зовут на серверах. */
+.fx-weapon-name {
+  display: grid;
+  min-width: 0;
+}
+
+.fx-weapon-name > small {
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+}
+
+/* У кого ствол сейчас: отметишь — перейдёт сюда. */
+.fx-weapon-owner {
+  margin-left: auto;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+  white-space: nowrap;
+}
+
+/* ── Мастерская «как в Photoshop» ───────────────────────────────────────── */
+
+/*
+ * Раскладка студии эффектов (владелец, 03.10.2026): инструменты слева,
+ * панель взятого справа, сцена — на весь кадр каркаса.
+ *
+ * Правила здесь — только под именем самой студии (`.effects-studio`):
+ * классы `fx-*` носят и соседние редакторы — силуэт удара у звука, полосы
+ * кадра у прицела, залазов и редакторов перекраски, — и общие правила выше
+ * остаются им такими, какими были.
+ *
+ * Кадр каркаса (`.ui-editor-canvas`) — сам матовая рамка: у сцены нет своей
+ * рамки, скругления и высоты, а органы кадра и его подпись лежат в углах
+ * поверх неё (`StageOverlay.jsx`).
+ */
+.fx-studio-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Стрельбище — окно кадра на весь кадр каркаса. Видео обрезается
+   (`object-fit: cover`), как экран игры, а слой стрельбы ставится по
+   измеренному кадру окна — якоря дула и мишеней остаются на месте. */
+.effects-studio .fx-range {
+  position: absolute;
+  inset: 0;
+}
+
+.effects-studio .fx-range-window {
+  height: 100%;
+}
+
+.effects-studio .fx-range-window .hud-preview-frame {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/*
+ * «Кадра игры нет» окно пишет полосой по нижнему краю — там, где у кадра
+ * мастерской подсказки управления и подпись. То же самое говорит подпись
+ * кадра, поэтому полоса остаётся только
+ * для читалки экрана: со своей ролью «status», без места на кадре.
+ */
+.effects-studio .fx-range .hud-preview-missing {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+
+/*
+ * Силуэт — на весь кадр: без скругления, подложка — чёрная плита сцены
+ * частиц (`--fx-sample-plate`), как и была. Полоса снизу — той же плиты:
+ * фигура вписывается над подсказками управления и подписью кадра, а не
+ * уходит ногами под них. Отступ — у обёртки, а не у коробки слоёв: по ней
+ * меряются холсты и метка прицела.
+ */
+.effects-studio .fx-body {
+  position: absolute;
+  inset: 0;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  padding: 0 0 44px;
+  background: var(--fx-sample-plate);
+}
+
+.effects-studio .fx-body-layers {
+  border-radius: 0;
+}
+
+/* Огонь и взрывы: лист — посередине кадра, ряд листов семейства — над
+   подсказками управления и подписью у нижнего края. */
+.effects-studio .fx-environment {
+  position: absolute;
+  inset: 0;
+  padding: 24px 24px 60px;
+}
+
+/* Объёмный кадр (задача 7): эффект игры на весь кадр, без рамки листа и
+   шахматки — фон и сетку рисует сама сцена. */
+.effects-studio .fx-environment.is-scene {
+  padding: 0;
+}
+.fx-environment.is-scene .fx-environment-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: var(--fx-matte-stage, var(--fx-matte));
+}
+.fx-environment-scene {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+/* Стволы — вся панель инструмента «Оружие»: второй прокрутки внутри
+   прокручиваемой панели не нужно. */
+.effects-studio .fx-weapons {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Плашка ядра — над настройками любого инструмента, итог «что уйдёт в
+   игру» — подвалом панели. */
+.effects-studio .ui-editor-panel-content > .fx-core-missing {
+  margin: 14px 0 0;
+}
+
+/* Стволы на странице группы — своим списком во всю высоту колонки, без
+   коробки с прокруткой внутри: страница сама и есть этот список. */
+.fx-weapons.is-page.is-page {
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: none;
+}

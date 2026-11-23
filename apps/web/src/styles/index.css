@@ -1,0 +1,254 @@
+/*
+ * The renderer has one CSS entry. Layers keep cascade order explicit while
+ * feature styles move toward CSS Modules and component-owned root selectors.
+ */
+@layer motion, workshop-contracts, foundation, desktop-app, components, overrides;
+
+/* Выключатель движения стоит первым слоем: важные объявления читают слои в
+   обратном порядке, поэтому только отсюда сброс перебивает `!important` из
+   контрактов мастерской. Подробности — в самом файле. */
+@import "../motion-switch.css" layer(motion);
+/* Выключатель стекла — там же и по той же причине: контракт стекла написан
+   через `!important`, и достать до него можно только из первого слоя. Слой
+   `motion` на деле слой выключателей; движение просто было первым из них. */
+@import "../attention-pause.css" layer(motion);
+
+/* Important declarations reverse the normal layer priority. The workshop
+   detail contract therefore lives ahead of every feature sheet so legacy skins
+   cannot re-introduce fixed canvases or catalog panels; only the motion switch
+   above it goes earlier. */
+@import "../components/desktop/workshop/workshop-detail-layout.css"
+  layer(workshop-contracts);
+@import "../workshop-clothing.css" layer(workshop-contracts);
+@import "../matte-surface-contract.css" layer(workshop-contracts);
+/* Карточки оружия и одежды на полке библиотеки вписывают рендер вещи, а
+   старые листы полки держат `object-fit: cover !important`: перебить их
+   можно только слоем раньше. */
+@import "../features/library/library-shelf.css" layer(workshop-contracts);
+/* Карточка полки (орган кита, 17.10): тем же ранним слоем — старые листы
+   полки держат корень карточки важными объявлениями. */
+@import "./shelf-card.css" layer(workshop-contracts);
+@import "../ui-matte-glass-contract.css" layer(workshop-contracts);
+/* Сразу за стеклом: рельс навигации стоит НА нём, и его контракт обязан
+   перебивать тринадцать листов, которые правили рельс по очереди. */
+@import "../components/desktop/navigation/navigation-rail.css"
+  layer(workshop-contracts);
+@import "../settings-unified-polish.css" layer(workshop-contracts);
+
+@import "../bootstrap.css" layer(foundation);
+@import "./foundation.css" layer(foundation);
+/* The palette every screen reads from. Feature sheets alias it, they do not
+   redefine it — see the note at the top of tokens.css. */
+@import "./tokens.css" layer(foundation);
+@import "@astral/design/ui.css" layer(components);
+@import "@astral/design/mod-stream.css" layer(components);
+/* Вкладки шапки страницы — орган с хуками, поэтому живёт у лаунчера, а не в
+   пакете; лист — сразу за листом органов. */
+@import "../components/ui/page-tabs.css" layer(components);
+/* Список слоёв (стопка попаданий, трассеры) — орган с хуками, как вкладки. */
+@import "../components/ui/layer-list.css" layer(components);
+/* Переключатель внутри группы колонки редактора («Свет»: цвет, свет, блик) — над панелью. */
+@import "../components/ui/editor-sub-tools.css" layer(components);
+/* The editor shell and the dialog live in the same layer as the primitives:
+   !important inverts layer order, so important rules in `components` beat
+   important rules in `overrides` — otherwise the legacy editor sheets would
+   clamp them the way they clamped the shared back button. */
+@import "./editor-shell.css" layer(components);
+@import "./editor-tour.css" layer(components);
+@import "./dialog.css" layer(components);
+/* Группа строк панели и действия внизу страницы (`ListGroup`, `ActionRows`) — после листа каркаса: строки — его `NavRow`. */
+@import "../components/ui/list-group.css" layer(components);
+@import "../components/ui/surface-picture.css" layer(components);
+/* Отказ «поставить нельзя» — часть комнаты редактора, и лист у него общий.
+   Подключался он прямо из компонента, то есть мимо слоёв: правило вне слоя
+   выигрывает у всего слоистого разом и молча. */
+@import "./editor-no-install.css" layer(components);
+/* Last in the cascade: the shared card has to win over the two per-screen
+   card sheets it replaces, without either of them reaching for !important. */
+@import "./media-card.css" layer(overrides);
+@import "./favorite-heart.css" layer(overrides);
+/* После карточки: экран сборок докручивает её угловые контролы, поэтому
+   должен идти за таблицей, которую докручивает. */
+@import "../builds.css" layer(overrides);
+/* Поле поиска «На что поставить?» и расцветка в его окне (своей карточки у
+   одежды с 16.10 нет — она та же, что у всех). */
+@import "../components/desktop/catalog/clothing-showcase.css" layer(overrides);
+/* Витрина каталога (ТЗ 05.10, задача 14): шапка с поиском на месте, полки,
+   строка фильтров. Последним слоем — поверх старых правил шапки. */
+@import "../components/desktop/catalog/catalog-browse.css" layer(overrides);
+/* Карточка мода «афишей» — имя на картинке, под курсором загрузки и вес (ТЗ 24.10.2026, п. 12). */
+@import "../components/desktop/catalog/catalog-poster.css" layer(overrides);
+@import "../components/desktop/catalog/variant-gallery.css" layer(overrides);
+@import "../features/appearance/look.css" layer(overrides);
+@import "../features/search/palette.css" layer(overrides);
+/* Знаки проектов вместо названий (ТЗ 06.10) — после правил шапки
+   каталога, которые держат сегменты переключателя по своей подписи. */
+@import "../features/catalog/project-switch.css" layer(overrides);
+@import "../components/desktop/clothing/clothing-target-picker.css" layer(overrides);
+@import "../components/desktop/clothing/clothing-tattoo-grid.css" layer(overrides);
+@import "../components/desktop/clothing/colour-rule.css" layer(overrides);
+@import "../components/desktop/catalog/mod-model-preview.css" layer(overrides);
+@import "../components/desktop/catalog/mod-sounds.css" layer(overrides);
+/* Страница мода (`mod-card/mod-card.css`) — ленивым листом с самой
+   страницей (16.10); «Что внутри» — здесь, после листов каталога. */
+@import "../components/desktop/catalog/mod-card/mod-contents.css" layer(overrides);
+/* Установленный редукс на новом пути под «Установлено» части: состояние, «Выключить / Включить / Освободить место», отказ словами. */
+@import "../features/catalog/redux-layer/redux-layer.css" layer(overrides);
+/* Паки каталога (16.10): звук пака на карточке; звуки пака на его
+   странице — окном «Компоненты» (ленивый лист `mod-card/components-split.css`). */
+@import "../components/desktop/catalog/catalog-packs.css" layer(overrides);
+
+@import "../desktop.css" layer(desktop-app);
+@import "../ios.css" layer(desktop-app);
+
+@import "../loader-setup.css" layer(components);
+@import "../vanilla-guard.css" layer(components);
+@import "../build-passport.css" layer(components);
+@import "../publisher-wizard.css" layer(components);
+@import "../features/publishing/frames/frame-studio.css" layer(components);
+@import "../features/publishing/intake/intake.css" layer(components);
+@import "../features/publishing/inbox/inbox.css" layer(components);
+@import "../desktop-game-selector.css" layer(components);
+@import "../product-onboarding.css" layer(components);
+@import "../regional-settings.css" layer(components);
+@import "../premium-ui.css" layer(components);
+@import "../experience-v2.css" layer(components);
+@import "../catalog-v3.css" layer(components);
+@import "../product-v4.css" layer(components);
+@import "../product-v5.css" layer(components);
+@import "../public-catalog.css" layer(components);
+@import "../appearance-settings.css" layer(components);
+@import "../immersive-workshop.css" layer(components);
+@import "../catalog-shell-polish.css" layer(components);
+@import "../workshop-library.css" layer(components);
+@import "../workshop-toolbar.css" layer(components);
+@import "../settings-refinement.css" layer(components);
+@import "../settings-shell.css" layer(components);
+@import "../settings-general.css" layer(components);
+@import "../settings-storage.css" layer(components);
+@import "../settings-tools.css" layer(components);
+@import "../settings-logs.css" layer(components);
+@import "../settings-game-location.css" layer(components);
+@import "../settings-language.css" layer(components);
+@import "../workshop-surface.css" layer(components);
+@import "../workshop-visual-redesign.css" layer(components);
+@import "../workshop-2026-refresh.css" layer(components);
+@import "../workshop-theme-polish.css" layer(components);
+@import "../features/home/home.css" layer(components);
+@import "../features/showcase/showcase.css" layer(components);
+@import "../workshop-motion.css" layer(components);
+@import "../desktop-interaction-guards.css" layer(components);
+@import "../workshop-mvp.css" layer(components);
+@import "../ui-final-polish.css" layer(components);
+/* Последним в слое компонентов: движение настроек и переключатель темы
+   переписаны одним листом, и он обязан выигрывать у семи проходов,
+   которые правили те же селекторы раньше. */
+@import "../settings-motion.css" layer(components);
+/* Сразу за настройками: сборка каталога, мастерской и комнаты редактора
+   собрана одним листом и обязана выигрывать у четырёх проходов, которые
+   правили вход карточки до неё. */
+@import "../assembly-motion.css" layer(components);
+@import "../responsive-polish.css" layer(overrides);
+@import "../workshop-detail-gallery.css" layer(overrides);
+@import "../workshop-library-refinement.css" layer(overrides);
+@import "../workshop-final-fixes.css" layer(overrides);
+@import "../workshop-scroll-gallery.css" layer(overrides);
+/* «Настройки графики» и «DLSS 5» (ТЗ 05.10, задача 15): полка шаблонов и
+   комната шаблона; кадр сравнения DLSS 5 с настройкой справа. */
+@import "../features/game-settings/graphics-page.css" layer(overrides);
+@import "../features/reshade/reshade-page.css" layer(overrides);
+@import "../features/optimization/optimization.css" layer(overrides);
+@import "../features/workshop/workshop-optimization.css" layer(overrides);
+@import "../overlay-regression-fixes.css" layer(overrides);
+@import "../ui-contrast-contracts.css" layer(overrides);
+@import "../components/desktop/workshop/workshop.css" layer(overrides);
+@import "../features/downloads/failure-details.css" layer(overrides);
+/* «Применить»: кадр редактора сминается и улетает в «Загрузки». */
+@import "../features/downloads/work-crumple.css" layer(overrides);
+@import "../features/downloads/fast-install.css" layer(overrides);
+@import "../features/a11y/focus-tip.css" layer(overrides);
+@import "../components/desktop/workshop/workshop-shelves.css" layer(overrides);
+/* Корзина библиотеки правит те же полки и полосу разделов. */
+@import "../features/library/library-removal.css" layer(overrides);
+@import "../features/library/library-waiting.css" layer(overrides);
+/* Корзина загрузок: значок на карточке, кнопка в рейке, окно списка. */
+@import "../features/cart/cart.css" layer(overrides);
+@import "../features/library/library-work-card.css" layer(overrides);
+/* «Мои работы» — та же карточка мастерской в своей сетке. */
+@import "../features/workshop/works/workshop-works.css" layer(overrides);
+/* Обложки плиток редакторов: на полке, в библиотеке и в «Моих работах». */
+@import "../features/workshop/covers/editor-covers.css" layer(overrides);
+@import "../components/desktop/workshop/workshop-studio.css" layer(overrides);
+@import "../components/desktop/workshop/reticle-customizer.css" layer(overrides);
+@import "../components/desktop/workshop/minimap-customizer.css" layer(overrides);
+@import "../components/desktop/workshop/mega-mall-customizer.css"
+  layer(overrides);
+@import "../components/desktop/workshop/timecycle-customizer.css"
+  layer(overrides);
+@import "../features/workshop/lamps-editor/lamps-editor.css" layer(overrides);
+@import "../features/workshop/busstops-editor/busstops-editor.css" layer(overrides);
+@import "../features/workshop/atms-editor/atms-editor.css" layer(overrides);
+@import "../features/workshop/project-interiors-editor/project-interiors-editor.css" layer(overrides);
+@import "../features/workshop/majestic-interiors-editor/majestic-interiors-editor.css" layer(overrides);
+@import "../features/workshop/roads-editor/roads-editor.css" layer(overrides);
+@import "../components/desktop/workshop/kill-effect-customizer.css"
+  layer(overrides);
+@import "../features/workshop/interior-editor/interior-editor.css"
+  layer(overrides);
+@import "../features/workshop/street-light-editor/street-light-customizer.css"
+  layer(overrides);
+@import "../features/workshop/climb-editor/climb-customizer.css"
+  layer(overrides);
+@import "../features/workshop/wallbang-editor/wallbang-editor.css"
+  layer(overrides);
+/* Общий 3D-кадр и раскладка редакторов перекраски (зоны, завод, ангар, маппинг, вода). */
+@import "../features/workshop/model-stage/recolor-editor.css" layer(overrides);
+/* Панель «Предметы»: категории, комнаты, страница предмета (ТЗ 26.10.2026, п. A). */
+@import "../features/workshop/items-panel/items-panel.css" layer(overrides);
+/* Заставка загрузки в кадре 3D (ТЗ 42В). */
+@import "../features/workshop/stage-loader/stage-loader.css" layer(overrides);
+/* Инструмент «Модели» мест (задача 1 ТЗ 11.10.2026, вечер). */
+@import "../features/workshop/models/place-models.css" layer(overrides);
+@import "../features/workshop/msl-zones-editor/msl-zones-editor.css" layer(overrides);
+@import "../features/workshop/vegetation-editor/vegetation-editor.css" layer(overrides);
+@import "../features/workshop/shops-editor/shops-editor.css" layer(overrides);
+/* Метки и GPS — карта из игры с маршрутами, плитки значков и цветов маршрута. */
+@import "../features/workshop/gps-editor/gps-editor.css" layer(overrides);
+/* «Полоска HP» — экран игры с постановочной сценой и органы кадра (ТЗ 11.10.2026). */
+@import "../features/workshop/target-hp-editor/target-hp-editor.css" layer(overrides);
+/* «Групповые метки» — метки игры плитками и кадр с улицей (задача 21 ТЗ 18.10.2026, вечер). */
+@import "../features/workshop/group-markers-editor/group-markers-editor.css" layer(overrides);
+@import "../features/workshop/animals-editor/animals-editor.css" layer(overrides);
+/* «Дым из-под колёс» — машина на матовом полу и строки целей (ТЗ 11.10.2026, вечер). */
+@import "../features/workshop/wheel-smoke-editor/wheel-smoke-editor.css" layer(overrides);
+/* Шрифты — плоский кадр экрана игры и плитки шаблонов поверх раскладки перекраски. */
+@import "../features/workshop/fonts-editor/fonts-editor.css" layer(overrides);
+/* Листы редактора большой карты (`world-map-customizer.css`, `world-map/
+   world-map-redesign.css` и листы 18.10) едут вместе с ним по `import()` —
+   их импортирует `WorldMapCustomizer.jsx` (18.10, потолок main.css). Здесь
+   остаются только шрифты надписей карты: файлы в проекте, без интернета
+   (ТЗ 05.10). */
+@import "../components/desktop/workshop/world-map/world-map-fonts.css"
+  layer(overrides);
+@import "../components/desktop/workshop/gun/gun-studio.css" layer(overrides);
+@import "../components/desktop/workshop/gunpack/gunpack-studio.css"
+  layer(overrides);
+@import "../components/desktop/workshop/effects-studio.css" layer(overrides);
+@import "../components/desktop/workshop/preview/preview-window.css"
+  layer(overrides);
+@import "../components/desktop/workshop/hud-preview/hud-preview.css"
+  layer(overrides);
+/* Прежние студии растительности и воды (`components/desktop/workshop/
+   vegetation`, `…/water`) в окне не открываются — реестр ведёт в
+   `features/workshop/vegetation-editor` и `water-editor`; их стили сняты
+   (ТЗ 10.10, вечер: место в бюджете main.css под новые редакторы). Так же
+   18.10 ушли листы прежних студий арены, HUD и значков (`arena/`, `hud/`,
+   `blips/`): их импортируют сами студии, ленивыми листами. */
+@import "../components/desktop/workshop/sound/sound-studio.css" layer(overrides);
+/* Студия звуков — после эффектов: её сцена и колонка правок — их вид. */
+@import "../components/desktop/workshop/weapon-picker/weapon-picker.css" layer(overrides);
+@import "../components/desktop/workshop/sound/sound-kit.css" layer(overrides);
+@import "../mod-action-menu.css" layer(overrides);
+@import "../catalog-media-contract.css" layer(overrides);
+/* Строка связи в заголовке окна — после всех листов заголовка. */
+@import "../features/onboarding/cloud-connection.css" layer(overrides);

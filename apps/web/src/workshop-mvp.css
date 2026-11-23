@@ -1,0 +1,13 @@
+/* Final workshop interactions live in one small override layer so the shared
+   weapon/clothing surface keeps the same behavior across all four sections. */
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .weapon-slot-card
+  .weapon-slot-image,
+.desktop-app
+  .catalog-v3[data-workshop-section="clothing"]
+  .weapon-slot-card
+  .weapon-slot-image {
+  transform: scale(1.36) !important;
+}

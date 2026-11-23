@@ -1,0 +1,29 @@
+/*
+  Блок «Проверить подписи»: короткий список строк-кнопок и ряд кнопок под ним.
+  Лист ложится в конец слоя overrides.
+*/
+@layer overrides {
+
+  /* ряд кнопок: «Показать все» слева, «Всё проверено» справа */
+  .wmc-doubtful-actions {
+    --doubtful-step: 8px;
+    justify-content: space-between;
+    margin-top: var(--doubtful-step);
+    row-gap: var(--doubtful-step);
+    column-gap: var(--doubtful-step);
+    flex-wrap: wrap;
+    display: flex;
+  }
+
+  /* строка списка: кнопка с подписью, прижатой влево */
+  .ui-button.wmc-doubtful-row {
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  .wmc-doubtful-list {
+    row-gap: 2px;
+    column-gap: 2px;
+    display: grid;
+  }
+}

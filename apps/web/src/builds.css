@@ -1,0 +1,748 @@
+/*
+  Сборки: страница и сетка, карточки с обложками, диалоги создания и правки.
+  Сначала общие заготовки (цвета и размеры текста, рамка, скругления),
+  дальше компоненты сверху вниз: страница, обложки, карточка, меню, значки, диалоги, тост.
+*/
+
+/* ---------- общие заготовки ---------- */
+
+/* размеры текста */
+.builds-create-contents > header > span,
+.builds-preview-facts dt,
+.builds-preview-caution,
+.builds-dialog-leaving,
+.builds-create-note,
+.builds-dialog-loading,
+.builds-dialog-hint,
+.builds-dialog-works-note {
+  font-size: var(--astral-text-small);
+}
+
+.builds-card-installed,
+.builds-card-status {
+  font-size: var(--astral-text-micro);
+}
+
+.builds-cover-more,
+.builds-preview-facts dd {
+  font-size: var(--astral-text-strong);
+}
+
+/* цвета текста */
+.builds-create-contents > header > span,
+.builds-preview-facts dt,
+.builds-create-note,
+.builds-dialog-loading,
+.builds-dialog-empty p {
+  color: var(--astral-ink-muted);
+}
+
+.builds-dialog-hint,
+.builds-dialog-empty > svg,
+.builds-dialog-works-note {
+  color: var(--astral-ink-faint);
+}
+
+.builds-create-contents > header > h3,
+.builds-preview-facts dd,
+.builds-preview-caution,
+.builds-dialog-leaving,
+.builds-copy-toast,
+.builds-card-status {
+  color: var(--astral-ink);
+}
+
+.builds-card-installed,
+.builds-copy-toast svg {
+  color: var(--astral-positive);
+}
+
+/* рамка и поверхности */
+.builds-copy-toast {
+  border-style: solid;
+  border-width: 1px;
+  border-color: var(--astral-line);
+}
+
+.builds-cover-tile,
+.builds-cover.is-empty {
+  background: var(--astral-surface-sunken);
+}
+
+.builds-cover-tile,
+.builds-cover.is-empty,
+.builds-preview-caution,
+.builds-dialog-leaving {
+  border-radius: var(--astral-radius-sm);
+}
+
+.builds-card-installed,
+.builds-card-status {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.builds-preview-caution,
+.builds-dialog-leaving,
+.builds-dialog-works-note {
+  line-height: var(--astral-line-normal);
+}
+
+/* ---------- страница и сетка ---------- */
+.builds-page {
+  margin-inline: auto;
+  margin-block: 0;
+  width: min(100%, 1340px);
+
+  /* в приложении страница стоит вплотную к шапке */
+  .desktop-app & {
+    padding-top: 0;
+  }
+
+  .desktop-app & > .ui-page-heading:first-child {
+    margin-top: 0;
+  }
+}
+
+.builds-grid {
+  column-gap: 16px;
+  row-gap: 26px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: grid;
+}
+
+/* ---------- обложка: мозаика из плиток ---------- */
+.builds-cover {
+  &.is-mosaic {
+    gap: 4px;
+    display: grid;
+
+    &.has-1 {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    &.has-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    &.has-3 {
+      grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+
+      /* первая плитка занимает обе строки */
+      & > .builds-cover-tile:first-child {
+        grid-row: 1 / span 2;
+      }
+    }
+  }
+
+  &.is-empty {
+    justify-items: center;
+    align-items: center;
+    display: grid;
+  }
+}
+
+.builds-cover-tile {
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+
+  & > :not(b),
+  & > img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    display: block;
+  }
+
+  &.is-pending {
+    background: var(--astral-surface);
+  }
+}
+
+.builds-cover-more {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.58);
+  place-items: center;
+  display: grid;
+  inset-block: 0;
+  inset-inline: 0;
+  position: absolute;
+}
+
+.builds-cover-empty {
+  color: rgba(255, 255, 255, 0.3);
+  place-items: center;
+  display: grid;
+
+  & svg {
+    height: 30px;
+    width: 30px;
+  }
+}
+
+/* ---------- карточка сборки ---------- */
+.builds-card {
+  width: 100%;
+  aspect-ratio: 1.4 / 1;
+
+  & > .ui-media-card-shade {
+    display: none;
+  }
+
+  & > .builds-cover {
+    z-index: 0;
+    position: absolute;
+    inset-block: 6px 78px;
+    inset-inline: 6px;
+  }
+
+  /* карточка магазина: обложка идёт сверху отдельной рамкой */
+  &.is-store {
+    aspect-ratio: auto;
+
+    & > .builds-cover {
+      transition-property: border-color;
+      transition-duration: var(--astral-duration-fast);
+      transition-timing-function: var(--astral-ease);
+      transition-delay: 0s;
+      position: relative;
+      inset: auto;
+      padding: 6px;
+      aspect-ratio: 16 / 10;
+      box-shadow: var(--astral-highlight);
+      border-radius: var(--astral-radius-lg);
+      border-style: solid;
+      border-width: 1px;
+      border-color: var(--astral-line);
+      background: #0b0b0c;
+
+      &.is-empty {
+        padding: 0;
+      }
+    }
+
+    &:hover > .builds-cover {
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+  }
+
+  & .ui-media-card-copy h3 {
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    line-clamp: 2;
+    white-space: normal;
+    overflow: hidden;
+  }
+
+  &.has-trailing > .ui-media-card-copy {
+    right: 132px;
+  }
+}
+
+/* обёртка поднимает карточку на hover и сжимает при нажатии */
+.builds-card-wrap {
+  transition-delay: 0s, 0s;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1), var(--astral-ease);
+  transition-duration: var(--astral-duration-slow), var(--astral-duration);
+  transition-property: scale, translate;
+  transform-origin: center;
+  position: relative;
+  min-width: 0;
+
+  &:hover {
+    translate: 0 -2px;
+  }
+
+  & > .builds-card:hover {
+    transform: none;
+  }
+
+  &:has(> .builds-card:active) {
+    transition-duration: var(--astral-duration-snap), var(--astral-duration);
+    scale: 0.96;
+  }
+
+  .desktop-app & > .builds-card:active {
+    scale: 1;
+  }
+
+  .desktop-app[data-motion="off"] &:has(> .builds-card:active) {
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builds-card-wrap:hover {
+    translate: none;
+  }
+
+  .builds-card-wrap {
+    transition: none;
+  }
+}
+
+/* ---------- меню карточки ---------- */
+.builds-card-menu {
+  transition-delay: 0s;
+  transition-timing-function: var(--astral-ease);
+  transition-duration: var(--astral-duration-fast);
+  transition-property: opacity;
+  z-index: 3;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  opacity: 0.72;
+
+  .builds-card-wrap:focus-within &,
+  .builds-card-wrap:hover &,
+  &.is-open {
+    opacity: 1;
+  }
+
+  & > .ui-button {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.55);
+    color: #f2f4f8;
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.72);
+    }
+  }
+}
+
+/* ---------- значки на карточке: «установлено» и статус загрузки ---------- */
+.builds-card-installed {
+  text-shadow: none;
+  font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--astral-positive) 24%, transparent);
+  border-radius: 999px;
+  padding-inline: 9px;
+  padding-block: 5px;
+  gap: 5px;
+  align-items: center;
+  display: inline-flex;
+
+  & svg {
+    height: 12px;
+    width: 12px;
+  }
+}
+
+.builds-card-status {
+  white-space: nowrap;
+  text-shadow: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: 999px;
+  padding-inline: 9px;
+  padding-block: 5px;
+  gap: 6px;
+  align-items: center;
+  display: inline-flex;
+
+  & i {
+    background: var(--astral-ink);
+    border-radius: 999px;
+    height: 7px;
+    width: 7px;
+  }
+
+  &.is-failed {
+    border-color: rgba(var(--astral-danger-rgb), 0.38);
+    color: var(--astral-danger);
+  }
+
+  & svg {
+    height: 12px;
+    width: 12px;
+  }
+}
+
+/* ---------- диалог создания ---------- */
+.builds-dialog.is-create {
+  & > header > :first-child {
+    padding-left: 50px;
+    text-align: center;
+  }
+}
+
+.builds-create-tabs {
+  width: 100%;
+  display: flex;
+}
+
+.builds-create-panel {
+  min-height: 0;
+  gap: 16px;
+  flex-direction: column;
+  flex: 1 1 auto;
+  display: flex;
+}
+
+/* в приложении диалог создания тянется по высоте окна */
+.desktop-app {
+  & .ui-dialog.builds-dialog.is-create {
+    max-height: none;
+    height: min(calc(100vh - 100px), 900px);
+  }
+
+  & .builds-create-body {
+    overflow: hidden;
+    padding-inline: 22px;
+    padding-block: 12px 20px;
+    flex-direction: column;
+    display: flex;
+  }
+}
+
+.builds-create-contents {
+  min-height: 0;
+  gap: 10px;
+  flex-direction: column;
+  flex: 1 1 auto;
+  display: flex;
+
+  & > header {
+    gap: 12px;
+    justify-content: space-between;
+    align-items: baseline;
+    display: flex;
+
+    & > h3 {
+      margin: 0;
+      font-weight: 600;
+      font-size: var(--astral-text-body);
+    }
+
+    & > span {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+/* ---------- предпросмотр сборки ---------- */
+.builds-preview {
+  min-height: 0;
+  gap: 12px;
+  flex-direction: column;
+  flex: 1 1 auto;
+  display: flex;
+}
+
+.builds-preview-head {
+  column-gap: 22px;
+  row-gap: 8px;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  flex: none;
+  display: flex;
+}
+
+.builds-preview-facts {
+  margin: 0;
+  column-gap: 22px;
+  row-gap: 8px;
+  flex-wrap: wrap;
+  display: flex;
+
+  & > div {
+    gap: 2px;
+    display: grid;
+  }
+
+  & dd {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+    gap: 5px;
+    align-items: center;
+    display: inline-flex;
+  }
+}
+
+/* предупреждение внутри факта: одинаково в диалогах и в предпросмотре */
+.ui-dialog-facts dd.is-caution {
+  gap: 5px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.builds-preview-facts,
+.ui-dialog-facts {
+  & dd.is-caution {
+    color: var(--astral-warning);
+  }
+
+  & dd > svg {
+    color: var(--astral-warning);
+    height: 15px;
+    width: 15px;
+    flex: none;
+  }
+}
+
+/* плашка-предупреждение в предпросмотре и в диалоге «уходит из сборки» */
+.builds-preview-caution,
+.builds-dialog-leaving {
+  border: 1px solid rgba(var(--astral-warning-rgb), 0.28);
+  background: var(--astral-warning-soft);
+  padding-inline: 12px;
+  padding-block: 10px;
+  margin: 0;
+  gap: 8px;
+  align-items: flex-start;
+  display: flex;
+
+  & > svg {
+    color: var(--astral-warning);
+    margin-top: 1px;
+    height: 16px;
+    width: 16px;
+    flex: none;
+  }
+}
+
+.builds-preview-bulk {
+  gap: 4px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  display: flex;
+}
+
+.builds-create-note {
+  line-height: 1.45;
+  margin: 0;
+}
+
+.builds-dialog-cover {
+  & > .builds-cover {
+    position: absolute;
+    inset: 4px;
+  }
+}
+
+/* ---------- плитки выбора модов ---------- */
+.ui-pick-tile.is-poster {
+  /* мод занят другой сборкой: вуаль зависит от тона плитки */
+  &.builds-mod-tile.is-blocked {
+    --pick-veil: rgba(0, 0, 0, 0.66);
+
+    &[data-tone="light"] {
+      --pick-veil: rgba(255, 255, 255, 0.72);
+    }
+  }
+
+  /* плитка заменяет мод: значок-предупреждение вместо номера */
+  &.is-replacing {
+    & > .ui-pick-badge {
+      color: var(--astral-warning);
+      right: auto;
+      left: 12px;
+      height: 24px;
+      width: 24px;
+      box-shadow: none;
+      background: transparent;
+
+      & > .builds-replaces-mark > svg {
+        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
+        height: 22px;
+        width: 22px;
+      }
+    }
+
+    & .builds-replaces-mark > svg {
+      & polygon {
+        stroke-width: 2.4;
+        fill: currentColor;
+      }
+
+      & path {
+        stroke-width: 2.2;
+        stroke: #1d1406;
+      }
+
+      & circle {
+        fill: #1d1406;
+      }
+    }
+
+    &.has-badge .ui-pick-copy {
+      right: 14px;
+      left: 44px;
+    }
+  }
+
+  &.builds-work-tile > .ui-pick-media > * {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.builds-mod-tile.is-blocked {
+  & .ui-pick-photo {
+    filter: grayscale(1);
+  }
+}
+
+/* ---------- диалоги: «уходит из сборки», «убрано», подсказки, пустое состояние ---------- */
+.builds-leaving-mark {
+  place-items: center;
+  display: grid;
+
+  & > svg {
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.builds-dialog-removed {
+  margin-top: 26px;
+
+  & .ui-dialog-section-head > h3 {
+    gap: 8px;
+    align-items: center;
+    display: inline-flex;
+
+    & > svg {
+      color: var(--astral-warning);
+      height: 16px;
+      width: 16px;
+    }
+  }
+}
+
+.builds-dialog-loading {
+  margin-right: auto;
+  margin-left: 12px;
+}
+
+.builds-dialog-hint {
+  margin: 12px 0 0;
+}
+
+.builds-dialog-empty {
+  text-align: center;
+  padding-inline: 12px;
+  padding-block: 22px 26px;
+  gap: 7px;
+  justify-items: center;
+  display: grid;
+
+  & > svg {
+    margin-bottom: 4px;
+    height: 26px;
+    width: 26px;
+  }
+
+  & strong {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  & p {
+    line-height: 1.5;
+    font-size: 12px;
+    max-width: 44ch;
+    margin: 0;
+  }
+
+  & .ui-button {
+    margin-top: 12px;
+  }
+}
+
+.builds-dialog-works-note {
+  margin: 0;
+}
+
+/* ---------- тост «скопировано» ---------- */
+.builds-copy-toast {
+  font-weight: 650;
+  font-size: 12px;
+  box-shadow: var(--astral-shadow);
+  background: var(--astral-glass-bg-strong);
+  border-radius: var(--astral-radius);
+  width: max-content;
+  padding-inline: 16px;
+  padding-block: 11px;
+  margin-right: auto;
+  margin-left: auto;
+  z-index: 320;
+  position: fixed;
+  right: 0;
+  left: 0;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  gap: 9px;
+  align-items: center;
+  display: flex;
+
+  & svg {
+    height: 15px;
+    width: 15px;
+  }
+
+  &.is-visible {
+    animation-play-state: running;
+    animation-direction: normal;
+    animation-iteration-count: 1;
+    animation-delay: 0s;
+    animation-fill-mode: both;
+    animation-timing-function: var(--astral-ease);
+    animation-duration: 220ms;
+    animation-name: builds-toast-in;
+  }
+
+  &.is-leaving {
+    animation-play-state: running;
+    animation-direction: normal;
+    animation-iteration-count: 1;
+    animation-delay: 0s;
+    animation-fill-mode: both;
+    animation-timing-function: var(--astral-ease);
+    animation-duration: 260ms;
+    animation-name: builds-toast-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .builds-copy-toast {
+    &.is-visible,
+    &.is-leaving {
+      animation: none;
+    }
+  }
+}
+
+@keyframes builds-toast-in {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes builds-toast-out {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}

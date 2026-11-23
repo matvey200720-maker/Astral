@@ -1,0 +1,913 @@
+/*
+ * Образцы действий инструментов (карточка и полоска 160×64, анимации tdm-*).
+ * Лист подключается лениво без слоя, поэтому все правила лежат в components сами.
+ * Шаги анимаций лежат в конце листа, после правил.
+ * Значения, которые ставит скрипт образца в style (--x, --y, --ox, --oy, --to-x,
+ * --to-y, --cx, --cy, --ex0…--ey1, --right, --dx, --dy, --i), лист только читает.
+ */
+@layer components {
+  /* Корень образца: общие цвета, времена, кривые и размеры; --ux-* читают правила ниже */
+  .ui-tool-demo {
+    --ux-amber: #d9a54e;
+    --ux-bar-lag: -0.11s;
+    --ux-beat: 1.2s;
+    --ux-box: fill-box;
+    --ux-burst: 2.6s;
+    --ux-clip: hidden;
+    --ux-curve: var(--astral-ease);
+    --ux-cut: 0.4;
+    --ux-dash: 1;
+    --ux-early: -0.4s;
+    --ux-face: var(--astral-font-display);
+    --ux-fill: 100%;
+    --ux-flush: 0;
+    --ux-gloss: linear-gradient(180deg, var(--ux-sheen), transparent 38%);
+    --ux-glow: 2.8s;
+    --ux-hair: 1px;
+    --ux-half: 0.5;
+    --ux-io: ease-in-out;
+    --ux-lap: 1.6s;
+    --ux-late: 0.8s;
+    --ux-lead: 0.6s;
+    --ux-lin: linear;
+    --ux-mid: 50%;
+    --ux-nil: 0px;
+    --ux-outline: 0.9;
+    --ux-phase: -0.7s;
+    --ux-pulse: 2.4s;
+    --ux-rim: 0 0 0 var(--ux-hair) var(--astral-line) inset;
+    --ux-round: var(--astral-radius-sm);
+    --ux-run: 4.2s;
+    --ux-shade: rgba(0, 0, 0, 0.9);
+    --ux-sheen: rgba(255, 255, 255, 0.07);
+    --ux-six: 6s;
+    --ux-slide: 3.2s;
+    --ux-snap: steps(1);
+    --ux-solid: 0.92;
+    --ux-stage: #111215;
+    --ux-stagger: 2s;
+    --ux-teal: #4fbfb4;
+    --ux-track: 0.06em;
+    --ux-veil: 0.55;
+    --ux-vh: 64;
+    --ux-vw: 160;
+    --ux-zone: 0.32;
+    aspect-ratio: var(--ux-vw) / var(--ux-vh);
+    background-color: var(--ux-stage);
+    border-radius: var(--ux-round);
+    box-shadow:
+      var(--ux-rim),
+      0 10px 24px -18px var(--ux-shade);
+    overflow: var(--ux-clip);
+    position: relative;
+
+    & > svg {
+      block-size: var(--ux-fill);
+      display: block;
+      inline-size: var(--ux-fill);
+    }
+
+    &::after {
+      background-image: var(--ux-gloss);
+      border-radius: inherit;
+      content: "";
+      inset-block: var(--ux-flush);
+      inset-inline: var(--ux-flush);
+      pointer-events: none;
+      position: absolute;
+    }
+  }
+
+  .ui-tool-card {
+    --ux-drop: 14px;
+    --ux-gap: 8px;
+    display: grid;
+    gap: var(--ux-gap);
+    margin-block: 0 var(--ux-drop);
+    margin-inline: 0;
+  }
+
+  /* До запуска: что скрыто, у чего рамка элемента служит базой, откуда растёт масштаб */
+  .ui-tool-demo
+    :is(
+      .tdm-chip,
+      .tdm-click,
+      .tdm-edge,
+      .tdm-sample,
+      .tdm-spark,
+      .tdm-tint,
+      .tdm-tracer,
+      .tdm-unpaint
+    ) {
+    opacity: 0;
+  }
+
+  .ui-tool-demo
+    :is(
+      .tdm-bar,
+      .tdm-click,
+      .tdm-draw-up,
+      .tdm-reset,
+      .tdm-ring,
+      .tdm-sample,
+      .tdm-type
+    ) {
+    transform-box: var(--ux-box);
+  }
+
+  .ui-tool-demo :is(.tdm-bar, .tdm-click, .tdm-reset, .tdm-ring, .tdm-sample) {
+    transform-origin: var(--ux-mid) var(--ux-mid);
+  }
+
+  /* Краска */
+  .ui-tool-demo .tdm-sweep {
+    animation: tdm-sweep var(--ux-run) var(--ux-curve) 1;
+    fill-opacity: var(--ux-veil);
+    transform-origin: left top;
+  }
+
+  .ui-tool-demo :is(.tdm-sweep, .tdm-unpaint) {
+    fill: var(--ux-teal);
+  }
+
+  .ui-tool-demo .tdm-edge {
+    animation: tdm-edge var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo[data-tone="b"] .tdm-sweep {
+    fill: var(--ux-amber);
+  }
+
+  .ui-tool-demo .tdm-sweep.is-solid {
+    fill-opacity: var(--ux-solid);
+  }
+
+  /* Надпись и эмблема */
+  .ui-tool-demo .tdm-word {
+    font-family: var(--ux-face);
+    letter-spacing: var(--ux-track);
+  }
+
+  .ui-tool-demo .tdm-type {
+    animation: tdm-type var(--ux-run) var(--ux-snap) 1;
+    transform-origin: 0 50%;
+  }
+
+  .ui-tool-demo .tdm-replaced {
+    animation: tdm-replaced var(--ux-run) var(--ux-lin) 1;
+  }
+
+  .ui-tool-demo .tdm-click {
+    animation: tdm-click var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo.is-text .tdm-click {
+    animation-delay: var(--ux-early);
+  }
+
+  .ui-tool-demo .tdm-pop {
+    animation: tdm-pop var(--ux-run) var(--ux-curve) 1;
+    transform: translate(var(--x), var(--y));
+  }
+
+  /* Картинка */
+  .ui-tool-demo .tdm-drop {
+    animation: tdm-drop var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo :is(.tdm-ghost, .tdm-gizmo, .tdm-handles) {
+    animation: tdm-handles var(--ux-run) var(--ux-curve) 1;
+  }
+
+  /* Зона, перенос, рамка выделения, фигура */
+  .ui-tool-demo .tdm-zone {
+    animation: tdm-zone var(--ux-slide) var(--ux-io) 1;
+    fill-opacity: var(--ux-zone);
+    stroke-opacity: var(--ux-outline);
+  }
+
+  .ui-tool-demo .tdm-border {
+    animation: tdm-border var(--ux-lap) var(--ux-lin) 3;
+  }
+
+  .ui-tool-demo .tdm-move {
+    animation: tdm-move var(--ux-slide) var(--ux-io) 1;
+  }
+
+  .ui-tool-demo :is(.tdm-marquee, .tdm-shape) {
+    animation: tdm-stretch var(--ux-run) var(--ux-curve) 1;
+    transform-origin: calc(var(--ox) + var(--ux-nil))
+      calc(var(--oy) + var(--ux-nil));
+  }
+
+  .ui-tool-demo .tdm-ants {
+    animation: tdm-border var(--ux-beat) var(--ux-lin) 4;
+  }
+
+  /* Пипетка и выбор */
+  .ui-tool-demo :is(.tdm-dropper, .tdm-pointer) {
+    animation: tdm-pointer var(--ux-run) var(--ux-curve) 1;
+    transform: translate(var(--to-x), var(--to-y));
+  }
+
+  .ui-tool-demo.is-select .tdm-click {
+    animation-delay: var(--ux-late);
+  }
+
+  .ui-tool-demo .tdm-sample {
+    animation: tdm-sample var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo .tdm-draw-up {
+    animation: tdm-draw-up var(--ux-run) var(--ux-curve) 1;
+    transform-origin: 50% 100%;
+  }
+
+  .ui-tool-demo :is(.tdm-picked, .tdm-swatch) {
+    animation: tdm-picked var(--ux-run) var(--ux-curve) 1;
+  }
+
+  /* Свет */
+  .ui-tool-demo .tdm-glow {
+    animation: tdm-glow var(--ux-glow) var(--ux-io) 2;
+    animation-delay: calc(var(--ux-phase) * var(--i));
+  }
+
+  /* Модель, части, контур */
+  .ui-tool-demo :is(.tdm-build, .tdm-stroke) {
+    animation: tdm-build var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo .tdm-hide {
+    animation: tdm-hide var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo .tdm-gizmo {
+    animation-delay: var(--ux-lead);
+  }
+
+  .ui-tool-demo .tdm-ghost {
+    animation-delay: calc(var(--ux-lead) * -1);
+  }
+
+  .ui-tool-demo :is(.tdm-build, .tdm-stroke, .tdm-tracer) {
+    stroke-dasharray: var(--ux-dash);
+    stroke-dashoffset: var(--ux-flush);
+  }
+
+  /* Шаблоны и узор */
+  .ui-tool-demo .tdm-tint {
+    animation: tdm-tint var(--ux-six) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo .tdm-chip {
+    animation: tdm-chip var(--ux-six) var(--ux-snap) 1;
+  }
+
+  .ui-tool-demo :is(.tdm-chip, .tdm-tint) {
+    animation-delay: calc(var(--ux-stagger) * var(--i));
+  }
+
+  .ui-tool-demo .tdm-stamp {
+    animation: tdm-stamp var(--ux-run) var(--ux-curve) 1;
+    opacity: 70%;
+  }
+
+  /* Стандарт, размер */
+  .ui-tool-demo .tdm-unpaint {
+    animation: tdm-unpaint var(--ux-run) var(--ux-curve) 1;
+    fill-opacity: var(--ux-half);
+  }
+
+  .ui-tool-demo .tdm-reset {
+    animation: tdm-reset var(--ux-run) var(--ux-curve) 1;
+  }
+
+  .ui-tool-demo .tdm-grow {
+    animation: tdm-grow var(--ux-slide) var(--ux-io) 1;
+    transform-origin: calc(var(--cx) + var(--ux-nil))
+      calc(var(--cy) + var(--ux-nil));
+  }
+
+  /* Эффект */
+  .ui-tool-demo .tdm-tracer {
+    animation: tdm-tracer var(--ux-burst) var(--ux-lin) 2;
+  }
+
+  .ui-tool-demo .tdm-spark {
+    animation: tdm-spark var(--ux-burst) var(--ux-curve) 2;
+  }
+
+  /* Настройка: кольцо и четыре стрелки */
+  .ui-tool-demo .tdm-ring {
+    animation: tdm-ring var(--ux-pulse) var(--ux-io) 2;
+  }
+
+  .ui-tool-demo .tdm-arms path {
+    animation: tdm-arm-up var(--ux-pulse) var(--ux-io) 2;
+  }
+
+  .ui-tool-demo .tdm-arms > .is-down {
+    animation: tdm-arm-down var(--ux-pulse) var(--ux-io) 2;
+  }
+
+  .ui-tool-demo .tdm-arms > .is-left {
+    animation: tdm-arm-left var(--ux-pulse) var(--ux-io) 2;
+  }
+
+  .ui-tool-demo .tdm-arms > .is-right {
+    animation: tdm-arm-right var(--ux-pulse) var(--ux-io) 2;
+  }
+
+  /* Ластик */
+  .ui-tool-demo .tdm-left {
+    animation: tdm-left var(--ux-run) var(--ux-lin) 1;
+    transform: scale(var(--ux-cut), 1);
+    transform-origin: var(--right, 160px) var(--ux-flush);
+  }
+
+  .ui-tool-demo .tdm-eraser {
+    animation: tdm-eraser var(--ux-run) var(--ux-lin) 1;
+    transform: translate(var(--ex1, 150px), var(--ey1, 28px));
+  }
+
+  /* Звук */
+  .ui-tool-demo .tdm-waves {
+    animation: tdm-glow var(--ux-lap) var(--ux-io) 3;
+  }
+
+  .ui-tool-demo .tdm-bar {
+    animation: tdm-bar var(--ux-beat) var(--ux-io) 4 alternate;
+    animation-delay: calc(var(--ux-bar-lag) * var(--i));
+  }
+
+  /* Выключатели движения для всего, что внутри образца; !important намеренный:
+     иначе анимации инструментов выше перебивают выключатель */
+  :root[data-attention]:not([data-attention="active"]) .ui-tool-demo * {
+    animation-play-state: paused !important;
+  }
+
+  .desktop-app[data-motion="off"] .ui-tool-demo * {
+    animation: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-tool-demo * {
+      animation: none !important;
+    }
+  }
+
+  /* Шаги анимаций образцов (tdm-*): только данные; имена запускают правила выше */
+  /* Краска и стирание */
+  @keyframes tdm-sweep {
+    to {
+      opacity: 0%;
+      transform: scale(0, 1);
+    }
+
+    97% {
+      opacity: 0%;
+      transform: scale(1, 1);
+    }
+
+    55%,
+    86% {
+      opacity: 100%;
+      transform: scale(1, 1);
+    }
+
+    from,
+    8% {
+      opacity: 100%;
+      transform: scale(0, 1);
+    }
+  }
+
+  @keyframes tdm-edge {
+    56%,
+    to {
+      opacity: 0%;
+      transform: translate(160px, 0);
+    }
+
+    55% {
+      opacity: 100%;
+      transform: translate(160px, 0);
+    }
+
+    from,
+    8% {
+      opacity: 100%;
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes tdm-unpaint {
+    to {
+      opacity: 100%;
+    }
+
+    56%,
+    92% {
+      opacity: 0%;
+    }
+
+    from,
+    30% {
+      opacity: 100%;
+    }
+  }
+
+  @keyframes tdm-stamp {
+    97%,
+    to {
+      opacity: 0%;
+    }
+
+    30%,
+    86% {
+      opacity: 70%;
+    }
+
+    from,
+    20% {
+      opacity: 0%;
+    }
+  }
+
+  @keyframes tdm-tint {
+    38%,
+    to {
+      opacity: 0%;
+    }
+
+    8%,
+    30% {
+      opacity: 26%;
+    }
+
+    from {
+      opacity: 0%;
+    }
+  }
+
+  @keyframes tdm-chip {
+    33.3%,
+    to {
+      opacity: 0%;
+    }
+
+    from {
+      opacity: 100%;
+    }
+  }
+
+  /* Картинка, надпись, эмблема */
+  @keyframes tdm-drop {
+    97%,
+    to {
+      opacity: 0%;
+      transform: translate(0, 0);
+    }
+
+    22%,
+    88% {
+      opacity: 100%;
+      transform: translate(0, 0);
+    }
+
+    from,
+    8% {
+      opacity: 0%;
+      transform: translate(0, -6px);
+    }
+  }
+
+  @keyframes tdm-handles {
+    92%,
+    to {
+      opacity: 0%;
+    }
+
+    30%,
+    84% {
+      opacity: 100%;
+    }
+
+    from,
+    24% {
+      opacity: 0%;
+    }
+  }
+
+  @keyframes tdm-pop {
+    97%,
+    to {
+      opacity: 0%;
+      transform: translate(var(--x), var(--y)) scale(1);
+    }
+
+    34%,
+    88% {
+      opacity: 100%;
+      transform: translate(var(--x), var(--y)) scale(1);
+    }
+
+    28% {
+      opacity: 100%;
+      transform: translate(var(--x), var(--y)) scale(1.15);
+    }
+
+    from,
+    18% {
+      opacity: 0%;
+      transform: translate(var(--x), var(--y)) scale(0.2);
+    }
+  }
+
+  @keyframes tdm-replaced {
+    to {
+      opacity: 100%;
+    }
+
+    19%,
+    99% {
+      opacity: 0%;
+    }
+
+    from,
+    12% {
+      opacity: 100%;
+    }
+  }
+
+  @keyframes tdm-type {
+    56%,
+    to {
+      transform: scale(1, 1);
+    }
+
+    50% {
+      transform: scale(0.84, 1);
+    }
+
+    44% {
+      transform: scale(0.67, 1);
+    }
+
+    38% {
+      transform: scale(0.5, 1);
+    }
+
+    32% {
+      transform: scale(0.34, 1);
+    }
+
+    26% {
+      transform: scale(0.18, 1);
+    }
+
+    from,
+    20% {
+      transform: scale(0, 1);
+    }
+  }
+
+  @keyframes tdm-click {
+    32%,
+    to {
+      opacity: 0%;
+      transform: scale(1.6);
+    }
+
+    20% {
+      opacity: 100%;
+      transform: scale(0.6);
+    }
+
+    from,
+    16% {
+      opacity: 0%;
+      transform: scale(0.3);
+    }
+  }
+
+  /* Зона, перенос, рамка, пипетка, выбор */
+  @keyframes tdm-zone {
+    50% {
+      opacity: 100%;
+    }
+
+    from,
+    to {
+      opacity: 55%;
+    }
+  }
+
+  @keyframes tdm-border {
+    to {
+      stroke-dashoffset: -5.4;
+    }
+  }
+
+  @keyframes tdm-move {
+    50% {
+      transform: translate(10px, 0);
+    }
+
+    from,
+    to {
+      transform: translate(-10px, 0);
+    }
+  }
+
+  @keyframes tdm-stretch {
+    97%,
+    to {
+      opacity: 0%;
+      transform: scale(1);
+    }
+
+    48%,
+    88% {
+      opacity: 100%;
+      transform: scale(1);
+    }
+
+    12% {
+      opacity: 100%;
+      transform: scale(0.05);
+    }
+
+    from,
+    8% {
+      opacity: 0%;
+      transform: scale(0);
+    }
+  }
+
+  @keyframes tdm-sample {
+    54%,
+    to {
+      opacity: 0%;
+      transform: scale(1.9);
+    }
+
+    38% {
+      opacity: 100%;
+      transform: scale(1);
+    }
+
+    from,
+    34% {
+      opacity: 0%;
+      transform: scale(0.6);
+    }
+  }
+
+  @keyframes tdm-pointer {
+    96%,
+    to {
+      opacity: 0%;
+      transform: translate(var(--to-x), var(--to-y));
+    }
+
+    36%,
+    86% {
+      opacity: 100%;
+      transform: translate(var(--to-x), var(--to-y));
+    }
+
+    10% {
+      opacity: 100%;
+      transform: translate(14px, 54px);
+    }
+
+    from,
+    6% {
+      opacity: 0%;
+      transform: translate(14px, 54px);
+    }
+  }
+
+  @keyframes tdm-draw-up {
+    50%,
+    to {
+      transform: scale(1, 1);
+    }
+
+    from,
+    37% {
+      transform: scale(1, 0);
+    }
+  }
+
+  @keyframes tdm-picked {
+    96%,
+    to {
+      opacity: 0%;
+    }
+
+    44%,
+    86% {
+      opacity: 100%;
+    }
+
+    from,
+    38% {
+      opacity: 0%;
+    }
+  }
+
+  /* Свет, части, размер, стандарт, настройка */
+  @keyframes tdm-glow {
+    50% {
+      opacity: 100%;
+    }
+
+    from,
+    to {
+      opacity: 35%;
+    }
+  }
+
+  @keyframes tdm-hide {
+    84%,
+    to {
+      opacity: 0%;
+    }
+
+    40%,
+    74% {
+      opacity: 100%;
+    }
+
+    from,
+    30% {
+      opacity: 0%;
+    }
+  }
+
+  @keyframes tdm-grow {
+    50% {
+      transform: scale(1.12);
+    }
+
+    from,
+    to {
+      transform: scale(0.82);
+    }
+  }
+
+  @keyframes tdm-reset {
+    56%,
+    to {
+      transform: rotate(-1turn);
+    }
+
+    from,
+    30% {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes tdm-ring {
+    50% {
+      opacity: 100%;
+      transform: scale(1.1);
+    }
+
+    from,
+    to {
+      opacity: 60%;
+      transform: scale(0.8);
+    }
+  }
+
+  @keyframes tdm-arm-up {
+    50% {
+      transform: translate(0, -2.5px);
+    }
+  }
+
+  @keyframes tdm-arm-down {
+    50% {
+      transform: translate(0, 2.5px);
+    }
+  }
+
+  @keyframes tdm-arm-left {
+    50% {
+      transform: translate(-2.5px, 0);
+    }
+  }
+
+  @keyframes tdm-arm-right {
+    50% {
+      transform: translate(2.5px, 0);
+    }
+  }
+
+  /* Контур модели, эффект, ластик, звук */
+  @keyframes tdm-build {
+    97%,
+    to {
+      opacity: 0%;
+      stroke-dashoffset: 0;
+    }
+
+    44%,
+    88% {
+      opacity: 100%;
+      stroke-dashoffset: 0;
+    }
+
+    from,
+    6% {
+      opacity: 100%;
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes tdm-tracer {
+    34%,
+    to {
+      opacity: 0%;
+      stroke-dashoffset: 0;
+    }
+
+    18% {
+      opacity: 100%;
+      stroke-dashoffset: 0;
+    }
+
+    from {
+      opacity: 100%;
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes tdm-spark {
+    46%,
+    to {
+      opacity: 0%;
+      transform: translate(var(--dx), var(--dy));
+    }
+
+    20% {
+      opacity: 100%;
+      transform: translate(0, 0);
+    }
+
+    from,
+    17% {
+      opacity: 0%;
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes tdm-left {
+    to {
+      transform: scale(1, 1);
+    }
+
+    70%,
+    90% {
+      transform: scale(0, 1);
+    }
+
+    from,
+    10% {
+      transform: scale(1, 1);
+    }
+  }
+
+  @keyframes tdm-eraser {
+    80%,
+    to {
+      opacity: 0%;
+      transform: translate(var(--ex1, 150px), var(--ey1, 28px));
+    }
+
+    70% {
+      opacity: 100%;
+      transform: translate(var(--ex1, 150px), var(--ey1, 28px));
+    }
+
+    from,
+    10% {
+      opacity: 100%;
+      transform: translate(var(--ex0, 14px), var(--ey0, 40px));
+    }
+  }
+
+  @keyframes tdm-bar {
+    to {
+      transform: scale(1, 1);
+    }
+
+    from {
+      transform: scale(1, 0.35);
+    }
+  }
+}

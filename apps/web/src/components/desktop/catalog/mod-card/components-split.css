@@ -1,0 +1,304 @@
+/*
+ * Окно «Компоненты» — вид «Просмотр» (`ComponentsSplit.jsx`, владелец 29.10.2026): слева список, справа большой кадр выбранного, его слова и действия.
+ * Лист ленивый, едет вместе с окном (`ModComponents` → `ModContents`); правила — целиком в слое `overrides`, как у `mod-components.css`. Цвета, углы, кегли и
+ * длительности — токены; тёмная плашка под значок поверх кадра — та же, что у кнопки ▶ проигрывателя ролика (`clip-player.css`): стекла в приложении нет.
+ */
+@layer overrides {
+  /* Высоту блоку даёт окно (`mod-components.css`): он заполняет остаток под шапкой и строкой «N частей». Строка сетки одна и ровно в эту высоту: список слева
+     листается сам, правая колонка не листается вместе с ним. */
+  .desktop-app .mod-components-split {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 20px;
+    min-height: 0;
+  }
+
+  @media (max-width: 960px) {
+    .desktop-app .mod-components-split {
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 14px;
+    }
+  }
+
+  /* Список: листается сам, выбранный — рамкой. */
+  .desktop-app .mod-components-entries {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-height: 0;
+    margin: 0;
+    padding: 0 4px 0 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+  }
+
+  .desktop-app .mod-components-entry {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 6px 10px 6px 6px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .mod-components-entry:hover {
+    background: var(--astral-surface-hover);
+  }
+
+  .desktop-app .mod-components-entry.is-selected {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .mod-components-entry:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 1px;
+  }
+
+  /* Отметка в строке («Новая сборка»): своя мишень справа, строка под ней выбирает кадр. */
+  .desktop-app .mod-components-entries > li.has-check {
+    position: relative;
+  }
+
+  .desktop-app .mod-components-entries > li.has-check > .mod-components-entry {
+    padding-right: 44px;
+  }
+
+  .desktop-app .mod-components-entry-check {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+  }
+
+  /* Заголовок группы строк («Интерьеры (11)»): кнопка раскрытия слева, галочка «все» справа, дети — под ним со сдвигом. */
+  .desktop-app .mod-components-entries > li.mod-components-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 10px;
+  }
+
+  .desktop-app .mod-components-group-head {
+    display: inline-flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px 0;
+    border: 0;
+    color: var(--astral-ink);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .desktop-app .mod-components-entries > li.mod-components-group + li {
+    margin-top: 0;
+  }
+
+  /* Компонент, который человек отключил: кадр и слова тише, галочка снята; строка остаётся на месте, чтобы её можно было вернуть. */
+  .desktop-app .mod-components-entries > li.is-off > .mod-components-entry > :is(.mod-components-entry-art, .mod-components-entry-name) {
+    opacity: 0.45;
+  }
+
+  .desktop-app .mod-components-entry-art {
+    position: relative;
+    display: block;
+    height: 40px;
+  }
+
+  .desktop-app .mod-components-entry-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .desktop-app .mod-components-title {
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    line-height: var(--astral-line-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-components-figures {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-components-entry-mark {
+    width: 14px;
+    height: 14px;
+    color: var(--astral-positive);
+  }
+
+  .desktop-app .mod-components-entry-mark.is-warning {
+    color: var(--astral-warning);
+  }
+
+  /* Кадры — плитка-постер общего органа без подписи: обложку, наш рендер и знак вида рисует она, имя стоит рядом словами. */
+  .desktop-app .mod-components-entry-art > .ui-pick-tile.is-poster,
+  .desktop-app .mod-components-stage > .ui-pick-tile.is-poster {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .mod-components-entry-art .ui-pick-copy,
+  .desktop-app .mod-components-entry-art .ui-pick-shade,
+  .desktop-app .mod-components-stage .ui-pick-copy,
+  .desktop-app .mod-components-stage .ui-pick-shade {
+    display: none;
+  }
+
+  .desktop-app .mod-components-entry-art .ui-pick-photo.is-contain {
+    padding: 4px;
+  }
+
+  .desktop-app .mod-components-entry-art .ui-pick-tile.is-poster > .ui-pick-media > svg {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 0;
+  }
+
+  /* Панель справа: кадр, слова, действия. */
+  .desktop-app .mod-components-panel {
+    display: grid;
+    grid-template-rows: minmax(160px, 1fr) auto auto;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+    /* Колонка стоит на месте. Листаться ей приходится только в окне ниже предела приложения (720 px): кадр уже не сжать, а слова с кнопками не вырезать. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Кольцо фокуса у крайних кнопок выходит за колонку — запас внутри, чтобы прокручиваемая колонка его не срезала. */
+    margin: -3px;
+    padding: 3px;
+  }
+
+  .desktop-app .mod-components-stage {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: radial-gradient(120% 120% at 50% 0%, var(--astral-surface-hover) 0%, var(--astral-surface) 72%);
+  }
+
+  .desktop-app .mod-components-stage > .ui-pick-tile.is-poster {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  /* Рисунок на прозрачном (ствол, вещь) — целиком, с воздухом по краям; знак вида без кадра — крупный посередине. */
+  .desktop-app .mod-components-stage .ui-pick-photo.is-contain {
+    padding: 24px 32px;
+  }
+
+  .desktop-app .mod-components-stage .ui-pick-tile.is-poster > .ui-pick-media > svg {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 0;
+  }
+
+  /* ▶ у звука — на кадре слева внизу, словом со временем; у части без звука её нет. */
+  .desktop-app .mod-components-listen {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 2;
+    background: rgba(12, 12, 14, 0.78);
+  }
+
+  .desktop-app .mod-components-panel-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .desktop-app .mod-components-kicker {
+    overflow: hidden;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-components-panel-title {
+    margin: 0;
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-section);
+    font-weight: 600;
+    line-height: var(--astral-line-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-components-panel-copy .mod-components-meta,
+  .desktop-app .mod-components-panel-copy .mod-components-weight,
+  .desktop-app .mod-components-panel-copy .mod-components-note {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .mod-components-panel-copy .mod-components-weight {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* «Заменит …» — тоном предупреждения: имя заменяемого мода бывает длинным, переносится. */
+  .desktop-app .mod-components-panel-copy .mod-components-note {
+    color: var(--astral-warning);
+  }
+
+  .desktop-app .mod-components-panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .desktop-app .mod-part-actions.is-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Выбор человека по компоненту сборки (отключить, заменить, вернуть родную) — второй рядом под кнопками самой части. */
+  .desktop-app .mod-part-actions.is-panel.mod-component-choice {
+    flex: 1 1 100%;
+    padding-top: 12px;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .mod-components-entry {
+      transition: none;
+    }
+  }
+}

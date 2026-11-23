@@ -1,0 +1,325 @@
+/*
+ * Мастерская мини-карты, ТЗ владельца 17.10.2026 (задача 1): непрозрачность
+ * карты, HP отдельно от карты, свои надписи и картинки, метки других игроков,
+ * слова расстояния. Русская строка → [uk, en, de, pl].
+ */
+
+export const zoneMinimap1710 = {
+  /* непрозрачность карты */
+  "Изменена непрозрачность карты": [
+    "Змінено непрозорість карти",
+    "Map opacity changed",
+    "Kartendeckkraft geändert",
+    "Zmieniono nieprzezroczystość mapy",
+  ],
+  "0 % — карты нет: в игре на её месте мир, а HP и броня остаются.": [
+    "0 % — карти немає: у грі на її місці світ, а HP і броня лишаються.",
+    "0% means no map: the game shows the world in its place, while HP and armour stay.",
+    "0 % heißt keine Karte: Im Spiel ist an ihrer Stelle die Welt, HP und Panzerung bleiben.",
+    "0% oznacza brak mapy: w grze w jej miejscu widać świat, a HP i pancerz zostają.",
+  ],
+  "Как в игре — 73 %, 100 % — карта без прозрачности. Стрелка, значки и HP остаются чёткими.": [
+    "Як у грі — 73 %, 100 % — карта без прозорості. Стрілка, значки й HP лишаються чіткими.",
+    "The game's own look is 73%; 100% makes the map fully opaque. The arrow, blips and HP stay sharp.",
+    "Wie im Spiel sind 73 %, 100 % macht die Karte völlig deckend. Pfeil, Symbole und HP bleiben scharf.",
+    "Jak w grze to 73%, 100% to mapa bez przezroczystości. Strzałka, ikony i HP pozostają wyraźne.",
+  ],
+  "Карта — как в игре": [
+    "Карта — як у грі",
+    "Map — as in the game",
+    "Karte — wie im Spiel",
+    "Mapa — jak w grze",
+  ],
+  "непрозрачность карты осталась как в игре": [
+    "непрозорість карти лишилася як у грі",
+    "the map opacity stayed as in the game",
+    "die Kartendeckkraft blieb wie im Spiel",
+    "nieprzezroczystość mapy została jak w grze",
+  ],
+
+  /* HP отдельно от карты */
+  "HP отдельно от карты": [
+    "HP окремо від карти",
+    "HP apart from the map",
+    "HP getrennt von der Karte",
+    "HP osobno od mapy",
+  ],
+  "HP вернулись под карту": [
+    "HP повернулися під карту",
+    "HP back under the map",
+    "HP wieder unter der Karte",
+    "HP wróciło pod mapę",
+  ],
+  "HP перемещены по экрану": [
+    "HP переміщено екраном",
+    "HP moved on the screen",
+    "HP auf dem Bildschirm verschoben",
+    "HP przesunięte na ekranie",
+  ],
+  "HP сдвинуты с клавиатуры": [
+    "HP зсунуто з клавіатури",
+    "HP nudged with the keyboard",
+    "HP mit der Tastatur verschoben",
+    "HP przesunięte klawiaturą",
+  ],
+  "HP и броня отдельно от карты: перетащите или двигайте стрелками": [
+    "HP і броня окремо від карти: перетягніть або рухайте стрілками",
+    "HP and armour apart from the map: drag them or move with the arrow keys",
+    "HP und Panzerung getrennt von der Karte: ziehen oder mit den Pfeiltasten bewegen",
+    "HP i pancerz osobno od mapy: przeciągnij lub przesuwaj strzałkami",
+  ],
+  "Тяните HP по всему экрану — карта останется на месте.": [
+    "Тягніть HP по всьому екрану — карта лишиться на місці.",
+    "Drag the HP anywhere on the screen and the map stays put.",
+    "Zieh die HP über den ganzen Bildschirm — die Karte bleibt stehen.",
+    "Przeciągaj HP po całym ekranie — mapa zostanie na miejscu.",
+  ],
+  "HP за кадром мини-карты: в меню паузы карта сожмётся и сдвинется. Верните HP в кадр, и она будет как в игре.": [
+    "HP за кадром мінікарти: у меню паузи карта стиснеться й зсунеться. Поверніть HP у кадр, і вона буде як у грі.",
+    "HP outside the minimap frame: in the pause menu the map will shrink and shift. Put the HP back in the frame and it will look as in the game.",
+    "HP außerhalb des Minimap-Rahmens: Im Pausenmenü wird die Karte kleiner und verrutscht. Zieh die HP zurück in den Rahmen, dann ist sie wie im Spiel.",
+    "HP poza kadrem minimapy: w menu pauzy mapa się zmniejszy i przesunie. Przywróć HP do kadru, a będzie jak w grze.",
+  ],
+  "Выключено — HP и броня под картой, как в игре.": [
+    "Вимкнено — HP і броня під картою, як у грі.",
+    "Off: HP and armour sit under the map, as in the game.",
+    "Aus: HP und Panzerung unter der Karte, wie im Spiel.",
+    "Wyłączone: HP i pancerz pod mapą, jak w grze.",
+  ],
+  /* положение на экране — строки, что стояли без перевода */
+  "Кадр выходит за экран игры — то, что за краем, в игре не видно. При установке Astral вернёт его к краю экрана.": [
+    "Кадр виходить за екран гри — те, що за краєм, у грі не видно. Під час встановлення Astral поверне його до краю екрана.",
+    "The frame goes past the game screen, and whatever is beyond the edge is not visible in the game. Astral moves it back to the edge on install.",
+    "Der Rahmen ragt über den Spielbildschirm hinaus — was hinter dem Rand liegt, ist im Spiel unsichtbar. Astral rückt ihn bei der Installation an den Rand zurück.",
+    "Kadr wychodzi poza ekran gry — tego, co za krawędzią, w grze nie widać. Przy instalacji Astral przesunie go do krawędzi ekranu.",
+  ],
+  "Мини-карта возвращена на экран": [
+    "Мінікарту повернуто на екран",
+    "Minimap moved back on screen",
+    "Minikarte zurück auf den Bildschirm",
+    "Minimapa wróciła na ekran",
+  ],
+  "Вернуть на экран": [
+    "Повернути на екран",
+    "Move back on screen",
+    "Zurück auf den Bildschirm",
+    "Przywróć na ekran",
+  ],
+  "Показать как в игре": [
+    "Показати як у грі",
+    "Show as in the game",
+    "Wie im Spiel zeigen",
+    "Pokaż jak w grze",
+  ],
+
+  /* метки других игроков */
+  "Метки игроков": ["Мітки гравців", "Player blips", "Spielermarker", "Znaczniki graczy"],
+  "Кружки других людей на радаре": [
+    "Кружечки інших людей на радарі",
+    "Other people's circles on the radar",
+    "Kreise anderer Personen auf dem Radar",
+    "Kółka innych ludzi na radarze",
+  ],
+  "Своя картинка встанет вместо кружка — цвет каждому игроку даст сама игра": [
+    "Власна картинка стане замість кружечка — колір кожному гравцю дасть сама гра",
+    "Your picture replaces the circle — the game itself gives each player a colour",
+    "Dein Bild ersetzt den Kreis — die Farbe jedes Spielers gibt das Spiel selbst",
+    "Własny obrazek zastąpi kółko — kolor każdemu graczowi nada sama gra",
+  ],
+  "Метки других игроков": [
+    "Мітки інших гравців",
+    "Other players' blips",
+    "Marker anderer Spieler",
+    "Znaczniki innych graczy",
+  ],
+  "Метки других игроков — как в игре": [
+    "Мітки інших гравців — як у грі",
+    "Other players' blips — as in the game",
+    "Marker anderer Spieler — wie im Spiel",
+    "Znaczniki innych graczy — jak w grze",
+  ],
+  "Кружки людей": ["Кружечки людей", "People circles", "Personenkreise", "Kółka ludzi"],
+  "Изменены метки других игроков": [
+    "Змінено мітки інших гравців",
+    "Other players' blips changed",
+    "Marker anderer Spieler geändert",
+    "Zmieniono znaczniki innych graczy",
+  ],
+  "Своя метка": ["Власна мітка", "Own blip", "Eigener Marker", "Własny znacznik"],
+  "Размер меток": ["Розмір міток", "Blip size", "Markergröße", "Rozmiar znaczników"],
+  "Изменён размер меток других игроков": [
+    "Змінено розмір міток інших гравців",
+    "Other players' blip size changed",
+    "Größe der Marker anderer Spieler geändert",
+    "Zmieniono rozmiar znaczników innych graczy",
+  ],
+  "Картинка встанет вместо кружка и кружков «выше/ниже»; цвет каждому игроку даст игра.": [
+    "Картинка стане замість кружечка й кружечків «вище/нижче»; колір кожному гравцю дасть гра.",
+    "The picture replaces the circle and the “above/below” circles; the game gives each player a colour.",
+    "Das Bild ersetzt den Kreis und die Kreise „oberhalb/unterhalb“; die Farbe jedes Spielers gibt das Spiel.",
+    "Obrazek zastąpi kółko i kółka „wyżej/niżej”; kolor każdemu graczowi nada gra.",
+  ],
+  "Тем же кружком игра метит и людей в заданиях. На РП-сервере сработает, если игроков метят кружком игры; свой значок сервера файлом игры не поменять.": [
+    "Тим самим кружечком гра позначає й людей у завданнях. На РП-сервері спрацює, якщо гравців позначають кружечком гри; власний значок сервера файлом гри не змінити.",
+    "The game uses the same circle for people in missions. On an RP server it works if players are marked with the game's circle; a server's own icon cannot be changed with a game file.",
+    "Denselben Kreis nutzt das Spiel auch für Personen in Missionen. Auf einem RP-Server wirkt es, wenn Spieler mit dem Kreis des Spiels markiert werden; ein eigenes Server-Symbol lässt sich per Spieldatei nicht ändern.",
+    "Tym samym kółkiem gra oznacza też ludzi w misjach. Na serwerze RP zadziała, jeśli gracze są oznaczani kółkiem gry; własnej ikony serwera plikiem gry nie zmienisz.",
+  ],
+  "Метки для примера": ["Мітки для прикладу", "Example blips", "Beispielmarker", "Znaczniki przykładowe"],
+
+  /* надписи и картинки на карте */
+  "Свой текст, картинки и GIF на карте": [
+    "Власний текст, картинки й GIF на карті",
+    "Your own text, pictures and GIFs on the map",
+    "Eigener Text, Bilder und GIFs auf der Karte",
+    "Własny tekst, obrazki i GIF-y na mapie",
+  ],
+  "Добавьте надпись или картинку и тяните её по карте мышью": [
+    "Додайте напис або картинку й тягніть її картою мишею",
+    "Add text or a picture and drag it across the map with the mouse",
+    "Füge Text oder ein Bild hinzu und zieh es mit der Maus über die Karte",
+    "Dodaj napis lub obrazek i przeciągnij go myszą po mapie",
+  ],
+  "Пустая надпись": ["Порожній напис", "Empty text", "Leerer Text", "Pusty napis"],
+  "Добавить картинку или GIF": ["Додати картинку або GIF", "Add a picture or GIF", "Bild oder GIF hinzufügen", "Dodaj obrazek lub GIF"],
+  "Готовим кадры…": ["Готуємо кадри…", "Preparing frames…", "Bilder werden vorbereitet…", "Przygotowujemy klatki…"],
+  "Картинка или GIF": ["Картинка або GIF", "Picture or GIF", "Bild oder GIF", "Obrazek lub GIF"],
+  "Показан элемент на карте": ["Показано елемент на карті", "Map item shown", "Element auf der Karte eingeblendet", "Pokazano element na mapie"],
+  "Скрыт элемент на карте": ["Приховано елемент на карті", "Map item hidden", "Element auf der Karte ausgeblendet", "Ukryto element na mapie"],
+  "Добавьте надпись или картинку — она встанет в середину карты, дальше тяните её мышью.": [
+    "Додайте напис або картинку — вона стане посередині карти, далі тягніть її мишею.",
+    "Add text or a picture: it lands in the middle of the map, then drag it with the mouse.",
+    "Füge Text oder ein Bild hinzu — es landet in der Kartenmitte, dann zieh es mit der Maus.",
+    "Dodaj napis lub obrazek — stanie na środku mapy, potem przeciągnij go myszą.",
+  ],
+  "До восьми элементов. Картинка — до 512 точек, GIF — до 48 кадров и 10 с: растры мини-карты игра держит в памяти, пока виден радар. Всё стоит в кадре мини-карты и едет вместе с ней.": [
+    "До восьми елементів. Картинка — до 512 точок, GIF — до 48 кадрів і 10 с: растри мінікарти гра тримає в пам’яті, поки видно радар. Усе стоїть у кадрі мінікарти й їде разом із нею.",
+    "Up to eight items. A picture up to 512 px, a GIF up to 48 frames and 10 s: the game keeps the minimap's images in memory while the radar is shown. Everything stays inside the minimap frame and moves with it.",
+    "Bis zu acht Elemente. Ein Bild bis 512 px, ein GIF bis 48 Bilder und 10 s: Die Bilder der Minikarte hält das Spiel im Speicher, solange das Radar zu sehen ist. Alles bleibt im Rahmen der Minikarte und wandert mit ihr.",
+    "Do ośmiu elementów. Obrazek do 512 px, GIF do 48 klatek i 10 s: grafiki minimapy gra trzyma w pamięci, dopóki widać radar. Wszystko stoi w kadrze minimapy i przesuwa się razem z nią.",
+  ],
+  "Изменён текст на карте": ["Змінено текст на карті", "Map text changed", "Kartentext geändert", "Zmieniono tekst na mapie"],
+  "Изменён шрифт надписи": ["Змінено шрифт напису", "Text font changed", "Schrift des Textes geändert", "Zmieniono czcionkę napisu"],
+  "Изменён размер надписи": ["Змінено розмір напису", "Text size changed", "Textgröße geändert", "Zmieniono rozmiar napisu"],
+  "Изменён цвет надписи": ["Змінено колір напису", "Text colour changed", "Textfarbe geändert", "Zmieniono kolor napisu"],
+  "Изменён размер картинки": ["Змінено розмір картинки", "Picture size changed", "Bildgröße geändert", "Zmieniono rozmiar obrazka"],
+  "GIF: {0} кадров, круг {1} с, кадр {2}×{3}": [
+    "GIF: {0} кадрів, коло {1} с, кадр {2}×{3}",
+    "GIF: {0} frames, {1} s loop, frame {2}×{3}",
+    "GIF: {0} Bilder, Runde {1} s, Bild {2}×{3}",
+    "GIF: {0} klatek, pętla {1} s, klatka {2}×{3}",
+  ],
+  "Картинка {0}×{1}": ["Картинка {0}×{1}", "Picture {0}×{1}", "Bild {0}×{1}", "Obrazek {0}×{1}"],
+  "Изменена непрозрачность элемента на карте": [
+    "Змінено непрозорість елемента на карті",
+    "Map item opacity changed",
+    "Deckkraft des Kartenelements geändert",
+    "Zmieniono nieprzezroczystość elementu na mapie",
+  ],
+  "Добавлена надпись на карту": ["Додано напис на карту", "Text added to the map", "Text zur Karte hinzugefügt", "Dodano napis na mapę"],
+  "Картинкам на карте уже тесно: уберите или уменьшите одну из них.": [
+    "Картинкам на карті вже тісно: приберіть або зменште одну з них.",
+    "The pictures on the map are already at the limit: remove or shrink one of them.",
+    "Die Bilder auf der Karte sind schon am Limit: entferne oder verkleinere eines davon.",
+    "Obrazkom na mapie jest już ciasno: usuń lub zmniejsz jeden z nich.",
+  ],
+  "Картинка не сохранилась в проекте.": [
+    "Картинка не збереглася в проєкті.",
+    "The picture was not saved in the project.",
+    "Das Bild wurde nicht im Projekt gespeichert.",
+    "Obrazek nie zapisał się w projekcie.",
+  ],
+  "Убран элемент с карты": ["Прибрано елемент з карти", "Item removed from the map", "Element von der Karte entfernt", "Usunięto element z mapy"],
+  "Перемещён элемент на карте": ["Переміщено елемент на карті", "Map item moved", "Kartenelement verschoben", "Przesunięto element na mapie"],
+  "Элемент на карте сдвинут с клавиатуры": [
+    "Елемент на карті зсунуто з клавіатури",
+    "Map item nudged with the keyboard",
+    "Kartenelement mit der Tastatur verschoben",
+    "Element na mapie przesunięty klawiaturą",
+  ],
+  "Картинка не открылась. Возьмите PNG, JPG, WebP или GIF.": [
+    "Картинка не відкрилася. Візьміть PNG, JPG, WebP або GIF.",
+    "The picture did not open. Use PNG, JPG, WebP or GIF.",
+    "Das Bild ließ sich nicht öffnen. Nimm PNG, JPG, WebP oder GIF.",
+    "Obrazek się nie otworzył. Użyj PNG, JPG, WebP lub GIF.",
+  ],
+  "Картинка слишком пёстрая для мини-карты: возьмите поменьше или с меньшим числом кадров.": [
+    "Картинка надто строката для мінікарти: візьміть меншу або з меншою кількістю кадрів.",
+    "The picture is too detailed for the minimap: use a smaller one or one with fewer frames.",
+    "Das Bild ist zu detailreich für die Minikarte: nimm ein kleineres oder eines mit weniger Bildern.",
+    "Obrazek jest zbyt szczegółowy dla minimapy: weź mniejszy lub z mniejszą liczbą klatek.",
+  ],
+  "Картинки на карте нет в проекте — загрузите её заново": [
+    "Картинки на карті немає в проєкті — завантажте її знову",
+    "The map picture is missing from the project; upload it again",
+    "Das Kartenbild fehlt im Projekt — lade es erneut hoch",
+    "Obrazka z mapy nie ma w projekcie — wgraj go ponownie",
+  ],
+  "Картинки на карте нет в локальном хранилище": [
+    "Картинки на карті немає в локальному сховищі",
+    "The map picture is missing from local storage",
+    "Das Kartenbild fehlt im lokalen Speicher",
+    "Obrazka z mapy nie ma w pamięci lokalnej",
+  ],
+
+  /* слова расстояния */
+  "Расстояние": ["Відстань", "Distance", "Entfernung", "Odległość"],
+  "Своё слово вместо км и м": [
+    "Власне слово замість км і м",
+    "Your own word instead of km and m",
+    "Eigenes Wort statt km und m",
+    "Własne słowo zamiast km i m",
+  ],
+  "Впишите слова — строка «В игре» покажет, как прочтётся расстояние": [
+    "Впишіть слова — рядок «У грі» покаже, як читатиметься відстань",
+    "Type the words — the “In game” line shows how the distance will read",
+    "Gib die Wörter ein — die Zeile „Im Spiel“ zeigt, wie die Entfernung gelesen wird",
+    "Wpisz słowa — wiersz „W grze” pokaże, jak odczyta się odległość",
+  ],
+  "Изменено слово вместо км": ["Змінено слово замість км", "Word for km changed", "Wort für km geändert", "Zmieniono słowo zamiast km"],
+  "Изменено слово вместо м": ["Змінено слово замість м", "Word for m changed", "Wort für m geändert", "Zmieniono słowo zamiast m"],
+  "Свои слова расстояния": ["Власні слова відстані", "Own distance words", "Eigene Entfernungswörter", "Własne słowa odległości"],
+  "Слова расстояния — как в игре": [
+    "Слова відстані — як у грі",
+    "Distance words — as in the game",
+    "Entfernungswörter — wie im Spiel",
+    "Słowa odległości — jak w grze",
+  ],
+  "Вместо км": ["Замість км", "Instead of km", "Statt km", "Zamiast km"],
+  "Вместо м": ["Замість м", "Instead of m", "Statt m", "Zamiast m"],
+  "Цифры считает игра. Меняется только слово после них.": [
+    "Цифри рахує гра. Змінюється лише слово після них.",
+    "The game counts the numbers. Only the word after them changes.",
+    "Die Zahlen rechnet das Spiel. Nur das Wort danach ändert sich.",
+    "Liczby liczy gra. Zmienia się tylko słowo po nich.",
+  ],
+  "Слово встанет там, где расстояние пишет сама игра, — на всех её языках: статистика, гонки, задания и испытания GTA Online. Мини-карта и GPS расстояния не пишут; если сервер рисует свой HUD, надпись там не сменится.": [
+    "Слово стане там, де відстань пише сама гра, — усіма її мовами: статистика, перегони, завдання й випробування GTA Online. Мінікарта й GPS відстані не пишуть; якщо сервер малює свій HUD, напис там не зміниться.",
+    "The word appears wherever the game itself writes a distance, in all its languages: stats, races, jobs and challenges in GTA Online. The minimap and GPS do not show distance; if a server draws its own HUD, the text there will not change.",
+    "Das Wort steht überall, wo das Spiel selbst eine Entfernung schreibt — in allen seinen Sprachen: Statistik, Rennen, Jobs und Herausforderungen in GTA Online. Minikarte und GPS zeigen keine Entfernung; zeichnet ein Server sein eigenes HUD, ändert sich der Text dort nicht.",
+    "Słowo stanie tam, gdzie odległość pisze sama gra — we wszystkich jej językach: statystyki, wyścigi, zadania i wyzwania GTA Online. Minimapa i GPS odległości nie pokazują; jeśli serwer rysuje własny HUD, napis tam się nie zmieni.",
+  ],
+  "слова расстояния остались игры: таблицы текста не прочитались": [
+    "слова відстані лишилися гри: таблиці тексту не прочиталися",
+    "the distance words stayed the game's: the text tables could not be read",
+    "die Entfernungswörter blieben die des Spiels: die Texttabellen ließen sich nicht lesen",
+    "słowa odległości zostały z gry: tabele tekstu się nie odczytały",
+  ],
+  /* Подписи картинок в тексте отказа установки (install-queue/tasks/minimap.js, SLOT_LABELS). */
+  "Своя метка других игроков": ["Власна мітка інших гравців", "Custom blip for other players", "Eigener Marker für andere Spieler", "Własny znacznik innych graczy"],
+  "Видео заливки HP": ["Відео заливки HP", "HP fill video", "Video der HP-Füllung", "Wideo wypełnienia HP"],
+  "Видео заливки брони": ["Відео заливки броні", "Armour fill video", "Video der Rüstungsfüllung", "Wideo wypełnienia pancerza"],
+  "Файл «{0}» отсутствует в проекте. Загрузите его заново.": [
+    "Файл «{0}» відсутній у проєкті. Завантажте його знову.",
+    "The file “{0}” is missing from the project. Upload it again.",
+    "Die Datei „{0}“ fehlt im Projekt. Laden Sie sie erneut hoch.",
+    "Pliku „{0}” brakuje w projekcie. Wczytaj go ponownie.",
+  ],
+  "Файл «{0}» не найден в локальном хранилище.": [
+    "Файл «{0}» не знайдено в локальному сховищі.",
+    "The file “{0}” was not found in local storage.",
+    "Die Datei „{0}“ wurde im lokalen Speicher nicht gefunden.",
+    "Nie znaleziono pliku „{0}” w pamięci lokalnej.",
+  ],
+  "Файл «{0}» больше 1 МБ.": ["Файл «{0}» більший за 1 МБ.", "The file “{0}” is larger than 1 MB.", "Die Datei „{0}“ ist größer als 1 MB.", "Plik „{0}” jest większy niż 1 MB."],
+};

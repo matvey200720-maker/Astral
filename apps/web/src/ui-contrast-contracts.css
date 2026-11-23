@@ -1,0 +1,25 @@
+/* The GTA location row sits directly on its section surface. This contract is
+   in the earliest layer so it can outrank legacy important panel fills. */
+.desktop-app
+  .settings-page
+  .settings-section-panel
+  .gta-location-settings.settings-glass-panel
+  > div.game-path {
+  border-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .settings-page
+  .settings-section-panel[data-settings-section="game"]
+  .game-path::before,
+.desktop-app
+  .settings-page
+  .settings-section-panel[data-settings-section="game"]
+  .game-path::after {
+  display: none !important;
+  content: none !important;
+}

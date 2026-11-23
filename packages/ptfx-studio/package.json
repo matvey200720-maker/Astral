@@ -1,0 +1,31 @@
+{
+  "name": "@modovik/ptfx-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./compile.js": "./compile.js",
+    "./environment.js": "./environment.js",
+    "./family-tint.js": "./family-tint.js",
+    "./impact-rules.js": "./impact-rules.js",
+    "./impact.js": "./impact.js",
+    "./mod-import.js": "./mod-import.js",
+    "./muzzle.js": "./muzzle.js",
+    "./package.json": "./package.json",
+    "./pictures.js": "./pictures.js",
+    "./preset-list.js": "./preset-list.js",
+    "./presets.js": "./presets.js",
+    "./rules.js": "./rules.js",
+    "./shapes.js": "./shapes.js",
+    "./sheets.js": "./sheets.js",
+    "./tracer-slot.js": "./tracer-slot.js",
+    "./wheel-smoke.js": "./wheel-smoke.js"
+  },
+  "dependencies": {
+    "@modovik/bloodfx": "*",
+    "@modovik/dds": "*",
+    "@modovik/tracer-contract": "*"
+  }
+}

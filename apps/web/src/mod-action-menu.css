@@ -1,0 +1,607 @@
+/* Guided product action menu: status, compatibility, install plan, action. */
+.desktop-app .catalog-product-page .redux-product-layout {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(350px, 382px);
+  gap: 14px;
+}
+
+.desktop-app .catalog-product-page .redux-product-gallery {
+  display: flex;
+  min-width: 0;
+}
+
+.desktop-app .catalog-product-page .redux-product-stage {
+  width: 100%;
+  min-height: 570px;
+  aspect-ratio: auto;
+  border-radius: var(--astral-radius-lg);
+}
+
+.desktop-app .catalog-product-page .redux-product-stage::after {
+  z-index: 2;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 43%,
+      rgba(7, 7, 7, 0.4) 68%,
+      rgba(7, 7, 7, 0.94) 100%
+    ),
+    linear-gradient(90deg, rgba(7, 7, 7, 0.1), transparent 35%);
+}
+
+.desktop-app .redux-product-stage-caption {
+  position: absolute;
+  z-index: 5;
+  right: 30px;
+  bottom: 27px;
+  left: 30px;
+  max-width: 650px;
+  color: var(--astral-ink);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.68);
+}
+
+.desktop-app .redux-product-stage-caption h1 {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-family: var(--astral-font);
+  font-size: clamp(40px, 4vw, 64px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Имя из Discord бывает в 160 символов или одним словом из имени файла
+   (`heroTitleLength`). При 64px такое имя шло в восемь строк и уходило за
+   верх героя, а слово без пробелов резалось его краем. Кегль идёт за длиной,
+   длинное слово переносится, больше четырёх строк герой не отдаёт. */
+.desktop-app .redux-product-stage-caption h1 {
+  overflow-wrap: anywhere;
+}
+
+.desktop-app .redux-product-stage-caption h1[data-length="long"] {
+  font-size: clamp(34px, 2.8vw, 44px);
+  line-height: 1.04;
+}
+
+.desktop-app .redux-product-stage-caption h1[data-length="very-long"] {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--astral-text-hero);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+/* Имя из Discord бывает в 160 символов или одним словом из имени файла
+   (`heroTitleLength`). При 64px такое имя шло в восемь строк и уходило за
+   верх героя, а слово без пробелов резалось его краем. Кегль идёт за длиной,
+   длинное слово переносится, больше четырёх строк герой не отдаёт. */
+.desktop-app .redux-product-stage-caption h1 {
+  overflow-wrap: anywhere;
+}
+
+.desktop-app .redux-product-stage-caption h1[data-length="long"] {
+  font-size: clamp(34px, 2.8vw, 44px);
+  line-height: 1.04;
+}
+
+.desktop-app .redux-product-stage-caption h1[data-length="very-long"] {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--astral-text-hero);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.desktop-app .redux-product-stage-caption .redux-product-author {
+  margin-top: 10px;
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+/* Кадров мода нет: вместо чужого городского кадра — пустое поле со
+   значком и подписью. Подпись в верхней половине, над заголовком. */
+.desktop-app .redux-product-media.is-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding-top: 16%;
+  background: var(--astral-surface-sunken);
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+}
+
+.desktop-app .redux-product-media.is-placeholder svg {
+  width: 40px;
+  height: 40px;
+}
+
+.desktop-app .redux-product-stage-caption .redux-product-author strong {
+  color: #fff;
+}
+
+/* Авторство мода: автор, редукс, обзор — через точку, ссылки на обзор и
+   пост строкой ниже (ModAuthor.jsx). */
+.desktop-app
+  .redux-product-stage-caption
+  .redux-product-author
+  span
+  + span::before {
+  content: " · ";
+}
+
+.desktop-app .redux-product-stage-caption .redux-product-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 6px 0 0;
+}
+
+/* Звуки мода — в своём листе: components/desktop/catalog/mod-sounds.css. */
+
+.desktop-app .redux-product-stage-caption .redux-product-description {
+  display: -webkit-box;
+  max-width: 640px;
+  margin: 15px 0 0;
+  overflow: hidden;
+  color: var(--astral-ink-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Анонс обрезан — ссылка на текст целиком под кадром (ModDescription.jsx).
+   Стоит у левого края подписи: общие поля ссылки −8px выводили её за
+   подпись (аудит box-overflow, Т-161). */
+.desktop-app .redux-product-stage-caption .redux-product-read-more {
+  margin-top: 4px;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.desktop-app .redux-product-stage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 15px;
+  margin-top: 14px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.desktop-app .redux-product-stage-meta span + span::before {
+  margin-right: 15px;
+  color: rgba(255, 255, 255, 0.3);
+  content: "•";
+}
+
+.desktop-app .catalog-product-page .redux-product-stage-progress {
+  top: 18px;
+  right: 19px;
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
+/* No plate. The install plan is a list and a button sitting in the page's own
+   column — a card around them drew a second frame beside the media card and
+   made the panel read as a widget bolted onto the page. */
+.desktop-app .mod-action-menu {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  min-height: 0;
+  padding: 0 0 0 4px;
+  border: 0;
+  background: none;
+}
+
+.desktop-app .mod-action-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: baseline;
+  padding: 2px 2px 16px;
+  border-bottom: 1px solid var(--astral-line);
+}
+
+.desktop-app .mod-action-status small {
+  grid-column: 1 / -1;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* The status is a sentence with a dot, not a badge. Colour lives in the dot so
+   the sentence cannot out-shout the button it is introducing — the install CTA
+   is meant to be the loudest thing in this panel. */
+.desktop-app .mod-action-status strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .mod-action-status strong > i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--astral-positive);
+}
+
+.desktop-app .mod-action-status.is-installed strong > i {
+  background: var(--astral-ink-muted);
+}
+
+.desktop-app .mod-action-status.is-busy strong > i {
+  background: var(--astral-warning);
+}
+
+.desktop-app .mod-action-status em {
+  color: var(--astral-ink-muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 760;
+}
+
+.desktop-app .mod-action-plan-card {
+  /* Цвет рамки и заливка приходят из общего стеклянного материала
+     (`ui-matte-glass-contract.css`, `!important`) — здесь дублировать их
+     нечем и незачем. */
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-lg);
+}
+
+.desktop-app .mod-action-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 11px 14px;
+  border: 0;
+  color: var(--astral-ink-muted);
+  background: transparent;
+  text-align: left;
+}
+
+.desktop-app .mod-action-row + .mod-action-row {
+  border-top: 1px solid color-mix(in srgb, var(--redux-line) 74%, transparent);
+}
+
+.desktop-app button.mod-action-row {
+  font: inherit;
+}
+
+.desktop-app .mod-action-row.is-button {
+  cursor: pointer;
+}
+
+.desktop-app .mod-action-row.is-button:hover,
+.desktop-app .mod-action-row.is-button:focus-visible {
+  color: var(--redux-ink);
+  background: color-mix(in srgb, var(--redux-ink) 4%, transparent);
+}
+
+.desktop-app .mod-action-row > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.desktop-app .mod-action-row strong {
+  color: var(--redux-ink);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.desktop-app .mod-action-row small {
+  overflow: hidden;
+  color: var(--redux-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .mod-action-row > b {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 102px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--redux-ink) 88%, var(--redux-muted));
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .mod-action-row > b svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 180ms ease;
+}
+
+.desktop-app .mod-action-row.is-after > b.is-ready {
+  max-width: none;
+  padding: 5px 8px;
+  border: 1px solid var(--astral-line);
+  border-radius: 999px;
+  color: var(--astral-positive);
+  background: var(--astral-positive-soft);
+  font-weight: 760;
+}
+
+.desktop-app .mod-action-row.is-after > b.is-ready svg {
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.desktop-app .mod-action-row[aria-expanded="true"] > b svg {
+  transform: rotate(180deg);
+}
+
+.desktop-app .mod-action-change-detail {
+  display: grid;
+  gap: 9px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--redux-line) 74%, transparent);
+  color: var(--redux-muted);
+  background: color-mix(in srgb, var(--redux-ink) 3%, transparent);
+  font-size: var(--astral-text-micro);
+  line-height: 1.5;
+  animation: mod-action-detail-in 180ms ease both;
+}
+
+.desktop-app .mod-action-change-detail p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.desktop-app .mod-action-change-detail > div {
+  display: grid;
+  gap: 4px;
+}
+
+.desktop-app .mod-action-change-detail code {
+  overflow: hidden;
+  color: var(--redux-ink);
+  font-family: Consolas, monospace;
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .mod-action-community {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  margin: 10px 3px 0;
+}
+
+.desktop-app .mod-action-menu .cloud-rating {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.desktop-app .mod-action-menu .cloud-rating > span,
+.desktop-app .mod-action-menu .cloud-rating > small {
+  display: none;
+}
+
+.desktop-app .mod-action-menu .cloud-rating > b {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+/* Мишень — 28×28, как у любого органа (`HIT_TARGET_MIN` сверки
+   `hit-target`); здесь её ужимали до 18. Значок звезды остаётся 14px —
+   крупнее только поле нажатия. */
+.desktop-app .mod-action-menu .cloud-rating button {
+  width: 28px;
+  height: 28px;
+}
+
+/* The install row is the shared Button in two sizes — nothing here restyles
+   it, it only places it. Rewriting the control per screen is what produced
+   three different primary buttons in the first place. */
+/* Одна колонка: вторая держала кнопку «в избранное», а её в карточке мода
+   больше нет. Пока колонка оставалась, «Установить» упиралось в её место и не
+   доходило до края. */
+/* Сборка одной кнопкой (Т-81d): сколько частей стоит, «Установить сборку» /
+   «Доставить», «Снять сборку» и что именно она снимет. */
+.desktop-app .mod-action-bundle {
+  display: grid;
+  gap: 8px;
+}
+
+.desktop-app .mod-action-bundle-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 3px;
+}
+
+.desktop-app .mod-action-bundle-status small {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.desktop-app .mod-action-bundle-status strong {
+  color: var(--redux-ink);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.desktop-app .mod-action-bundle-note {
+  margin: 0 3px;
+  color: var(--redux-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.35;
+}
+
+/* Выбор варианта внутри карточки (Т-77): мини-карта 16:9 / 5:4 / по
+   умолчанию — над кнопкой, которая ставит выбранный. */
+.desktop-app .mod-action-variant {
+  display: grid;
+  gap: 8px;
+  margin: 14px 3px 0;
+}
+
+.desktop-app .mod-action-variant > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.desktop-app .mod-action-variant strong {
+  color: var(--redux-ink);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.2;
+}
+
+.desktop-app .mod-action-variant small {
+  color: var(--redux-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.35;
+}
+
+.desktop-app .mod-action-variant .ui-segmented {
+  width: 100%;
+}
+
+.desktop-app .mod-action-buttons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* Витрина без пакета (`catalogModWithoutPackage`): под неактивной кнопкой —
+   почему ставить нечего. */
+.desktop-app .mod-action-no-package {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+  text-align: center;
+}
+
+.desktop-app .mod-action-favorite.is-liked {
+  border-color: color-mix(in srgb, var(--astral-danger) 34%, transparent);
+  color: var(--astral-danger);
+  background: var(--astral-danger-soft);
+}
+
+@keyframes mod-action-detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1120px) {
+  .desktop-app .catalog-product-page .redux-product-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(325px, 350px);
+    gap: 11px;
+  }
+
+  .desktop-app .redux-product-stage-caption .redux-product-description {
+    -webkit-line-clamp: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .desktop-app .catalog-product-page .redux-product-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-app .catalog-product-page .redux-product-stage {
+    min-height: 480px;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .desktop-app .mod-action-menu {
+    width: 100%;
+    border-radius: var(--astral-radius-lg);
+  }
+}
+
+@media (max-width: 620px) {
+  .desktop-app .catalog-product-page .redux-product-stage {
+    min-height: 400px;
+    aspect-ratio: auto;
+  }
+
+  .desktop-app .redux-product-stage-caption {
+    right: 20px;
+    bottom: 20px;
+    left: 20px;
+  }
+
+  .desktop-app .redux-product-stage-caption h1 {
+    font-size: var(--astral-text-hero);
+  }
+
+  .desktop-app .redux-product-stage-caption .redux-product-description,
+  .desktop-app .redux-product-stage-meta span:nth-child(2) {
+    display: none;
+  }
+
+  .desktop-app .redux-product-stage-meta span + span::before {
+    margin-right: 10px;
+  }
+
+  .desktop-app .mod-action-menu {
+    padding: 17px;
+  }
+
+  .desktop-app .mod-action-row > b {
+    max-width: 82px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app .mod-action-change-detail {
+    animation: none;
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@modovik/rpf-inspector",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./weapon-identity": "./weapon-identity.js",
+    "./weapon-components": "./weapon-components.js",
+    "./weapon-attachments": "./weapon-attachments.js",
+    "./baseline": "./baseline.js",
+    "./weapon-baseline": "./weapon-baseline.js",
+    "./clothing-baseline": "./clothing-baseline.js",
+    "./post-key": "./post-key.js",
+    "./place-fingerprints": "./place-fingerprints.js",
+    "./fast-entry": "./fast-entry.js",
+    "./arena-stock-names": "./arena-stock-names.js",
+    "./arena-closure": "./arena-closure.js",
+    "./anatomy-summary": "./anatomy-summary.js",
+    "./anatomy": "./anatomy.js",
+    "./stock-library": "./stock-library.js",
+    "./stock-routes": "./stock-routes.js"
+  },
+  "dependencies": {
+    "@modovik/gun-studio": "*",
+    "@modovik/publishing": "*",
+    "@modovik/mod-targets": "*",
+    "@modovik/bloodfx": "*",
+    "@modovik/minimap-contract": "*",
+    "@modovik/climb-contract": "*"
+  }
+}

@@ -1,0 +1,246 @@
+/*
+ * Корзина библиотеки: кнопки на полосе разделов, отмеченные карточки и окно
+ * подтверждения.
+ *
+ * Лист стоит в слое overrides рядом с полками мастерской: он правит те же
+ * карточки и ту же полосу разделов и обязан стоять после листов, которые их
+ * рисуют.
+ */
+
+/* Действие полки — в конце полосы разделов, по той же линии, что чипы:
+   корзина в библиотеке (в режиме выбора — «Выбрать всё» и «Удалить
+   выбранное» на её месте), «Мои работы» в мастерской. */
+.desktop-app
+  .workshop-page-bar
+  .ui-page-bar-actions
+  > :is(.library-trash-button, .library-shelf-actions, .workshop-works-button) {
+  flex: 0 0 auto;
+}
+
+.desktop-app .library-shelf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Сколько отмечено — числом на самой кнопке удаления: то, что уйдёт из игры,
+   видно там, где решают, а не строкой в стороне. Цифра тёмная: белая на
+   приглушённом красном давала 3.5:1, ниже порога для мелкого кегля. */
+.desktop-app .library-remove-selected .library-remove-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: var(--astral-accent-ink);
+  background: var(--astral-danger);
+  font-size: var(--astral-text-micro);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+}
+
+/* Отмеченная карточка — рамкой акцента поверх кадра: чип и знак выбора сами
+   по себе маленькие, а решение «это уйдёт» должно читаться издалека. Рамка —
+   контуром, а не тенью: тени карточек мастерской глушат ранние контракты
+   (`workshop-contracts`), и отметка пропадала бы вместе с ними. */
+.desktop-app [data-library-selecting] .ui-media-card[aria-pressed="true"],
+.desktop-app [data-library-selecting] .weapon-slot-card[data-selected="true"] {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: -2px;
+}
+
+/* Плитка полки v2 (`library-v2.css`) отмечена своей скруглённой рамкой акцента
+   на кадре (`shelf-card.css`, `aria-pressed`); квадратный контур вокруг кадра с
+   подписью поверх неё лишний. */
+.desktop-app
+  [data-library-selecting]
+  .lib-tile
+  .ui-shelf-card[aria-pressed="true"] {
+  outline: none;
+}
+
+.desktop-app [data-library-selecting] .ui-media-card[aria-pressed="false"],
+.desktop-app [data-library-selecting] .weapon-slot-card[data-selected="false"] {
+  opacity: 0.82;
+}
+
+/* Карточка уходит из игры: «Удалить» нажато, удаление идёт минутами. Она
+   гаснет на своём месте и не нажимается, пока удаление не кончится, — полка
+   не делает вид, что ничего не происходит, и не даёт удалить то же дважды. */
+.desktop-app [data-library-removing] {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+/* Знак выбора у карточек оружия и одежды: их корень — article, у которого
+   своего знака нет. Геометрия — та же, что у знака общей карточки. */
+.desktop-app .weapon-slot-card > .library-card-check {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--astral-radius);
+  color: rgba(249, 250, 252, 0.9);
+  background: rgba(13, 13, 13, 0.62);
+  pointer-events: none;
+}
+
+.desktop-app .weapon-slot-card[data-selected="true"] > .library-card-check {
+  border-color: var(--astral-accent);
+  color: var(--astral-accent-ink);
+  background: var(--astral-accent);
+}
+
+.desktop-app .weapon-slot-card > .library-card-check svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Строка оптимизации в режиме выбора: флажок в начале, «Открыть» прячется —
+   в режиме выбора строка отмечается, а не открывается. */
+.desktop-app .workshop-library-row > .library-row-check {
+  flex: 0 0 auto;
+}
+
+/* Окно подтверждения ------------------------------------------------------*/
+
+.library-removal-dialog .library-removal-lead {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+/* В широком окне (ТЗ 05.10, задача 16) план — сеткой карточек справа, а
+   вводная, заметки и то, что мешает, — в колонке сведений слева. */
+.library-removal-dialog .library-removal-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library-removal-dialog .library-removal-list > li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface);
+}
+
+.library-removal-dialog .library-removal-list > li > span {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.library-removal-dialog .library-removal-list b {
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-removal-dialog .library-removal-list small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  line-height: var(--astral-line-normal);
+}
+
+.library-removal-dialog .library-removal-list em {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: var(--astral-ink-muted);
+  background: var(--astral-surface-raised);
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.library-removal-dialog .library-removal-list > li[data-tone="blocked"] {
+  border-color: rgba(var(--astral-warning-rgb), 0.36);
+  background: var(--astral-warning-soft);
+}
+
+.library-removal-dialog .library-removal-list > li[data-tone="blocked"] em {
+  color: var(--astral-warning);
+  background: transparent;
+}
+
+/* Карточка, которую не отмечали, но которая уйдёт вместе с отмеченной: её
+   видно в списке так же, как отмеченные, — метка говорит, почему она там. */
+.library-removal-dialog .library-removal-list > li[data-tone="together"] em {
+  color: var(--astral-danger);
+  background: var(--astral-danger-soft);
+}
+
+.library-removal-dialog .library-removal-problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid rgba(var(--astral-danger-rgb), 0.34);
+  border-radius: var(--astral-radius);
+  color: var(--astral-ink);
+  background: var(--astral-danger-soft);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+.library-removal-dialog .library-removal-problem > svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--astral-danger);
+}
+
+.library-removal-dialog .library-removal-problem > span {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.library-removal-dialog .library-removal-note {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+.library-removal-dialog .library-removal-note:last-child {
+  margin-bottom: 0;
+}
+
+/* Узкое окно: полоса разделов переносится, и кнопки выбора встают строкой
+   во всю ширину, а не жмутся в угол. */
+@media (max-width: 760px) {
+  .desktop-app .workshop-page-bar .ui-page-bar-actions,
+  .desktop-app
+    .workshop-page-bar
+    .ui-page-bar-actions
+    > .library-shelf-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .desktop-app .library-shelf-actions > .ui-button {
+    flex: 1 1 auto;
+  }
+}

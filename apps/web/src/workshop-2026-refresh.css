@@ -1,0 +1,193 @@
+/*
+ * Workshop 2026 refinement.
+ *
+ * The rules in this file deliberately target the public workshop only. They
+ * consolidate the latest presentation fixes without coupling behavior to
+ * one-off page markup or changing the shared catalog components.
+ */
+
+/* Redux previews keep their original image clarity and color. */
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .redux-visual-grid
+  > .redux-visual-card::before,
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .catalog-v3-landing-grid
+  > button::before {
+  opacity: 0 !important;
+  background: linear-gradient(
+    180deg,
+    transparent 70%,
+    rgba(9, 9, 9, 0.18)
+  ) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  :is(.redux-visual-card, .catalog-v3-landing-grid > button)
+  > :is(.redux-visual-image, img) {
+  opacity: 1 !important;
+  filter: saturate(1.04) contrast(1.045) brightness(1.04) !important;
+  transform: scale(1.002) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  .redux-visual-card
+  > .redux-visual-image.is-suggested-preview {
+  opacity: 1 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button
+  ):hover
+  > :is(.redux-visual-image, img) {
+  filter: saturate(1.07) contrast(1.055) brightness(1.055) !important;
+  transform: scale(1.035) !important;
+}
+
+/* A weapon model occupies the app canvas instead of an artificial dark card. */
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"].workshop-local-catalog-active {
+  padding: 0 18px 28px !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100vh - 112px) !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .workshop-local-hero {
+  position: relative !important;
+  min-height: clamp(600px, calc(100vh - 112px), 900px) !important;
+  height: auto !important;
+  display: block !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .workshop-local-hero-media {
+  position: absolute !important;
+  z-index: 1 !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .weapon-viewer-embedded,
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .weapon-viewer-stage,
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .weapon-viewer-state {
+  background: rgba(13, 13, 13, 0.18);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .weapon-viewer-state
+  > img {
+  display: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .workshop-local-hero-header {
+  position: absolute !important;
+  z-index: 3 !important;
+  right: 18px !important;
+  bottom: 18px !important;
+  left: 18px !important;
+  min-height: 104px !important;
+  padding: 17px 18px !important;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: color-mix(
+    in srgb,
+    var(--workshop-surface-strong) 76%,
+    transparent
+  ) !important;
+  box-shadow: var(--workshop-glass-shadow) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-library-catalog.is-immersive-media
+  .workshop-local-grid {
+  position: relative !important;
+  z-index: 4 !important;
+  margin-top: 12px !important;
+}
+
+@media (max-width: 1080px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="gunpacks"]
+    .workshop-library-catalog.is-immersive-media
+    .workshop-local-hero {
+    min-height: calc(100vh - 150px);
+  }
+}
+
+@media (max-width: 760px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="gunpacks"]
+    .workshop-library-catalog.is-immersive-media
+    .workshop-local-hero-header {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app
+    .catalog-v3[data-workshop-section="redux"]
+    :is(.redux-visual-card, .catalog-v3-landing-grid > button)
+    > :is(.redux-visual-image, img) {
+    transition-duration: 1ms;
+  }
+}

@@ -1,0 +1,276 @@
+/* Разделы редукса в карточке мода: поток содержимого, значки эффектов, списки и статус.
+   Весь лист лежит в слое overrides; снаружи слоя только комментарии.
+   Корень вложенности — .desktop-app. */
+
+@layer overrides {
+  .desktop-app {
+    --sections-text: var(--astral-ink);
+    --sections-text-dim: var(--astral-ink-muted);
+    --sections-text-quiet: var(--astral-ink-faint);
+    --sections-size-small: var(--astral-text-small);
+    --sections-size-title: var(--astral-text-title);
+    --sections-size-strong: var(--astral-text-strong);
+
+    /* ---------- поток разделов внутри карточки ---------- */
+    & .mod-card {
+      & .mod-contents-flow {
+        column-gap: 12px;
+        row-gap: 22px;
+        align-items: start;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        display: grid;
+
+        & > .mod-contents-section {
+          min-width: 0;
+          grid-column: 1 / -1;
+        }
+      }
+
+      & .mod-contents-heading {
+        letter-spacing: -.01em;
+        font-weight: 600;
+        font-size: var(--sections-size-title);
+        color: var(--sections-text);
+        margin-inline: 0;
+        margin-block: 0 10px;
+        gap: 8px;
+        align-items: baseline;
+        display: flex;
+
+        & small {
+          font-weight: 500;
+          font-size: var(--sections-size-small);
+          color: var(--sections-text-quiet);
+        }
+      }
+
+      & .mod-card-cover-sign {
+        color: var(--sections-text-dim);
+        height: 100%;
+        width: 100%;
+        place-items: center;
+        display: grid;
+
+        & > svg {
+          height: 64px;
+          width: 64px;
+        }
+      }
+    }
+
+    /* ---------- обложка эффектов в ступени «Компоненты» ---------- */
+    & .mod-components-stage {
+      /* два правила на один селектор: второе сознательно идёт после первого */
+      & .ui-pick-media {
+        & > .mod-effects-cover {
+          padding-inline: 14px;
+          padding-block: 13px 0;
+          gap: 12px;
+          justify-content: flex-start;
+          align-items: flex-start;
+          flex-direction: column;
+          display: flex;
+
+          &.is-sparse {
+            padding-inline: 14px;
+            padding-block: 0 44px;
+            gap: 14px;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+
+        & > .mod-effects-cover {
+          padding: 32px;
+          gap: 28px;
+          justify-content: center;
+          align-items: center;
+        }
+      }
+
+      & .mod-effects-row {
+        column-gap: 28px;
+        row-gap: 14px;
+        justify-content: center;
+
+        &.is-redrawn {
+          & .mod-effects-glyph {
+            height: 44px;
+            width: 44px;
+          }
+        }
+
+        &.is-off {
+          & .mod-effects-glyph {
+            height: 30px;
+            width: 30px;
+          }
+        }
+
+        &.is-redrawn {
+          & .mod-effects-chip {
+            & > b {
+              font-size: var(--sections-size-title);
+            }
+          }
+        }
+      }
+    }
+
+    /* ---------- строка значков эффектов ---------- */
+    & .mod-effects-row {
+      max-width: 100%;
+      column-gap: 13px;
+      row-gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      display: flex;
+
+      &.is-redrawn {
+        & .mod-effects-chip {
+          color: var(--sections-text);
+
+          & > b {
+            font-weight: 700;
+            font-size: var(--sections-size-strong);
+          }
+
+          & > small {
+            font-weight: 600;
+            font-size: var(--sections-size-small);
+            color: var(--sections-text-dim);
+          }
+        }
+
+        & .mod-effects-glyph {
+          height: 26px;
+          width: 26px;
+        }
+      }
+
+      &.is-off {
+        & .mod-effects-chip {
+          color: var(--sections-text-dim);
+
+          & > b {
+            font-weight: 600;
+            font-size: var(--sections-size-small);
+          }
+        }
+
+        & .mod-effects-glyph {
+          height: 20px;
+          width: 20px;
+        }
+      }
+    }
+
+    & .mod-effects-chip {
+      white-space: nowrap;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      gap: 5px;
+      align-items: center;
+      display: inline-flex;
+    }
+
+    /* редкая обложка: идёт после строк redrawn и off, чтобы перебить их размеры при равной силе */
+    & .is-sparse.mod-effects-cover {
+      & .mod-effects-row {
+        column-gap: 22px;
+        row-gap: 10px;
+        justify-content: center;
+      }
+
+      & .mod-effects-glyph {
+        height: 40px;
+        width: 40px;
+      }
+
+      & .mod-effects-chip {
+        & > b {
+          font-size: var(--sections-size-strong);
+        }
+      }
+    }
+
+    /* ---------- списки эффектов и названий ---------- */
+    & .mod-effects-list code,
+    & .mod-effects-names code {
+      font-size: var(--sections-size-small);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      color: var(--sections-text-dim);
+      border-radius: var(--astral-radius-xs);
+      border-color: var(--astral-line);
+      border-style: solid;
+      border-width: 1px;
+      padding-inline: 8px;
+      padding-block: 3px;
+      display: inline-block;
+    }
+
+    & .mod-effects-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 10px;
+      display: grid;
+
+      & > li {
+        line-height: 1.5;
+        font-size: var(--astral-text-body);
+        color: var(--sections-text);
+        gap: 12px;
+        align-items: start;
+        grid-template-columns: 20px minmax(0, 1fr);
+        display: grid;
+      }
+
+      & .mod-effects-glyph {
+        color: var(--sections-text);
+        height: 20px;
+        width: 20px;
+
+        &.is-off {
+          color: var(--sections-text-quiet);
+        }
+      }
+
+      & b {
+        font-weight: 600;
+      }
+
+      /* после общего правила для code: здесь поля уже */
+      & code {
+        line-height: 1.6;
+        padding-inline: 6px;
+        padding-block: 0;
+      }
+    }
+
+    & .mod-effects-detail {
+      color: var(--sections-text-dim);
+    }
+
+    & .mod-effects-names {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 6px;
+      flex-wrap: wrap;
+      display: flex;
+    }
+
+    & .mod-effects-status {
+      gap: 6px;
+      align-items: center;
+      display: inline-flex;
+
+      & > svg {
+        height: 13px;
+        width: 13px;
+        flex: none;
+      }
+    }
+  }
+}

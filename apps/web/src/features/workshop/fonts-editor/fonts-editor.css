@@ -1,0 +1,45 @@
+/*
+ * Шрифты: кадр — название шрифта его буквами на матовой плашке, плитки
+ * шаблонов — строкой букв самим шрифтом шаблона. Раскладка и плашки — общие с
+ * редакторами перекраски (`recolor-editor.css`).
+ */
+
+.fonts-frame {
+  display: grid;
+  place-items: stretch;
+}
+
+.fonts-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Плитка шаблона: строка «Аа Bb 12» шрифтом шаблона вместо картинки. */
+.fonts-template .ui-choice-media {
+  display: grid;
+  place-items: center;
+}
+
+.fonts-template-sample {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-hero);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.fonts-template:disabled .fonts-template-sample {
+  opacity: 0.4;
+}
+
+/* Шрифт с Google Fonts: поле со ссылкой и две кнопки под ним. */
+.fonts-google {
+  display: grid;
+  gap: 8px;
+}
+
+.fonts-google-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

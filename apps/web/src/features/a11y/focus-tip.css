@@ -1,0 +1,34 @@
+/*
+ * Подсказка у элемента в фокусе: плавает поверх окна, мышь не ловит.
+ * Порядок объявлений в правиле: текст, цвет, обводка и углы, тень, фон, отступы, размеры,
+ * положение, поведение. Углы берёт локальный псевдоним: так значение радиуса не повторяется
+ * четыре раза.
+ */
+.focus-tip {
+  --tip-corner: var(--astral-radius-sm);
+  white-space: nowrap;
+  line-height: 1.4;
+  font-size: var(--astral-text-micro);
+  color: var(--astral-ink);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--astral-glass-border);
+  border-top-left-radius: var(--tip-corner);
+  border-top-right-radius: var(--tip-corner);
+  border-bottom-right-radius: var(--tip-corner);
+  border-bottom-left-radius: var(--tip-corner);
+  box-shadow: 0 10px 28px var(--astral-glass-shadow);
+  background-color: var(--astral-glass-bg-strong);
+  padding-block: 6px;
+  padding-inline: 10px;
+  max-width: 240px;
+  z-index: 9999;
+  position: fixed;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+/* Подсказка сбоку от якоря: центрируется по вертикали, а не по горизонтали. */
+.is-right.focus-tip {
+  transform: translateY(-50%);
+}

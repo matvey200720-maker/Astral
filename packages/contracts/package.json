@@ -1,0 +1,18 @@
+{
+  "name": "@modovik/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/ipc.cjs",
+  "exports": {
+    "./api": "./src/api.js",
+    "./app-icon": "./src/app-icon.js",
+    "./app-errors": "./src/app-errors.js",
+    "./catalog-v1": "./src/catalog-v1.js",
+    "./catalog-v2": "./src/catalog-v2.js",
+    "./download-grant-v1": "./src/download-grant-v1.js",
+    "./news-v1": "./src/news-v1.js",
+    "./showcase-v1": "./src/showcase-v1.js",
+    "./ipc": "./src/ipc.cjs"
+  }
+}

@@ -1,0 +1,1434 @@
+/*
+ * «На что поставить?» — выбор вещи сервера (`ClothingTargetPicker.jsx`).
+ *
+ * Шапка окна (сервер, поиск) не уезжает с прокруткой, тело прокручивается
+ * целиком: рекомендации, своя вещь по номеру и список группами по 15 строк
+ * (задача 9 ТЗ 10.10.2026, вечер). Строка — постоянной высоты
+ * (`--ui-virtual-row`): её же держит виртуальный список тату игры.
+ * Выбор — обводка и отметка в самой строке: по щелчку ничего не двигается.
+ */
+
+.clothing-target-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.clothing-target-search {
+  flex: 1 1 260px;
+}
+
+.clothing-target-body {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.clothing-target-section {
+  display: grid;
+  gap: 8px;
+}
+
+.clothing-target-section > h4 {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.clothing-target-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+/* Приписка «Советует автор» — на поверхности окна «слабый» текст плитки
+   не вычитывается (4.3:1), поэтому здесь она на ступень ярче. */
+.clothing-target-tile .ui-choice-copy > em {
+  color: var(--astral-ink-muted);
+}
+
+.clothing-target-custom {
+  padding: 10px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  transition: border-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.clothing-target-custom.is-selected {
+  border-color: var(--astral-accent);
+}
+
+.clothing-target-custom-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.clothing-target-list {
+  --ui-virtual-row: 80px;
+}
+
+/* Полка магазина — строка той же высоты, что вещь (список виртуальный):
+   название внизу строки, над ним — черта, а не пустота. */
+.clothing-target-shop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  box-sizing: border-box;
+  height: var(--ui-virtual-row);
+  padding: 0 4px 10px;
+  background: linear-gradient(var(--astral-line), var(--astral-line)) center 40% / 100% 1px no-repeat;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.clothing-target-shop small {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.clothing-target-row {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(var(--ui-virtual-row) - 4px);
+  margin-bottom: 4px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  color: var(--astral-ink);
+  background: var(--astral-surface-raised);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.clothing-target-row:hover {
+  border-color: var(--astral-line-strong);
+}
+
+.clothing-target-row:disabled {
+  color: var(--astral-ink-muted);
+  background: transparent;
+  cursor: default;
+}
+
+.clothing-target-row:disabled:hover {
+  border-color: var(--astral-line);
+}
+
+.clothing-target-row.is-selected {
+  border-color: var(--astral-accent);
+}
+
+.clothing-target-row:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 1px;
+}
+
+.clothing-target-thumb {
+  display: grid;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-faint);
+  background: var(--astral-surface-sunken);
+}
+
+.clothing-target-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clothing-target-thumb svg {
+  width: 20px;
+  height: 20px;
+}
+
+.clothing-target-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.clothing-target-copy b,
+.clothing-target-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clothing-target-copy b {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+
+.clothing-target-copy small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.clothing-target-empty,
+.clothing-target-note {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+.clothing-target-summary {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+@media (max-width: 720px) {
+  .clothing-target-custom-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/*
+ * «Замена» — тот же выбор инструментом мастерской одежды (задача 8).
+ * «Применить» без выбора приводит сюда: раздел выбора подсвечен обводкой,
+ * пока вещь не выбрана, — без красного и без окна.
+ */
+.clothing-target-tool {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+/* Панель узкая: сервер и поиск — каждый во всю строку, имена серверов
+   целиком, а не «GTA5…». */
+.clothing-target-tool .clothing-target-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.clothing-target-tool .clothing-target-custom-fields {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.clothing-target-tool .clothing-target-custom-fields > :first-child {
+  grid-column: 1 / -1;
+}
+
+.clothing-target-tool .clothing-target-tiles {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.clothing-target-tool.is-attention .clothing-target-summary {
+  color: var(--astral-ink);
+  font-weight: 600;
+}
+
+/* Нижняя строка «Сделать заменёнку» (28.10.2026): слева маленькое фото штатной расцветки, справа выбранный цвет мода, рядом «вещь · расцветка N». */
+.clothing-target-chosen {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.clothing-target-pair {
+  display: inline-flex;
+  flex: none;
+}
+
+.clothing-target-pair .clothing-pair {
+  width: 88px;
+  height: 40px;
+  padding: 0;
+}
+
+.clothing-target-pair .clothing-pair-side svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Пара в нижней строке окна: две картинки, без стрелки (владелец, 01.11.2026). Стрелка не знала своей рамки и уезжала в центр окна, на плитки. */
+.clothing-target-pair .clothing-pair-arrow {
+  display: none;
+}
+
+.clothing-pair-swatch {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.clothing-target-summary.is-chosen,
+.clothing-target-summary.is-waiting {
+  color: var(--astral-ink);
+}
+
+/* Вторая строка статуса «Сделать заменёнку»: что станет с вариантом для другого пола. */
+.clothing-target-twin {
+  display: block;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+}
+
+/* Что осталось выбрать — обводка акцентом у раздела выбора, без красного. */
+.clothing-target-section.is-attention {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 4px;
+  border-radius: var(--astral-radius-sm);
+}
+
+.clothing-target-more {
+  justify-self: start;
+}
+
+/*
+ * Группы списка (задача 9 ТЗ 10.10.2026, вечер): шапка — кнопка во всю
+ * строку, строки — по 15, без картинок (значок вида вместо снимка), поэтому
+ * ниже строк с картинкой. У плиток советов картинок тоже нет — их правила
+ * ушли вместе с картинками (бюджет `main.css` у потолка).
+ */
+.clothing-target-group {
+  display: grid;
+  gap: 4px;
+}
+
+.clothing-target-group-head.ui-button {
+  justify-content: flex-start;
+  color: var(--astral-ink);
+  font-weight: 600;
+}
+
+.clothing-target-group .clothing-target-list {
+  --ui-virtual-row: 56px;
+}
+
+.clothing-target-group .clothing-target-row {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+
+.clothing-target-group .clothing-target-thumb {
+  width: 44px;
+  height: 44px;
+}
+
+/*
+ * Бронежилеты проекта (задача 9): группы «Стандартный / Государственные /
+ * Фракции», строка — цвет жилета с образцом и отметкой.
+ */
+.clothing-armor {
+  --ui-virtual-row: 52px;
+  gap: 14px;
+}
+
+.clothing-armor.is-attention {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 4px;
+  border-radius: var(--astral-radius-sm);
+}
+
+.clothing-armor-group {
+  display: grid;
+  gap: 6px;
+}
+
+.clothing-armor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.clothing-armor-head h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.clothing-armor-head small {
+  color: var(--astral-ink-muted);
+  font-weight: 400;
+}
+
+.clothing-armor-rows {
+  display: grid;
+}
+
+/* Строка жилета — как строка вещи: картинка 68 px (задача 2 ТЗ 06.10.2026),
+   без картинки — образец цвета на всю клетку. */
+.clothing-armor-row {
+  height: 76px;
+}
+
+.clothing-armor-swatch {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.clothing-armor-row:disabled .clothing-target-thumb {
+  opacity: 0.4;
+}
+
+.clothing-armor-project {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--astral-line);
+}
+
+/*
+ * Сетка вещей картинками (`ClothingItemGrid.jsx`, владелец, 25.10.2026): плитка — картинка вещи и её имя, как в магазине одежды.
+ * Картинка во всю ширину плитки, 4 : 5; значок вида — пока она едет или её нет. Выбор — обводка и отметка в углу, без сдвигов.
+ */
+.clothing-item-grid-body {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.clothing-item-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.clothing-item-count {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.clothing-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  /*
+   * Без растяжения по высоте: у плиток aspect-ratio, и `align-items: stretch` заставляет сетку заново раскладывать каждую плитку на каждый проход
+   * (замер 27.10.2026, Desktop ×4, 96 плиток: пересчёт раскладки 230–290 мс против 5–11 мс с `start`; высота сетки та же — у всех плиток ряда один ряд ratio).
+   */
+  align-items: start;
+  gap: 10px;
+}
+
+.clothing-item-grid.is-attention {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 4px;
+  border-radius: var(--astral-radius-sm);
+}
+
+.clothing-item-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  color: var(--astral-ink);
+  background: var(--astral-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--astral-duration-fast) var(--astral-ease),
+    background var(--astral-duration-fast) var(--astral-ease);
+}
+
+.clothing-item-tile:hover:not(:disabled) {
+  border-color: var(--astral-line-strong);
+  background: var(--astral-surface-raised);
+}
+
+.clothing-item-tile:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.clothing-item-tile.is-selected {
+  border-color: var(--astral-ink);
+  background: var(--astral-surface-raised);
+}
+
+.clothing-item-tile:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.clothing-item-pic {
+  display: grid;
+  /*
+   * Одна ячейка ровно по коробке (16.11.2026, владелец: «чтобы вещь влезала в кадр целиком, а не была обрезана»; снимок бороды-обезьяны berd_000 в окне «На что поставить?»). У сетки без явных дорожек
+   * строка — `auto`, и `height: 100%` картинки считалась от неё, а не от коробки: картинка вставала в свой натуральный квадрат (191 px при кадре 122 px), и `overflow: hidden` срезал её сверху и снизу.
+   * С дорожкой `minmax(0, 1fr)` процент считается от коробки, и `object-fit: contain` вписывает вещь целиком, с полями плитки.
+   */
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--astral-radius-xs);
+  color: var(--astral-ink-faint);
+  background: #000;
+}
+
+/*
+ * Плитка выбора вещи — карточка, а не рамка с картинкой внутри (ТЗ 27.10.2026, п. 1): картинка вещи во всю плитку без чёрной подложки,
+ * магазин и имя поверх неё слева внизу, число раскрасок справа вверху. Текст читается на тёмной дымке снизу.
+ */
+.clothing-item-tile .clothing-item-pic {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+  background: transparent;
+}
+
+.clothing-item-tile .clothing-item-pic img {
+  box-sizing: border-box;
+  padding: 10px 10px 54px;
+}
+
+.clothing-item-tile .ui-skeleton.is-fill {
+  border-radius: 0;
+}
+
+.clothing-item-copy {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  gap: 2px;
+  padding: 30px 10px 9px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.86) 28%, rgba(0, 0, 0, 0));
+  pointer-events: none;
+}
+
+.clothing-item-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clothing-item-pic svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Значок вида над серым местом снимка: скелет лежит позади (`z-index: 0`). */
+.clothing-item-pic .ui-skeleton + svg {
+  position: relative;
+  z-index: 1;
+}
+
+/* Серое место плитки, пока картинка едет: плита цвета без анимации. Бегущий блик `Skeleton` на каждой плитке сетки задерживал первую картинку на 0,7–1,1 с (замер 15.11.2026). */
+.clothing-item-pic .clothing-item-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--astral-surface-hover);
+}
+
+.clothing-item-pic .clothing-item-plate + svg {
+  position: relative;
+  z-index: 1;
+}
+
+.clothing-item-name {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  line-height: var(--astral-line-tight);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.clothing-item-colours {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.clothing-item-flags {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: calc(100% - 52px);
+}
+
+.clothing-item-flags i {
+  padding: 1px 6px;
+  border-radius: 999px;
+  color: var(--astral-ink);
+  background: rgba(0, 0, 0, 0.72);
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+}
+
+/* Галочка «на вещи стоит заменёнка» — своя, не путать с отметкой выбора справа. */
+.clothing-item-flags i.is-taken {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--astral-ink);
+  box-shadow: inset 0 0 0 1px var(--astral-line-strong);
+}
+
+.clothing-item-flags i.is-taken svg {
+  width: 12px;
+  height: 12px;
+}
+
+.clothing-item-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: #000;
+  background: var(--astral-ink);
+}
+
+.clothing-item-more {
+  grid-column: 1 / -1;
+  height: 1px;
+}
+
+.clothing-item-note {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.clothing-item-custom > summary {
+  /* Строка выбирается пальцем: не ниже мишени (аудит «hit-target»); маркер раскрытия остаётся. */
+  padding-block: 8px;
+  cursor: pointer;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.clothing-item-custom[open] > summary {
+  margin-bottom: 8px;
+}
+
+/* Слева: выбранная вещь рядом с заменёнкой — картинка и имя (`ChosenItemCard`). */
+.clothing-chosen-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+}
+
+.clothing-chosen-card.is-empty {
+  border-style: dashed;
+  color: var(--astral-ink-muted);
+}
+
+.clothing-chosen-pic {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 64px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-xs);
+  color: var(--astral-ink-faint);
+  background: #000;
+}
+
+.clothing-chosen-pic .clothing-item-pic {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.clothing-chosen-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.clothing-chosen-copy small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.clothing-chosen-copy b {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-tight);
+  overflow-wrap: anywhere;
+}
+
+/*
+ * «Какой цвет будет виден в игре» (`ColourMappingDialog.jsx`, владелец 25.10.2026): вверху «вещь → заменёнка», шаг 1 — способ,
+ * шаг 2 — пары картинками (слева цвет вещи, справа — что увидишь); нажал на пару — ниже выбор другого цвета мода.
+ */
+.colour-map-body {
+  display: grid;
+  gap: 20px;
+}
+
+.colour-map-heads {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+}
+
+.colour-map-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.colour-map-head > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.colour-map-head small,
+.colour-map-head em {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+}
+
+.colour-map-head b {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  line-height: var(--astral-line-tight);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.colour-map-head-arrow {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--astral-line);
+  border-radius: 999px;
+  color: var(--astral-ink-muted);
+}
+
+.colour-map-pic {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-xs);
+  color: var(--astral-ink-faint);
+  background: #000;
+}
+
+.colour-map-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.colour-map-pic i {
+  width: 56%;
+  height: 56%;
+  border-radius: 999px;
+  background: var(--astral-line-strong);
+}
+
+.colour-map-pic svg {
+  width: 24px;
+  height: 24px;
+}
+
+.colour-map-step {
+  display: grid;
+  gap: 10px;
+}
+
+.colour-map-step h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.colour-map-step h4 i {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: 999px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.colour-map-step h4 small {
+  margin-left: auto;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 400;
+}
+
+.colour-map-modes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.colour-map-modes svg {
+  width: 48px;
+  height: 36px;
+  color: var(--astral-ink-muted);
+}
+
+.colour-map-modes [aria-checked="true"] svg {
+  color: var(--astral-ink);
+}
+
+.colour-map-pairs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 10px;
+}
+
+.colour-map-pair {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: var(--astral-surface);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--astral-duration-fast) var(--astral-ease),
+    background var(--astral-duration-fast) var(--astral-ease);
+}
+
+.colour-map-pair:hover {
+  border-color: var(--astral-line-strong);
+  background: var(--astral-surface-raised);
+}
+
+.colour-map-pair:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.colour-map-pair.is-active {
+  border-color: var(--astral-ink);
+  background: var(--astral-surface-raised);
+}
+
+.colour-map-pair-pics {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.colour-map-pair-pics .colour-map-pic {
+  width: 64px;
+  height: 64px;
+}
+
+.colour-map-pair-arrow {
+  display: grid;
+  place-items: center;
+  color: var(--astral-ink-muted);
+}
+
+.colour-map-pair-name {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colour-map-pair-name small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.colour-map-strip {
+  /* Выбор цвета всегда на виду: пар у вещи бывает два десятка, и без прилипания он уезжал бы за край окна. */
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-strong);
+  box-shadow: 0 -14px 18px -14px rgba(0, 0, 0, 0.7);
+}
+
+.colour-map-strip p {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.colour-map-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.colour-map-option .colour-map-pic {
+  width: 40px;
+  height: 40px;
+}
+
+.colour-map-option {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 72px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-muted);
+  background: transparent;
+  font: inherit;
+  font-size: var(--astral-text-micro);
+  cursor: pointer;
+}
+
+.colour-map-option span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colour-map-option:hover {
+  background: var(--astral-surface-raised);
+}
+
+.colour-map-option:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.colour-map-option.is-selected {
+  border-color: var(--astral-ink);
+  color: var(--astral-ink);
+}
+
+.colour-map-summary {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+}
+
+@media (max-width: 720px) {
+  .colour-map-heads {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .colour-map-head-arrow {
+    display: none;
+  }
+
+  .colour-map-modes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Слева в «Сделать заменёнку»: вещь мода в 3D и ряд её цветов (`ModelPane.jsx`, `ClothingInstallDialog.jsx`). */
+.clothing-model-pane {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: #000;
+}
+
+.clothing-model-pane > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* Пока Desktop собирает вещь выбранного цвета (28.10.2026): тихая подпись сверху по центру, поверх прежней модели. */
+.clothing-model-pane > .clothing-model-note {
+  inset: 10px 0 auto;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.clothing-model-pane.is-flat {
+  display: grid;
+  place-items: center;
+  color: var(--astral-ink-faint);
+}
+
+.clothing-model-pane.is-flat img {
+  position: static;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clothing-model-loading {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.clothing-install-colours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clothing-install-colours li {
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-xs);
+  background: #000;
+}
+
+.clothing-install-colours img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.clothing-install-colours i {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Плитка одежды в «Библиотеке»: пара «вещь → заменёнка» (`ClothingPairArt.jsx`, владелец 25.10.2026) — две картинки в кадре полки,
+ * между ними стрелка. Кадр полки сам держит рамку и чёрное поле; здесь только раскладка пары.
+ */
+.clothing-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2px;
+  padding: 4px;
+}
+
+.clothing-pair-side {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-faint);
+  background: var(--astral-surface);
+}
+
+.clothing-pair-side img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clothing-pair-side svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Снимок вещи самой GTA слева в паре (`GameItemPicture`): в рамку стороны целиком, с полем, как плитка выбора. */
+.clothing-pair-side .game-item-picture {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.clothing-pair-side .game-item-picture img {
+  box-sizing: border-box;
+  padding: 8px;
+}
+
+.clothing-pair-arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: 999px;
+  color: var(--astral-ink);
+  background: rgba(0, 0, 0, 0.78);
+  transform: translate(-50%, -50%);
+}
+
+.clothing-pair-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+/*
+ * «Сделать заменёнку» (`ClothingInstallDialog.jsx`, переделка 27.10.2026, владелец): слева большой чёрный баннер с вещью мода в 3D
+ * (`ModBanner.jsx`), в левом нижнем углу — маленькие квадраты других раскрасок без обводок; справа только поиск, раздел и сетка вещей.
+ */
+.clothing-install-dialog.is-pick .ui-dialog-split {
+  grid-template-columns: minmax(300px, 40%) minmax(0, 1fr);
+}
+
+.clothing-install-dialog.is-pick .ui-dialog-aside {
+  display: block;
+  padding: 14px;
+  overflow: hidden;
+  border-right: 0;
+  background: transparent;
+}
+
+.clothing-banner {
+  position: relative;
+  height: 100%;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: var(--astral-radius-lg);
+  background: #000;
+}
+
+.clothing-banner .clothing-model-pane {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+/*
+ * Расцветки мода под кадром (30.10.2026, владелец: «убери подложки, чтобы они просто летали как PNG»): без квадрата и рамки — прозрачная
+ * картинка с тенью, как вещь на плитке сетки. Выбранная отличается не коробкой: поднята, крупнее, под ней точка цвета акцента; остальные
+ * чуть притушены. Расцветка без картинки (один цвет) — круглая капля с тем же подъёмом.
+ */
+.clothing-banner-colours {
+  position: absolute;
+  bottom: 16px;
+  left: 14px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 4px;
+  max-width: calc(100% - 28px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clothing-banner-colours li {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.clothing-banner-colours img,
+.clothing-banner-colours i {
+  display: block;
+  transition:
+    transform var(--astral-duration-fast) var(--astral-ease),
+    filter var(--astral-duration-fast) var(--astral-ease),
+    opacity var(--astral-duration-fast) var(--astral-ease);
+}
+
+.clothing-banner-colours img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.65));
+}
+
+/* Выбор цвета мода (28.10.2026): картинка нажимается; выбранная — выше и крупнее, с точкой под собой (30.10.2026). */
+.clothing-banner-colours button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--astral-radius-xs);
+  background: transparent;
+  cursor: pointer;
+  transition: transform var(--astral-duration-fast) var(--astral-ease);
+}
+
+.clothing-banner-colours button:focus-visible {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 2px;
+}
+
+.clothing-banner-colours button:hover img,
+.clothing-banner-colours button:hover i {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Поднимается кнопка целиком, картинка внутри неё только растёт: значок остаётся по центру кнопки. */
+.clothing-banner-colours button:hover {
+  transform: translateY(-3px);
+}
+
+.clothing-banner-colours li.is-active button {
+  transform: translateY(-6px);
+}
+
+.clothing-banner-colours:has(.is-active) li:not(.is-active) img,
+.clothing-banner-colours:has(.is-active) li:not(.is-active) i {
+  opacity: 0.68;
+}
+
+.clothing-banner-colours li.is-active img,
+.clothing-banner-colours li.is-active i {
+  transform: scale(1.22);
+}
+
+.clothing-banner-colours li.is-active img {
+  filter: drop-shadow(0 9px 10px rgba(0, 0, 0, 0.7));
+}
+
+.clothing-banner-colours li.is-active::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--astral-accent);
+}
+
+.clothing-banner-colours i {
+  width: 24px;
+  height: 24px;
+  margin: 8px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Шапка сетки: поиск растёт, раздел — своей ширины. */
+.clothing-item-toolbar.is-pick {
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.clothing-item-toolbar.is-pick .clothing-target-search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+/* Окно «Сделать заменёнку»: поиск короче, справа фильтр «откуда вещи». Плитка без картинки не показывается. При наведении имя поднимается, под ним — откуда вещь, как на карточке каталога. */
+.clothing-item-toolbar.is-pick .ui-segmented {
+  flex: none;
+}
+
+.clothing-item-tile.is-pick:has([data-no-picture]) {
+  display: none;
+}
+
+.clothing-item-source {
+  display: block;
+  overflow: hidden;
+  max-height: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  line-height: var(--astral-line-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transition:
+    max-height var(--astral-duration-fast) var(--astral-ease),
+    opacity var(--astral-duration-fast) var(--astral-ease);
+}
+
+.clothing-item-tile.is-pick:is(:hover, :focus-visible) .clothing-item-source {
+  max-height: 1.4em;
+  opacity: 1;
+}
+
+/* Плитка вещи: магазин мелко над именем, число раскрасок — в правом углу картинки, выбор — отметкой внизу справа. */
+.clothing-item-shop {
+  overflow: hidden;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clothing-item-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--astral-ink);
+  background: rgba(0, 0, 0, 0.72);
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.clothing-item-tile .clothing-item-check {
+  top: auto;
+  right: 8px;
+  bottom: 8px;
+}
+
+.clothing-item-tile.is-selected .clothing-item-name {
+  padding-right: 26px;
+}
+
+/* «На что ставится» у вещи со своим местом (`ClothingPlaceDialog.jsx`, 28.10.2026): что именно изменится в игре, списком. */
+.clothing-place-dialog .clothing-place-lead {
+  margin: 0 0 12px;
+  color: var(--astral-ink);
+}
+
+.clothing-place-dialog .clothing-place-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.clothing-place-dialog .clothing-place-list .is-more {
+  color: var(--astral-ink-faint);
+}
+
+/* Какую расцветку править (29.10.2026): расцветки вещи плитками с картинкой и именем. */
+.clothing-colour-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clothing-colour-pick button {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.clothing-colour-pick button:hover,
+.clothing-colour-pick button:focus-visible {
+  border-color: var(--astral-accent);
+}
+
+.clothing-colour-pick img,
+.clothing-colour-pick i {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--astral-radius-xs);
+  background: #000;
+}
+
+.clothing-colour-pick span {
+  font-size: var(--astral-text-micro);
+  line-height: 1.3;
+}
+
+/* Расцветки открытой вещи: назад к списку вещей. */
+/* Строка «Все вещи · имя» между фильтрами и сеткой: тем же шрифтом, что и фильтр над ней. */
+.clothing-item-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: 2px 0 10px;
+  padding: 0;
+  font: inherit;
+  font-size: var(--astral-text-small);
+  font-weight: 500;
+  color: var(--astral-ink-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.clothing-item-back:hover {
+  color: var(--astral-ink);
+}
+.clothing-item-back b {
+  font-weight: 500;
+  color: var(--astral-ink);
+}

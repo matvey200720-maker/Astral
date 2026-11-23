@@ -1,0 +1,22 @@
+{
+  "name": "@modovik/reticle-pack",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./scene": "./scene.js",
+    "./mod-reticle": "./mod-reticle.js",
+    "./package.json": "./package.json",
+    "./workshop-cover": "./workshop-cover.js"
+  },
+  "dependencies": {
+    "@modovik/gfx": "*",
+    "@modovik/gunpack": "*",
+    "@modovik/rage-drawable": "*",
+    "@modovik/reticle-contract": "*",
+    "@modovik/rpf-inspector": "*",
+    "fflate": "0.8.3"
+  }
+}

@@ -1,0 +1,38 @@
+.game-target-select {
+  min-width: 150px;
+  max-width: 210px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0 30px 0 11px;
+  border: 1px solid var(--ios-border, #353535);
+  border-radius: var(--astral-radius);
+  background: var(--ios-surface-2, #1a1a1a);
+  color: var(--ios-text, #f7f8fb);
+  font-family: Inter, Arial, sans-serif;
+  font-size: var(--astral-text-micro);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  outline: none;
+}
+
+.game-target-select:focus-visible {
+  border-color: var(--accent, #787878);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--accent, #787878) 18%, transparent);
+}
+
+@media (max-width: 760px) {
+  .game-path {
+    flex-wrap: wrap;
+  }
+
+  .game-path span {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  .game-target-select {
+    flex: 1 1 auto;
+    margin-left: 49px;
+  }
+}

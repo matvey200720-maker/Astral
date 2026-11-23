@@ -1,0 +1,141 @@
+/* Ключевые кадры установщика. Запускаются из app.css по имени (animation-name); при ?motion=off не запускаются.
+   Шаги идут от конца к началу, прозрачность в процентах, у transform в одном @keyframes один набор функций (трёхмерные остаются трёхмерными). */
+
+@keyframes screen-in {
+  from {
+    opacity: 0%;
+    transform: translate3d(18px, 0, 0);
+  }
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0%;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0%;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0%;
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes hero-swap {
+  from {
+    opacity: 0%;
+    transform: translate3d(0, 6px, 0);
+  }
+}
+
+@keyframes hero-arrive {
+  from {
+    opacity: 0%;
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+@keyframes arrive-rise {
+  from {
+    opacity: 0%;
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+@keyframes arrive-pop {
+  to {
+    opacity: 100%;
+    transform: none;
+  }
+
+  from {
+    opacity: 0%;
+    transform: scale(0.6, 0.6);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes orbit-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes orbit-pulse {
+  to {
+    opacity: 0%;
+    transform: scale(1.12, 1.12);
+  }
+
+  25% {
+    opacity: 60%;
+  }
+
+  from {
+    opacity: 0%;
+    transform: scale(0.7, 0.7);
+  }
+}
+
+@keyframes orbit-flash {
+  to {
+    opacity: 0%;
+    transform: scale(1.45, 1.45);
+  }
+
+  18% {
+    opacity: 100%;
+  }
+
+  from {
+    opacity: 0%;
+    transform: scale(0.5, 0.5);
+  }
+}
+
+@keyframes orbit-ripple {
+  to {
+    opacity: 0%;
+    transform: scale(1.3, 1.3);
+  }
+
+  from {
+    opacity: 75%;
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes orbit-star-breathe {
+  to {
+    opacity: 100%;
+    transform: scale(1.015, 1.015);
+  }
+
+  from {
+    opacity: 90%;
+    transform: scale(0.985, 0.985);
+  }
+}
+
+@keyframes orbit-star-pop {
+  35% {
+    transform: scale(1.12, 1.12);
+  }
+
+  from,
+  to {
+    transform: scale(1, 1);
+  }
+}

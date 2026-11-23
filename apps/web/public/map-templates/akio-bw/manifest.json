@@ -1,0 +1,119 @@
+{
+  "format": "astral-map-template",
+  "version": 1,
+  "assets": "akio-bw",
+  "pack": "Black_White_GTA5RP_Akio_Mods",
+  "kind": "raster",
+  "author": "akiooo",
+  "grid": {
+    "columns": 2,
+    "rows": 3
+  },
+  "tileSide": 4096,
+  "tiles": [
+    {
+      "row": 0,
+      "column": 0,
+      "file": "tile-0-0.webp",
+      "side": 4096,
+      "bytes": 656048,
+      "sha256": "b61139d5872bbb12c8c9220fc27235555d506da2f4f7f0b3378a8da78b75302b"
+    },
+    {
+      "row": 0,
+      "column": 1,
+      "file": "tile-0-1.webp",
+      "side": 4096,
+      "bytes": 627870,
+      "sha256": "28a850df92a4745bb483ca525a8d588253a354e571d456566b0f2d45045843a2"
+    },
+    {
+      "row": 1,
+      "column": 0,
+      "file": "tile-1-0.webp",
+      "side": 4096,
+      "bytes": 1027122,
+      "sha256": "e0f4889fd3d6c9650dff60be80388dc6e9b2ee0652da752b1a46c95ed8ed5b65"
+    },
+    {
+      "row": 1,
+      "column": 1,
+      "file": "tile-1-1.webp",
+      "side": 4096,
+      "bytes": 1148174,
+      "sha256": "735d6179f7eb327f143178da832ea9da7f47104d1e5954299768557e910c42e2"
+    },
+    {
+      "row": 2,
+      "column": 0,
+      "file": "tile-2-0.webp",
+      "side": 4096,
+      "bytes": 722314,
+      "sha256": "b9abd7f446bdd8aa0f1a71e09957f1288b6cfceb4e257e415fd44ac2eb374709"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "file": "tile-2-1.webp",
+      "side": 4096,
+      "bytes": 723380,
+      "sha256": "3edc95a4bd6bd85e8991fa62ed1ee6c832ab8c6e9d5e5ea51c520aab29a48bfc"
+    }
+  ],
+  "map": {
+    "file": "map.webp",
+    "width": 4096,
+    "height": 6144,
+    "bytes": 1239582,
+    "sha256": "66e2d761ae0c663a4716f4a8ca4ab5ca6afc931a13ee7726e2e640ab351cee33"
+  },
+  "card": {
+    "file": "card.webp",
+    "width": 640,
+    "height": 400
+  },
+  "state": {
+    "file": "state.webp",
+    "width": 512,
+    "height": 768
+  },
+  "seaColor": "",
+  "vectorTiles": 0,
+  "zoom": [
+    {
+      "scale": 3.75,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 3.8,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 9,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 11,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 83,
+      "tiles": [
+        0,
+        0
+      ]
+    }
+  ]
+}

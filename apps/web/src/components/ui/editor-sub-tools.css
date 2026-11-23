@@ -1,0 +1,53 @@
+/* Переключатель внутри группы колонки («Свет»: цвет, свет, блик) — над панелью, в ширину колонки. */
+.editor-sub-tools {
+  padding: 4px 16px 10px;
+  & .ui-segmented {
+    width: 100%;
+  }
+  /* Ширина — по подписи, а не поровну: «Verzierungen» рядом с «Text» иначе обрезается. */
+  & .ui-segment {
+    flex: 1 1 auto;
+  }
+}
+
+.is-tabs {
+  &.editor-sub-tools .ui-segment svg {
+    height: 18px;
+    width: 18px;
+  }
+  &.editor-sub-tools .is-active.ui-segment {
+    font-weight: 500;
+  }
+  /*
+  * Пункты значком над коротким словом в ширину колонки (п. 13 `design-qa.md`, 30.10.2026) — как пункты страницы вещи арены.
+  * Пункт не уже своего слова («Контейнеры» рядом с «Земля»), остаток — поровну. Взятый пункт — подложкой, без жирного: слово
+  * не шире, чем было, ряд не дрожит при выборе. Ряд стоит внутри содержимого панели, у которого свои поля: своих боковых полей
+  * у него нет, иначе сегмент уже картинки и строк под ним (критик 30.10.2026, как `arena-sub-tabs`).
+  */
+  &.editor-sub-tools {
+    padding: 0 0 12px;
+  }
+  &.editor-sub-tools .ui-segmented {
+    grid-auto-columns: minmax(max-content, 1fr);
+    gap: 1px;
+    grid-auto-flow: column;
+    padding: 2px;
+    display: grid;
+  }
+  &.editor-sub-tools .ui-segment-label {
+    font-size: var(--astral-text-micro);
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 100%;
+    text-overflow: ellipsis;
+  }
+  &.editor-sub-tools .ui-segment {
+    line-height: 1.15;
+    flex-direction: column;
+    min-height: 50px;
+    letter-spacing: -0.02em;
+    gap: 4px;
+    padding: 7px 4px 6px;
+    min-width: 0;
+  }
+}

@@ -1,0 +1,1054 @@
+/*
+ * Обновления: экран-замок, «Что нового», окна про ветки, всплывающее уведомление,
+ * карточка в настройках и орбита-индикатор.
+ *
+ * Типографика собрана по свойствам в общие правила (размер, цвет, начертание), а
+ * правила компонентов ниже держат только геометрию и раскладку.
+ */
+@layer overrides {
+
+  /* ---------- подписи: размер шрифта ---------- */
+
+  .updates-lock-foot,
+  .update-prompt-copy small,
+  .updates-steps,
+  .updates-chip {
+    font-size: var(--astral-text-micro);
+  }
+
+  .updates-meta,
+  .update-prompt-copy em,
+  .branches-alt-copy small,
+  .updates-failure-dialog .updates-failure-logs,
+  .branches-dialog .branches-detail,
+  .update-prompt-copy span,
+  .updates-lock-note,
+  .updates-lock-kicker,
+  .updates-lock-help {
+    font-size: var(--astral-text-small);
+  }
+
+  .updates-notes,
+  .branches-dialog p,
+  .updates-lock-progress,
+  .branches-alt-copy b,
+  .updates-notes-empty,
+  .updates-failure-dialog p {
+    font-size: var(--astral-text-body);
+  }
+
+  .update-prompt-copy b,
+  .updates-notes h3,
+  .updates-lock-body {
+    font-size: var(--astral-text-strong);
+  }
+
+  /* ---------- подписи: интерлиньяж, начертание, цифры ---------- */
+
+  .update-prompt-copy em,
+  .updates-lock-help,
+  .updates-chip,
+  .branches-dialog p,
+  .update-prompt-copy span,
+  .updates-lock-note,
+  .updates-steps,
+  .updates-failure-dialog p,
+  .updates-notes,
+  .update-prompt-copy small,
+  .updates-lock-body {
+    line-height: var(--astral-line-normal);
+  }
+
+  .updates-lock-note,
+  .branches-card .updates-notice,
+  .update-prompt-copy b,
+  .updates-notes h3,
+  .updates-chip,
+  .updates-lock-kicker,
+  .updates-card .updates-notice,
+  .updates-steps li[data-status=active],
+  .update-prompt-copy em,
+  .branches-dialog .updates-notice,
+  .branches-alt-copy b {
+    font-weight: 600;
+  }
+
+  .updates-lock-foot,
+  .branches-card .settings-row-copy small,
+  .updates-meta,
+  .update-prompt-copy span,
+  .updates-card .settings-row-copy small,
+  .updates-lock-progress {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .updates-lock-body,
+  .updates-lock-stage h2 {
+    text-wrap: balance;
+  }
+
+  /* ---------- подписи: цвет ---------- */
+
+  .updates-notes-empty,
+  .branches-alt-copy small,
+  .updates-steps li[data-status=done],
+  .updates-lock-body,
+  .updates-chip,
+  .branches-dialog p,
+  .update-prompt-copy span,
+  .updates-failure-dialog p,
+  .updates-meta {
+    color: var(--astral-ink-muted);
+  }
+
+  .updates-lock-help,
+  .update-prompt-copy small,
+  .updates-failure-dialog .updates-failure-logs,
+  .updates-notes li::marker,
+  .branches-dialog .branches-detail,
+  .updates-lock-kicker,
+  .branches-card .branches-foot small,
+  .updates-steps,
+  .updates-lock-foot {
+    color: var(--astral-ink-faint);
+  }
+
+  .branches-alt-copy b,
+  .updates-steps li[data-status=active],
+  .updates-lock-progress,
+  .update-prompt,
+  .updates-notes {
+    color: var(--astral-ink);
+  }
+
+  .updates-card .updates-failure .settings-row-copy b,
+  .branches-card [data-kind=denied].branches-row .settings-row-copy b,
+  .branches-card [data-kind=error].branches-row .settings-row-copy b + small,
+  .updates-card .updates-notice,
+  .branches-dialog .updates-notice,
+  .branches-card .updates-notice,
+  .update-prompt-copy em,
+  .updates-lock-note {
+    color: var(--astral-warning);
+  }
+
+  /* ---------- «Что нового» и окно сбоя ---------- */
+
+  .updates-cover > img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    display: block;
+  }
+
+  .updates-notes ul {
+    padding-inline-start: 18px;
+    gap: 6px;
+    display: grid;
+  }
+
+  .updates-cover {
+    border-radius: var(--astral-radius-lg);
+    background-color: var(--astral-surface-sunken);
+    margin-block: 0 16px;
+    margin-inline: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    aspect-ratio: 16 / 7;
+  }
+
+  .updates-notes h3 {
+    margin-block: 8px 0;
+    margin-inline: 0;
+  }
+
+  .updates-notes p,
+  .updates-notes ul,
+  .updates-notes-empty {
+    margin: 0;
+  }
+
+  .updates-failure-dialog p,
+  .branches-dialog p {
+    margin-block: 0 10px;
+    margin-inline: 0;
+  }
+
+  .updates-notes {
+    gap: 10px;
+    display: grid;
+  }
+
+  .updates-meta {
+    margin-block: 0 14px;
+    margin-inline: 0;
+  }
+
+  .updates-failure-dialog .updates-failure-reason code {
+    font-size: var(--astral-text-small);
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    color: var(--astral-ink);
+  }
+
+  /* ---------- карточка «Обновления» в настройках ---------- */
+
+  .updates-chip {
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line-strong);
+    padding-block: 1px;
+    padding-inline: 8px;
+  }
+
+  .updates-steps li {
+    column-gap: 6px;
+    row-gap: 6px;
+    align-items: center;
+    display: inline-flex;
+  }
+
+  /* Карточка в «Настройках › О программе» («Пульт», 15.11.2026): значок-плашка, слова, кнопки; ниже — этапы и строка «сами». */
+  .updates-card {
+    background: var(--astral-surface);
+  }
+
+  .updates-card[data-mode=available],
+  .updates-card[data-mode=ready] {
+    border-color: rgba(255, 255, 255, 0.26);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .updates-card .updates-hero {
+    min-height: 0;
+    padding-block: 18px;
+    padding-inline: 20px;
+    gap: 14px;
+  }
+
+  .updates-card .updates-hero .settings-row-copy b {
+    font-size: var(--astral-text-strong);
+    line-height: 22px;
+  }
+
+  .updates-card .updates-hero .settings-row-copy small {
+    font-size: var(--astral-text-body);
+    margin-block-start: 2px;
+  }
+
+  .updates-hero-icon {
+    inline-size: 44px;
+    block-size: 44px;
+    flex: none;
+    place-items: center;
+    display: grid;
+    color: var(--astral-ink);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-hover);
+  }
+
+  .updates-hero-icon svg {
+    inline-size: 22px;
+    block-size: 22px;
+  }
+
+  .updates-hero-icon[data-mode=ready] {
+    color: #000;
+    background: #fff;
+  }
+
+  .updates-hero-icon[data-mode=error] {
+    color: var(--astral-danger);
+  }
+
+  .updates-hero-icon[data-mode=checking] svg,
+  .updates-hero-icon[data-mode=applying] svg {
+    animation: updates-hero-spin 1.4s linear infinite;
+  }
+
+  @keyframes updates-hero-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .updates-hero-steps {
+    padding-block: 0 18px;
+    padding-inline: 20px;
+  }
+
+  /* Этапы: четыре полоски в ряд; у идущего этапа полоска растёт вместе со скачиванием (`--step-fill`). */
+  .updates-card .updates-hero-steps .updates-bar {
+    display: none;
+  }
+
+  .updates-card .updates-steps {
+    margin-block: 0;
+    column-gap: 6px;
+    row-gap: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: grid;
+  }
+
+  .updates-card .updates-steps li {
+    padding-block-start: 11px;
+    position: relative;
+    display: block;
+    color: var(--astral-ink-faint);
+  }
+
+  .updates-card .updates-steps li::before,
+  .updates-card .updates-steps li::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: 4px;
+    border-radius: 2px;
+  }
+
+  .updates-card .updates-steps li::before {
+    background: var(--astral-surface-hover);
+  }
+
+  .updates-card .updates-steps li::after {
+    background: #fff;
+    transform-origin: left center;
+    transform: scaleX(0);
+  }
+
+  .updates-card .updates-steps li[data-status=done]::after {
+    transform: scaleX(1);
+  }
+
+  .updates-card .updates-steps li[data-status=active]::after {
+    transform: scaleX(var(--step-fill, 0.5));
+    transition: transform var(--astral-duration-slow) var(--astral-ease);
+  }
+
+  .updates-card .updates-steps li[data-status=active] {
+    color: #fff;
+  }
+
+  .updates-card .updates-steps li[data-status=done] {
+    color: #d4d4d8;
+  }
+
+  .updates-card .updates-step-mark {
+    display: none;
+  }
+
+  /* Строка «Скачивать обновления сами»: переключатель, слова, справа — когда проверяли. */
+  .updates-auto {
+    padding-block: 12px;
+    padding-inline: 20px;
+    gap: 10px;
+    align-items: center;
+    display: flex;
+    border-block-start: 1px solid var(--astral-line);
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink-muted);
+  }
+
+  /* Малый переключатель макета: дорожка 34 × 20 в кнопке высотой 28. */
+  .updates-card .updates-auto .ui-switch {
+    inline-size: 34px;
+    block-size: 28px;
+    flex-basis: 34px;
+  }
+
+  .updates-card .updates-auto .ui-switch::before {
+    inset-block: 4px;
+  }
+
+  .updates-card .updates-auto .ui-switch > i {
+    inline-size: 14px;
+    block-size: 14px;
+    inset-block-start: 7px;
+    inset-inline-start: 3px;
+  }
+
+  .updates-card .updates-auto .ui-switch.is-on > i {
+    transform: translateX(14px);
+  }
+
+  .updates-auto-copy {
+    min-inline-size: 0;
+    gap: 8px;
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .updates-auto-copy b {
+    font-weight: 400;
+    color: var(--astral-ink-muted);
+  }
+
+  .updates-auto-copy small {
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink-faint);
+  }
+
+  .updates-auto-copy small::before {
+    content: "— ";
+  }
+
+  .updates-checked {
+    margin-inline-start: auto;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .updates-bar > i {
+    transition-property: width;
+    transition-duration: var(--astral-duration-slow);
+    transition-timing-function: var(--astral-ease);
+    transition-delay: 0s;
+    transition-behavior: normal;
+    border-radius: inherit;
+    background-color: var(--astral-ink);
+    height: 100%;
+    display: block;
+  }
+
+  .updates-step-mark svg {
+    block-size: 9px;
+    inline-size: 9px;
+  }
+
+  .updates-steps li[data-status=done] .updates-step-mark {
+    color: var(--astral-ink);
+    border-color: var(--astral-ink-muted);
+  }
+
+  .updates-steps {
+    list-style: none;
+    padding-block: 0;
+    padding-inline: 0;
+    margin-block: 10px 0;
+    margin-inline: 0;
+    column-gap: 16px;
+    row-gap: 6px;
+    flex-wrap: wrap;
+    display: flex;
+  }
+
+  .updates-card .updates-failure {
+    background: var(--astral-warning-soft);
+  }
+
+  .updates-bar {
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--astral-ink) 16%, transparent);
+    margin-block-start: 8px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    height: 6px;
+    display: block;
+  }
+
+  .updates-step-mark {
+    border-radius: 999px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line-strong);
+    height: 14px;
+    width: 14px;
+    place-items: center;
+    display: inline-grid;
+  }
+
+  .updates-steps li[data-status=active] .updates-step-mark {
+    border-color: var(--astral-ink);
+    background-image: radial-gradient(circle, var(--astral-ink) 0px 3px, transparent 3.5px);
+  }
+
+  /* «Версии Astral» («Пульт», 15.11.2026): заголовок группы над карточкой, строки со значком; метка — плашкой. */
+  .branches-group-head {
+    gap: 12px;
+    align-items: flex-end;
+    justify-content: space-between;
+    display: flex;
+  }
+
+  .branches-group-copy {
+    min-inline-size: 0;
+    gap: 3px;
+    display: grid;
+  }
+
+  .branches-group-copy small {
+    font-size: var(--astral-text-small);
+    padding-inline-start: 4px;
+    color: var(--astral-ink-muted);
+  }
+
+  .branches-card .branches-row .settings-row-copy b,
+  .branches-card .branches-row .settings-row-copy small {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .settings-shell .updates-chip {
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    color: #d4d4d8;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-hover);
+    padding-block: 0;
+    padding-inline: 8px;
+    block-size: 22px;
+    align-items: center;
+    display: inline-flex;
+  }
+
+  /* строка с пометкой в заголовке: карточки обновлений и веток одинаково */
+  .updates-card .settings-row-copy b,
+  .branches-card .settings-row-copy b {
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    display: flex;
+  }
+
+  /* ---------- экран-замок обязательного обновления ---------- */
+
+  .updates-lock-stage {
+    text-align: center;
+    padding-block: 8px;
+    padding-inline: 0;
+    justify-items: center;
+    display: grid;
+  }
+
+  .updates-lock-stage h2 {
+    letter-spacing: -.02em;
+    line-height: var(--astral-line-tight);
+    font-weight: 650;
+    font-size: var(--astral-text-hero);
+    margin-block: 8px 0;
+    margin-inline: 0;
+  }
+
+  .updates-lock-stage .ui-button {
+    margin-block-start: 20px;
+  }
+
+  .updates-lock-kicker {
+    letter-spacing: .04em;
+    margin-block-start: 22px;
+  }
+
+  .updates-lock .ui-dialog-body,
+  .updates-lock {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+
+  .updates-lock-backdrop {
+    background: color-mix(in srgb, var(--astral-void) 88%, transparent);
+    z-index: 9000;
+  }
+
+  .updates-lock-progress {
+    margin-block: 14px 0;
+    margin-inline: 0;
+  }
+
+  .updates-lock-stage .updates-steps {
+    margin-block-start: 16px;
+    justify-content: center;
+  }
+
+  .updates-lock-note,
+  .updates-lock-help {
+    max-width: 400px;
+    margin-block: 10px 0;
+    margin-inline: 0;
+  }
+
+  .updates-version {
+    white-space: nowrap;
+  }
+
+  .updates-backdrop {
+    z-index: 4500;
+    inset-block: 36px 0;
+    inset-inline: 0;
+  }
+
+  .updates-lock-body {
+    margin-block: 12px 0;
+    margin-inline: 0;
+    max-width: 400px;
+  }
+
+  .updates-lock-stage .updates-bar {
+    margin-block: 12px 0;
+    margin-inline: auto;
+    width: min(100%, 320px);
+  }
+
+  .updates-lock-foot {
+    letter-spacing: .02em;
+    margin-block-start: 26px;
+  }
+
+  .updates-lock {
+    box-shadow: none;
+    border-color: transparent;
+    background: transparent;
+    max-height: none;
+    width: min(520px, 100%);
+  }
+
+  /* ---------- окно и карточка веток ---------- */
+
+  .branches-alt-copy {
+    min-width: 0;
+    gap: 2px;
+    display: grid;
+  }
+
+  .branches-alt {
+    list-style: none;
+    padding-block: 0;
+    padding-inline: 0;
+    margin-block: 0 6px;
+    margin-inline: 0;
+    gap: 8px;
+    display: grid;
+  }
+
+  .branches-alt li {
+    border-radius: var(--astral-radius-sm);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    background-color: var(--astral-surface-sunken);
+    padding-block: 10px;
+    padding-inline: 12px;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
+  }
+
+  /* ---------- всплывающее уведомление ---------- */
+
+  .update-prompt-actions {
+    gap: 8px;
+    justify-content: flex-end;
+    grid-column-start: 1;
+    grid-column-end: -1;
+    flex-wrap: wrap;
+    display: flex;
+  }
+
+  .update-prompt-copy .updates-bar {
+    margin-block-start: 6px;
+  }
+
+  .update-prompt {
+    animation-name: update-prompt-in;
+    animation-duration: 260ms;
+    animation-timing-function: var(--astral-ease);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-fill-mode: backwards;
+    animation-play-state: running;
+    box-shadow: var(--astral-shadow);
+    border-radius: var(--astral-radius-lg);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line-strong);
+    background: var(--astral-glass-bg-strong, var(--astral-surface-strong));
+    padding-block: 14px;
+    padding-inline: 14px 16px;
+    width: min(calc(100vw - 40px), 380px);
+    column-gap: 14px;
+    row-gap: 12px;
+    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr);
+    display: grid;
+    z-index: 20;
+    right: 20px;
+    top: 48px;
+    position: fixed;
+  }
+
+  @keyframes update-prompt-in {
+    from {
+      transform: translate3d(0, -10px, 0) scale(.98);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  .update-prompt-copy em {
+    font-style: normal;
+  }
+
+  .desktop-app.ui-dialog-open .update-prompt {
+    transition-property: opacity;
+    transition-duration: var(--astral-duration-fast);
+    transition-timing-function: var(--astral-ease);
+    transition-delay: 0s;
+    transition-behavior: normal;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .update-prompt-copy {
+    min-width: 0;
+    gap: 3px;
+    display: grid;
+  }
+
+  /* ---------- орбита: корень и размеры ---------- */
+
+  .update-orbit-star {
+    transition-property: opacity, filter;
+    transition-duration: var(--astral-duration-slow), var(--astral-duration-slow);
+    transition-timing-function: var(--astral-ease), var(--astral-ease);
+    transition-delay: 0s, 0s;
+    transition-behavior: normal, normal;
+    filter: drop-shadow(0px 0px 22px rgba(255, 255, 255, .36));
+    margin-block: -59px 0;
+    margin-inline: -59px 0;
+    height: 118px;
+    width: 118px;
+    left: 50%;
+    top: 50%;
+    position: absolute;
+  }
+
+  [data-size=sm].update-orbit {
+    --orbit-track: 4;
+    --orbit-stroke: 6;
+    height: 52px;
+    width: 52px;
+  }
+
+  .update-orbit svg {
+    overflow-x: visible;
+    overflow-y: visible;
+    inset-block: 0;
+    inset-inline: 0;
+    position: absolute;
+  }
+
+  /* мягкое свечение под звездой */
+  .update-orbit::before {
+    animation-name: update-orbit-breathe;
+    animation-duration: 6s;
+    animation-timing-function: ease-in-out;
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-fill-mode: none;
+    animation-play-state: running;
+    border-radius: 999px;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, .17), rgba(255, 255, 255, 0) 66%);
+    inset-block: 22px;
+    inset-inline: 22px;
+    position: absolute;
+    content: "";
+  }
+
+  @keyframes update-orbit-breathe {
+    from {
+      transform: scale(.94);
+      opacity: .55;
+    }
+    to {
+      transform: scale(1.04);
+      opacity: 1;
+    }
+  }
+
+  .update-orbit {
+    --orbit-track: 1.5;
+    --orbit-stroke: 2.5;
+    --orbit-off: 578.05px;
+    height: 208px;
+    width: 208px;
+    flex-basis: auto;
+    flex-shrink: 0;
+    flex-grow: 0;
+    position: relative;
+  }
+
+  [data-size=sm].update-orbit::before {
+    inset-block: 6px;
+    inset-inline: 6px;
+  }
+
+  [data-size=sm].update-orbit .update-orbit-star {
+    filter: drop-shadow(0px 0px 7px rgba(255, 255, 255, .3));
+    margin-block: -15px 0;
+    margin-inline: -15px 0;
+    height: 30px;
+    width: 30px;
+  }
+
+  /* ---------- орбита: детали рисунка ---------- */
+
+  .update-orbit-arc {
+    transition-property: stroke-dashoffset, stroke, opacity;
+    transition-duration: var(--astral-duration-slow), var(--astral-duration-slow), var(--astral-duration-slow);
+    transition-timing-function: var(--astral-ease), var(--astral-ease), var(--astral-ease);
+    transition-delay: 0s, 0s, 0s;
+    transition-behavior: normal, normal, normal;
+    filter: drop-shadow(0px 0px 6px rgba(255, 255, 255, .5));
+    stroke-linecap: round;
+    stroke-dashoffset: var(--orbit-off);
+    stroke-width: var(--orbit-stroke);
+    stroke-dasharray: 578.05px;
+    stroke: #fff;
+  }
+
+  .update-orbit-pulse,
+  .update-orbit-flash {
+    opacity: 0;
+  }
+
+  .update-orbit-ring2,
+  .update-orbit-head,
+  .update-orbit-drift,
+  .update-orbit-pulse,
+  .update-orbit-flash {
+    transform-origin: 104px 104px;
+  }
+
+  .update-orbit-head circle,
+  .update-orbit-drift circle {
+    fill: #fff;
+  }
+
+  .update-orbit-flash {
+    fill: rgba(255, 255, 255, .9);
+  }
+
+  .update-orbit-track,
+  .update-orbit-ring2,
+  .update-orbit-arc,
+  .update-orbit-pulse {
+    fill: none;
+  }
+
+  .update-orbit-ring2 {
+    animation-name: update-orbit-spin;
+    animation-duration: 80s;
+    animation-timing-function: linear;
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-direction: reverse;
+    animation-fill-mode: none;
+    animation-play-state: running;
+    stroke-width: 1;
+    stroke-dasharray: 2 7;
+    stroke: rgba(255, 255, 255, .08);
+  }
+
+  @keyframes update-orbit-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .update-orbit-head {
+    transition-property: transform, opacity;
+    transition-duration: var(--astral-duration-slow), var(--astral-duration-fast);
+    transition-timing-function: var(--astral-ease), var(--astral-ease);
+    transition-delay: 0s, 0s;
+    transition-behavior: normal, normal;
+  }
+
+  .update-orbit-drift circle {
+    filter: drop-shadow(0px 0px 7px rgba(255, 255, 255, .9));
+  }
+
+  .update-orbit-track {
+    stroke-width: var(--orbit-track);
+    stroke: rgba(255, 255, 255, .1);
+  }
+
+  .update-orbit-head circle {
+    filter: drop-shadow(0px 0px 8px #fff);
+  }
+
+  [data-size=sm].update-orbit .update-orbit-drift circle,
+  [data-size=sm].update-orbit .update-orbit-head circle {
+    r: 8;
+  }
+
+  .update-orbit-drift {
+    animation-name: update-orbit-spin;
+    animation-duration: 26s;
+    animation-timing-function: linear;
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-fill-mode: none;
+    animation-play-state: running;
+    transition-property: opacity;
+    transition-duration: var(--astral-duration-slow);
+    transition-timing-function: var(--astral-ease);
+    transition-delay: 0s;
+    transition-behavior: normal;
+  }
+
+  [data-size=sm].update-orbit .update-orbit-ring2,
+  [data-size=sm].update-orbit .update-orbit-pulse,
+  [data-size=sm].update-orbit .update-orbit-flash {
+    display: none;
+  }
+
+  .update-orbit-pulse {
+    stroke-width: 1.5;
+    stroke: rgba(255, 255, 255, .38);
+  }
+
+  /* значок результата в углу орбиты */
+  .update-orbit-badge {
+    transition-property: opacity, transform;
+    transition-duration: var(--astral-duration-slow), var(--astral-duration-slow);
+    transition-timing-function: var(--astral-ease), cubic-bezier(0.2, 1.4, 0.4, 1);
+    transition-delay: 0s, 0s;
+    transition-behavior: normal, normal;
+    transform: scale(.6);
+    opacity: 0;
+    color: #0b0b0b;
+    border-radius: 999px;
+    background-color: #f4f5f7;
+    height: 36px;
+    width: 36px;
+    place-items: center;
+    display: grid;
+    bottom: 22px;
+    right: 20px;
+    position: absolute;
+  }
+
+  [data-size=sm].update-orbit .update-orbit-badge svg {
+    block-size: 12px;
+    inline-size: 12px;
+  }
+
+  .update-orbit-badge svg {
+    block-size: 18px;
+    inline-size: 18px;
+    position: static;
+  }
+
+  [data-size=sm].update-orbit .update-orbit-badge {
+    height: 20px;
+    width: 20px;
+    bottom: -3px;
+    right: -3px;
+  }
+
+  /* ---------- орбита: состояния ---------- */
+
+  [data-kind=wait].update-orbit .update-orbit-pulse {
+    animation-name: update-orbit-pulse;
+    animation-duration: 2.8s;
+    animation-timing-function: var(--astral-ease);
+    animation-delay: 0s;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-fill-mode: none;
+    animation-play-state: running;
+  }
+
+  @keyframes update-orbit-pulse {
+    0% {
+      transform: scale(.7);
+      opacity: 0;
+    }
+    25% {
+      opacity: .6;
+    }
+    100% {
+      transform: scale(1.12);
+      opacity: 0;
+    }
+  }
+
+  [data-kind=wait].update-orbit .update-orbit-pulse + .update-orbit-pulse {
+    animation-delay: 1400ms;
+  }
+
+  [data-kind=done].update-orbit .update-orbit-star {
+    filter: drop-shadow(0px 0px 32px rgba(255, 255, 255, .6));
+  }
+
+  [data-kind=error].update-orbit .update-orbit-track {
+    stroke: rgba(var(--astral-danger-rgb), .28);
+  }
+
+  [data-kind=done].update-orbit .update-orbit-badge,
+  [data-kind=error].update-orbit .update-orbit-badge {
+    transform: none;
+    opacity: 1;
+  }
+
+  [data-kind=progress].update-orbit .update-orbit-drift,
+  [data-kind=done].update-orbit .update-orbit-drift,
+  [data-kind=error].update-orbit .update-orbit-drift,
+  [data-kind=wait].update-orbit .update-orbit-drift,
+  [data-kind=done].update-orbit .update-orbit-head,
+  [data-kind=error].update-orbit .update-orbit-head,
+  [data-kind=idle].update-orbit .update-orbit-head,
+  [data-kind=wait].update-orbit .update-orbit-head,
+  [data-kind=idle].update-orbit .update-orbit-arc,
+  [data-kind=wait].update-orbit .update-orbit-arc {
+    opacity: 0;
+  }
+
+  [data-kind=done].update-orbit .update-orbit-flash {
+    animation-name: update-orbit-flash;
+    animation-duration: 1.1s;
+    animation-timing-function: var(--astral-ease);
+    animation-delay: 0s;
+    animation-iteration-count: 1;
+    animation-direction: normal;
+    animation-fill-mode: both;
+    animation-play-state: running;
+  }
+
+  @keyframes update-orbit-flash {
+    0% {
+      transform: scale(.4);
+      opacity: .85;
+    }
+    100% {
+      transform: scale(1.5);
+      opacity: 0;
+    }
+  }
+
+  [data-kind=error].update-orbit .update-orbit-arc {
+    opacity: 1;
+    stroke: var(--astral-danger);
+  }
+
+  [data-size=sm][data-kind=done].update-orbit .update-orbit-star {
+    filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, .55));
+  }
+
+  [data-kind=error].update-orbit .update-orbit-badge {
+    color: #1d0806;
+    background-color: var(--astral-danger);
+  }
+
+  [data-kind=error].update-orbit .update-orbit-star {
+    opacity: .55;
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@modovik/pack-intake",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./entry-path": "./entry-path.js",
+    "./listing": "./listing.js",
+    "./oiv": "./oiv.js",
+    "./rpf-header": "./rpf-header.js",
+    "./archive-encryption": "./archive-encryption.js",
+    "./archive-fix": "./archive-fix.js",
+    "./package.json": "./package.json",
+    "./rpf-reader": "./rpf-reader.js",
+    "./dlc-packs": "./dlc-packs.js"
+  },
+  "dependencies": {
+    "7z-wasm": "1.2.0",
+    "@modovik/rpf7": "*"
+  }
+}

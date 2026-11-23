@@ -1,0 +1,451 @@
+/*
+ * Страница «ReShade» (ТЗ 23.10.2026, п. G; до того — вкладки «ReShade» и «DLSS 5», ТЗ 05.10 и 17.10): сцена и колонка
+ * «Состав», как у комнат мастерской. Слева — кадры из игры с лентой миниатюр, «как с ним играть», готовые пресеты и то,
+ * что нужно знать про DLSS 5; справа — колонка «Состав»: ReShade, клавиша меню, DLSS 5, «Ваш ПК».
+ * Кадры «до/после», их ползунок и подписи — органы карточек оптимизации (`workshop-optimization.css`).
+ */
+
+.desktop-app .reshade-page {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 14px;
+  /* Ширина страницы для `--reshade-block` (единицы `cqw`). */
+  container-type: inline-size;
+}
+
+.desktop-app .reshade-page .reshade-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--astral-line);
+  border-radius: 999px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.desktop-app .reshade-page .reshade-state.is-on {
+  border-color: color-mix(in srgb, var(--astral-positive) 45%, transparent);
+  color: var(--astral-positive);
+}
+
+/* Заголовок «ReShade · DLSS 5» с описанием — сверху (ТЗ 24.10.2026, ночь, п. 2), под ним две колонки: слева — кадры с лентой,
+   ниже «как играть» и пресеты; справа — «Состав». Кадры и «Состав» — вровень сверху и снизу (п. D, как на странице мода):
+   блок кадров и колонка берут одну высоту `--reshade-block` (размеры одобрены владельцем, не менять). «Состав» не липкий:
+   стоит на своём месте и уезжает вместе со страницей. */
+.desktop-app .reshade-page .reshade-layout {
+  /* Высота блока: окно за вычетом полос — а в низком окне не меньше, чем нужно кадру 16 : 9 во всю ширину левой
+     колонки (ширина страницы − колонка 380 − зазор 28) с подписью и лентой (≈ 240 px), иначе кадр стал бы полосой. */
+  --reshade-block: max(
+    560px,
+    calc(100vh - 40px - 56px),
+    calc((100cqw - 408px) * 0.5625 + 240px)
+  );
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
+  align-items: start;
+  gap: 28px;
+}
+
+.desktop-app .reshade-page .reshade-stage {
+  display: grid;
+  min-width: 0;
+  gap: 32px;
+}
+
+.desktop-app .reshade-page .reshade-presets > header h2,
+.desktop-app .reshade-page .reshade-how h2 {
+  margin: 0;
+  font-size: var(--astral-text-section);
+  font-weight: 600;
+}
+
+.desktop-app .reshade-page .reshade-how h3 {
+  margin: 0;
+  font-size: var(--astral-text-strong);
+  font-weight: 600;
+}
+
+/* Подписи слева крупнее (24.10.2026, п. 9: «надписи крупнее»): подсказки и описания — 13, строки и названия — 15. */
+.desktop-app .reshade-page .reshade-stage .fx-hint {
+  font-size: var(--astral-text-body);
+  line-height: var(--astral-line-normal);
+}
+
+/* ── Кадры из игры: большой кадр и лента миниатюр ──────────────────────── */
+
+/* Блок кадров — ровно во всю высоту колонки «Состав»: большой кадр берёт всё, что осталось от подписи и ленты, и не ниже
+   своих 16 : 9 в узком окне; лента миниатюр заканчивается там же, где колонка. */
+.desktop-app .reshade-page .reshade-gallery {
+  display: flex;
+  height: var(--reshade-block);
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.desktop-app .reshade-page .reshade-shots-block {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.desktop-app .reshade-page .reshade-shots {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-height: 220px;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border-radius: var(--astral-radius-lg);
+}
+
+.desktop-app .reshade-page .reshade-shots-block > .fx-hint {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+/* Лента — всегда одним рядом (кадры сужаются, а не переносятся): блок кадров обязан кончаться там же, где колонка. */
+.desktop-app .reshade-page .reshade-thumbs {
+  display: grid;
+  flex: 0 0 auto;
+  grid-auto-columns: minmax(0, 210px);
+  grid-auto-flow: column;
+  gap: 14px;
+}
+
+.desktop-app .reshade-page .reshade-thumb {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--astral-ink-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.desktop-app .reshade-page .reshade-thumb:hover,
+.desktop-app .reshade-page .reshade-thumb.is-active {
+  color: var(--astral-ink);
+}
+
+.desktop-app .reshade-page .reshade-thumb-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface);
+}
+
+.desktop-app .reshade-page .reshade-thumb.is-active .reshade-thumb-frame {
+  box-shadow: 0 0 0 2px var(--astral-accent);
+}
+
+.desktop-app .reshade-page .reshade-thumb-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  transform-origin: 0 0;
+}
+
+.desktop-app .reshade-page .reshade-thumb-label {
+  overflow: hidden;
+  font-size: var(--astral-text-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Как с ним играть ───────────────────────────────────────────────────── */
+
+.desktop-app .reshade-page .reshade-how {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.desktop-app .reshade-page .reshade-how-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.desktop-app .reshade-page .reshade-how ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  counter-reset: reshade-step;
+  list-style: none;
+}
+
+.desktop-app .reshade-page .reshade-how li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-strong);
+  line-height: var(--astral-line-normal);
+  counter-increment: reshade-step;
+}
+
+.desktop-app .reshade-page .reshade-how li::before {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: 999px;
+  color: var(--astral-ink);
+  content: counter(reshade-step);
+  font-size: var(--astral-text-small);
+  font-weight: 700;
+  place-items: center;
+}
+
+.desktop-app .reshade-page .reshade-how-keys {
+  display: grid;
+  gap: 10px;
+}
+
+.desktop-app .reshade-page .reshade-how-keys dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.desktop-app .reshade-page .reshade-how-keys dl > div {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.desktop-app .reshade-page .reshade-how-keys dt {
+  margin: 0;
+}
+
+.desktop-app .reshade-page .reshade-how-keys dd {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+  line-height: var(--astral-line-normal);
+}
+
+/* ── Готовые пресеты ────────────────────────────────────────────────────── */
+
+.desktop-app .reshade-page .reshade-presets {
+  display: grid;
+  gap: 10px;
+}
+
+.desktop-app .reshade-page .reshade-presets-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.desktop-app .reshade-page .reshade-presets-head > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.desktop-app .reshade-page .reshade-presets-head .fx-hint,
+.desktop-app .reshade-page .reshade-presets > .fx-hint {
+  margin: 0;
+}
+
+/* Сетка и плитки пресетов — в `reshade-cinema.css` (макет «Кино»). */
+
+/* ── Что нужно знать про DLSS 5 — в «Составе», под «Вашим ПК» ─────────────── */
+
+.desktop-app .reshade-page .reshade-facts h3 {
+  margin: 4px 0 0;
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+
+/* ── Колонка «Состав» ───────────────────────────────────────────────────── */
+
+/* Колонка той же высоты, что блок кадров (`--reshade-block`, п. D); не влезло — прокручивается внутри себя. Не липкая
+   (владелец, 24.10.2026, ночь, п. 2: «Состав не следует за прокруткой»): страница едет — колонка уезжает со своего места. */
+.desktop-app .reshade-page .reshade-panel {
+  position: relative;
+  display: flex;
+  height: var(--reshade-block);
+  min-height: 0;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.desktop-app .reshade-page .reshade-panel-scroll {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  padding: 18px 18px 14px;
+  overflow-y: auto;
+}
+
+.desktop-app .reshade-page .reshade-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 6px;
+}
+
+.desktop-app .reshade-page .reshade-panel-title {
+  margin: 0;
+  font-size: var(--astral-text-section);
+  font-weight: 600;
+}
+
+/* Пакет, правила и оговорки — у нижнего края колонки. */
+.desktop-app .reshade-page .reshade-panel-foot {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--astral-line);
+}
+
+.desktop-app .reshade-page .reshade-panel-foot .fx-hint {
+  margin: 0;
+}
+
+.desktop-app .reshade-page .reshade-part {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-top: 1px solid var(--astral-line);
+}
+
+.desktop-app .reshade-page .reshade-panel-head + .reshade-part {
+  border-top: 0;
+}
+
+.desktop-app .reshade-page .reshade-part .fx-hint {
+  margin: 0;
+}
+
+.desktop-app .reshade-page .reshade-part-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.desktop-app .reshade-page .reshade-part-head > svg {
+  width: 18px;
+  height: 18px;
+  color: var(--astral-ink-muted);
+}
+
+.desktop-app .reshade-page .reshade-part-title {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.desktop-app .reshade-page .reshade-part-title b {
+  font-size: var(--astral-text-strong);
+}
+
+.desktop-app .reshade-page .reshade-part-title small {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+.desktop-app .reshade-page .reshade-part-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+}
+
+.desktop-app .reshade-page .reshade-part-state.is-on {
+  color: var(--astral-positive);
+}
+
+.desktop-app .reshade-page .reshade-key-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.desktop-app .reshade-page .reshade-key-wait {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.desktop-app .reshade-page .reshade-numbers {
+  display: grid;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.desktop-app .reshade-page .reshade-numbers-actions {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.desktop-app .reshade-page .reshade-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--astral-warning);
+}
+
+.desktop-app .reshade-page .reshade-warning > svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.desktop-app .reshade-page .reshade-warning.is-block {
+  color: var(--astral-danger);
+}
+
+@media (max-width: 1100px) {
+  .desktop-app .reshade-page .reshade-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .desktop-app .reshade-page .reshade-panel {
+    position: static;
+    height: auto;
+  }
+
+  /* Одна колонка: кадр снова 16 : 9 своей ширины, блок — по содержимому. */
+  .desktop-app .reshade-page .reshade-gallery {
+    height: auto;
+  }
+
+  .desktop-app .reshade-page .reshade-shots {
+    min-height: 0;
+    flex: 0 0 auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .desktop-app .reshade-page .reshade-how {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

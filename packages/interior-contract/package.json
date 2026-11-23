@@ -1,0 +1,7 @@
+{
+  "name": "@modovik/interior-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js"
+}

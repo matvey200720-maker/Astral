@@ -1,0 +1,191 @@
+/*
+  Карточка работы в библиотеке: слева обложка, справа панель с названием,
+  кнопками и фактами. Все правила действуют только в приложении (`.desktop-app`),
+  поэтому каждый компонент записан сам по себе, а `.desktop-app &` вложен внутрь.
+*/
+
+/* ---- обложка и панель: общая рамка, скругление и подсветка кромки ---- */
+.library-work-cover,
+.library-work-body {
+  .desktop-app & {
+    --wl-glow: var(--astral-highlight);
+    border-radius: var(--astral-radius-xl);
+    border-width: 1px;
+    border-color: var(--astral-line);
+    border-style: solid;
+  }
+}
+
+/* ---- сама карточка и сетка «обложка + панель» ---- */
+.library-work-card {
+  .desktop-app & {
+    padding-block-end: var(--astral-page-pad-bottom);
+    row-gap: 18px;
+    column-gap: 18px;
+    display: grid;
+  }
+
+  .desktop-app & > .library-work-layout {
+    --wl-main: minmax(0, 1fr);
+    --wl-side: clamp(320px, 27vw, 400px);
+    margin-block-start: 8px;
+    row-gap: 36px;
+    column-gap: 36px;
+    align-items: start;
+    display: grid;
+    grid-template-columns: var(--wl-main) var(--wl-side);
+  }
+}
+
+.library-work-stage {
+  .desktop-app & {
+    margin: 0;
+  }
+}
+
+/* ---- обложка 16:9 с мягким пятном света ---- */
+.library-work-cover {
+  .desktop-app & {
+    --cover-spot-shape: ellipse 70% 70% at 50% 36%;
+    --cover-spot: rgba(255, 255, 255, 0.06);
+    aspect-ratio: 16 / 9;
+    display: block;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--wl-glow);
+    background: radial-gradient(var(--cover-spot-shape), var(--cover-spot), transparent 72%), #050505;
+
+    & .workshop-cover {
+      justify-items: center;
+      align-items: center;
+      display: grid;
+      inset-block: 0;
+      inset-inline: 0;
+      position: absolute;
+    }
+  }
+}
+
+/* ---- панель справа: прилипает к верху при прокрутке ---- */
+.library-work-body {
+  .desktop-app & {
+    --wl-lift: var(--astral-shadow-soft);
+    row-gap: 18px;
+    column-gap: 18px;
+    display: grid;
+    padding-block-start: 22px;
+    padding-block-end: 10px;
+    padding-inline: 18px;
+    inset-block-start: 20px;
+    position: sticky;
+    box-shadow: var(--wl-glow), var(--wl-lift);
+    background: var(--astral-surface);
+
+    & > header {
+      row-gap: 6px;
+      column-gap: 6px;
+      display: grid;
+
+      & span {
+        font-size: var(--astral-text-small);
+        font-weight: 600;
+        color: var(--astral-ink-muted);
+      }
+
+      & h1 {
+        font-size: var(--astral-text-hero);
+        overflow-wrap: anywhere;
+        margin: 0;
+        letter-spacing: -0.025em;
+        line-height: 1.08;
+        font-weight: 700;
+        color: var(--astral-ink);
+      }
+
+      & p {
+        font-size: var(--astral-text-body);
+        margin: 0;
+        color: var(--astral-ink-muted);
+      }
+    }
+
+    /* список фактов: подпись слева, значение справа */
+    & dl {
+      --fact-main: minmax(0, 1fr);
+      margin: 0;
+      padding-block-start: 4px;
+      display: grid;
+      border-top-width: 1px;
+      border-top-style: solid;
+      border-top-color: var(--astral-line);
+
+      & > div {
+        padding-block-start: 11px;
+        padding-block-end: 11px;
+        padding-inline: 0;
+        align-items: baseline;
+        row-gap: 14px;
+        column-gap: 14px;
+        display: grid;
+        grid-template-columns: minmax(0, auto) var(--fact-main);
+
+        & + div {
+          border-top-width: 1px;
+          border-top-style: solid;
+          border-top-color: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
+
+    & dt {
+      font-size: var(--astral-text-small);
+      white-space: nowrap;
+      color: var(--astral-ink-faint);
+    }
+
+    & dd {
+      font-size: var(--astral-text-body);
+      text-align: right;
+      overflow-wrap: anywhere;
+      margin: 0;
+      font-weight: 600;
+      color: var(--astral-ink);
+    }
+  }
+}
+
+.library-work-actions {
+  .desktop-app & {
+    row-gap: 8px;
+    column-gap: 8px;
+    display: grid;
+
+    & .ui-button {
+      inline-size: 100%;
+    }
+  }
+}
+
+.library-work-hint {
+  .desktop-app & {
+    font-size: var(--astral-text-small);
+    margin: -6px 0 0;
+    line-height: var(--astral-line-normal);
+    color: var(--astral-ink-faint);
+  }
+}
+
+/* узкое окно: панель падает под обложку и перестаёт прилипать */
+@media (max-width: 1180px) {
+  .library-work-body {
+    .desktop-app & {
+      position: static;
+    }
+  }
+
+  .library-work-card {
+    .desktop-app & > .library-work-layout {
+      grid-template-columns: var(--wl-main);
+    }
+  }
+}

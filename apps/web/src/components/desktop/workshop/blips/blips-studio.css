@@ -1,0 +1,628 @@
+/*
+ * Редактор значков и маршрута.
+ *
+ * Кадр здесь чужой: его рисует общее двумерное окно, и у него своя рамка, своё
+ * затемнение по краям и свой переключатель сцен в углу. Поэтому редактор
+ * ничего в кадре не переопределяет — он ставит полосу над кадром и подпись под
+ * ним, а рамку оставляет окну.
+ *
+ * Внутри кадра — экран игры, а не страница лаунчера: радар, значки и маршрут
+ * остаются такими же в обеих темах, иначе светлая тема лаунчера перекрасила бы
+ * ночной радар в белый лист. Всё, что снаружи кадра, берёт цвета из палитры —
+ * своей синевы в мастерской нет.
+ *
+ * Лист лежит в слое `overrides` и подключается из общего `styles/index.css`, а
+ * не из компонента: у приложения один вход для стилей и явный порядок слоёв.
+ */
+
+/*
+ * Ленивый лист (18.10): прежнюю студию окно не открывает — реестр
+ * (`features/workshop/useWorkshopEditors.jsx`) её не ведёт, — и в стартовом
+ * `main.css` лист лежал зря (потолок 190 KiB, `scripts/verify-web-
+ * architecture.js`). Импортирует его сама студия: вернут её в реестр — вид
+ * приедет вместе с ней. Слой тот же, `overrides`.
+ */
+@layer overrides {
+  .blips-studio {
+    --blips-line: var(--astral-line);
+    --blips-muted: var(--astral-ink-muted);
+    --blips-faint: var(--astral-ink-faint);
+    color: var(--astral-ink);
+  }
+
+  /* --- Список типов слева --- */
+
+  .blips-rail-title {
+    padding: 2px 2px 4px;
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+  }
+
+  .blips-rail-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius);
+  }
+  .blips-rail-row:hover {
+    border-color: var(--blips-line);
+  }
+  .blips-rail-row.is-active {
+    border-color: var(--astral-accent);
+    background: var(--astral-surface);
+  }
+  /* Убранный со сцены тип не исчезает из списка: его всё ещё правят, просто на
+     кадре его сейчас нет. Поэтому строка гаснет, а не пропадает. */
+  .blips-rail-row.is-off {
+    opacity: 0.5;
+  }
+
+  .blips-rail-pick {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px 9px;
+    align-items: center;
+    min-width: 0;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  /* Значок в списке — тот же самый рисунок, что и в кадре, а не его подобие:
+     раньше здесь были своё скругление и захардкоженный тёмный силуэт, и
+     тёмно-синий значок в списке выглядел пустым, оставаясь в кадре белым. */
+  .blips-rail-pick i {
+    display: inline-flex;
+    grid-row: span 2;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+  }
+  .blips-rail-pick b {
+    color: var(--astral-ink);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .blips-rail-pick small {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+  }
+
+  .blips-rail-eye {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    color: var(--blips-faint);
+    cursor: pointer;
+  }
+  .blips-rail-eye:hover {
+    color: var(--astral-ink);
+    background: var(--astral-surface-sunken);
+  }
+  .blips-rail-eye svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* --- Полоса над кадром --- */
+
+  .blips-view-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border: 1px solid var(--blips-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+  }
+
+  .blips-metres {
+    color: var(--blips-faint);
+    font-size: 11px;
+  }
+
+  /* Строка «Экран игры» (`GameScreenLine`) — своей строкой в полосе: фраза длиннее органов. */
+  .blips-screen-line {
+    flex: 1 0 100%;
+  }
+
+  /* Курс занимает всю ширину под остальными органами: ползунку нужен ход, а не
+     огрызок в двадцать точек между двумя переключателями. */
+  .blips-heading {
+    flex: 1 0 100%;
+    margin: 0;
+    padding-top: 2px;
+    border-top: 1px solid var(--blips-line);
+  }
+
+  .blips-magnify {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    color: var(--blips-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .blips-magnify:hover {
+    border-color: var(--blips-line);
+    color: var(--astral-ink);
+  }
+  .blips-magnify.is-active {
+    border-color: var(--astral-accent);
+    color: var(--astral-accent);
+  }
+  .blips-magnify svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* Откуда подложка. Стоит в конце полосы: это не орган управления, а ответ на
+     вопрос «на что я смотрю». */
+  .blips-field-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 0 4px;
+    color: var(--blips-muted);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .blips-field-source svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .blips-hint-bar {
+    margin: 0;
+    color: var(--blips-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.5;
+  }
+
+  /* --- Радар в кадре --- */
+
+  /*
+   * Радар стоит там, где его ставит игра, и его положение считает код — здесь
+   * только вид. Ни отступов, ни собственных размеров: любое смещение отсюда
+   * сдвинуло бы радар относительно безопасной зоны, то есть соврало бы ровно про
+   * то, ради чего кадр и показывают.
+   */
+  /*
+   * Весь декор кадра считается от масштаба слоя, а не задан пикселями окна.
+   *
+   * Окно отдаёт `--hud-layer-scale` — во сколько раз пиксель экрана 1080p больше
+   * или меньше пикселя окна. Рамка, тень и подписи, зашитые постоянными
+   * пикселями, в маленьком окне выходили пропорционально огромными, а в большом
+   * исчезали, то есть кадр переставал быть один к одному ровно там, где заявлено,
+   * что это экран игры.
+   */
+  .blips-radar {
+    --blips-px: calc(1px * var(--hud-layer-scale, 1));
+    position: absolute;
+    overflow: hidden;
+    border: var(--blips-px) solid rgba(255, 255, 255, 0.24);
+    border-radius: calc(var(--blips-px) * 4);
+    background: #0d1116;
+    box-shadow:
+      0 calc(var(--blips-px) * 2) calc(var(--blips-px) * 12) rgba(0, 0, 0, 0.45),
+      inset 0 0 calc(var(--blips-px) * 14) rgba(0, 0, 0, 0.55);
+  }
+
+  /* Квадрат подложки: он больше радара и крутится по курсу, поэтому его углы
+     уходят под `overflow: hidden` радара, а не оставляют пустоту в его углах.
+     `will-change` здесь нет намеренно: обещание держит промотированный слой под
+     растянутой картинкой атласа постоянно, и его ставит разметка — только на то
+     время, пока курс не нулевой. */
+  .blips-radar-turn {
+    position: absolute;
+    transform-origin: 50% 50%;
+  }
+
+  .blips-radar-field {
+    position: absolute;
+    max-width: none;
+    user-select: none;
+  }
+  /* Рисованная подложка мировых координат не знает — её просто натягивают на
+     радар. Отдельное имя нужно, чтобы это было видно в разметке, а не выводилось
+     из отсутствия inline-стиля. */
+  .blips-radar-field.is-loose {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Куда север. Место буквы считает сцена по настоящим сторонам радара — здесь
+     только вид: своих отступов у метки нет, иначе она сойдёт с обода. */
+  .blips-radar-north {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: calc(var(--blips-px) * 11);
+    font-weight: 700;
+    font-style: normal;
+    line-height: 1;
+    text-shadow: 0 0 calc(var(--blips-px) * 3) rgba(0, 0, 0, 0.9);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .blips-route {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  /* Шевроны направления: своя коробка на каждый, потому что коробка маршрута
+     растянута неравномерно и скосила бы их. */
+  .blips-route-arrow {
+    position: absolute;
+    overflow: visible;
+    transform-origin: 50% 50%;
+    pointer-events: none;
+  }
+
+  .blips-blip {
+    position: absolute;
+    display: block;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  /* Тень лежит на самом рисунке, а не на коробке: она обязана повторять форму —
+     у капли с остриём тень квадратом выдала бы, что значок нарисован вёрсткой. */
+  .blips-art {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 var(--blips-shadow, 1px 2px) rgba(0, 0, 0, 0.62));
+  }
+  /* Прижатый к краю значок стоит вплотную к рамке радара, и общая тень его от
+     неё не отделяет: она смещена вниз-вправо, а рамка идёт со всех сторон.
+     Поэтому у прижатого добавляется тень без смещения — тёмный ореол по контуру
+     фигуры, тот самый, что раньше давала рамка коробки. */
+  .blips-blip.is-edge .blips-art {
+    filter: drop-shadow(0 var(--blips-shadow, 1px 2px) rgba(0, 0, 0, 0.62))
+      drop-shadow(0 0 calc(var(--blips-px) * 2) rgba(0, 0, 0, 0.85));
+  }
+  .blips-blip-point {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    overflow: visible;
+    transform-origin: 50% 50%;
+    filter: drop-shadow(0 var(--blips-shadow, 1px 2px) rgba(0, 0, 0, 0.55));
+  }
+  .blips-blip b {
+    position: absolute;
+    left: 50%;
+    top: 104%;
+    overflow: hidden;
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-shadow:
+      0 0 calc(var(--blips-px) * 3) rgba(0, 0, 0, 0.95),
+      0 calc(var(--blips-px)) calc(var(--blips-px) * 2) rgba(0, 0, 0, 0.9);
+    transform: translateX(-50%);
+  }
+  /* Подпись уходит наверх, когда под значком её место уже занято соседом:
+     сдвинуть её вбок нельзя — она отъедет от своего значка. */
+  .blips-blip b.is-above {
+    top: auto;
+    bottom: 104%;
+  }
+
+  /*
+   * Что здесь живёт — живёт CSS-анимациями.
+   *
+   * Кадрового цикла в редакторе нет намеренно, и заводить его ради пульсации
+   * одного значка значило бы перерисовывать весь слой шестьдесят раз в секунду.
+   * React об этих анимациях не знает, и от них не пересчитывается ни одна
+   * раскладка.
+   *
+   * Цена у них разная. Мигание значка и пульсация шеврона двигают прозрачность —
+   * это композитор браузера, слой уже растрирован. Течение пунктира двигает
+   * `stroke-dashoffset`, то есть саму геометрию штриха: путь маршрута
+   * растрируется заново каждый кадр на главном потоке. Поэтому течение в штатном
+   * наборе выключено и приходит только вместе с пунктиром — в покое кадр обязан
+   * стоять на нуле.
+   *
+   * Мигание нужно не для красоты: на статике не увидеть, что мигающее задание
+   * ворует внимание у соседних значков, — а именно это и решают, собирая набор.
+   */
+  @keyframes blips-blink {
+    0%,
+    46% {
+      opacity: 1;
+    }
+    62%,
+    84% {
+      opacity: 0.22;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes blips-flow {
+    to {
+      stroke-dashoffset: calc(var(--blips-flow-step, 20px) * -1);
+    }
+  }
+
+  @keyframes blips-run {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    30% {
+      opacity: 1;
+    }
+  }
+
+  .blips-blip.is-blinking .blips-art {
+    animation: blips-blink 1.6s ease-in-out infinite;
+  }
+  .blips-route-line.is-flowing {
+    animation: blips-flow 1.1s linear infinite;
+  }
+  .blips-route-arrow.is-flowing {
+    animation: blips-run 1.4s ease-in-out infinite;
+  }
+
+  /* Движение в кадре — не украшение, а сообщение; человеку, который его
+     отключил, редактор всё равно обязан показать набор целиком. */
+  @media (prefers-reduced-motion: reduce) {
+    .blips-blip.is-blinking .blips-art,
+    .blips-route-line.is-flowing,
+    .blips-route-arrow.is-flowing {
+      animation: none;
+    }
+    .blips-route-arrow.is-flowing {
+      opacity: 0.9;
+    }
+  }
+
+  /* --- Правая колонка --- */
+
+  .blips-inspector-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--blips-line);
+  }
+
+  .blips-name {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .blips-name span {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+  }
+  .blips-name input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid var(--blips-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-sunken);
+    color: var(--astral-ink);
+    font: inherit;
+    font-size: 12px;
+  }
+
+  .blips-inspector-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow: auto;
+    /* Место под полосу прокрутки, чтобы ползунки не дёргались при её появлении. */
+    padding-right: 4px;
+  }
+
+  .blips-field > span,
+  .blips-toggle > span {
+    display: flex;
+    flex-direction: column;
+    color: var(--blips-muted);
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .blips-field > span small,
+  .blips-toggle > span small {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+  }
+
+  .blips-colour {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .blips-colour input {
+    width: 34px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--blips-line);
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    cursor: pointer;
+  }
+  .blips-colour b {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .blips-toggle input {
+    justify-self: start;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--astral-accent);
+    cursor: pointer;
+  }
+
+  /* Рисунки значков выбирают глазами, а не по названию из списка: имя «звезда»
+     ничего не говорит о том, как она выглядит на двадцати пикселях. И показывать
+     их надо ровно в том виде, в каком человек их получит, — на своём пятне, со
+     своей обводкой и своим размером, а не крупно на плоском фоне. */
+  .blips-glyphs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .blips-glyphs button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    border: 1px solid var(--blips-line);
+    border-radius: var(--astral-radius-sm);
+    background: #171b22;
+    cursor: pointer;
+  }
+  .blips-glyphs button:hover {
+    border-color: var(--astral-line-strong);
+  }
+  .blips-glyphs button.is-active {
+    border-color: var(--astral-accent);
+    box-shadow: inset 0 0 0 1px var(--astral-accent);
+  }
+  .blips-glyphs button .blips-art {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  }
+
+  /*
+   * Живой значок и линейка размеров.
+   *
+   * Размер оценивать было нечем: рядом с ползунком стояло только число, а чтобы
+   * увидеть свой значок, человек искал его глазами в кадре шириной в две сотни
+   * точек. Здесь тот же самый рисунок стоит один к одному и рядом — ряд 12/24/48,
+   * на котором сразу видно, что «Тележка» на двадцати двух превращается в кляксу,
+   * а «Флажок» держится.
+   */
+  .blips-sizes {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid var(--blips-line);
+    border-radius: var(--astral-radius);
+    /* Подложка тёмная и своя: значок настраивают для радара игры, и на светлой
+       карточке лаунчера белый значок игрока читался бы совсем не так. */
+    background: #12161c;
+  }
+  .blips-sizes figure {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    margin: 0;
+  }
+  .blips-sizes figcaption {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+  }
+  .blips-sizes .blips-art {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.62));
+  }
+  .blips-sizes figure.is-own figcaption {
+    color: var(--astral-accent);
+  }
+
+  /*
+   * Контраст значка с картой.
+   *
+   * Ползунок прозрачности опускается до двадцати процентов и до сих пор гасил
+   * значок без единого сигнала. Здесь стоит число и приговор к нему — иначе
+   * «покрути и посмотри» так и остаётся единственным способом проверки.
+   */
+  .blips-contrast {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    border: 1px solid var(--blips-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-sunken);
+  }
+  .blips-contrast span {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--blips-muted);
+    font-size: 11px;
+  }
+  .blips-contrast b {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .blips-contrast small {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+    line-height: 1.4;
+  }
+  .blips-contrast.is-good b {
+    color: #6fce7a;
+  }
+  .blips-contrast.is-fair b {
+    color: #f4d35e;
+  }
+  .blips-contrast.is-poor b {
+    color: #ff6b7d;
+  }
+
+  .blips-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .blips-group-title {
+    color: var(--blips-faint);
+    font-size: var(--astral-text-micro);
+  }
+
+  .blips-hint {
+    margin: 0;
+    color: var(--blips-faint);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+}

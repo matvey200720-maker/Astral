@@ -1,0 +1,371 @@
+/*
+ * Редактор залазов.
+ *
+ * Комната — мастерская «как в Photoshop» (`EditorShell` с инструментами):
+ * колонка инструментов, кадр на весь центр, панель взятого инструмента.
+ * Разделы и плитки носят вид мастерской эффектов (`effects-studio.css`, имя
+ * `fx-editor` рядом со своим). Здесь только своё: плитки набора из десяти
+ * меток, кадр стены и текстуры, органы кадра в его углу, плитки видов и
+ * шрифтов.
+ *
+ * Лист подключён раньше `effects-studio.css` в том же слое, поэтому общие
+ * правила переопределяются здесь с именем редактора впереди.
+ *
+ * Литералы цвета допущены только под метками: там не страница лаунчера, а
+ * подложка текстуры — тёмная, бетон или светлая, — и выбирают по ней цвет
+ * метки, так что палитра интерфейса там соврала бы.
+ */
+
+.climb-editor {
+  --climb-plate-dark: #101216;
+  --climb-plate-light: #dfe3e8;
+  --climb-plate-concrete: #8a8781;
+}
+
+/* ── Сцена ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Сцена занимает кадр каркаса целиком: рамку, скругление и матовый фон даёт
+ * кадр. Правый верхний угол — органы кадра (`StageBar`), правый нижний —
+ * подпись, левый нижний — подсказки: плитки и кадр стены стоят в полях
+ * между ними.
+ */
+.climb-stage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.climb-stage-bar > * {
+  flex: none;
+}
+
+/* Приближение — ползунок среди сегментов: без своей ширины он растянул бы
+   угол кадра на всю строку. Поле числа у него своё (`Slider`). */
+.climb-stage-bar > .climb-zoom {
+  flex: 0 1 210px;
+  min-width: 180px;
+  margin: 0;
+}
+
+.climb-stage-bar > .climb-stage-slot {
+  padding: 0 4px;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* В узком кадре угол держит органы в одну строку: подпись метки уступает
+   первой — её имя и так видно по выбранной плитке слева. */
+@container (max-width: 980px) {
+  .climb-stage-bar > .climb-stage-slot {
+    display: none;
+  }
+}
+
+.climb-backdrops {
+  display: flex;
+  gap: 4px;
+}
+
+.climb-backdrops > .ui-color-swatch {
+  width: var(--astral-control-h-xs);
+}
+
+/*
+ * Набор: десять меток в две строки по шесть клеток — сверху стрелка,
+ * «Встать здесь», прыжок, обе надписи «POV» и правая кнопка, снизу машина,
+ * напарник, удар и «CLICK - Q» на три клетки: она вчетверо шире своей
+ * высоты, и в одной клетке сжалась бы в строчку.
+ */
+.climb-set {
+  position: absolute;
+  inset: 64px 24px 56px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 0;
+}
+
+.climb-editor .climb-set > .climb-set-tile {
+  min-height: 0;
+  background: var(--fx-matte);
+}
+
+.climb-set > .climb-set-tile.is-wide {
+  grid-column: span 3;
+}
+
+/* Гнездо картинки тянется по высоте плитки, а высота гибкой плитки для
+   процентов картинки не определена: `height: 100%` у неё превращался в
+   «по ширине», и квадратная метка обрезалась гнездом. Картинка поэтому
+   лежит в гнезде вписанной рамкой, а не в потоке. */
+.climb-set-tile .ui-choice-media {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.climb-set-tile .ui-choice-media > img {
+  position: absolute;
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  object-fit: contain;
+}
+
+.climb-set.is-dark .ui-choice-media {
+  background: var(--climb-plate-dark);
+}
+
+.climb-set.is-light .ui-choice-media {
+  background: var(--climb-plate-light);
+}
+
+.climb-set.is-concrete .ui-choice-media {
+  background: var(--climb-plate-concrete) url("/assets/workshop/climbs/scene-day.jpg")
+    30% 40% / 260% auto;
+}
+
+.climb-set-tile.is-hidden .ui-choice-media > * {
+  opacity: 0.3;
+}
+
+/*
+ * Кадр стены и текстуры: слева те же десять картинок двумя столбиками —
+ * метку и здесь выбирают картинкой, а не словом. Клетки делят высоту кадра
+ * поровну и в низком окне ужимаются, а не выталкивают кадр.
+ */
+.climb-stage-body {
+  position: absolute;
+  inset: 64px 24px 56px;
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+}
+
+.climb-slot-rail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 0;
+}
+
+.climb-editor .climb-slot-rail > .climb-rail-tile {
+  min-height: 0;
+  padding: 4px;
+  background: var(--fx-matte);
+}
+
+.climb-rail-tile .ui-choice-media {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: var(--climb-plate-dark);
+}
+
+.climb-rail-tile .ui-choice-media > img {
+  position: absolute;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  object-fit: contain;
+}
+
+/* Подпись у столбика — только для читалки экрана и подсказки. */
+.climb-rail-tile .ui-choice-copy {
+  display: none;
+}
+
+.climb-rail-tile.is-hidden .ui-choice-media > * {
+  opacity: 0.3;
+}
+
+/* Картинки метки нет — имя вместо пустого гнезда, по центру клетки (владелец 31.10.2026: пустых миниатюр не бывает). */
+.climb-set-tile.is-named,
+.climb-rail-tile.is-named {
+  justify-content: center;
+}
+
+.climb-rail-tile.is-named .ui-choice-copy {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: var(--astral-text-micro);
+  overflow-wrap: anywhere;
+}
+
+.climb-stage-frame {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--fx-scene-line);
+  border-radius: var(--astral-radius);
+  background: var(--climb-plate-dark);
+}
+
+.climb-stage-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* «На месте» — общий 3D-кадр мастерской на всю рамку (кусок карты с метками). */
+.climb-stage-frame > .model-stage-frame {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* ── Готовые залазы ────────────────────────────────────────────────────── */
+
+/* Полка и сетка — общий орган (`PresetShelf`) в панели «Шаблоны»; плитка —
+   десять меток двумя строками, поэтому плитки идут одной колонкой, а не
+   двумя, как у прицелов: в половине панели метки сжались бы до точек. */
+.climb-editor .climb-presets .ui-preset-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.climb-editor .climb-preset {
+  background: var(--fx-matte);
+}
+
+.climb-editor .climb-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+.climb-preset .ui-choice-media {
+  aspect-ratio: 7 / 2;
+  padding: 4px 6px;
+  background: var(--climb-plate-dark);
+}
+
+.climb-preset .ui-choice-media > img {
+  object-fit: contain;
+}
+
+/* ── Панель инструмента ────────────────────────────────────────────────── */
+
+.climb-variants {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.climb-editor .climb-variant {
+  padding: 6px;
+  background: var(--fx-matte);
+}
+
+.climb-variant .ui-choice-media {
+  aspect-ratio: 1;
+  background: var(--climb-plate-dark);
+}
+
+.climb-variant .ui-choice-media > img {
+  object-fit: contain;
+}
+
+.climb-variant .ui-choice-copy > b {
+  text-align: center;
+}
+
+.climb-variant-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-title);
+}
+
+.climb-subhead {
+  margin: 4px 0 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.climb-fonts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.climb-editor .climb-font {
+  padding: 6px 8px;
+  background: var(--fx-matte);
+}
+
+/* Образец шрифта — сама надпись метки этим шрифтом: выбирают глазами. */
+.climb-font .ui-choice-media {
+  height: 40px;
+  padding: 0 6px;
+  background: var(--climb-plate-dark);
+}
+
+/* Образец не режет себя сам: высоту начертаниям с высокими выносными даёт
+   строка, а длинную надпись обрезает гнездо плитки. */
+.climb-font-sample {
+  max-width: 100%;
+  color: #ffffff;
+  font-size: var(--astral-text-title);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* Подпись клавиши в сегменте — тем же шрифтом, что и соседние слова. */
+.climb-suggestions kbd {
+  font: inherit;
+}
+
+/* Быстрые надписи: пять клавиш в колонку 336 точек не влезают строкой, и
+   сегменты переносятся, а не прячутся за край. */
+.climb-editor .climb-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.climb-editor .climb-suggestions > .ui-segment {
+  flex: 1 0 auto;
+}
+
+.climb-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.climb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--astral-text-small);
+}
+
+.climb-note {
+  margin: 0;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-small);
+  line-height: 1.5;
+}
+
+.climb-note.is-warning {
+  color: var(--astral-warning);
+}
+
+.climb-note.is-positive {
+  color: var(--astral-ink);
+}
+
+.climb-note code {
+  font-size: var(--astral-text-micro);
+  opacity: 0.8;
+}

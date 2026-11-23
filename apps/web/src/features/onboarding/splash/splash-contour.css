@@ -1,0 +1,396 @@
+/* Заставка запуска «Контур» и экран пробуждения после сна (15.11.2026). Макет — `.local/design-1511/r8/onboard/splash.css`, `wake.html`.
+   Лист едет вместе со слоем заставки (`StartupSplashView.jsx`, по `import()`), а не со стартовым `main.css`. Слой окна поверх всего, пока идёт запуск и уход. Само движение знака рисует холст (`contour-engine.js`); здесь — первый кадр без
+   него (знак, ореол, слова), спокойная версия и слова с ходом из четырёх отрезков. Движется только transform и opacity. */
+
+@layer overrides {
+  .startup-splash {
+    --ss-w: clamp(180px, min(19vw, 29vh), 290px);
+    --ss-h: calc(var(--ss-w) * 0.9132);
+    --ss-text: 1;
+    --ss-star: 1;
+    --ss-lit: 1;
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    overflow: hidden;
+    pointer-events: none;
+    color: #f4f4f5;
+    font-family: var(--astral-font);
+    transition: opacity var(--astral-duration-fast) linear;
+  }
+
+  /* Пока заставка водит свет, оболочка под ней прозрачна (`data-startup-hold="held"`): её первая растеризация на видеочипе (20–27 мс,
+     замер в Electron 18.11.2026) отнимала у света 3–5 кадров прямо в добегании. В первом кадре ухода метка меняется на `released`
+     (`StartupSplashView.jsx`), оболочка видна. `will-change` держит её слоем с первого мига: кисть успевает отработать под светом,
+     а на уходе остаётся только растеризация. Метка снимается вместе со слоем заставки. */
+  html[data-startup-hold] .desktop-app {
+    will-change: opacity;
+  }
+
+  html[data-startup-hold="held"] .desktop-app {
+    opacity: 0;
+  }
+
+  .startup-splash[data-leaving] {
+    opacity: 0;
+  }
+
+  .ss-veil {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 55% at 50% 42%, #0d0d0e 0%, #050505 55%, #000 100%),
+      #000;
+  }
+
+  /* Знак и ореол первого кадра: те же, что рисует холст, и те же, что стоят на странице окна до интерфейса (`apps/desktop/src/window-load.js`). */
+  .ss-halo,
+  .ss-mark {
+    position: absolute;
+    left: 50%;
+    top: 40.5%;
+    translate: -50% -50%;
+  }
+
+  .ss-halo {
+    width: calc(var(--ss-w) * 2.0833);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 255, 255, 0.5),
+      rgba(255, 255, 255, 0.12) 45%,
+      rgba(255, 255, 255, 0)
+    );
+    opacity: 0.08;
+  }
+
+  .ss-mark {
+    width: var(--ss-w);
+    aspect-ratio: 288 / 263;
+    overflow: visible;
+  }
+
+  .ss-mark svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .ss-ghost {
+    fill: rgba(255, 255, 255, 0.035);
+    stroke: rgba(255, 255, 255, 0.2);
+    stroke-width: 1.1;
+    stroke-dasharray: 2 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ss-fill {
+    fill: #fff;
+    opacity: 0;
+  }
+
+  .startup-splash[data-live] :is(.ss-halo, .ss-mark) {
+    visibility: hidden;
+  }
+
+  .ss-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Спокойная версия: знак без движения, ярче по мере хода запуска; слова и ход те же. */
+  .startup-splash[data-calm] .ss-halo {
+    display: none;
+  }
+
+  .startup-splash[data-calm] .ss-mark {
+    opacity: var(--ss-star);
+  }
+
+  .startup-splash[data-calm] .ss-ghost {
+    display: none;
+  }
+
+  .startup-splash[data-calm] .ss-fill {
+    opacity: calc(0.1 + 0.9 * var(--ss-lit));
+  }
+
+  /* Слова: этап, пояснение и ход из четырёх отрезков. */
+  .ss-text {
+    position: absolute;
+    left: 50%;
+    top: calc(40.5% + var(--ss-h) / 2 + 54px);
+    width: min(620px, 92vw);
+    text-align: center;
+    opacity: var(--ss-text);
+    transform: translateX(-50%) translateY(calc(-10px * (1 - var(--ss-text))));
+  }
+
+  /* Ошибка запуска: слова стоят выше (в макете — на 34 px от знака вместо 54). */
+  .startup-splash[data-failed] .ss-text {
+    top: calc(40.5% + var(--ss-h) / 2 + 34px);
+  }
+
+  .ss-kicker {
+    margin: 0 auto 12px;
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #909096;
+  }
+
+  .ss-title {
+    margin: 0;
+    min-height: 26px;
+    font-size: var(--astral-text-section);
+    line-height: 26px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: #f4f4f5;
+  }
+
+  .ss-desc {
+    margin: 6px auto 0;
+    max-width: 470px;
+    min-height: 21px;
+    font-size: var(--astral-text-strong);
+    line-height: 21px;
+    color: #a6a6ac;
+    text-wrap: balance;
+  }
+
+  .ss-title,
+  .ss-desc {
+    animation: ss-in 0.42s var(--astral-ease) both;
+  }
+
+  @keyframes ss-in {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .ss-track {
+    display: flex;
+    gap: 6px;
+    width: min(340px, 70vw);
+    margin: 22px auto 0;
+  }
+
+  .ss-track[hidden] {
+    display: none;
+  }
+
+  .ss-track i {
+    position: relative;
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+  }
+
+  .ss-track b {
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* Этап не закрывается дольше обычного: последний незакрытый отрезок дышит. */
+  .ss-track i[data-wait] b {
+    animation: ss-wait 2.2s ease-in-out infinite;
+    box-shadow: none;
+    transform: scaleX(1);
+  }
+
+  @keyframes ss-wait {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 0.95;
+    }
+  }
+
+  .startup-splash[data-calm] .ss-title,
+  .startup-splash[data-calm] .ss-desc,
+  .startup-splash[data-calm] .ss-track i[data-wait] b {
+    animation: none;
+  }
+
+  /* Ошибка запуска: свет гаснет, слова и два действия (`SplashFailure.jsx`). */
+  .ss-alert {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .ss-alert svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .ss-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+    pointer-events: auto;
+  }
+
+  /* Пробуждение после сна: знак уже горит, ждём открытия окна, потом он уезжает в заголовок (`wake.html`). */
+  .startup-splash[data-mode="wake"] {
+    --ss-s: min(14vw, 22vh);
+  }
+
+  .ss-wake-veil {
+    background: radial-gradient(closest-side at 50% 44%, #0f0f10, #050505);
+  }
+
+  .ss-wake-chrome {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ss-wake-chrome i {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  .ss-wake-chrome .a {
+    left: 0;
+    right: 0;
+    top: 40px;
+    height: 1px;
+  }
+
+  .ss-wake-chrome .b {
+    left: 64px;
+    top: 41px;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .ss-wake-chrome div {
+    position: absolute;
+    left: 10px;
+    top: 89px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ss-wake-chrome b {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .ss-wake-core {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    width: 0;
+    height: 0;
+  }
+
+  .ss-wake-hw {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .ss-wake-halo {
+    position: absolute;
+    left: calc(var(--ss-s) * -1.1);
+    top: calc(var(--ss-s) * -1.1);
+    width: calc(var(--ss-s) * 2.2);
+    height: calc(var(--ss-s) * 2.2);
+    border-radius: 50%;
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 255, 255, 0.36),
+      rgba(255, 255, 255, 0.09) 55%,
+      rgba(255, 255, 255, 0)
+    );
+    opacity: 0.6;
+    animation: ss-breath 2.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes ss-breath {
+    from {
+      opacity: 0.6;
+    }
+    to {
+      opacity: 0.4;
+    }
+  }
+
+  .ss-wake-star {
+    position: absolute;
+    left: calc(var(--ss-s) * -0.5);
+    top: calc(var(--ss-s) * -0.4565);
+    width: var(--ss-s);
+    height: calc(var(--ss-s) * 0.9132);
+    overflow: visible;
+  }
+
+  .ss-wake-dim {
+    fill: rgba(255, 255, 255, 0.07);
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 1.3;
+    stroke-linejoin: round;
+  }
+
+  .ss-wake-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(44% + var(--ss-s) * 0.46 + 40px);
+    text-align: center;
+  }
+
+  .ss-wake-cap b {
+    display: block;
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+    color: #f1f1f3;
+  }
+
+  .ss-wake-cap span {
+    display: block;
+    margin-top: 5px;
+    font-size: var(--astral-text-body);
+    color: #9a9aa1;
+  }
+
+  .startup-splash[data-calm] .ss-wake-halo {
+    animation: none;
+  }
+}

@@ -1,0 +1,144 @@
+/*
+ * Проигрыватель ролика (`ClipPlayer.jsx`, ТЗ 28.10.2026): кадр-постер, наша кнопка ▶ по центру, никаких штатных органов браузера. Ленивый лист: едет вместе с
+ * плеером, слой overrides (как mod-stage.css). Размеры кадру задаёт вызывающий (`className`: `mod-stage-media`, `mod-frame-viewer-media`).
+ */
+
+@layer overrides {
+  .ui-clip-player {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: #050505;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Видео — только картинка: клики и перетаскивание ловит кнопка поверх него. */
+  .ui-clip-player-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #050505;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Весь кадр — одна кнопка: нажал — играет, нажал снова — пауза. */
+  .ui-clip-player-surface {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #f4f4f5;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ui-clip-player-surface:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -4px;
+  }
+
+  .ui-clip-player-play {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(12, 12, 14, 0.78);
+    color: #f4f4f5;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    transition:
+      transform var(--astral-duration-fast) var(--astral-ease),
+      background var(--astral-duration-fast) var(--astral-ease),
+      border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .ui-clip-player-play svg {
+    width: 26px;
+    height: 26px;
+    /* Треугольник ▶ оптически сдвинут влево: возвращаем его в середину круга. */
+    margin-left: 3px;
+  }
+
+  .ui-clip-player-surface:hover .ui-clip-player-play,
+  .ui-clip-player-surface:focus-visible .ui-clip-player-play {
+    transform: scale(1.06);
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(32, 32, 36, 0.82);
+  }
+
+  /* Идёт ролик — кнопки нет, кадр чист; курсор — «пауза по нажатию» не рисуем ничем лишним. */
+  .ui-clip-player[data-clip-playing] .ui-clip-player-surface {
+    cursor: default;
+  }
+
+  /* Пока файл едет — слова поверх кадра; сбой — слова и «Повторить». */
+  .ui-clip-player-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(12, 12, 14, 0.78);
+    color: #f4f4f5;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .ui-clip-player-state.is-failed {
+    border-radius: var(--astral-radius-lg);
+    padding: 14px 20px;
+    pointer-events: auto;
+  }
+
+  .ui-clip-player-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 16px 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: transparent;
+    color: #f4f4f5;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .ui-clip-player-retry:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(32, 32, 36, 0.9);
+  }
+
+  .ui-clip-player-retry:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .ui-clip-player-retry svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-clip-player-play {
+      transition: none;
+    }
+  }
+}

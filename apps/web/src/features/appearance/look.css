@@ -1,0 +1,749 @@
+/*
+ * Внешний вид Astral (17.10.2026): акцент, знак и фон — по атрибутам на
+ * <html> (`features/appearance/look.js`). Плюс сам раздел «Внешний вид» в
+ * настройках: миниатюра Главной и «Цвет и фон».
+ */
+
+/* Акцент ---------------------------------------------------------------------
+   Главная кнопка, выбранное, отсчёт витрины. Белый — значения токенов,
+   остальные — здесь. Подпись на акценте всегда чёрная: все акценты светлые. */
+:root[data-accent="sand"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-accent: #dccaa5;
+  --astral-accent-hover: #e8d9ba;
+  --astral-accent-rgb: 220, 202, 165;
+}
+
+:root[data-accent="peach"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-accent: #e8b48f;
+  --astral-accent-hover: #f0c4a4;
+  --astral-accent-rgb: 232, 180, 143;
+}
+
+:root[data-accent="rose"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-accent: #e6a9c2;
+  --astral-accent-hover: #efbdd1;
+  --astral-accent-rgb: 230, 169, 194;
+}
+
+:root[data-accent="lavender"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-accent: #b9a9ec;
+  --astral-accent-hover: #cbbef3;
+  --astral-accent-rgb: 185, 169, 236;
+}
+
+:root[data-accent="sky"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-accent: #9fc0ea;
+  --astral-accent-hover: #b6d0f0;
+  --astral-accent-rgb: 159, 192, 234;
+}
+
+:root[data-accent="sage"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-accent: #a9cba1;
+  --astral-accent-hover: #bdd8b6;
+  --astral-accent-rgb: 169, 203, 161;
+}
+
+/* Плашка выбранного в рейке — тенью акцента, если он не белый. */
+:root[data-accent]:not([data-accent="white"]) .desktop-app {
+  --rail-pill: rgba(var(--astral-accent-rgb), 0.16);
+  --rail-pill-hover: rgba(var(--astral-accent-rgb), 0.22);
+}
+
+/* Знак в углу окна ----------------------------------------------------------
+   Один — исходная звезда Astral (25.10.2026, владелец: выбора знака нет). Картинка — маска:
+   цвет акцента кладётся под неё (23.10.2026: «акцент сам красит логотип»). Рисунок — белое на
+   прозрачном, берётся его прозрачность. */
+.desktop-titlebar-brand-mark {
+  -webkit-mask: url("/brand/astral-mark.png") center / contain no-repeat;
+  mask: url("/brand/astral-mark.png") center / contain no-repeat;
+  background: var(--astral-accent);
+}
+
+/* Заголовок окна приложения (не экран входа и не образец во «Внешнем виде»): знак — плотная звезда без полей (файл astral-star.webp, звезда занимает 95 % стороны), как в макете (≈22 px при коробке 24–25), а не «astral-mark.png» с широкими полями (13 px); подпись 13 px, как в макете и на экране входа. */
+.desktop-app .desktop-titlebar .desktop-titlebar-brand-mark {
+  -webkit-mask-image: url("/brand/astral-star.webp");
+  mask-image: url("/brand/astral-star.webp");
+}
+
+/* Отступ слева как в макете: звезда начинается в 18 px от края окна. */
+.desktop-app .desktop-titlebar .desktop-titlebar-brand {
+  margin-inline-start: 6px;
+}
+
+.desktop-app .desktop-titlebar .desktop-titlebar-brand b {
+  font-size: var(--astral-text-body) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Фон за окнами -------------------------------------------------------------- */
+
+.astral-backdrop {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.astral-backdrop-art {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.astral-backdrop-art.is-light {
+  background:
+    radial-gradient(
+      ellipse 60% 46% at 50% -6%,
+      rgba(var(--astral-accent-rgb), 0.17),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 34% at 92% 104%,
+      rgba(var(--astral-accent-rgb), 0.09),
+      transparent 70%
+    );
+}
+
+/*
+ * Три гряды — три слоя-картинки, и у каждого слоя три независимых движения: дрейф вдоль окна (`translate`), «дыхание» высоты гребней
+ * (`scale` по вертикали от нижнего края) и качка (`rotate`, доли градуса). Периоды у всех разные и не кратны друг другу, поэтому гребни
+ * то сходятся, то расходятся, а сама линия волны меняет форму, а не едет целиком (30.10.2026, владелец: «волны просто едут влево»).
+ * Всё это — свойства, которые считает композитор: главный поток ничего не рисует заново, цена та же, что у одного дрейфа
+ * (замер: 0,2 % главного потока при ×4, а морф самого пути `d` — 6 % и ритм перерисовок).
+ */
+.astral-backdrop-art.is-waves .astral-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 46%;
+  transform-origin: 50% 100%;
+  animation:
+    astral-wave-drift 90s linear infinite,
+    astral-wave-swell 13s ease-in-out infinite alternate,
+    astral-wave-roll 29s ease-in-out infinite alternate;
+  will-change: translate, scale, rotate;
+}
+
+.astral-backdrop-art.is-waves .astral-wave.is-2 {
+  animation:
+    astral-wave-drift 120s linear infinite reverse,
+    astral-wave-swell 17s ease-in-out -6s infinite alternate,
+    astral-wave-roll 37s ease-in-out -11s infinite alternate;
+}
+
+.astral-backdrop-art.is-waves .astral-wave.is-3 {
+  animation:
+    astral-wave-drift 150s linear infinite,
+    astral-wave-swell 11s ease-in-out -4s infinite alternate,
+    astral-wave-roll 31s ease-in-out -17s infinite alternate-reverse;
+}
+
+/* Гряда тает книзу: верхний край читается, низ экрана не превращается в серую плиту. */
+.astral-wave-top {
+  stop-color: #fff;
+  stop-opacity: 0.07;
+}
+
+.astral-wave-bottom {
+  stop-color: #fff;
+  stop-opacity: 0;
+}
+
+.astral-wave.is-2 .astral-wave-top {
+  stop-opacity: 0.085;
+}
+
+.astral-wave.is-3 .astral-wave-top {
+  stop-color: rgb(var(--astral-accent-rgb));
+  stop-opacity: 0.16;
+}
+
+.astral-wave.is-3 .astral-wave-bottom {
+  stop-color: rgb(var(--astral-accent-rgb));
+}
+
+@keyframes astral-wave-drift {
+  to {
+    translate: -50% 0;
+  }
+}
+
+/* Гребни растут и садятся: слой сжимается и растягивается по вертикали от нижнего края, низ гряды растворён градиентом и не виден. */
+@keyframes astral-wave-swell {
+  from {
+    scale: 1 0.8;
+  }
+
+  to {
+    scale: 1 1.22;
+  }
+}
+
+/* Линия волны слегка заваливается то в одну сторону окна, то в другую. */
+@keyframes astral-wave-roll {
+  from {
+    rotate: -0.7deg;
+  }
+
+  to {
+    rotate: 0.7deg;
+  }
+}
+
+.astral-backdrop-art.is-lines svg {
+  width: 100%;
+  height: 100%;
+}
+
+.astral-backdrop-art.is-lines path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.astral-backdrop-art.is-lines path:nth-child(4n + 1) {
+  stroke: rgba(var(--astral-accent-rgb), 0.14);
+}
+
+/* Волны стоят, когда на окно не смотрят или движение выключено, и за
+   открытым редактором — фон окна там почти не виден (`useEditorRoom.js`). */
+:root[data-motion="off"] .astral-wave,
+:root[data-attention]:not([data-attention="active"]) .astral-wave,
+:root[data-power="hot"] .astral-wave,
+:root[data-editor-room] .astral-backdrop .astral-wave {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .astral-backdrop-art.is-waves .astral-wave {
+    animation: none;
+  }
+}
+
+/* Раздел «Внешний вид» ---------------------------------------------------------- */
+
+.desktop-app .look-settings {
+  display: grid;
+  gap: 14px;
+}
+
+/*
+ * «Внешний вид»: миниатюра Главной стояла на всю ширину окна настроек и встречала огромным кадром (владелец, 16.11.2026: «сделать её меньше, чтобы настройки акцента
+ * были видны рядом и их было удобно крутить»). Теперь она слева колонкой в 360 px и держится на месте, пока справа крутят акцент, фон и скругления; в узком окне
+ * (меньше 1280) — одна колонка и миниатюра не шире 420 px.
+ */
+.desktop-app .look-aside,
+.desktop-app .look-main {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-inline-size: 0;
+}
+
+/*
+ * Под миниатюрой слева стоит карточка «Анимации интерфейса» той же ширины (владелец, 16.11.2026: «пустое пространство не оставлять»), а не полосой на всю ширину внизу
+ * страницы: цвет, фон, значок и анимации помещаются на 1440 × 900 без прокрутки. В узком окне колонки складываются в порядок «миниатюра, цвет и значок, анимации».
+ */
+@media (min-width: 1280px) {
+  .desktop-app .look-settings {
+    grid-template-columns: 360px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 18px;
+  }
+
+  .desktop-app .look-aside {
+    position: sticky;
+    top: 0;
+  }
+}
+
+@media (max-width: 1279px) {
+  .desktop-app .look-aside {
+    display: contents;
+  }
+
+  .desktop-app .look-aside > .look-home {
+    max-width: 420px;
+  }
+
+  .desktop-app .look-aside > :not(.look-home) {
+    order: 2;
+  }
+
+  .desktop-app .look-main {
+    order: 1;
+  }
+}
+
+/*
+ * Миниатюра Главной (`HomePreview.jsx`): окно 1440 × 900 в натуральную величину, сжатое одним `scale`. Рамка
+ * держит пропорцию окна и режет всё лишнее; внутри — своя «шапка», рейка, большой кадр и ряд карточек с теми же
+ * размерами, что у настоящей Главной (замер на экране 1440 × 900).
+ */
+.desktop-app .look-home {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1440 / 900;
+  overflow: hidden;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-lg);
+  background: #000;
+  box-shadow: var(--astral-highlight);
+  /* Кегли окна не из шкалы настроек объявлены значением, а не числом в `font-size`. */
+  --home-title: 52px;
+}
+
+.desktop-app .look-home-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 900px;
+  overflow: hidden;
+  background: #000;
+  color: var(--astral-ink);
+  font-family: var(--astral-font);
+  transform: scale(var(--look-k, 0.5));
+  transform-origin: 0 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Фон из «Внешнего вида» — тот же рисунок, что за настоящим окном, но без дрейфа волн: миниатюра не движется. */
+.desktop-app .look-home-window .astral-backdrop-art {
+  position: absolute;
+  inset: 0;
+}
+
+.desktop-app .look-home-window .astral-wave {
+  animation: none;
+  will-change: auto;
+}
+
+.desktop-app .look-home-titlebar {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 40px;
+  background: #000;
+}
+
+.desktop-app .look-home-rail {
+  position: absolute;
+  z-index: 3;
+  top: 40px;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 85px;
+  padding: 35px 0 33px;
+  border-right: 1px solid var(--astral-line);
+  background: #000;
+}
+
+.desktop-app .look-home-rail-gap {
+  flex: 1 1 auto;
+}
+
+.desktop-app .look-home-rail-item {
+  display: grid;
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: var(--astral-radius-lg);
+  color: var(--astral-ink-muted);
+}
+
+.desktop-app .look-home-rail-item svg {
+  width: 24px;
+  height: 24px;
+}
+
+.desktop-app .look-home-rail-item.is-active {
+  color: #fff;
+  background: rgba(var(--astral-accent-rgb), 0.16);
+}
+
+/* Большой кадр Главной. */
+.desktop-app .look-home-hero {
+  position: absolute;
+  z-index: 1;
+  top: 40px;
+  left: 85px;
+  width: 1355px;
+  height: 512px;
+  overflow: hidden;
+}
+
+.desktop-app .look-home-hero-photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--astral-surface-strong);
+}
+
+.desktop-app .look-home-hero-photo > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+}
+
+.desktop-app .look-home-hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.28) 46%, transparent 72%),
+    linear-gradient(0deg, #000 0%, rgba(0, 0, 0, 0.62) 22%, transparent 52%);
+}
+
+.desktop-app .look-home-chip {
+  position: absolute;
+  top: 25px;
+  left: 32px;
+  padding: 6px 11px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.desktop-app .look-home-social {
+  position: absolute;
+  top: 17px;
+  right: 32px;
+  display: flex;
+  gap: 8px;
+}
+
+.desktop-app .look-home-social > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  background: rgba(11, 11, 12, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.desktop-app .look-home-social svg {
+  width: 16px;
+  height: 16px;
+}
+
+.desktop-app .look-home-copy {
+  position: absolute;
+  bottom: 30px;
+  left: 32px;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  width: 640px;
+}
+
+.desktop-app .look-home-title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--home-title);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .look-home-title-skeleton {
+  width: 480px;
+  height: 52px;
+  border-radius: var(--astral-radius-sm);
+}
+
+.desktop-app .look-home-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--astral-radius);
+  color: var(--astral-accent-ink);
+  background: var(--astral-accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.desktop-app .look-home-open svg {
+  width: 16px;
+  height: 16px;
+}
+
+.desktop-app .look-home-pager {
+  position: absolute;
+  right: 32px;
+  bottom: 30px;
+  display: flex;
+  gap: 8px;
+}
+
+.desktop-app .look-home-thumb {
+  position: relative;
+  display: block;
+  width: 104px;
+  height: 60px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  background: #0b0b0c;
+}
+
+.desktop-app .look-home-thumb.is-active {
+  border-color: var(--astral-accent);
+}
+
+.desktop-app .look-home-thumb > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Ряд «Подборка модов». */
+.desktop-app .look-home-shelf {
+  position: absolute;
+  z-index: 1;
+  top: 588px;
+  left: 117px;
+  width: 1292px;
+}
+
+.desktop-app .look-home-shelf-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+}
+
+.desktop-app .look-home-shelf-head > b {
+  flex: 1 1 auto;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.desktop-app .look-home-shelf-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 18px;
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.desktop-app .look-home-shelf-all svg {
+  width: 12px;
+  height: 12px;
+}
+
+.desktop-app .look-home-arrow {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--astral-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.027);
+}
+
+.desktop-app .look-home-arrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+.desktop-app .look-home-cards {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.desktop-app .look-home-card {
+  display: grid;
+  flex: 0 0 302px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.desktop-app .look-home-card-art {
+  position: relative;
+  display: block;
+  height: 189px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  background: #0b0b0c;
+  box-shadow: var(--astral-highlight);
+}
+
+.desktop-app .look-home-card-art > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.desktop-app .look-home-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--astral-accent-ink);
+  background: var(--astral-accent);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.desktop-app .look-home-card-name {
+  display: block;
+  padding: 0 2px;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .look-home-card-name-skeleton {
+  width: 60%;
+  height: 14px;
+}
+
+/* Строки «Цвет и фон» */
+.desktop-app .look-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.desktop-app .look-swatch {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.desktop-app .look-swatch[aria-checked="true"] {
+  outline: 1.5px solid var(--astral-accent);
+  outline-offset: 3px;
+}
+
+.desktop-app .look-swatch:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 4px;
+}
+
+
+/* Скругления (ТЗ владельца 29.10.2026, п. 7) ----------------------------------
+   Токены радиусов — общие с сайтом (`packages/astral-design/tokens.css`: 4 / 8 / 12 / 16 / 22 / 28) и объявлены на `.desktop-app`
+   и его родне, поэтому и переопределяем их там же. «Обычные» — сами токены,
+   здесь только «острые» и «круглые»: окно, карточки, кнопки и поля берут углы из токенов, поэтому меняются все сразу.
+   Таблетка (999px) остаётся таблеткой. Ступени подобраны так, чтобы производные углы (`calc(var(--astral-radius) - 4px)` у
+   сегмента, `calc(var(--astral-radius-lg) - 4px)` у вложенных плиток) сами попадали на шкалу: сверка радиусов
+   (`window.__astralAudit()`) читает шкалу из токенов и не видит «радиуса мимо». */
+:root[data-radius="sharp"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-radius-xs: 2px;
+  --astral-radius-sm: 4px;
+  --astral-radius: 6px;
+  --astral-radius-lg: 8px;
+  --astral-radius-xl: 10px;
+  --astral-radius-2xl: 14px;
+}
+
+:root[data-radius="round"] :is(.desktop-app, .product-onboarding, .astral-first-run) {
+  --astral-radius-xs: 6px;
+  --astral-radius-sm: 12px;
+  --astral-radius: 16px;
+  --astral-radius-lg: 20px;
+  --astral-radius-xl: 26px;
+  --astral-radius-2xl: 34px;
+}
+
+/*
+ * Живое превью значка (ТЗ 29.10-c) слева в карточке, а «Цвет звезды», «Фон значка» и «Без фона» строками справа от него (владелец, 16.11.2026: значок 96–110 px, а не
+ * большая пустая рамка над строками). Без фона — шашечка под превью.
+ */
+.desktop-app .look-icon-card {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.desktop-app .look-icon-studio {
+  display: grid;
+  align-content: center;
+  justify-content: center;
+  padding: 16px 20px;
+  border-inline-end: 1px solid var(--prefs-edge, var(--astral-line));
+}
+
+.desktop-app .look-icon-rows {
+  display: grid;
+  align-content: center;
+  min-inline-size: 0;
+}
+
+.desktop-app .look-icon-stage {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  place-items: center;
+  border-radius: var(--astral-radius-xl);
+  background: var(--astral-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--astral-line);
+}
+
+.desktop-app .look-icon-stage.is-clear {
+  background:
+    conic-gradient(rgba(255, 255, 255, 0.08) 25%, transparent 0 50%, rgba(255, 255, 255, 0.08) 0 75%, transparent 0) 0 0 / 16px 16px,
+    var(--astral-surface-sunken);
+}
+
+.desktop-app .look-icon-preview {
+  width: 96px;
+  height: 96px;
+}
+
+.desktop-app .look-icon-colours {
+  justify-content: flex-end;
+}
+
+.desktop-app .look-icon-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 16px;
+  border-block-start: 1px solid var(--prefs-edge, var(--astral-line));
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}

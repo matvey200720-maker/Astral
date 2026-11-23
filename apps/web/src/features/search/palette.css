@@ -1,0 +1,230 @@
+/* Командная палитра: затемнённая подложка, окно с поиском, список действий и подвал с подсказками клавиш. */
+
+.astral-palette-group {
+  padding-top: 6px;
+  display: grid;
+  gap: 2px;
+
+  & h3 {
+    color: var(--astral-ink-faint);
+    margin: 0;
+    padding: 6px 10px 4px;
+    font-weight: 600;
+    font-size: var(--astral-text-micro);
+  }
+}
+
+@keyframes astral-palette-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(.98);
+  }
+}
+
+@keyframes astral-palette-fade {
+  0% {
+    opacity: 0;
+  }
+}
+
+/* Подвал с подсказками */
+.astral-palette-foot {
+  color: var(--astral-ink-faint);
+  border-top: var(--astral-line) solid 1px;
+  padding: 10px 16px;
+  display: flex;
+  gap: 16px;
+  font-size: var(--astral-text-micro);
+
+  & span {
+    align-items: center;
+    display: inline-flex;
+    gap: 4px;
+  }
+}
+
+.astral-palette-go {
+  opacity: 0;
+  color: var(--astral-ink-faint);
+  height: 14px;
+  width: 14px;
+}
+
+/* Одна строка списка */
+.astral-palette-item {
+  min-height: 46px;
+  font: inherit;
+  color: var(--astral-ink);
+  background: transparent;
+  grid-template-columns: 40px minmax(0, 1fr) 16px;
+  align-items: center;
+  border-radius: var(--astral-radius);
+  border: 0;
+  padding: 5px 10px;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+
+  &.is-active {
+    background: var(--astral-surface-hover);
+
+    & .astral-palette-go {
+      opacity: 1;
+    }
+  }
+
+  & img {
+    object-fit: cover;
+    height: 26px;
+    width: 40px;
+    background: #0b0b0c;
+    border-radius: var(--astral-radius-xs);
+
+    &[data-render] {
+      object-fit: contain;
+      padding: 2px;
+    }
+  }
+}
+
+/* Строка поиска */
+.astral-palette-field {
+  color: var(--astral-ink-muted);
+  height: 58px;
+  align-items: center;
+  border-bottom: var(--astral-line) solid 1px;
+  padding: 0 16px 0 18px;
+  display: flex;
+  gap: 12px;
+
+  & svg {
+    height: 19px;
+    width: 19px;
+    flex: none;
+  }
+
+  /* font идёт раньше font-size: иначе короткая запись перебьёт размер */
+  & input {
+    min-width: 0;
+    font: inherit;
+    color: var(--astral-ink);
+    background: transparent;
+    height: 100%;
+    flex: 1 auto;
+    outline: 0;
+    border: 0;
+    padding: 0;
+    font-size: var(--astral-text-strong);
+
+    &::placeholder {
+      color: var(--astral-ink-faint);
+    }
+  }
+}
+
+.astral-palette-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+
+  & b {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    font-size: var(--astral-text-body);
+  }
+
+  & small {
+    color: var(--astral-ink-muted);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--astral-text-small);
+  }
+}
+
+/* Список результатов */
+.astral-palette-list {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 8px 8px;
+  overscroll-behavior: contain;
+}
+
+.astral-palette-empty {
+  color: var(--astral-ink-muted);
+  margin: 0;
+  padding: 18px 12px;
+  font-size: var(--astral-text-body);
+}
+
+.astral-palette-icon {
+  color: var(--astral-ink-muted);
+  height: 32px;
+  width: 32px;
+  background: var(--astral-surface);
+  place-items: center;
+  border: var(--astral-line) solid 1px;
+  border-radius: var(--astral-radius-sm);
+  display: grid;
+  justify-self: center;
+
+  & svg {
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.astral-palette-scrim {
+  inset: 0;
+  animation: var(--astral-ease) astral-palette-fade var(--astral-duration);
+  background: rgba(0, 0, 0, .45);
+  place-items: start center;
+  z-index: 320;
+  padding: 12vh 16px 16px;
+  display: grid;
+  position: fixed;
+}
+
+/* Окно палитры; здесь же короткие имена для цветов, которые повторяются у частей внутри */
+.astral-palette {
+
+  animation: var(--astral-ease) astral-palette-in var(--astral-duration-slow);
+  color: var(--astral-ink);
+  width: min(640px, 100%);
+  background: rgba(12, 12, 13, .74);
+  box-shadow: var(--astral-shadow-float), var(--astral-highlight);
+  max-height: min(560px, 76vh);
+  overflow: hidden;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: var(--astral-line-strong) solid 1px;
+  border-radius: var(--astral-radius-xl);
+  display: grid;
+
+  /* подсказки клавиш */
+  & kbd {
+    min-width: 20px;
+    color: var(--astral-ink-muted);
+    font-family: var(--astral-font);
+    background: var(--astral-surface);
+    place-items: center;
+    border: var(--astral-line) solid 1px;
+    border-radius: var(--astral-radius-xs);
+    padding: 2px 6px;
+    display: inline-grid;
+    font-size: var(--astral-text-micro);
+  }
+}
+
+/* Без анимации: подложка и окно появляются сразу */
+@media (prefers-reduced-motion: reduce) {
+  .astral-palette {
+    animation: none;
+  }
+
+  .astral-palette-scrim {
+    animation: none;
+  }
+}

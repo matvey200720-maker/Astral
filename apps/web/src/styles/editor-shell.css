@@ -1,0 +1,2558 @@
+/*
+ * Единый каркас редактора — договор описан в components/ui/EditorShell.jsx.
+ *
+ * Только геометрия. Полоса держит постоянную высоту, чтобы сцена не прыгала,
+ * когда под названием появляется строка состояния; сцена забирает всё, что
+ * осталось; инспектор — колонка постоянной ширины, потому что колонка,
+ * тянущаяся за окном, переставляет все органы управления, стоит потянуть за
+ * рамку.
+ *
+ * Содержимое редактора здесь не рисуется. Прицел поверх скриншота, мини-карта
+ * поверх карты — это художество редактора и живёт в его листе.
+ *
+ * Подключён лист из `styles/index.css` — у приложения один вход для стилей и
+ * явный порядок слоёв, — и лежит в слое `components`, а не рядом с листами
+ * редакторов. Обычное правило редактора (слой `overrides`) сильнее здешнего,
+ * так и задумано; а вот `!important` работает наоборот, важное из `components`
+ * бьёт важное из `overrides`. Ради этого каркас и лежит здесь: иначе старые
+ * листы зажимали бы общие части комнаты, как однажды зажали кнопку «назад».
+ */
+
+.ui-editor-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  color: var(--astral-ink);
+}
+
+/* Полоса сверху -------------------------------------------------------------*/
+
+.ui-editor-topbar {
+  /*
+   * Шапка — над телом редактора. Входная анимация даёт ей свой контекст
+   * наложения (will-change: transform), и меню «⋯» с его z-index заперто в
+   * нём; колонка правок с размытием идёт в разметке позже и рисовалась
+   * поверх меню — видно было два пункта из девяти.
+   */
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--astral-line);
+}
+
+.ui-editor-topbar > .ui-editor-back {
+  flex: 0 0 auto;
+}
+
+/*
+ * Три строки одной стопкой, сверху вниз: раздел (kicker), название редактора и
+ * состояние. Порядок задан разметкой каркаса, размеры — здесь; больше в этой
+ * стопке ничего не бывает, поэтому и селекторы бьют по прямым детям.
+ */
+.ui-editor-title {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+/*
+ * Три строки шапки — три ступени, и до сих пор они шли не по порядку.
+ *
+ * Было так: раздел 9px/500, название 13px/500, состояние 11px/600. То есть
+ * строка «Проект сохранён» весила больше, чем само название редактора, а
+ * название почти не отличалось от текста рядом. Глазу не за что зацепиться:
+ * он ищет, как называется комната, и находит три одинаковых серых строки.
+ *
+ * Стало по убыванию: название крупнее и тяжелее всего, раздел над ним —
+ * ориентир, состояние под ним — состояние. Размеры двигаются, геометрия
+ * полосы нет: `min-height` шапки прежний, и ничего не переезжает.
+ */
+.ui-editor-title > span {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+/* Название редактора. Одна строка с многоточием: длинное имя обязано
+   обрезаться, а не растолкать вкладки и «сохранить» по краям полосы. */
+.ui-editor-title > h1 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-strong);
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Сохранено или нет и во что это ставится. Одна строка, один цвет: ряд
+   разноцветных значков здесь уже был и читался как реклама, а не как
+   состояние. */
+.ui-editor-title > small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+/* Конец полосы занят явно, а не через :last-child: редактор без вкладок иначе
+   выбрасывал бы «сохранить» на середину полосы. */
+.ui-editor-topbar > .ui-editor-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/*
+ * Шапка редактора как в macOS (ТЗ владельца 29.10.2026, модуль А).
+ *
+ * Середина — «что в кадре»: сервер (`PageTabs`) и сцена (`SegmentedControl indicator`) одного вида — утопленная
+ * дорожка с тонкой границей, выбранный — приподнятая плашка, которая едет к нажатому. Раньше сервер был вкладками без
+ * дорожки, сцена — сегментами в рамке, и рядом они читались как два разных органа. Высота дорожки — высота кнопок
+ * полосы (34 px).
+ *
+ * Правый край — три группы: история [↶ ↷], сервис [Как в игре] [⋯] и главная «Применить», отделённая чертой: рука
+ * находит её, не перебирая сервисные.
+ */
+.ui-editor-topbar .ui-editor-tabs :is(.ui-page-tabs, .ui-segmented) {
+  --segment-plate: var(--rail-pill, rgba(255, 255, 255, 0.14));
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-sunken);
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-page-tabs {
+  --page-tab-h: var(--astral-control-h-xs);
+  --page-tab-radius: var(--astral-radius-sm);
+  --page-tab-glyph: 15px;
+  --page-tab-ink-active: var(--astral-ink);
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-page-tabs .ui-page-tab {
+  gap: 7px;
+  padding: 0 12px 0 10px;
+  font-size: var(--astral-text-small);
+  font-weight: 550;
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-page-tabs .ui-page-tab:not(:has(> svg)) {
+  padding: 0 12px;
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-page-tabs .ui-page-tab.is-active {
+  font-weight: 600;
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-segmented .ui-segment {
+  min-height: var(--astral-control-h-xs);
+  padding: 0 12px;
+  border-radius: var(--astral-radius-sm);
+  font-size: var(--astral-text-small);
+  font-weight: 550;
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-segmented .ui-segment:has(> svg) {
+  padding-left: 10px;
+}
+
+.ui-editor-topbar .ui-editor-tabs .ui-segmented .ui-segment.is-active {
+  font-weight: 600;
+}
+
+.ui-editor-topbar .ui-editor-tabs :is(.ui-page-tabs .ui-page-tabs-plate, .ui-segmented .ui-segmented-plate) {
+  border-radius: var(--astral-radius-sm);
+  background: var(--segment-plate);
+  box-shadow:
+    inset 0 0 0 1px var(--astral-line),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Плашка сегментов (`SegmentedControl indicator`) — одна на дорожку, едет `transform` и шириной. Выбранный сегмент
+   своей заливки не носит: под ним плашка. */
+.ui-segmented.has-plate {
+  position: relative;
+  isolation: isolate;
+}
+
+.ui-segmented.has-plate > .ui-segment {
+  position: relative;
+  z-index: 1;
+}
+
+.ui-segmented.has-plate > .ui-segment.is-active {
+  border-color: transparent;
+  background: transparent;
+}
+
+.ui-segmented-plate {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: var(--plate-w, 0px);
+  height: var(--plate-h, 0px);
+  border-radius: calc(var(--astral-radius) - 4px);
+  background: var(--astral-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--astral-line);
+  opacity: 0;
+  transform: translate3d(var(--plate-x, 0px), var(--plate-y, 0px), 0);
+  pointer-events: none;
+}
+
+.ui-segmented[data-plate] > .ui-segmented-plate {
+  opacity: 1;
+}
+
+.ui-segmented[data-live] > .ui-segmented-plate {
+  transition:
+    transform var(--astral-duration-slow) cubic-bezier(0.25, 1.06, 0.4, 1),
+    width var(--astral-duration-slow) cubic-bezier(0.25, 1.06, 0.4, 1),
+    opacity var(--astral-duration-fast) var(--astral-ease);
+}
+
+.ui-segmented.has-plate:has(> .ui-segment.is-active:active) > .ui-segmented-plate {
+  transform: translate3d(var(--plate-x, 0px), var(--plate-y, 0px), 0) scale(0.96);
+  transition-duration: var(--astral-duration-snap);
+}
+
+/* Правый край: история, сервис, главная. */
+.ui-editor-topbar > .ui-editor-actions {
+  gap: 6px;
+}
+
+.ui-editor-topbar > .ui-editor-actions > .is-icon-only + :not(.is-icon-only) {
+  margin-left: 6px;
+}
+
+.ui-editor-topbar > .ui-editor-actions > * + .editor-apply-wrap {
+  margin-left: 13px;
+}
+
+.ui-editor-topbar > .ui-editor-actions > * + .editor-apply-wrap::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: -10px;
+  width: 1px;
+  background: var(--astral-line-strong);
+  content: "";
+  pointer-events: none;
+}
+
+.ui-editor-topbar .ui-button.editor-apply {
+  padding-inline: 13px 15px;
+  font-weight: 600;
+}
+
+/* Меню «⋯» редактора: группы чертой (работы и коды, пункты редактора, сброс и снятие из игры), пункт — значок тише
+   подписи, подпись — основным цветом, снятие из игры — красным. */
+.ui-menu.editor-more-menu {
+  gap: 1px;
+  min-width: 236px;
+  padding: 6px;
+}
+
+.ui-menu.editor-more-menu .ui-menu-item {
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 10px;
+  color: var(--astral-ink);
+  font-weight: 500;
+}
+
+.ui-menu.editor-more-menu .ui-menu-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--astral-ink-muted);
+  transition: color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.ui-menu.editor-more-menu .ui-menu-item:hover:not(:disabled) svg {
+  color: var(--astral-ink);
+}
+
+.ui-menu.editor-more-menu .ui-menu-item.is-danger,
+.ui-menu.editor-more-menu .ui-menu-item.is-danger svg {
+  color: var(--astral-danger);
+}
+
+.ui-menu.editor-more-menu .ui-menu-separator {
+  margin: 5px 6px;
+}
+
+/*
+ * «Применить» во время записи в игру (EditorActions, `ApplyButton`).
+ *
+ * Занятая кнопка не гаснет, как выключенная: она не «нельзя», а «идёт». Цвет
+ * главной кнопки остаётся, по ней слева растёт доля записи, а пока доля
+ * неизвестна — бежит полоса. Стрелка в лотке опускается всё это время.
+ */
+.ui-button.editor-apply:is(.is-working, .is-done):disabled {
+  opacity: 1;
+}
+
+.ui-button.editor-apply.is-working:disabled {
+  cursor: progress;
+}
+
+/* Занятая кнопка открывает «Загрузки» с подробностями (ТЗ 08.10, вечер). */
+.ui-button.editor-apply.is-working:not(:disabled) {
+  cursor: pointer;
+}
+
+/*
+ * Отказ — на месте кнопки: «Не удалось» и причина под ней, поверх кадра, пока
+ * её не закроют или не нажмут «Применить» снова. Обёртка — опора для
+ * подписи и в полосе места не занимает.
+ */
+.editor-apply-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Красным — только знак: красный текст на светлой главной кнопке не
+   вычитывается (2,7 : 1 при нужных 4,5 : 1). */
+.ui-button.editor-apply.is-failed .editor-apply-glyph {
+  color: var(--astral-danger);
+}
+
+.editor-apply-failure {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: max-content;
+  max-width: 320px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid rgba(var(--astral-danger-rgb), 0.38);
+  border-radius: var(--astral-radius);
+  /* Плотная подложка: подпись ложится поверх панели редактора, и сквозь
+     матовое стекло читался бы её заголовок. */
+  background: var(--astral-surface-strong);
+  box-shadow: var(--astral-shadow);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+  animation: editor-apply-text-in var(--astral-duration-slow) var(--astral-ease)
+    both;
+}
+
+.editor-apply-failure-close {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px -4px 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: var(--astral-ink-muted);
+  cursor: pointer;
+}
+
+.editor-apply-failure-close:hover {
+  color: var(--astral-ink);
+  background: var(--astral-surface-hover);
+}
+
+.editor-apply-failure-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ui-button.editor-apply .ui-button-progress {
+  overflow: hidden;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+/* Блик по залитой части: доля может стоять на месте десяток секунд, пока
+   движок пересобирает архив, — без движения это выглядело бы зависанием. */
+.ui-button.editor-apply .ui-button-progress::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, currentColor 14%, transparent),
+    transparent
+  );
+  animation: editor-apply-gloss 1.6s linear infinite;
+}
+
+.ui-button.editor-apply.is-indeterminate .ui-button-progress {
+  width: 40% !important;
+  animation: editor-apply-sweep 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.ui-button.editor-apply.is-indeterminate .ui-button-progress::after {
+  display: none;
+}
+
+.editor-apply-glyph {
+  display: grid;
+  place-items: center;
+}
+
+.editor-apply-glyph svg {
+  overflow: visible;
+}
+
+.ui-button.editor-apply:is(.is-working, .is-done) .editor-apply-glyph {
+  animation: editor-apply-glyph-in var(--astral-duration-slow)
+    var(--astral-ease) both;
+}
+
+.editor-apply-arrow {
+  animation: editor-apply-arrow 1.2s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+}
+
+.editor-apply-text {
+  display: inline-block;
+  animation: editor-apply-text-in var(--astral-duration-slow) var(--astral-ease)
+    both;
+}
+
+@keyframes editor-apply-gloss {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes editor-apply-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+/* Стрелка уходит в лоток и гаснет, сверху выходит следующая. Единицы — поля
+   значка (24 на сторону, набор Astral), не пиксели экрана. */
+@keyframes editor-apply-arrow {
+  0% {
+    opacity: 0;
+    transform: translateY(-6.75px);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(2.25px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(3.75px);
+  }
+}
+
+@keyframes editor-apply-glyph-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-20deg);
+  }
+}
+
+@keyframes editor-apply-text-in {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+}
+
+/*
+ * Заголовок раздела — один на все редакторы.
+ *
+ * Их было пять: 13/500 у залазов и фонарей, 13/600 у звука и большой карты,
+ * 12/500 строчными и приглушённо у эффектов, 11,5/500 бледно у оружия и неба,
+ * 12/500 у мини-карты, 16/700 у мегамолла — там заголовок раздела выходил
+ * крупнее названия самого редактора. Каждый по отдельности разумен; рядом
+ * это читается как шесть разных продуктов, и именно это видно, когда
+ * переходишь из редактора в редактор.
+ *
+ * Правило стоит здесь, а не у примитива `.ui-panel`: карточкой обёрнут не
+ * каждый раздел, а там, где обёрнут, заголовок бывает глубже первого
+ * уровня — у мегамолла он живёт в шапке со значком и подписью.
+ *
+ * И не только в колонке правок: разделы есть и в основной области —
+ * «Готовые темы» под кадром мегамолла, «готовые пресеты» у эффектов. Заголовок
+ * там тот же самый, поэтому правило висит на каркасе целиком.
+ */
+.ui-editor-shell h2,
+.ui-editor-shell h3 {
+  margin: 0;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/*
+ * Полоса видов едет без видимой полосы прокрутки.
+ *
+ * Общая лента оставляет тонкую полосу — для галереи карточек это верно:
+ * там она говорит, сколько ещё осталось. В полосе редактора она проходит
+ * под самими вкладками и читается как подчёркивание активной — поэтому её
+ * здесь нет, а о скрытых видах говорят стрелка и растушёвка края.
+ */
+.ui-editor-tabs .ui-rail-track {
+  scrollbar-width: none;
+  /* Виды — одной строкой, а не потоком: два вида подряд (вкладки и сцена) в блочной дорожке при нехватке пары пикселей
+     уходили вторым рядом, и шапка росла вниз; лента для того и лента, что едет вбок. */
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.ui-editor-tabs .ui-rail-track > *,
+.ui-editor-tabs .ui-segmented {
+  flex-wrap: nowrap;
+}
+
+.ui-editor-tabs .ui-rail-track > * {
+  flex: 0 0 auto;
+}
+
+.ui-editor-tabs .ui-rail-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Тело: сцена и инспектор ----------------------------------------------------*/
+
+.ui-editor-body {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  align-items: start;
+  min-height: 0;
+}
+
+/*
+ * Третья колонка. Появляется только у редактора, который передал `rail`:
+ * остальные не знают о ней вовсе, и сетка тела у них остаётся той же, что
+ * была, — две колонки.
+ *
+ * Ширина постоянная по той же причине, что и у инспектора: список, который
+ * тянется за окном, перекладывает свои строки, стоит потянуть за рамку. 236px —
+ * ширина, на которой сошлись оба списка, что жили до этого слота: мастерская
+ * оружия (190–236px) и мастерская интерфейса (224px).
+ */
+/* Колонку отмечает сама оболочка (`data-rail`), а не `:has()`: его браузер перепроверял на каждую правку в теле. */
+.ui-editor-body[data-rail] {
+  grid-template-columns: 236px minmax(0, 1fr) 336px;
+}
+
+/* Карточки под списком нет намеренно. Инспектор — поверхность, на которой
+   лежат органы управления, и без неё они висят в воздухе; рейл держит то, что
+   редактор рисует карточками сам, и коробка вокруг коробок ничего не
+   объясняет. */
+.ui-editor-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ui-editor-canvas {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+/*
+ * Колонка правок — одна поверхность, а не стопка одинаковых.
+ *
+ * Было три слоя одной и той же заливки подряд: колонка 3% белого, секция
+ * внутри неё те же 3%, строка внутри секции — снова 3%. Прозрачность
+ * складывается, и к третьему уровню выходит ровный серый (#232324), в котором
+ * уже ничего не читается как «внутри чего-то»: все коробки одного тона, с
+ * одинаковой рамкой и одинаковым радиусом.
+ *
+ * Правило простое и общее: поверхность не повторяет заливку своего
+ * контейнера. Колонка — поверхность; всё внутри неё либо утоплено (дорожка
+ * переключателя, поле), либо приподнято (выбранный орган), либо не имеет
+ * заливки вовсе. Третьего не дано, и одинаковых слоёв подряд не бывает.
+ *
+ * Сама колонка при этом тише прежнего: она фон для работы, а не предмет.
+ */
+.ui-editor-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 6px 14px 14px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/*
+ * Секция внутри колонки — раздел, а не вторая панель.
+ *
+ * Её отделяют заголовок и воздух, и этого достаточно: коробка в коробке
+ * добавляет вторую рамку и второй тон на том же месте, а сообщает ровно то же,
+ * что и заголовок. Волосок сверху появляется только между разделами — у
+ * первого отделять нечего.
+ *
+ * Радиус тоже снят: у вложенной коробки он был равен родительскому (16 и 16),
+ * и углы шли вплотную друг к другу. Коробки больше нет — вопрос снят.
+ */
+.ui-editor-inspector > .ui-panel {
+  padding: 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ui-editor-inspector > .ui-panel + .ui-panel {
+  border-top: 1px solid var(--astral-line);
+}
+
+/* Редактор в кадре окна -----------------------------------------------------*/
+
+/*
+ * `fit="window"` — заявка редактора «сцена обязана помещаться в окно целиком».
+ *
+ * По умолчанию редактор живёт на прокручиваемой странице: тело тянется по
+ * самой длинной колонке (`align-items: start`), сцена держится липкой, едет
+ * страница. Редактору с холстом этого мало: холст растёт за отведённым ему
+ * местом, и без опоры получается обратная связь — холст тянет страницу,
+ * страница отдаёт холсту новую высоту, и так до упора. У килл-эффекта кадр
+ * дорос до 1180 px в окне высотой 760 и ушёл под нижний край.
+ *
+ * Заявки внутри оболочки для этого мало. `height: 100%` читается только тогда,
+ * когда высота есть у того, кто оболочку держит, — а держат её двое: страница
+ * каталога (редактор открыт из карточки слота) и мастерская (открыт из
+ * студии, и сама она лежит на той же странице). Опору поэтому ставим странице:
+ * от неё высота достаётся и мастерской, и оболочке. Комбинатор у страницы
+ * потомковый намеренно — оболочка бывает и внуком.
+ *
+ * Правило живёт у каркаса, а не в листах редакторов, по простой причине: до
+ * этого его написали заново четыре раза — небо, звук, карта мира,
+ * килл-эффект, — и каждый пятый редактор начинал с того же бага.
+ *
+ * Оболочку правила находят не через `:has()`, а по атрибутам, которые она
+ * сама ставит до первого кадра (`useEditorFitHost.js`): `data-editor-page` —
+ * на `.desktop-content` вокруг неё, `data-editor-host` — на её родителе.
+ * `:has()` с потомком на корне страницы заставлял браузер перепроверять
+ * правило при любой правке DOM внутри редактора — метка наведения, подсказка,
+ * выделение — и пересчитывать стили ~1900 элементов (13.10: на тяжёлой карте
+ * 138 мс против 59 мс на 60 движений мыши). Атрибут повторён дважды —
+ * специфичность осталась прежней, (0,3,0) у этого правила и (0,5,0) у
+ * следующего: они спорят с листами редакторов и обёртками разделов, и
+ * проигрыш им вернул бы тот же баг.
+ */
+.desktop-content[data-editor-page="window"][data-editor-page="window"],
+.workshop-studio[data-editor-host="window"][data-editor-host="window"] {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/*
+ * Обёртка раздела между страницей и оболочкой тоже держит высоту.
+ *
+ * «Шаблон графики» (08.10) кладёт оболочку в свою `section.graphics-page`.
+ * Страница получала опору, оболочка просила `height: 100%` — а между ними
+ * стояла обёртка без высоты, и процент читался от содержимого: доска
+ * вырастала до 1442 px в окне на 680, `overflow: hidden` страницы срезал
+ * низ, и до половины настроек нельзя было добраться ни колесом, ни полосой.
+ * Правило общее: любой раздел, который оборачивает оболочку, передаёт ей
+ * высоту страницы. Ловит такие места правило аудита `clipped`.
+ */
+.desktop-content[data-editor-page="window"][data-editor-page="window"]
+  > [data-editor-host="window"][data-editor-host="window"] {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Нижний отступ страницы — воздух под последней карточкой прокручиваемого
+   каталога. В кадре окна прокручивать нечего, и он просто отнимает у сцены
+   шестьдесят пикселей. */
+.desktop-content[data-editor-page="window"][data-editor-page="window"] {
+  padding-bottom: 18px;
+}
+
+/*
+ * Редактор в окне занимает всю ширину окна (ТЗ 43В, 20.10.2026).
+ *
+ * Страница каталога держит колонку в 1580 px и ставит её посередине
+ * (`desktop.css`): для прокручиваемых карточек это читаемая мера. Редактору в
+ * кадре окна она вредна: на развёрнутом экране 1920 колонка инструментов и
+ * правая панель стояли узкой серединой, по ~200 px пустоты с каждой стороны, а
+ * кадру сцены не хватало места. Здесь мера снимается: инструменты прижаты к
+ * левому краю, панель — к правому, всё остальное достаётся кадру (колонка
+ * кадра у каркаса — `1fr`). Поле по бокам то же, что и снизу: 18 px, чтобы
+ * рамка редактора не липла к краю окна. Правило там, где остальные правила
+ * страницы-редактора, и держится на том же атрибуте, который оболочка ставит
+ * сама до первого кадра, — от ширины окна оно не зависит.
+ */
+.desktop-content[data-editor-page="window"][data-editor-page="window"] {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 18px;
+}
+
+/*
+ * Мастерская «как в Photoshop» — сплошным экраном (ТЗ владельца 22.10.2026, п. E).
+ *
+ * Колонка инструментов, кадр и панель справа стояли тремя плитами внутри полей
+ * страницы (22 / 18 / 18 px) и с воздухом между собой (12 px): рамка у каждой, у
+ * каждой скругление — между ними и вокруг них пустота, и мастерская выглядела
+ * вставкой в окно, а не окном. Теперь метка `editor-flush` (`EditorShell`,
+ * `EditorSkeleton`) снимает поля страницы целиком: комната упирается в низ, в левый
+ * и в правый край окна, а три колонки лежат вплотную и делятся волоском. Шапка
+ * редактора возвращает себе боковые поля сама (ниже), чтобы название и «Применить»
+ * не липли к краю окна.
+ *
+ * Метка трижды, как у соседних правил страницы: этот лист слабее листов раздела, а
+ * поле страницы `desktop.css` и первое правило `data-editor-page` бьют по
+ * специфичности.
+ */
+.desktop-content[data-holds~="editor-flush"][data-editor-page="window"][data-editor-page="window"] {
+  padding: 0;
+}
+
+.ui-editor-shell[data-fit="window"] .ui-editor-body {
+  align-items: stretch;
+}
+
+/* Липкость нужна прокручиваемой странице; здесь ехать нечему, а `sticky`
+   мешает колонке сцены отдать высоту вложенной сетке. */
+.ui-editor-shell[data-fit="window"] .ui-editor-canvas {
+  position: static;
+}
+
+/* Едут колонки, а не страница. Обе: у рейла бывает список на сорок строк
+   ровно так же, как у инспектора. */
+.ui-editor-shell[data-fit="window"] .ui-editor-rail,
+.ui-editor-shell[data-fit="window"] .ui-editor-inspector {
+  overflow-y: auto;
+  /*
+   * Полоса прокрутки — тонкая общая (`foundation.css`), без стрелок
+   * Windows. До 08.10 её не было вовсе: о продолжении говорил только
+   * распущенный край ниже, и человек, привыкший тянуть полосу мышью, не
+   * находил, за что взяться (ТЗ 08.10, фикс 1). Край остаётся — полоса
+   * теперь рядом с ним.
+   */
+}
+
+/*
+ * Край, за которым есть продолжение, распускается.
+ *
+ * Колонка в кадре окна обрывается ровно по своей рамке: последняя видимая
+ * строка стоит там же, где стояла бы последняя строка короткого списка, и
+ * коробка читается как закрытая. Под этим краем остаётся половина органов, и
+ * узнать о них можно было только случайным движением колеса. На прокручиваемой
+ * странице такого не бывает — рамка уходит под нижний край окна, и то, что
+ * список продолжается, видно само; отсюда и разница между прицелом, где
+ * продолжение видно, и эффектами, где его не видно.
+ *
+ * Сделано маской, а не накладкой поверх: накладка внутри прокручиваемой
+ * коробки едет вместе с содержимым, а прижатая `sticky` — это лишний элемент в
+ * разметке каждой колонки и своя заливка, которая обязана совпасть с фоном
+ * колонки в обеих темах. Маска же — свойство самой коробки: она не едет, не
+ * знает про цвета и гаснет ровно там, где кончается прокрутка.
+ *
+ * Данные проставляет каркас (`useScrollEdges`): край распускается только там,
+ * где за ним правда что-то есть. Распущенный край без продолжения — такая же
+ * неправда, как закрытый край с продолжением.
+ */
+.ui-editor-shell[data-fit="window"]
+  :is(.ui-editor-rail, .ui-editor-inspector, .ui-editor-tools)[data-scroll~="bottom"] {
+  --editor-fade-bottom: 34px;
+}
+
+.ui-editor-shell[data-fit="window"]
+  :is(.ui-editor-rail, .ui-editor-inspector, .ui-editor-tools)[data-scroll~="top"] {
+  --editor-fade-top: 22px;
+}
+
+.ui-editor-shell[data-fit="window"]
+  :is(.ui-editor-rail, .ui-editor-inspector, .ui-editor-tools):is(
+    [data-scroll~="top"],
+    [data-scroll~="bottom"]
+  ) {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--editor-fade-top, 0px),
+    #000 calc(100% - var(--editor-fade-bottom, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--editor-fade-top, 0px),
+    #000 calc(100% - var(--editor-fade-bottom, 0px)),
+    transparent 100%
+  );
+}
+
+/* Нижняя граница коробки тоже перестаёт быть краем: сплошная линия под
+   растворяющимся текстом возвращает ощущение «дальше ничего». */
+.ui-editor-shell[data-fit="window"]
+  .ui-editor-inspector[data-scroll~="bottom"] {
+  border-bottom-color: transparent;
+}
+
+/* Людям с выключенным движением подсказка нужна не меньше: она не анимация,
+   а форма края. Здесь отключать нечего — правило оставлено без @media, и это
+   осознанно. */
+
+/*
+ * Узкое окно: инспектор уходит под сцену.
+ *
+ * Порог стоял на 1180 — ровно на `minWidth` окна приложения (`main.js`).
+ * Совпадение стоило дорого: `max-width` включает саму границу, поэтому на
+ * самом маленьком окне, которое приложение вообще разрешает, каждый редактор
+ * уже был разложен в столбик — инспектор под кадром, страница на два экрана
+ * скроллом. А места там хватает: при 1180 тело редактора получает 1059 px,
+ * то есть кадр 707 плюс инспектор 336 без переполнения.
+ *
+ * Правило то же, порог другой: 1100. Ниже него окно приложения не опускается
+ * вовсе, и стопка остаётся тем, чем задумана, — ответом на действительно узкое
+ * окно браузера. Прятать при этом что-то одно (рейл или инспектор) нельзя:
+ * рейл — это из чего выбирают, инспектор — чем правят, и без любого из них
+ * редактор перестаёт быть редактором.
+ */
+@media (max-width: 1100px) {
+  .ui-editor-body,
+  .ui-editor-body[data-rail] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ui-editor-canvas {
+    position: static;
+  }
+
+  /* Стопка отменяет и кадр окна. Две колонки помещались в высоту окна каждая
+     сама по себе; поставленные одна под другую, они требуют вдвое больше, и
+     «помещается целиком» превращается в «нижняя половина обрезана». Пусть
+     лучше едет страница — это то, ради чего стопка и заводилась. */
+  .desktop-content[data-editor-page="window"][data-editor-page="window"],
+  .workshop-studio[data-editor-host="window"][data-editor-host="window"] {
+    height: auto;
+    overflow: visible;
+  }
+
+  .ui-editor-shell[data-fit="window"] .ui-editor-rail,
+  .ui-editor-shell[data-fit="window"] .ui-editor-inspector {
+    overflow-y: visible;
+  }
+}
+
+@media (max-width: 780px) {
+  .ui-editor-topbar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .ui-editor-topbar > .ui-editor-actions {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+}
+
+/* Мастерская как в Photoshop (`tools`) --------------------------------------*/
+
+/*
+ * Три колонки и полоса над ними — одна раскладка на все разделы мастерской.
+ *
+ * Колонка инструментов постоянная: значок слева и название справа в одну строку (232 px) либо, если человек её свернул
+ * или окно узкое, одни значки (55 px) с подписью рядом по наведению (`EditorToolRail`, `editor-tool-names.js`).
+ * Меняется только ширина колонки: разметка у двух видов одна, поэтому свёртка идёт плавно (переход ширины, ниже).
+ * Панель справа уже прежнего инспектора (320 против 336): в ней теперь настройки одного инструмента, а не
+ * свиток всех разделов, и кадр забирает освободившееся место себе.
+ */
+.ui-editor-shell[data-layout="studio"] {
+  /* Колонка из одних значков (названия свёрнуты или окно узкое): 55 px = поля 6 + кнопка 42 + волосок 1 + поле 6.
+     Колонка с названиями — `[data-tools="names"]` ниже. Значок стоит в кнопке с отступом 10 px, так что его центр
+     (6 + 10 + 11) лежит посередине свёрнутой колонки и при сворачивании не двигается. `--editor-tool-h` — высота
+     строки для каркаса загрузки и занавеса: они рисуют плашки её размера. */
+  --editor-tools-w: 55px;
+  --editor-tool-h: 38px;
+  --editor-panel-w: 320px;
+}
+
+/*
+ * Шапка мастерской — одна лёгкая строка (редизайн 17.10.2026: «шапку
+ * убрать или переделать, она тяжёлая»). Было: стопка «название / состояние»,
+ * полоса 58px и черта под ней — над кадром висел ещё один заголовок
+ * страницы. Стало: имя редактора и его состояние в одну строку, полоса
+ * 40px, черты нет — кадр и колонки отделяет воздух, а не линия.
+ */
+.ui-editor-shell[data-layout="studio"] > .ui-editor-topbar {
+  box-sizing: border-box;
+  gap: 8px;
+  /* Поля страницы снял сплошной экран (`editor-flush`): шапка держит свои — сверху 22 px, как был отступ
+     страницы, по бокам 18 px, снизу 10 px воздуха до колонок. Высота полосы с ними прежняя, 72 px. */
+  min-height: 72px;
+  margin-bottom: 0;
+  padding: 22px 18px 10px;
+  border-bottom: 0;
+}
+
+/*
+ * Та же лёгкая строка у редактора без колонок инструментов (`bar="line"`, «Анимации», 30.10.2026, владелец: «шапку сделать как в мастерской
+ * одежды»): «Мастерская …» и состояние в одну строку, вкладки посередине, кнопки справа. Поля страницы у такого редактора свои, поэтому
+ * полоса без боковых отступов, а черту под ней рисует тело.
+ */
+.ui-editor-shell[data-bar="line"] > .ui-editor-topbar {
+  box-sizing: border-box;
+  gap: 8px;
+  min-height: 52px;
+  margin-bottom: 10px;
+  padding-bottom: 2px;
+  border-bottom: 0;
+}
+
+/* Имя и состояние рядом, по одной базовой линии. Состояние тише имени и
+   первым уступает место: обрезается многоточием, имя — нет. */
+.ui-editor-shell[data-bar="line"] .ui-editor-title,
+.ui-editor-shell[data-layout="studio"] .ui-editor-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ui-editor-shell[data-bar="line"] .ui-editor-title > h1,
+.ui-editor-shell[data-layout="studio"] .ui-editor-title > h1 {
+  /* Название — второе, что уступает место (после состояния): сжимается, только когда состояние уже съедено. */
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: var(--astral-text-strong);
+  font-weight: 600;
+}
+
+.ui-editor-shell[data-bar="line"] .ui-editor-title > small,
+.ui-editor-shell[data-layout="studio"] .ui-editor-title > small {
+  display: block;
+  /* Первое, что сжимается: у состояния вес сжатия в тысячу раз больше, чем у названия, поэтому название не
+     обрезается, пока от состояния что-то осталось. */
+  flex: 0 1000 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Вкладки режима (сервер арены, вид прицела) — посередине полосы, между
+   названием и действиями: это выбор предмета работы, а не инструмент. */
+.ui-editor-shell[data-bar="line"] > .ui-editor-topbar > .ui-editor-tabs,
+.ui-editor-shell[data-layout="studio"] > .ui-editor-topbar > .ui-editor-tabs {
+  margin-inline: auto;
+}
+
+/*
+ * Узкое окно: сначала сжимается название, вкладки видов — последними (ТЗ 22.10.2026).
+ *
+ * Название работы и вкладки делили нехватку места поровну по своей ширине: у «Прицела» на немецком при 900 px вкладкам
+ * доставалось 199 из 246, у «Дорог» — 44 из 66, а длинное имя проекта при этом оставалось в 300 px. Теперь у названия
+ * (с состоянием в нём) вес сжатия в тысячу раз больше, чем у ленты видов: оно отдаёт место первым, а вкладки начинают
+ * сжиматься, лишь когда названию некуда. Пол названия — 6rem: короче имя уже не читается, и тогда вкладки сжимаются
+ * сами, и у ленты появляются стрелки (поля под них — `ScrollRail gutters`).
+ *
+ * Вес вкладкам нельзя занижать дробью (`flex-shrink: 0.001`): при сумме весов меньше единицы флекс делит между ними
+ * лишь долю нехватки, и полоса вылезала бы за окно. Целое число против тысячи даёт то же «последними» без этой ловушки.
+ */
+.ui-editor-shell[data-bar="line"] > .ui-editor-topbar > .ui-editor-title,
+.ui-editor-shell[data-layout="studio"] > .ui-editor-topbar > .ui-editor-title {
+  flex: 0 1000 auto;
+  min-width: min(6rem, 100%);
+  overflow: hidden;
+}
+
+.ui-editor-shell[data-layout="studio"] > .ui-editor-body {
+  grid-template-columns:
+    var(--editor-tools-w) minmax(0, 1fr)
+    var(--editor-panel-w);
+  /* Колонки вплотную (п. E): их делят волоски у самих колонок, а верхний край — черта тела. */
+  gap: 0;
+  align-items: stretch;
+  border-top: 1px solid var(--astral-line);
+  /* «Скрыть / Показать названия»: ширина колонки инструментов едет, кадр отдаёт и забирает то же место. */
+  transition: grid-template-columns var(--astral-duration-slow) var(--astral-ease);
+}
+
+/* Колонка инструментов ------------------------------------------------------*/
+
+.ui-editor-tools {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-height: 0;
+  padding: 8px 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Сплошной экран (п. E): колонка упирается в левый край окна и в низ, скруглять нечего — справа волосок. */
+  border: 0;
+  border-right: 1px solid var(--astral-line);
+  border-radius: 0;
+  /* Чёрный окна, а не серая плита (редизайн 17.10.2026, владелец: «серость
+     — уходим в чёрное»): колонку отделяет волосок. */
+  background: var(--astral-bg);
+  scrollbar-width: none;
+}
+
+.ui-editor-tools::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Органы колонки и кадра закреплены важными объявлениями — так же, как
+ * кнопка «назад» у каркаса (шапка файла). Листы редакторов, написанные до
+ * колонки, красят свои «сырые» кнопки широким правилом (`.wmc-shell button`
+ * — `color: inherit`), и в слое `overrides` оно бьёт каркас: значок
+ * выбранного инструмента выходил белым на белой подсветке.
+ */
+.ui-editor-tool {
+  position: relative;
+  z-index: 1;
+  /* Значок слева, название справа в одну строку. Отступ 10 px и поле колонки 6 держат центр значка (22 px)
+     в 27 px от края — посередине свёрнутой колонки; кнопка обрезает название, когда колонка сужается. */
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 38px;
+  padding: 6px 10px !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: var(--astral-radius-sm) !important;
+  color: var(--astral-ink-muted) !important;
+  background: transparent !important;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    color var(--astral-duration-fast) var(--astral-ease),
+    background-color var(--astral-duration-fast) var(--astral-ease),
+    transform var(--astral-duration-snap) var(--astral-ease);
+}
+
+/* Имя кнопки для чтения с экрана: не `aria-label`, чтобы оболочка не
+   рисовала по нему системную подсказку поверх своей. */
+.ui-editor-tool-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  /* Скрытое имя всё равно текст: без кегля оно брало 16 страницы, и сверка
+     (`type-scale`) считала его мимо шкалы — по замечанию на каждый значок. */
+  font-size: var(--astral-text-small);
+  white-space: nowrap;
+}
+
+.ui-editor-tool > svg {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+}
+
+/* Признак «у инструмента есть меню»: уголок в правом нижнем углу кнопки, как у кисти и фигур в образце 14.
+   Рисуется срезом, без текста: имя кнопки для читалки и текст кнопки он не трогает. Стоит в одном месте у обоих
+   видов колонки, чтобы при сворачивании не прыгать. */
+.ui-editor-tool[data-menu]::after {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  content: "";
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.ui-editor-tool:hover:not(:disabled, .is-active, .is-disabled) {
+  color: var(--astral-ink) !important;
+  background: var(--astral-surface-hover) !important;
+}
+
+.ui-editor-tool:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.ui-editor-tool.is-active {
+  color: var(--astral-accent-ink) !important;
+}
+
+/* Плашка ещё не измерена (первый кадр колонки: замер — в начале следующего кадра, `EditorToolRail`): выбранную подсвечивает
+   сама кнопка тем же цветом, и колонка не появляется без подсветки. */
+.ui-editor-tools:not([data-pill]) > .ui-editor-tool.is-active {
+  background: var(--astral-accent) !important;
+}
+
+.ui-editor-tool:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.ui-editor-tool:disabled,
+.ui-editor-tool.is-disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+/* Выключенный с причиной не «нажимается»: щелчок только показывает подсказку. */
+.ui-editor-tool.is-disabled:active {
+  transform: none;
+}
+
+/* Причина под именем инструмента — тише имени, в две строки при нужде. */
+.ui-editor-tool-tip.has-reason {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 260px;
+  white-space: normal;
+}
+
+.ui-editor-tool-tip-reason {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 400;
+  line-height: var(--astral-line-normal);
+}
+
+/* Переключатель сцены (`EditorShell` → `scene`) — в шапке рядом с видами
+   работы, отступом, а не чертой: это тот же ряд «что в кадре». */
+.ui-editor-tabs .ui-editor-scene:not(:first-child) {
+  margin-left: 10px;
+}
+
+/* Сцены — по ширине подписи, а не поровну: «Внутри зала» рядом со «Снаружи»
+   не должна резаться многоточием. */
+.ui-editor-tabs .ui-editor-scene {
+  flex: none;
+}
+
+.ui-editor-tabs .ui-editor-scene > .ui-segment {
+  flex: 0 0 auto;
+}
+
+/*
+ * Подсветка выбранного — одна плашка, которая едет к инструменту, а не
+ * загорается на месте: так взгляд идёт за рукой и не ищет, что сменилось.
+ * Перелёт пружиной тот же, что у рейки лаунчера.
+ */
+.ui-editor-tools-pill {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 6px;
+  left: 6px;
+  /* По вертикали — от самой кнопки (`EditorToolRail`); по ширине — вся колонка за вычетом полей, поэтому при
+     сворачивании плашка сужается вместе с колонкой. */
+  height: var(--tool-pill-h, var(--editor-tool-h));
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-accent);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transform: translateY(var(--tool-pill-y, 0px));
+  transition: transform 360ms cubic-bezier(0.32, 1.24, 0.4, 1);
+  pointer-events: none;
+}
+
+/* Волосок группы — во всю строку, с воздухом: группы читаются блоками. */
+.ui-editor-tools-divider {
+  flex: 0 0 auto;
+  align-self: stretch;
+  height: 1px;
+  margin: 6px 8px;
+  background: var(--astral-line);
+}
+
+/* Инструмент, прижатый к низу (`pinned: "end"`): свободное место над ним, а
+   волосок — у самого инструмента. */
+.ui-editor-tools-spacer {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  min-height: 9px;
+}
+
+/*
+ * Колонка с названиями (`EditorShell toolNames`, владелец 24.10 и 25.10.2026: «новый человек без наведения должен
+ * понять, та ли это вкладка»; значок слева, название справа, оба крупнее прежних).
+ *
+ * Ширина — под русские названия в одну строку («Торговые автоматы», «Положение на экране»); длинное немецкое или
+ * украинское переносится на вторую строку мягким дефисом, а не обрывается.
+ */
+.ui-editor-shell[data-layout="studio"][data-tools="names"] {
+  --editor-tools-w: 232px;
+}
+
+/* Название — основной текст строки списка (токен 15), цвет значка (меняется у выбранного и выключенного), до двух
+   строк. Ширина у него своя, а не от колонки: когда колонка сужается, слова не пересобираются в ещё более
+   узкие строки — название гаснет и уходит за край кнопки. */
+.ui-editor-tool-label {
+  display: -webkit-box;
+  flex: 0 0 156px;
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: var(--astral-text-strong);
+  font-weight: 500;
+  line-height: var(--astral-line-tight);
+  opacity: 0;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  transition: opacity var(--astral-duration-snap) var(--astral-ease);
+}
+
+/* Названия видны: появляются чуть позже начала раскрытия — когда колонка уже дала им место. */
+.ui-editor-tools[data-names] .ui-editor-tool-label {
+  opacity: 1;
+  transition: opacity var(--astral-duration-fast) var(--astral-ease) var(--astral-duration-snap);
+}
+
+.ui-editor-tool.is-active .ui-editor-tool-label {
+  font-weight: 600;
+}
+
+/* Последняя строка колонки — «Скрыть названия». Тише инструментов: это настройка вида, а не работа. Прижата к низу
+   и не уезжает со свитком: в низком окне колонка листается, а дорога назад к значкам остаётся на виду.
+   Устроена как строка инструмента: стрелка в той же колонке, что значки, подпись справа. */
+.ui-editor-tools-names {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 36px;
+  margin-top: auto;
+  padding: 0 10px 0 13px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-faint);
+  /* Непрозрачная — под ней на свитке едут инструменты; тень закрывает и
+     нижнее поле колонки, чтобы под кнопкой не выглядывал хвост значка. */
+  background: var(--astral-bg);
+  box-shadow:
+    0 -8px 10px var(--astral-bg),
+    0 8px 0 var(--astral-bg);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    color var(--astral-duration-fast) var(--astral-ease),
+    background-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.ui-editor-tools-names:hover {
+  color: var(--astral-ink);
+  background:
+    linear-gradient(var(--astral-surface-hover), var(--astral-surface-hover)),
+    var(--astral-bg);
+}
+
+.ui-editor-tools-names:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+/* Стрелка одна на оба вида: у свёрнутой колонки она смотрит вправо — «раскрыть». Поворот идёт тем же переходом,
+   что и ширина колонки. */
+.ui-editor-tools-names > svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  transition: transform var(--astral-duration-slow) var(--astral-ease);
+}
+
+.ui-editor-tools:not([data-names]) .ui-editor-tools-names > svg {
+  transform: rotate(180deg);
+}
+
+.ui-editor-tools-names > .ui-editor-tool-label {
+  font-size: var(--astral-text-body);
+  font-weight: 500;
+}
+
+/* Низкое окно (ноутбук 1366×768): строки плотнее, чтобы арена с её семнадцатью инструментами (≈800 px высоты окна
+   на строки по 34, ≈710 — по 30) листалась как можно
+   меньше. Строка не ниже 28 px — ниже живая сверка считает кнопку меньше пальца. */
+@media (max-height: 920px) {
+  .ui-editor-shell[data-layout="studio"] {
+    --editor-tool-h: 34px;
+  }
+
+  .ui-editor-tools,
+  .ui-veil-tools {
+    gap: 1px;
+  }
+
+  .ui-editor-tool {
+    min-height: 34px;
+    padding-block: 4px !important;
+  }
+
+  .ui-editor-tools-divider {
+    margin-block: 4px;
+  }
+
+  .ui-editor-tools-names {
+    height: 32px;
+  }
+}
+
+@media (max-height: 820px) {
+  .ui-editor-shell[data-layout="studio"] {
+    --editor-tool-h: 30px;
+  }
+
+  .ui-editor-tools,
+  .ui-veil-tools {
+    padding-block: 4px;
+  }
+
+  .ui-editor-tool {
+    min-height: 30px;
+    padding-block: 3px !important;
+  }
+
+  .ui-editor-tool > svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .ui-editor-tools-divider {
+    margin-block: 3px;
+  }
+
+  .ui-editor-tools-names {
+    height: 28px;
+  }
+}
+
+/* Подпись и выпадашка живут порталом в хосте наложений: колонка едет в
+   низком окне и обрезала бы всё, что торчит за её край. */
+.ui-editor-tool-tip {
+  position: fixed;
+  z-index: 270;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: var(--astral-surface-strong);
+  box-shadow: var(--astral-shadow-soft);
+  font-size: var(--astral-text-small);
+  font-weight: 550;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none !important;
+  animation: ui-editor-tip-in var(--astral-duration-fast) var(--astral-ease)
+    both;
+}
+
+@keyframes ui-editor-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-4px, -50%);
+  }
+}
+
+.ui-editor-tool-flyout {
+  position: fixed;
+  z-index: 250;
+  display: grid;
+  gap: 10px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-lg);
+  color: var(--astral-ink);
+  background: var(--astral-surface-strong);
+  box-shadow: var(--astral-shadow);
+  transform-origin: left top;
+  animation: ui-editor-flyout-in var(--astral-duration-slow) var(--astral-ease)
+    both;
+}
+
+@keyframes ui-editor-flyout-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.97);
+  }
+}
+
+/* Кадр ---------------------------------------------------------------------*/
+
+/*
+ * Кадр — матовая поверхность продукта (`--dragon-matte-stage`, та же, что у
+ * карточек мастерской), а не чёрный прямоугольник каждого редактора своего
+ * тона. Сцена редактора лежит в нём целиком; подсказки — поверх, у нижнего
+ * края.
+ */
+.ui-editor-shell[data-layout="studio"] .ui-editor-canvas {
+  position: relative;
+  /* Липкий кадр страницы стоит на `top: 16px`; у относительного этот отступ
+     сдвигал бы кадр вниз — мимо колонок по бокам и за нижний край окна. */
+  top: auto;
+  overflow: hidden;
+  /* Сплошной экран (п. E): кадр лежит вплотную к колонкам по бокам, рамки и скругления у него нет —
+     границы ему дают волоски соседей. */
+  border: 0;
+  border-radius: 0;
+  background: var(--dragon-matte-stage, var(--astral-surface-sunken));
+}
+
+/* Панель инструмента -------------------------------------------------------*/
+
+.ui-editor-shell[data-layout="studio"] .ui-editor-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Сплошной экран (п. E): панель упирается в правый край окна и в низ — волосок слева, углы прямые. */
+  border: 0;
+  border-left: 1px solid var(--astral-line);
+  border-radius: 0;
+}
+
+/*
+ * Шапка панели инструмента (редизайн 17.10.2026, владелец: «смотрится
+ * дёшево», потом «значок наезжает на имя»). Было: значок в серой плитке
+ * 32×32, имя, строка под ним и черта через всю колонку. Стало: только имя
+ * и пояснение, по одной линии с разделами ниже, без черты — первый раздел
+ * отделяет воздух. Какой инструмент взят, говорит рейка слева.
+ */
+.ui-editor-panel-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 16px 6px;
+}
+
+/* Дорога назад со страницы панели (колонка «Карта») — своей колонкой
+   слева от имени, без плитки. */
+.ui-editor-panel-head > .ui-editor-panel-back.ui-button {
+  flex: 0 0 auto;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  margin: -4px -4px 0;
+  padding: 0;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: transparent;
+}
+
+.ui-editor-panel-head > .ui-editor-panel-back.ui-button:hover {
+  background: var(--astral-surface-hover);
+}
+
+.ui-editor-panel-back .ui-button-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Орган у правого края шапки — выключатель раздела. */
+.ui-editor-panel-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin-left: auto;
+}
+
+.ui-editor-panel-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Длинное имя страницы («Белый щит PANIC над главным входом») — в две
+   строки, а не обрывом «…» (19.10.2026). */
+.ui-editor-shell[data-layout="studio"] .ui-editor-panel-copy > h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-strong);
+  font-weight: 650;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* Заголовок раздела, повторяющий имя открытой страницы (`EditorShell.jsx`). */
+.ui-editor-panel [data-page-echo] {
+  display: none;
+}
+
+.ui-editor-panel-copy > small {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  line-height: 1.35;
+}
+
+/*
+ * Абзацы «?» у имени панели («Вода», «Небо», «Трава»…). Раскрываются между шапкой и полями, вне прокручиваемой
+ * колонки, поэтому своих отступов не имели и шли вплотную к краям окна (владелец 03.11.2026). Теперь та же линия, что у шапки
+ * и разделов ниже (16 px), абзацы с воздухом между собой, строка с запасом, ширина строки не длиннее читаемой.
+ */
+.ui-editor-panel-help {
+  display: grid;
+  flex: none;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 2px 16px 12px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.ui-editor-panel-help > p {
+  max-width: 62ch;
+  margin: 0;
+}
+
+/*
+ * Колонка правок — на чёрном окна (редизайн 17.10.2026: «серость — уходим в
+ * чёрное»). Контракт поверхностей (`ui-matte-glass-contract.css`, ранний слой)
+ * красит её `var(--astral-glass-bg)` важным объявлением, которое отсюда не
+ * перебить. Но переменные заданы на `:root` и `.desktop-app`, а не на колонке:
+ * свои значения на ней самой побеждают унаследованные. Чёрный окна, край —
+ * волосок.
+ */
+.ui-editor-shell .ui-editor-inspector {
+  --astral-glass-bg: var(--astral-bg);
+  --astral-glass-border: var(--astral-line);
+}
+
+.ui-editor-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 2px 16px 16px;
+  /* Тонкая общая полоса (ТЗ 08.10, фикс 1): панель тянут и мышью. */
+  /*
+   * Место под полосу — всегда (21.10.2026). На Windows полоса не накладная, как
+   * на Mac, а занимает место, и Blink на каждый шаг ползунка помечал её
+   * изменившейся («Scrollbar changed») и раскладывал всю панель заново — дважды
+   * за шаг. Стенд (`editor-drag --trace --invalidations`, Windows, закрытая
+   * сборка): ползунок табло большой карты — раскладка 338 → 41 мс за протяжку,
+   * главный поток 77 → 59 %, p95 шага 22,5 → 18,1 мс.
+   */
+  scrollbar-gutter: stable;
+}
+
+.ui-editor-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: ui-editor-panel-in var(--astral-duration-slow) var(--astral-ease)
+    both;
+}
+
+@keyframes ui-editor-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Разделы внутри панели — те же, что были в инспекторе: заголовок и воздух,
+   без коробки в коробке (см. `.ui-editor-inspector > .ui-panel` выше). */
+.ui-editor-panel-content > .ui-panel {
+  padding: 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ui-editor-panel-content > .ui-panel + .ui-panel {
+  border-top: 1px solid var(--astral-line);
+}
+
+/* Вкладыш редактора (`.fx-inspector`, `.recolor-inspector` и соседи) — та же
+   панель, только обёрнутая: его разделы расправляются так же, как прямые
+   дети, иначе в панели справа стояли коробки в коробке. Вкладыш не обязан
+   быть единственным ребёнком панели: над ним стоит кадр-образец
+   (`.ui-tool-demo`: волна звука, карта растительности), и без `.fx-inspector`
+   в списке у девятнадцати редакторов разделы получали светло-серую плашку
+   (ТЗ 24.10.2026, п. 3). */
+.ui-editor-panel-content > :only-child > .ui-panel,
+.ui-editor-panel-content > .fx-inspector > .ui-panel {
+  padding: 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ui-editor-panel-content > :only-child > .ui-panel + .ui-panel,
+.ui-editor-panel-content > .fx-inspector > .ui-panel + .ui-panel {
+  border-top: 1px solid var(--astral-line);
+}
+
+.ui-editor-shell[data-layout="studio"]
+  .ui-editor-panel:is([data-scroll~="top"], [data-scroll~="bottom"]) {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--editor-fade-top, 0px),
+    #000 calc(100% - var(--editor-fade-bottom, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--editor-fade-top, 0px),
+    #000 calc(100% - var(--editor-fade-bottom, 0px)),
+    transparent 100%
+  );
+}
+
+.ui-editor-shell[data-layout="studio"] .ui-editor-panel[data-scroll~="bottom"] {
+  --editor-fade-bottom: 34px;
+}
+
+.ui-editor-shell[data-layout="studio"] .ui-editor-panel[data-scroll~="top"] {
+  --editor-fade-top: 22px;
+}
+
+/* Готовые виды в панели «Шаблоны»: полка без переключателя, сетка в два
+   столбца — в колонке 320 одна плитка в ряд выходила бы баннером. */
+.ui-editor-panel-content .ui-presets.is-static {
+  display: grid;
+  gap: 10px;
+  padding: 14px 0;
+}
+
+.ui-editor-panel-content .ui-presets.is-static > header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ui-editor-panel-content .ui-presets.is-static > header > small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.ui-editor-panel-content .ui-preset-grid {
+  /* В колонке 320 — два столбца, как и было; в узком окне колонка уходит под
+     кадр во всю ширину, и два столбца давали плитки-баннеры по 370 px с
+     миниатюрой в 210 px высотой. Ширина столбца — не меньше 136, а сколько
+     влезет, столько и встаёт. */
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  /* Карточки одной высоты, как у плиток выбора: сетка здесь без своей прокрутки (overflow: visible),
+     высота её — по содержимому, и `1fr` не растягивает ряды на лишнее место. */
+  grid-auto-rows: 1fr;
+  overflow: visible;
+}
+
+/*
+ * Органы и подпись кадра (`StageOverlay.jsx`): правый верхний и правый
+ * нижний углы. Левый верхний свободен: подсказки управления — в пошаговой
+ * инструкции (`EditorTour`), поверх кадра они не лежат.
+ */
+.ui-stage-bar {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  /* Левый верхний угол свободен (плашки полёта больше нет, 18.10.2026): полоса
+     идёт во всю ширину кадра без полей по 12 пикселей, а не ужимается до 220
+     и не переносит последний орган второй строкой. */
+  max-width: calc(100% - 24px);
+  padding: 4px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: rgba(10, 10, 11, 0.72);
+}
+
+/* Переключатель над кадром («Снаружи / Внутри»): равные сегменты по самой
+   длинной подписи. У дорожки по содержимому равные доли `flex: 1 1 0`
+   делили сумму подписей поровну, и длинная обрезалась многоточием —
+   «Снару…» у ангара (ночь 12.10.2026). Сетка `1fr` берёт за долю самую
+   широкую подпись. */
+.ui-stage-bar .ui-segmented {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+/* Полоса во всю ширину верха (`StageBar wide`): у кадра без полёта левый
+   угол свободен, а ленте времени нужна ширина. */
+.ui-stage-bar.is-wide {
+  left: 12px;
+  flex-wrap: nowrap;
+  max-width: none;
+}
+
+/* Плашка в левом верхнем углу (эмблема в руке) шире прежнего запаса:
+   полоса органов, переносясь, уходила бы под неё. */
+/* Угол над кадром отмечает холст сам (`StageCorner`, `useHolds.js`), а не `:has()` — его браузер перепроверял на каждую правку в кадре. */
+.ui-editor-canvas[data-holds~="stage-corner"] .ui-stage-bar {
+  max-width: calc(100% - 300px);
+}
+
+/* «Обновляю…» (`StageBusy`): кадр пересобирается. Тихая подпись в левом
+   верхнем углу, без затемнения кадра.
+   Проявляется через 150 мс: быстрая пересборка проходит без мигания.
+   Прозрачность и поворот ведёт композитор — плашка проявляется и крутится,
+   даже пока главный поток занят пересборкой (19.10.2026). */
+.ui-stage-busy {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-muted);
+  background: rgba(10, 10, 11, 0.72);
+  font-size: var(--astral-text-micro);
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  will-change: opacity;
+  animation: ui-stage-busy-in var(--astral-duration-fast) var(--astral-ease) 150ms forwards;
+}
+
+.ui-stage-busy i {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  will-change: transform;
+  animation: ui-stage-busy-spin 800ms linear infinite;
+}
+
+@keyframes ui-stage-busy-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-stage-busy-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-stage-busy i {
+    animation: none;
+  }
+}
+
+/* Доска (`board`) -----------------------------------------------------------*/
+
+/*
+ * Раздел без инструментов — оптимизация: карточки вместо кадра. Полоса и
+ * подсказки те же, что у редакторов; середина целиком отдана карточкам и
+ * едет сама, а строка подсказок стоит у нижнего края и со свитком не уезжает.
+ * Рамки и матовой плашки у середины нет: карточки — сами плашки, и коробка
+ * вокруг коробок читалась бы лишним этажом.
+ */
+.ui-editor-shell[data-layout="board"] > .ui-editor-topbar {
+  min-height: 50px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+
+.ui-editor-shell[data-layout="board"] .ui-editor-title > h1 {
+  font-size: var(--astral-text-title);
+}
+
+.ui-editor-shell[data-layout="board"] > .ui-editor-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ui-editor-shell[data-layout="board"] .ui-editor-canvas {
+  position: relative;
+  top: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ui-editor-board {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Под последним рядом — место строке подсказок: она лежит поверх. */
+  padding-bottom: 64px;
+  /* Тонкая общая полоса (ТЗ 08.10, фикс 1): доску тянут и мышью. */
+}
+
+/* Узкое окно: панель инструмента уходит под кадр, колонка инструментов
+   остаётся слева — она тонкая и без неё редактор нечем держать. */
+@media (max-width: 1100px) {
+  .ui-editor-shell[data-layout="studio"] > .ui-editor-body {
+    grid-template-columns: var(--editor-tools-w) minmax(0, 1fr);
+  }
+
+  .ui-editor-shell[data-layout="studio"] .ui-editor-canvas {
+    min-height: 420px;
+  }
+
+  .ui-editor-shell[data-layout="studio"] .ui-editor-inspector {
+    grid-column: 1 / -1;
+    overflow: visible;
+    /* Панель стала под кадром: волосок у неё теперь сверху, а не слева. */
+    border-left: 0;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  .ui-editor-shell[data-layout="studio"] .ui-editor-panel {
+    overflow: visible;
+  }
+}
+
+/* Меню по правому щелчку (`ContextMenu`): строка над пунктами — что именно
+   под курсором. Сам список — общий `.ui-menu`. */
+.ui-context-menu-title {
+  padding: 6px 10px 4px;
+  overflow: hidden;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Ползунки колонки — одна вертикаль дорожек (design-qa.md, п. 18; критик 30.10.2026): колонка подписи у каждой строки
+ * мерила себя сама, и дорожки «Масштаба» и «Сдвига по высоте» начинались в разных местах. Подпись — одной ширины
+ * (треть строки, не шире 96 px), длинная переносится, а не сдвигает дорожку.
+ */
+.ui-editor-shell[data-layout="studio"] .ui-editor-panel .ui-slider:not(.is-stacked) {
+  grid-template-columns: minmax(0, min(96px, 34%)) minmax(0, 1fr) var(--ui-field-value);
+}
+
+/* Значение — у правого края, как код цвета в той же колонке (п. 18; критик 31.10.2026: «100 %» и «0 %», «0,26 м» и «нет» по центру
+   стояли в разных местах). Остальные экраны держат значение по центру (ТЗ 22.10.2026, п. 3). */
+.ui-editor-shell[data-layout="studio"] .ui-editor-panel .ui-slider:not(.is-stacked) > .ui-slider-value {
+  text-align: right;
+}
+
+/*
+ * Закреплённая панель внизу правой колонки (`dock`): не уезжает со свитком
+ * настроек инструмента и видна при любом инструменте. Высоту держит сама —
+ * у «Слоёв» её тянут за верхний край.
+ */
+.ui-editor-shell[data-layout="studio"] .ui-editor-dock {
+  flex: 0 0 auto;
+  min-height: 0;
+  border-top: 1px solid var(--astral-line);
+}
+
+/* Строки состояния кадра (`StageNote`): внизу панели, мелко; без строк узел места не занимает. Предупреждения видны всегда,
+   прочие — только раскрытые «?» справа (`EditorNotes`, слово владельца 29.10.2026). */
+.ui-editor-notes {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: flex-start;
+  gap: 8px;
+  max-height: min(34%, 240px);
+  overflow-y: auto;
+}
+/* Полоса видна только со строкой, которую видно: жёлтой, раскрытой или со своим «?» (без имени панели). */
+.ui-editor-notes:has(.ui-editor-note.is-warning),
+.ui-editor-notes.is-open:has(.ui-editor-note),
+.ui-editor-notes.has-toggle:has(.ui-editor-note) {
+  padding: 8px 8px 10px 12px;
+  border-top: 1px solid var(--astral-line);
+}
+.ui-editor-notes-list {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 6px;
+  min-width: 0;
+}
+.ui-editor-notes:not(.is-open) .ui-editor-note:not(.is-warning) {
+  display: none;
+}
+.ui-editor-notes .ui-editor-notes-more.ui-button {
+  display: none;
+  flex: none;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  color: var(--astral-ink-faint);
+}
+.ui-editor-notes.has-toggle:has(.ui-editor-note:not(.is-warning)) .ui-editor-notes-more.ui-button {
+  display: inline-flex;
+}
+
+/* «?» строк кадра у имени панели — тот же вид, что у «?» разделов. */
+.ui-editor-panel-actions > .ui-editor-panel-notes.ui-button {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  margin: -4px -6px 0 0;
+  padding: 0;
+  color: var(--astral-ink-faint);
+}
+.ui-editor-panel-actions > .ui-editor-panel-notes.ui-button[aria-expanded="true"],
+.ui-editor-panel-actions > .ui-editor-panel-notes.ui-button:hover {
+  color: var(--astral-ink);
+  background: var(--astral-surface-hover);
+}
+.ui-editor-panel-actions > .ui-editor-panel-notes svg {
+  width: 15px;
+  height: 15px;
+}
+.ui-editor-notes.is-open .ui-editor-notes-more.ui-button,
+.ui-editor-notes .ui-editor-notes-more.ui-button:hover {
+  color: var(--astral-ink);
+  background: var(--astral-surface-hover);
+}
+.ui-editor-notes .ui-editor-notes-more svg {
+  width: 15px;
+  height: 15px;
+}
+.ui-editor-note {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.45;
+}
+.ui-editor-note.is-warning {
+  color: var(--astral-warning);
+}
+
+/* Окно «Горячие клавиши» (`ShortcutsDialog`): группы, клавиши плашками. */
+.ui-shortcuts section + section {
+  margin-top: 14px;
+}
+.ui-shortcuts h3 {
+  margin: 0 0 6px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+.ui-shortcuts dl {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.ui-shortcuts dl > div {
+  display: grid;
+  grid-template-columns: 148px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.ui-shortcuts dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.ui-shortcuts dd {
+  margin: 0;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}
+/* Клавиша пункта меню — справа, приглушённо, как в меню системы. */
+.ui-context-menu .ui-menu-item .ui-context-menu-key {
+  margin-left: auto;
+  padding-left: 16px;
+  color: var(--astral-ink-muted);
+  font-family: inherit;
+  font-size: var(--astral-text-micro);
+  white-space: nowrap;
+}
+
+/* Редактор, который ещё едет (`EditorSkeleton`) ------------------------------*/
+
+/*
+ * Комната та же, что у каркаса, — и классы его; здесь только плашки на месте
+ * органов и строка загрузки в кадре. Размеры плашек — размеры органов: кнопка
+ * шапки 34, инструмент 38, поле панели 34. Приехавший редактор встаёт в те же
+ * клетки, и глаз видит, как комната наполняется, а не как её перекраивают.
+ *
+ * Плашки — скелет (`components/ui/Skeleton.jsx`): серое место органа и светлая
+ * полоса-блик слева направо, конечное число проходов, на композиторе — пока
+ * кусок редактора грузится, главному потоку не добавляется ни одной
+ * перерисовки. Шапка, колонка и панель идут волной (`--ui-skeleton-delay`), а
+ * не одним мерцанием всего экрана.
+ */
+.ui-editor-skeleton-plate {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: var(--astral-radius-sm);
+}
+
+.ui-editor-skeleton-plate.is-back,
+.ui-editor-skeleton-plate.is-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.ui-editor-skeleton-plate.is-title {
+  width: 230px;
+  height: 18px;
+}
+
+.ui-editor-skeleton-plate.is-action {
+  width: 124px;
+  height: 34px;
+}
+
+/* Плашка — строка будущей кнопки: во всю ширину колонки (у свёрнутой — квадрат значка). */
+.ui-editor-skeleton .ui-editor-tools > .ui-editor-skeleton-plate {
+  height: var(--editor-tool-h);
+  border-radius: var(--astral-radius-sm);
+}
+
+.ui-editor-skeleton .ui-editor-canvas {
+  display: grid;
+  place-items: center;
+}
+
+.ui-editor-skeleton-plate.is-heading {
+  width: 128px;
+  height: 15px;
+}
+
+.ui-editor-skeleton-plate.is-note {
+  width: 184px;
+  height: 10px;
+  margin-top: 4px;
+}
+
+.ui-editor-skeleton-field {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0 4px;
+}
+
+.ui-editor-skeleton-plate.is-caption {
+  width: 42%;
+  height: 10px;
+}
+
+.ui-editor-skeleton-field:nth-child(even) > .is-caption {
+  width: 58%;
+}
+
+.ui-editor-skeleton-plate.is-control {
+  width: 100%;
+  height: 34px;
+}
+
+/*
+ * Строка «Загружаю редактор…» выходит не сразу. Кусок из кэша приезжает за
+ * доли секунды, и мелькнувшая надпись читалась бы как сбой, а пустая комната
+ * того же размера — нет. Задерживается только надпись: плашки на месте с
+ * первого кадра, и признак жизни есть всегда.
+ */
+.ui-editor-skeleton-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+  opacity: 0;
+  animation: ui-editor-skeleton-label-in var(--astral-duration-slow)
+    var(--astral-ease) 360ms forwards;
+}
+
+/* Второй каркас сменяет первый: надпись уже была на экране, и выдержка
+   погасила бы её на треть секунды. */
+.ui-editor-skeleton[data-arrival="warm"] .ui-editor-skeleton-label {
+  opacity: 1;
+  animation: none;
+}
+
+@keyframes ui-editor-skeleton-label-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Занавес над готовой комнатой (`EditorVeil`, ТЗ 24.10.2026 вечер) ----------------*/
+
+/*
+ * Пока комната ждёт кадр сцены и снимки первого экрана панели (`data-screen="wait"`, `components/ui/screen-ready.js`),
+ * поверх неё стоят серые плашки каркаса загрузки, а комната под ними строится и грузится как обычно. Готова (или вышел
+ * потолок 2,5 с) — `data-screen="ready"`, и занавес растворяется разом: комната встаёт целиком, без поштучной очереди
+ * органов (`assembly-motion.css`). Без метки `wait` занавеса нет: он виден только пока комната ждёт, и если механизм не
+ * отработал, комната просто стоит открытой.
+ *
+ * Без метки занавес — `display: none`, а не просто прозрачный: скрытый, но живой, он держал бы двадцать плит с бликом, и
+ * главный поток крутил бы их в простое открытой комнаты (замер 24.10: +20 пунктов у «Настройки автомобиля»). Уходит
+ * растворением: `display` переключается в конце (`allow-discrete`), блики с ним останавливаются.
+ *
+ * Геометрия — геометрия каркаса (`EditorSkeleton`, выше): полоса 72 px с полями 22/18/10, колонки 55 (232 с названиями) и 320 (`--editor-tools-w`,
+ * `--editor-panel-w` приходят от оболочки), волоски 1 px, плашки тех же размеров и с тем же отступом. Классы свои, а не классы
+ * оболочки: узлы с классами комнаты проходили бы по всем её правилам, и вход дорожал на 60…130 мс стиля (замер 24.10).
+ * Класса `ui-editor-skeleton` у занавеса нет: по нему стенд и сторожа узнают, что каркас загрузки ещё на экране.
+ *
+ * `position: relative` оболочке нужен занавесу как опора. Оболочка стоит сплошным экраном по краям `.desktop-main`, так что
+ * опора для вложенных `absolute` та же по границам (обход 40 редакторов 24.10: у всех `absolute` внутри опираются на свои
+ * же колонки).
+ */
+.ui-editor-shell[data-screen-room] {
+  position: relative;
+}
+
+.ui-editor-shell > .ui-veil {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: var(--astral-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--astral-duration) var(--astral-ease),
+    display var(--astral-duration) allow-discrete;
+}
+
+.ui-editor-shell[data-screen="wait"] > .ui-veil {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+  transition: none;
+}
+
+.ui-veil-top {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 72px;
+  padding: 22px 18px 10px;
+}
+
+.ui-veil-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-strong);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-veil-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.ui-veil-plate {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: var(--astral-radius-sm);
+}
+
+.ui-veil-plate.is-back,
+.ui-veil-plate.is-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.ui-veil-plate.is-title {
+  width: 230px;
+  height: 18px;
+}
+
+.ui-veil-plate.is-action {
+  width: 124px;
+  height: 34px;
+}
+
+.ui-veil-body {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: var(--editor-tools-w, 55px) minmax(0, 1fr) var(--editor-panel-w, 320px);
+  min-height: 0;
+  border-top: 1px solid var(--astral-line);
+}
+
+.ui-veil-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-height: 0;
+  padding: 8px 6px;
+  overflow: hidden;
+  border-right: 1px solid var(--astral-line);
+}
+
+/* Плашка — строка колонки: поля и шаг те же, что у настоящей. */
+.ui-veil-plate.is-tool {
+  width: auto;
+  height: var(--editor-tool-h, 38px);
+  border-radius: var(--astral-radius-sm);
+}
+
+.ui-veil-canvas {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  background: var(--dragon-matte-stage, var(--astral-surface-sunken));
+}
+
+.ui-veil-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+}
+
+.ui-veil-label::before {
+  content: attr(data-label);
+}
+
+/* Страница, чей кусок ещё едет (`PageLoading.jsx`): строка по центру, прозрачная первые `--astral-duration-snap` — быстрый кусок не мигает подписью. */
+.ui-page-loading {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  animation: ui-page-loading-in var(--astral-duration-fast) ease-out var(--astral-duration-snap) both;
+}
+
+@keyframes ui-page-loading-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.ui-veil-panel {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 16px 0;
+  overflow: hidden;
+  border-left: 1px solid var(--astral-line);
+}
+
+.ui-veil-head {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding-bottom: 8px;
+}
+
+.ui-veil-plate.is-heading {
+  width: 128px;
+  height: 15px;
+}
+
+.ui-veil-plate.is-note {
+  width: 184px;
+  height: 10px;
+  margin-top: 4px;
+}
+
+.ui-veil-field {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 14px 0 4px;
+}
+
+.ui-veil-plate.is-caption {
+  width: 42%;
+  height: 10px;
+}
+
+.ui-veil-field:nth-of-type(even) > .is-caption {
+  width: 58%;
+}
+
+.ui-veil-plate.is-control {
+  width: 100%;
+  height: 34px;
+}
+
+/* Пометка издания GTA V в полосе редактора (ТЗ 08.10, задача 5): тихая
+   метка рядом с названием — «Ставится в Legacy» или «Enhanced: не ставится»;
+   объяснение — подсказкой. */
+.ui-editor-edition {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 3px 8px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-xs);
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  white-space: nowrap;
+}
+
+.ui-editor-edition.is-warning {
+  border-color: color-mix(in srgb, var(--astral-warning) 55%, transparent);
+  color: var(--astral-warning);
+}
+
+/* Та же пометка в каталоге: каталог ставит туда же, куда мастерская. */
+.catalog-edition-chip {
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.catalog-root-heading .catalog-edition-note {
+  margin-top: 10px;
+  color: var(--astral-ink-muted);
+}
+
+.catalog-root-heading .catalog-edition-note.is-warning b {
+  color: var(--astral-warning);
+}
+
+/*
+ * Длинные пояснения панели — до трёх строк (18.10.2026, владелец: «очень много
+ * тяжёлого текста, пугает»; 11.11.2026 — с двух до трёх: на двух строках
+ * терялся смысл, «Зависит от игры: работает, пока игр…», «На цели цвет, к…»,
+ * «…выбор вида ставит…»). Щелчок раскрывает целиком (`revealHint` в
+ * EditorShell.jsx). Пояснение с кнопкой или ссылкой внутри не сжимается:
+ * его орган не должен прятаться за многоточием. То же правило — у пояснения
+ * ползунка и подписи кнопки ниже: три строки вместо одной и перенос вместо
+ * многоточия.
+ */
+/* Свои пояснения редакторов (`gun-hint`, `mmc-section-hint`, `lamp-note`,
+   `climb-note`…) — тем же правилом: абзац, чей класс кончается на «-hint» или
+   «-note». Предупреждение (`is-warning`, `role="alert"`) не сжимается. */
+.ui-editor-panel
+  :is(p.fx-hint, p[class$="-hint"], p[class*="-hint "], p[class$="-note"], p[class*="-note "]):not(.is-open):not(.is-warning):not([role="alert"]):not(:has(a, button, input, select)) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  cursor: pointer;
+}
+
+.ui-editor-panel
+  :is(p.fx-hint, p[class$="-hint"], p[class*="-hint "], p[class$="-note"], p[class*="-note "]).is-open {
+  cursor: pointer;
+}
+
+/*
+ * Пояснение под названием ползунка (`Slider hint`) в общем пакете набрано одной строкой с многоточием (`ui.css`: «.ui-slider > .ui-slider-copy small»), да ещё в колонке
+ * подписи шириной 200 px рядом со значением: «Зависит от игры: работает, пока игр…» теряло смысл. В панели студии пояснение уходит в свою строку во всю ширину
+ * ползунка (под названием и значением, над дорожкой) и переносится до трёх строк; дальше многоточие, целиком — `title`.
+ * Колонка значения у такой строки шире общих 68 px: значение-слово («wie im Spiel», «comme dans le jeu») в поле шириной 68 px резалось на последней букве
+ * (поле режет `overflow: clip`); 112 px вмещают самое длинное из шести языков с запасом, а дорожка занимает всю строку и от колонки не зависит.
+ */
+.ui-editor-panel .ui-slider.is-stacked:has(> .ui-slider-copy > small) {
+  --ui-field-value: 112px;
+  grid-template-areas:
+    "copy output"
+    "hint hint"
+    "track track";
+}
+
+.ui-editor-panel .ui-slider.is-stacked:has(> .ui-slider-copy > small) > .ui-slider-copy {
+  display: contents;
+}
+
+.ui-editor-panel .ui-slider > .ui-slider-copy > small {
+  display: -webkit-box;
+  grid-area: hint;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/*
+ * Подпись кнопки в панели студии переносится, а не обрезается многоточием («Вся группа «Машины и транспорт» как в …»): кнопка вырастает на строку.
+ * Кнопки-значки и ссылки-действия остаются как были.
+ */
+.ui-editor-panel .ui-button:not(.is-icon-only, .is-link) {
+  padding-block: 6px;
+  white-space: normal;
+}
+
+.ui-editor-panel .ui-button:not(.is-icon-only, .is-link) .ui-button-label > span {
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+/* Строка перехода на страницу панели (`ui/NavRow.jsx`) — как у разделов
+   «Большой карты»: во всю ширину раздела, имя и то, что стоит сейчас,
+   стрелка справа (18.10.2026). */
+.ui-nav-row.ui-button {
+  justify-content: flex-start;
+  gap: 10px;
+  width: calc(100% + 12px);
+  min-height: 44px;
+  margin-inline: -6px;
+  padding: 5px 8px;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+}
+
+.ui-nav-row.ui-button:hover {
+  background: var(--astral-surface-hover);
+}
+
+.ui-nav-row .ui-button-icon {
+  color: var(--astral-ink-muted);
+}
+
+.ui-nav-row .ui-button-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ui-nav-row .ui-button-label > span {
+  font-size: var(--astral-text-body);
+}
+
+.ui-nav-row .ui-button-label small {
+  overflow: hidden;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-nav-row .ui-button-trailing {
+  margin-left: auto;
+}
+
+.ui-nav-row .ui-button-trailing svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* «Студия» (`texture-studio/StudioEntry.jsx`) — строкой-переходом во всю
+   ширину колонки (18.10.2026, владелец: «везде кнопка эта плохо
+   смотрится»). Среди кнопок картинки («Загрузить», «Убрать») — последней,
+   своей строкой под ними, а не третьей кнопкой в ряд. */
+.recolor-actions > .studio-entry.ui-nav-row,
+.ui-actions > .studio-entry.ui-nav-row {
+  order: 1;
+  flex: 0 0 calc(100% + 12px);
+}
+
+/* Правка по буквам табло расписания (`ScheduleBoard`): поле прозрачное,
+   выделение — синей подложкой под буквами листа, как у надписи «Большой
+   карты». */
+.schedule-letters::selection {
+  color: transparent;
+  background: rgba(96, 150, 255, 0.42);
+}
+
+/*
+ * Кадр ещё грузит сцену, листы или текстуры (ТЗ 42В, 20.10.2026, `stage-busy.js`):
+ * инструменты слева приглушены, но по-прежнему видны и листаются — посмотреть,
+ * какие есть; колонка правок приглушена и недоступна (`inert` ставит оболочка),
+ * пока сцена не готова. Когда всё на месте, и то и другое плавно возвращается в
+ * свой цвет.
+ */
+.ui-editor-tool,
+.ui-editor-panel {
+  transition-property: color, background-color, transform, opacity, filter;
+}
+
+.ui-editor-panel {
+  transition-duration: var(--astral-duration-slow);
+  transition-timing-function: var(--astral-ease);
+}
+
+.ui-editor-tool {
+  transition-duration: var(--astral-duration-fast), var(--astral-duration-fast), var(--astral-duration-snap), var(--astral-duration-slow), var(--astral-duration-slow);
+}
+
+.ui-editor-shell[data-stage-busy] .ui-editor-tool:not(.is-active),
+.ui-editor-shell[data-stage-busy] .ui-editor-panel {
+  opacity: 0.4;
+  filter: saturate(0.35);
+}
+
+.ui-editor-shell[data-stage-busy] .ui-editor-panel {
+  pointer-events: none;
+}
+
+/*
+ * Снимок окна при «Сохранить» и «Применить» (`features/workshop/works/work-covers.js`): на два кадра экрана всё, что лежит поверх
+ * кадра редактора (органы кадра, панель приближения карты, инструкция, подсказки, меню и окна), гасится — в обложку идёт сам кадр.
+ */
+html[data-capturing-frame] :is(.ui-stage-bar, .ui-stage-busy, .ui-tour, .wmc-stage-zoom, [data-desktop-overlay-host]) {
+  visibility: hidden !important;
+}

@@ -1,0 +1,101 @@
+/*
+ * Окно «Компоненты» (`ModComponents.jsx`, владелец, 24.10.2026 ночью): рабочее поле окна, строка «N звуков · M стволов» над содержимым и серые плиты, пока оно едет.
+ * Само содержимое — вид «Просмотр» (`ComponentsSplit.jsx`, `components-split.css`, 29.10.2026): список слева, кадр и действия выбранного справа. Содержимое — `ModContents`
+ * в контейнере `.mod-card`: правила разделов страницы мода привязаны к нему, и в окне, вынесенном в оверлей, они работают так же.
+ *
+ * Лист ленивый, едет вместе с окном; правила — целиком в слое `overrides`, как у `mod-card.css`.
+ */
+@layer overrides {
+  /* Окно — по высоте окна приложения (ТЗ 29.10.2026-c): от верха до низа без своей прокрутки. Запас — полоса окна (36 px) и поля подложки (2 × 32 px);
+     на высоком окне оно растёт до 900 px, а не стоит 720-пиксельным прямоугольником посреди пустоты. */
+  .desktop-app .ui-dialog.mod-components-dialog {
+    height: min(calc(100vh - 100px), 900px);
+    max-height: none;
+  }
+
+  /* Рабочее поле окна не листается: листается только список слева (`components-split.css`), правая колонка стоит на месте.
+     Сверху — совсем немного воздуха под шапкой, строка «N частей» стоит почти вплотную к списку. */
+  .desktop-app .mod-components-body {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 22px 20px;
+    overflow: hidden;
+  }
+
+  /* `.mod-card` на странице — позиция и нижняя «подушка» страницы; в окне они не нужны, а само окно заполняет рабочее поле. */
+  .desktop-app .mod-card.mod-components {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0;
+  }
+
+  /* Раздел страницы мода отступает от соседа на 40 px (`.mod-card .mod-card-section`) — в окне соседа нет, это и был зазор под шапкой. */
+  .desktop-app .mod-card.mod-components .mod-card-section {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    margin-top: 0;
+  }
+
+  .desktop-app .mod-card.mod-components .mod-components-summary {
+    flex: none;
+    margin: 0 0 8px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: var(--astral-line-tight);
+  }
+
+  /* Серые плиты, пока содержимое окна едет (скелет, `docs/3D.md`, правило 22): те же две колонки, что у «Просмотра» — список и большой кадр. */
+  .desktop-app .mod-components-loading {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 20px;
+    min-height: 0;
+  }
+
+  .desktop-app .mod-components-loading-list {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .desktop-app .mod-components-plate {
+    height: 52px;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .desktop-app .mod-components-loading-stage {
+    height: 100%;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  @media (max-width: 960px) {
+    .desktop-app .mod-components-loading {
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 14px;
+    }
+  }
+}
+
+/* Окно «Заменить компонент» (10.11.2026): вкладки «Из другой сборки» / «Моя работа» и слово, когда подходящих нет. */
+@layer overrides {
+  .desktop-app .mod-components-tabs {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .desktop-app .mod-components-empty {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+    padding: 8px 2px;
+  }
+}

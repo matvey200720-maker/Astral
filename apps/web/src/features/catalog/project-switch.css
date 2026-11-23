@@ -1,0 +1,121 @@
+/*
+ * Переключатель проекта со знаками (ТЗ 06.10).
+ *
+ * Дорожка и сегменты — общий `SegmentedControl`; здесь только то, чего у него
+ * нет: сегмент из одного логотипа и фирменный цвет проекта у выбранного.
+ * Логотип — настоящий файл проекта (`catalog-projects.js`, `public/brands/`),
+ * без правок; углы плитке округляет интерфейс. У логотипа со своим сплошным
+ * фоном (`is-cover`, Majestic) плитка — сам файл. У эмблемы на прозрачном
+ * (`is-contain`, звезда GTA 5 RP и шапка «России Онлайн») плитка своя, тёмная,
+ * с полями. Выбранный знак — в цвете и с обводкой проекта (`--project-accent`
+ * приходит из данных проекта), остальные — те же логотипы, но тусклее и бледнее:
+ * настоящие знаки узнаются и без выбора, а выбранный виден по обводке и яркости.
+ */
+
+.desktop-app .project-switch .ui-segment.is-icon {
+  flex: 0 0 auto;
+  min-width: 36px;
+  padding: 0 5px;
+}
+
+.project-switch .project-mark {
+  display: block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 28%;
+  object-fit: cover;
+  opacity: 0.85;
+  filter: saturate(0.7);
+  transition:
+    opacity var(--astral-duration-fast) var(--astral-ease),
+    filter var(--astral-duration-fast) var(--astral-ease),
+    box-shadow var(--astral-duration-fast) var(--astral-ease);
+}
+
+.project-switch.is-md .project-mark {
+  width: 24px;
+  height: 24px;
+}
+
+/* Эмблема на прозрачном стоит на своей плитке и не касается её краёв. */
+.project-switch .project-mark.is-contain {
+  box-sizing: border-box;
+  padding: 1px;
+  object-fit: contain;
+  background: var(--astral-surface-strong);
+}
+
+.project-switch .ui-segment.is-icon:hover:not(:disabled) .project-mark {
+  opacity: 0.95;
+  filter: saturate(0.85);
+}
+
+.project-switch .ui-segment.is-icon.is-active .project-mark {
+  opacity: 1;
+  filter: none;
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--project-accent) 70%, transparent),
+    0 3px 12px color-mix(in srgb, var(--project-accent) 34%, transparent);
+}
+
+/* «Все проекты» — не проект, а набор: свой знак — четыре клетки на серой
+   плашке того же размера, что и у проектов, без фирменного цвета. */
+.project-switch .project-mark.is-all {
+  --project-accent: transparent;
+  display: grid;
+  place-items: center;
+  color: var(--astral-ink);
+  background: var(--astral-surface-hover);
+}
+
+.project-switch .project-mark.is-all svg {
+  width: 62%;
+  height: 62%;
+}
+
+.project-switch .ui-segment.is-icon.is-active .project-mark.is-all {
+  background: var(--astral-surface-raised);
+}
+
+/*
+ * Фильтр проекта над сеткой каталога (ТЗ 24.10.2026, п. 13, `ProjectFilter.jsx`): кнопка с ползунками, как сердечко
+ * рядом. Пока каталог сужен проектом, на ней горит точка — без неё кнопка выглядела бы так же, как без выбора, а
+ * в сетке недоставало бы модов «ни с того ни с сего».
+ */
+.desktop-app .catalog-project-filter.is-filtered {
+  position: relative;
+}
+
+.desktop-app .catalog-project-filter.is-filtered::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--astral-accent);
+  pointer-events: none;
+}
+
+/* Пункты меню: знак проекта (тот же файл, что на карточке) и «Все» — четыре клетки на плашке того же размера. */
+.catalog-project-menu .ui-menu-item .catalog-project-badge,
+.catalog-project-menu .ui-menu-item .catalog-project-all {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: var(--astral-radius-xs);
+}
+
+.catalog-project-menu .ui-menu-item .catalog-project-badge.is-contain {
+  padding: 2px;
+}
+
+.catalog-project-menu .ui-menu-item .catalog-project-all {
+  box-sizing: border-box;
+  padding: 4px;
+  color: var(--astral-ink);
+  background: var(--astral-surface-hover);
+}

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Проверки нативного хоста: консольный прогон без внешних пакетов. Внутренние типы хоста
+    открывает ему AssemblyInfo.cs хоста. Запускает tests/native-host-checks.test.js.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Modovik.Native.Host\Modovik.Native.Host.csproj" />
+  </ItemGroup>
+</Project>

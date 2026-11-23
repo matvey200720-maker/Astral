@@ -1,0 +1,298 @@
+/*
+ * Фонари.
+ *
+ * Вид — у мастерской эффектов (`effects-studio.css`): редактор носит её имя
+ * `fx-editor` рядом со своим, и матовая пластина сцены, колонка правок,
+ * разделы и сетка готовых видов у него те же, что у неба, прицела и
+ * эффектов попадания. Здесь — только своё: кадр фонаря на всю пластину,
+ * образцы цвета и радуга, плитки частиц с картинками, своя картинка и
+ * строка «только ночью».
+ *
+ * Лист подключён раньше `effects-studio.css` в том же слое, поэтому общие
+ * правила переопределяются с именем редактора впереди.
+ */
+
+/* ── Сцена ─────────────────────────────────────────────────────────────── */
+
+.lamp-editor .fx-stage {
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  height: clamp(360px, 60vh, 720px);
+}
+
+.lamp-frame {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  border: 1px solid var(--fx-scene-line);
+  border-radius: var(--astral-radius);
+  background: var(--fx-plate);
+}
+
+.lamp-frame > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lamp-frame-failure {
+  margin: 0;
+  padding: 16px;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+}
+
+/* Под кадром: подпись правды слева, вид кадра справа. */
+.lamp-stage-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.lamp-stage-note {
+  margin: 0;
+}
+
+.lamp-stage-note.is-warning {
+  color: var(--astral-warning, var(--fx-muted));
+}
+
+/*
+ * Кадр в раскладке «как в Photoshop»: середина каркаса — сама матовая рамка,
+ * кадр фонаря занимает её целиком, без своей рамки и своей высоты. Вид кадра
+ * и «вид по умолчанию» — органы поверх (`StageBar`), подпись правды —
+ * подпись кадра, отказ частиц — плашкой сверху посередине.
+ */
+.ui-editor-shell[data-layout="studio"] .lamp-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: auto;
+}
+
+.ui-editor-shell[data-layout="studio"] .lamp-frame {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.lamp-frame > canvas:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+
+/* ── Готовые фонари ────────────────────────────────────────────────────── */
+
+.lamp-editor .lamp-preset {
+  background: var(--fx-matte);
+}
+
+.lamp-editor .lamp-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+.lamp-preset .ui-choice-media {
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  background: var(--fx-plate);
+}
+
+.lamp-preset .ui-choice-media > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Пока плитка рисуется — ночная подложка, а не пустая дыра. */
+.lamp-preset-pending {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #05070d 0%, #111a2b 82%, #16181f 100%);
+}
+
+/* ── Колонка правок ────────────────────────────────────────────────────── */
+
+/* Пояснения других редакторов (GPS, групповые метки, попадания) берут эту строку и ряд с кнопкой отсюда. */
+.lamp-note {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+}
+
+.lamp-note.is-warning {
+  color: var(--astral-warning, var(--fx-muted));
+}
+
+.lamp-picture-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Жёлтая строка ламп — одна, о том, что человек может исправить сам (правило 14 `design-qa.md`). */
+.lamp-warning {
+  margin: 0;
+  color: var(--astral-warning, var(--fx-muted));
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+}
+
+/* Шаблоны частиц — плитки выбора по две в ряд. */
+.lamp-particles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.lamp-editor .lamp-particle {
+  background: var(--fx-card);
+}
+
+/*
+ * Знак шаблона — три пятнышка его цвета: рой кружком, парящие — россыпью,
+ * падающие — лесенкой вниз. Знак вида, а не снимок: рой в движении — на
+ * кадре.
+ */
+.lamp-particle-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: var(--astral-radius-xs);
+  background: radial-gradient(
+      circle at 50% 18%,
+      color-mix(in srgb, #ffc27a 55%, transparent) 0,
+      transparent 58%
+    ),
+    #0a0d15;
+}
+
+.lamp-particle-art > i {
+  position: absolute;
+  width: 16%;
+  aspect-ratio: 1.6;
+  border-radius: 50%;
+  background: var(--lamp-particle);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--lamp-particle) 60%, transparent);
+}
+
+/* Своя картинка, пока файла нет: знак картинки на ночной подложке. */
+.lamp-particle-art.is-upload {
+  display: grid;
+  place-items: center;
+  color: var(--fx-muted);
+  font-size: 28px;
+}
+
+/* Картинка шаблона — кадры листа ядра игрока на ночной подложке. */
+.lamp-particle-picture {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  object-fit: contain;
+  border-radius: var(--astral-radius-xs);
+  background: radial-gradient(
+      circle at 50% 18%,
+      color-mix(in srgb, #ffc27a 45%, transparent) 0,
+      transparent 62%
+    ),
+    #0a0d15;
+}
+
+/* Выбор файла — своей кнопкой, сам ввод скрыт. */
+.lamp-picture-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* «Как летают» — подпись и три сегмента во всю ширину. */
+.lamp-motion {
+  display: grid;
+  gap: 6px;
+}
+
+.lamp-motion-label {
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.lamp-motion > .ui-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+.lamp-particle-art[data-kind="swarm"] > i:nth-child(1) {
+  top: 30%;
+  left: 28%;
+}
+
+.lamp-particle-art[data-kind="swarm"] > i:nth-child(2) {
+  top: 48%;
+  left: 52%;
+}
+
+.lamp-particle-art[data-kind="swarm"] > i:nth-child(3) {
+  top: 24%;
+  left: 64%;
+}
+
+.lamp-particle-art[data-kind="float"] > i {
+  width: 7%;
+  aspect-ratio: 1;
+}
+
+.lamp-particle-art[data-kind="float"] > i:nth-child(1) {
+  top: 36%;
+  left: 30%;
+}
+
+.lamp-particle-art[data-kind="float"] > i:nth-child(2) {
+  top: 58%;
+  left: 55%;
+}
+
+.lamp-particle-art[data-kind="float"] > i:nth-child(3) {
+  top: 28%;
+  left: 70%;
+}
+
+.lamp-particle-art[data-kind="fall"] > i {
+  width: 10%;
+  aspect-ratio: 1.3;
+}
+
+.lamp-particle-art[data-kind="fall"] > i:nth-child(1) {
+  top: 20%;
+  left: 34%;
+}
+
+.lamp-particle-art[data-kind="fall"] > i:nth-child(2) {
+  top: 46%;
+  left: 50%;
+}
+
+.lamp-particle-art[data-kind="fall"] > i:nth-child(3) {
+  top: 70%;
+  left: 40%;
+}
+
+/* Строка «Огни вдали» в панели «Блика»: выключатель и подпись в одну линию. */
+.fx-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}

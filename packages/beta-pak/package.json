@@ -1,0 +1,8 @@
+{
+  "name": "@modovik/beta-pak",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "description": "Формат интерфейса бета-лаунчера: web.bundle (ASTRBUN1) и зашифрованный под активацию astral-web.pak (ASTRPAK1)"
+}

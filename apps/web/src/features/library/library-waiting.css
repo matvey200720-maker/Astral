@@ -1,0 +1,36 @@
+/*
+ * «Библиотека»: компоненты, ждущие новой версии после обновления игры (А10, шаг 3). Лист в слое overrides рядом с остальными листами библиотеки: плашку и знак
+ * даёт `.workshop-library-drift` (`workshop-shelves.css`), здесь только список строк внутри неё.
+ */
+.desktop-app .workshop-library-waiting-list {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.desktop-app .workshop-library-waiting-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.desktop-app .workshop-library-waiting-name {
+  grid-column: 1 / -1;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 650;
+}
+
+.desktop-app .workshop-library-waiting-line,
+.desktop-app .workshop-library-waiting-missing {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+}
+
+.desktop-app .workshop-library-waiting-missing {
+  grid-column: 1 / -1;
+}

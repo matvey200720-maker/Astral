@@ -1,0 +1,137 @@
+/*
+ * Окно «Подписи локаций» (ТЗ 18.10.2026, задача 9): слева сетка наборов, справа
+ * тот же набор на большой карте и три вида. Каркас окна — общий `Dialog`
+ * (`size="wide"`), карточки — те же `wmc-set-card`, что у каталога; здесь только
+ * то, чего у них нет: ширина колонки наборов, строка над картой и сама карта.
+ *
+ * Ленивый лист: едет вместе с окном (его грузит редактор карты), в стартовый
+ * `main.css` не входит.
+ */
+
+@layer overrides {
+  .ui-dialog.wml-dialog.is-wide {
+    width: min(100%, 1240px);
+    height: min(88vh, 780px);
+  }
+
+  /* Колонка наборов — две карточки в ряд, как у эталона; прокручивается сама. */
+  .wml-dialog .ui-dialog-split {
+    grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  }
+
+  .wml-dialog .wml-aside {
+    align-content: start;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .wml-grid {
+    gap: 10px;
+  }
+
+  /* Название под образцом — одной строкой: у карт-модов имена короткие. */
+  .wml-grid .wmc-set-card .ui-choice-copy b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .wml-page {
+    min-width: 44px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  /* Правое поле: строка над картой и сама карта на всё остальное место. */
+  .wml-dialog .ui-dialog-split > .ui-dialog-body {
+    display: grid;
+    padding: 14px;
+  }
+
+  .wml-stage {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .wml-stage-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+  }
+
+  /* «Набор · 1 / 35»: что показано и какой он по счёту. */
+  .wml-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+    padding: 6px 12px;
+    border: 1px solid var(--astral-glass-border);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-wash);
+    font-size: var(--astral-text-body);
+  }
+
+  .wml-chip > svg {
+    align-self: center;
+    flex: 0 0 auto;
+  }
+
+  .wml-chip b {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .wml-chip small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Подписи видов — «Форт Занкудо» целиком, без многоточия. */
+  .wml-stage-bar .ui-segment {
+    flex: 0 0 auto;
+    max-width: none;
+  }
+
+  .wml-stage-bar .ui-segment-label {
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .wml-map {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 240px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: #0b0d10;
+  }
+
+  .wml-map > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Узкое окно: колонки друг под другом, карта — своей высоты. */
+  @media (max-width: 900px) {
+    .wml-dialog .ui-dialog-split {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .wml-map {
+      min-height: 320px;
+    }
+  }
+}

@@ -1,0 +1,618 @@
+/*
+ * Библиотека Б «Состояние игры» (владелец, 15.11.2026; макет `r6/library/library-b.html`): шапка, сводка из четырёх карточек, полоса фильтров и плотная сетка плиток.
+ *
+ * Два слоя. Всё новое — в `overrides`, как у соседних листов библиотеки. Внутренности готовой карточки полки (`shelf-card.css`, слой `workshop-contracts`, почти всё с
+ * `!important`) переписаны в самом `workshop-contracts`: важные объявления читают слои в обратном порядке, и из `overrides` они бы не достали.
+ */
+
+@layer overrides {
+  .desktop-app .lib-page {
+    /* Числа макета, которых нет в шкале кеглей: заголовок страницы и крупные цифры сводки. */
+    --lib-title-size: 38px;
+    --lib-big-size: 40px;
+    --lib-solid: #0b0b0c;
+    --lib-line: rgba(255, 255, 255, 0.08);
+    --lib-line-strong: rgba(255, 255, 255, 0.14);
+    --lib-faint: #909096;
+
+    display: grid;
+    gap: 0;
+    align-content: start;
+    min-width: 0;
+  }
+
+  /* Шапка: заголовок слева, корзина справа, высота 48 px как в макете. */
+  .desktop-app .lib-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 18px;
+    min-height: 48px;
+
+    & h1 {
+      margin: 0;
+      font-family: var(--astral-font-display);
+      font-size: var(--lib-title-size);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+  }
+
+  /* Сводка ------------------------------------------------------------------ */
+
+  .desktop-app .lib-band {
+    display: grid;
+    grid-template-columns: 1.5fr 1.2fr 0.95fr 1.1fr;
+    gap: 12px;
+    margin-top: 18px;
+
+    /* Минимум окна — 1180 px, четыре карточки в нём помещаются; в два ряда они складываются только в окне уже минимума. */
+    @media (max-width: 1100px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .desktop-app .lib-band-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 154px;
+    padding: 16px 18px;
+    overflow: hidden;
+    border: 1px solid var(--lib-line);
+    border-radius: var(--astral-radius-xl);
+    background: var(--lib-solid);
+
+    &.is-after {
+      border-color: var(--lib-line-strong);
+      background: #0f0f10;
+    }
+  }
+
+  .desktop-app .lib-band-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--lib-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+
+    & svg {
+      inline-size: 13px;
+      block-size: 13px;
+      flex: none;
+    }
+  }
+
+  .desktop-app .lib-band-big {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 10px;
+    font-family: var(--astral-font-display);
+    font-size: var(--lib-big-size);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+
+    & small {
+      color: var(--astral-ink-muted);
+      font-family: var(--astral-font);
+      font-size: var(--astral-text-strong);
+      font-weight: 600;
+    }
+
+    &.is-small {
+      font-size: var(--astral-text-hero);
+    }
+
+    &.is-quiet {
+      color: var(--lib-faint);
+    }
+  }
+
+  .desktop-app .lib-band-arrow {
+    color: var(--lib-faint);
+    font-size: var(--astral-text-page);
+  }
+
+  .desktop-app .lib-band-sub {
+    margin: auto 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 18px;
+
+    & b {
+      color: #fff;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  }
+
+  .desktop-app .lib-band-big + .lib-band-sub {
+    margin-top: auto;
+  }
+
+  /* Цифры ещё читаются: скелет держит место крупной цифры и подписи, прошлое значение чуть притушено, пока приходит свежее (16.11.2026). */
+  .desktop-app .lib-band-wait {
+    display: block;
+    margin-top: 10px;
+    inline-size: 46%;
+    block-size: 34px;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .desktop-app .lib-band-wait-line {
+    display: block;
+    margin-top: auto;
+    inline-size: 72%;
+    block-size: 12px;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .lib-band-card[data-stale] > :not(.lib-band-eyebrow) {
+    opacity: 0.72;
+  }
+
+  /* Карточка сборки: слева панель-значок (макет рисует там коллаж из трёх кадров, но кадров сборки у окна нет), справа название. */
+  .desktop-app .lib-band-build {
+    display: grid;
+    grid-template-columns: 128px minmax(0, 1fr);
+    padding: 0;
+  }
+
+  .desktop-app .lib-band-collage {
+    display: grid;
+    place-items: center;
+    margin: 12px 0 12px 12px;
+    border: 1px solid var(--lib-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--lib-faint);
+
+    & svg {
+      inline-size: 34px;
+      block-size: 34px;
+    }
+  }
+
+  .desktop-app .lib-band-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 16px 18px 14px 16px;
+  }
+
+  .desktop-app .lib-band-title {
+    margin: 9px 0 0;
+    overflow: hidden;
+    font-family: var(--astral-font-display);
+    font-size: var(--astral-text-section);
+    font-weight: 400;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.is-quiet {
+      color: var(--lib-faint);
+    }
+  }
+
+  /* Полоса «сколько в какой группе»: белая графика, серое оружие, тёмная одежда; отмеченное к удалению — штриховкой. */
+  .desktop-app .lib-band-bar {
+    display: flex;
+    gap: 3px;
+    height: 8px;
+    margin-top: 12px;
+
+    & i {
+      display: block;
+      height: 100%;
+      border-radius: var(--astral-radius-xs);
+    }
+
+    & i[data-segment="graphics"] {
+      background: #ffffff;
+    }
+
+    & i[data-segment="weapons"] {
+      background: #a6a6ac;
+    }
+
+    & i[data-segment="clothing"] {
+      background: #5d5d63;
+    }
+
+    & i.is-empty {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    & i.is-removed {
+      background: repeating-linear-gradient(
+        135deg,
+        rgba(217, 123, 117, 0.85) 0 3px,
+        rgba(217, 123, 117, 0.25) 3px 6px
+      );
+    }
+  }
+
+  .desktop-app .lib-band-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 9px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+
+    & span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    & b {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    & u {
+      display: block;
+      inline-size: 8px;
+      block-size: 8px;
+    }
+
+    & u[data-segment="graphics"] {
+      background: #ffffff;
+    }
+
+    & u[data-segment="weapons"] {
+      background: #a6a6ac;
+    }
+
+    & u[data-segment="clothing"] {
+      background: #5d5d63;
+    }
+  }
+
+  /* Полоса фильтров ----------------------------------------------------------- */
+
+  .desktop-app .lib-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-top: 16px;
+  }
+
+  .desktop-app .lib-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .desktop-app .lib-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 15px;
+    border: 1px solid var(--lib-line);
+    border-radius: var(--astral-radius);
+    background: transparent;
+    color: var(--astral-ink-muted);
+    font: inherit;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--astral-duration-fast) ease,
+      color var(--astral-duration-fast) ease;
+
+    & em {
+      color: var(--lib-faint);
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    &:hover {
+      color: #fff;
+    }
+
+    &[aria-selected="true"] {
+      border-color: #fff;
+      background: #fff;
+      color: #000;
+
+      & em {
+        color: #555;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.75);
+      outline-offset: 2px;
+    }
+  }
+
+  .desktop-app .lib-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    inline-size: 230px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--lib-line-strong);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.045);
+    color: var(--lib-faint);
+
+    & svg {
+      inline-size: 16px;
+      block-size: 16px;
+      flex: none;
+    }
+
+    & input {
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: none;
+      color: #fff;
+      font: inherit;
+      font-size: var(--astral-text-body);
+
+      &::placeholder {
+        color: var(--lib-faint);
+      }
+    }
+
+    &:focus-within {
+      border-color: rgba(255, 255, 255, 0.42);
+    }
+  }
+
+  /* Сетка и плитки ------------------------------------------------------------ */
+
+  .desktop-app .lib-grid {
+    margin-top: 14px;
+  }
+
+  .desktop-app .lib-none {
+    margin: 22px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* Плитка: рамка, кадр и подпись в одной карточке; на наведении плитка приподнимается и показывает «Открыть». */
+  .desktop-app .lib-tile {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--lib-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.028);
+    transition:
+      transform var(--astral-duration-fast) ease,
+      border-color var(--astral-duration-fast) ease,
+      opacity var(--astral-duration) var(--astral-ease);
+
+    &:hover,
+    &:focus-within {
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-3px);
+    }
+
+    &[data-picking]:hover,
+    &[data-picking]:focus-within {
+      transform: none;
+    }
+
+    /* Отмеченное читается рамкой; остальные плитки не гаснут — то, что останется в игре, видно как есть (16.11.2026). */
+    &[data-selected] {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px #fff;
+    }
+
+    &[data-removing] {
+      opacity: 0.42;
+      pointer-events: none;
+    }
+  }
+
+  /* Отметка плитки: квадратик в левом углу кадра, всегда на месте; своих отметок у карточек внутри плитки нет (см. `workshop-contracts` ниже).
+     Кнопка — 28×28 (мишень не меньше пальца, аудит), сам квадратик 22×22 внутри неё. */
+  .desktop-app .lib-tile-check {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    z-index: 6;
+    display: grid;
+    place-items: center;
+    inline-size: 28px;
+    block-size: 28px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #000;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.75);
+      outline-offset: 0;
+      border-radius: var(--astral-radius-sm);
+    }
+  }
+
+  .desktop-app .lib-tile-box {
+    display: grid;
+    place-items: center;
+    inline-size: 22px;
+    block-size: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--astral-radius-xs);
+    background: rgba(0, 0, 0, 0.55);
+    transition:
+      background-color var(--astral-duration-fast) ease,
+      border-color var(--astral-duration-fast) ease;
+
+    & svg {
+      inline-size: 14px;
+      block-size: 14px;
+    }
+  }
+
+  .desktop-app .lib-tile-check:hover .lib-tile-box {
+    border-color: #fff;
+  }
+
+  .desktop-app .lib-tile-check[aria-pressed="true"] .lib-tile-box {
+    border-color: #fff;
+    background: #fff;
+  }
+
+  .desktop-app .lib-tile .library-card-check {
+    display: none !important;
+  }
+
+  /* Дубль — два мода на одном месте: значок в правом углу кадра, подсказка в `title`. */
+  .desktop-app .lib-tile-twin {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    block-size: 22px;
+    padding: 0 8px;
+    border-radius: var(--astral-radius-xs);
+    background: #fff;
+    color: #0a0a0b;
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+  }
+
+  .desktop-app .lib-tile-open {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 104px;
+    background: rgba(0, 0, 0, 0.52);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--astral-duration-fast) ease;
+    z-index: 4;
+
+    & b {
+      display: inline-flex;
+      align-items: center;
+      height: 30px;
+      padding: 0 13px;
+      border-radius: var(--astral-radius-sm);
+      background: #fff;
+      color: #0a0a0b;
+      font-size: var(--astral-text-body);
+      font-weight: 600;
+    }
+  }
+
+  .desktop-app
+    .lib-tile:is(:hover, :focus-within):not([data-picking])
+    .lib-tile-open {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .lib-tile {
+      transform: none !important;
+    }
+  }
+}
+
+@layer workshop-contracts {
+  /* Сетка плиток: столько колонок, сколько влезает по 164 px (семь при 1440 px). */
+  .desktop-app .lib-grid.redux-visual-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* Карточка полки внутри плитки: без своей рамки и подписи под кадром — рамка у плитки, подпись внутри неё. */
+  .desktop-app .lib-tile .ui-shelf-card.ui-shelf-card {
+    gap: 0 !important;
+    grid-template-rows: 104px auto !important;
+  }
+
+  .desktop-app .lib-tile .ui-shelf-card .ui-shelf-card-art {
+    aspect-ratio: auto !important;
+    block-size: 104px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .desktop-app .lib-tile .ui-shelf-card:hover .ui-shelf-card-art {
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .desktop-app .lib-tile .ui-shelf-card .ui-shelf-card-go {
+    display: none !important;
+  }
+
+  /* Отметка выбора у плитки своя (`.lib-tile-check`, всегда на месте); отметка самой карточки внутри плитки спрятана, чтобы квадратиков не было два. */
+  .desktop-app .lib-tile .ui-shelf-card > .ui-media-card-select {
+    display: none !important;
+  }
+
+  .desktop-app .lib-tile .ui-shelf-card .ui-shelf-card-copy {
+    padding: 9px 10px 10px !important;
+  }
+
+  .desktop-app .lib-tile .ui-shelf-card .ui-shelf-card-copy h3 {
+    margin: 0 !important;
+    overflow: hidden;
+    font-size: var(--astral-text-small) !important;
+    font-weight: 600 !important;
+    line-height: 16px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .lib-tile .ui-shelf-card .ui-shelf-card-copy p {
+    margin: 3px 0 0 !important;
+    overflow: hidden;
+    color: var(--astral-ink-muted) !important;
+    font-size: var(--astral-text-micro) !important;
+    /* Запись «Поставлено … · На GTA 5 RP видно: …» переносится до трёх строк; полный текст — в подсказке (21.11.2026). */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Отмеченная плитка — рамкой самой плитки; своя рамка кадра у карточки не нужна. */
+  .desktop-app
+    [data-library-selecting]
+    .lib-tile
+    .ui-shelf-card[aria-pressed="true"]
+    .ui-shelf-card-art {
+    border: 0 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+  }
+}

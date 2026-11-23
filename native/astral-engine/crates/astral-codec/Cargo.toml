@@ -1,0 +1,19 @@
+[package]
+name = "astral-codec"
+description = "Кодек BC для хоста Astral (C ABI, astral_codec.dll): декод BC1–BC7 и кодирование BC1–BC5 вместо DirectXTex"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+name = "astral_codec"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+rage-res = { path = "../rage-res" }
+bcdec_rs = "0.2"
+
+[lints]
+workspace = true

@@ -1,0 +1,469 @@
+/* Настройки, экран «Общее» (вариант A «Пульт», 15.11.2026): три карточки сводки — игра, место, версия, —
+   и «Запуск и окно» на всю ширину (владелец 18.11.2026: «Живые превью» убраны — язык и внешний вид живут в своих
+   разделах). Числа — из макета
+   `r6/settings-downloads/settings-a.css`; размеры между ступенями шкалы названы локальными свойствами. */
+
+/* ---- Каркас экрана ---- */
+
+.settings-general {
+  --general-fs-12: 12px;
+  --general-fs-14: 14px;
+  --general-fs-name: 26px;
+  --general-fs-big: 32px;
+  --general-fs-version: 24px;
+  min-width: 0px;
+  row-gap: 14px;
+  column-gap: 14px;
+  display: grid;
+}
+
+.settings-general-sum {
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: 14px;
+  display: grid;
+}
+
+/* Окно уже макета: сводка в две колонки, игра — на всю ширину. Минимум окна — 1180 px. */
+@media (max-width: 1360px) {
+  .settings-general-sum {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+  }
+
+  .settings-sum-game {
+    grid-column: 1 / -1;
+    min-height: 196px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .settings-general-sum {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+  }
+}
+
+/* ---- Карточки сводки ---- */
+
+.settings-sum {
+  min-width: 0px;
+  min-height: 222px;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--astral-radius-lg);
+  border: 1px solid var(--astral-line);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+}
+
+.settings-sum-space,
+.settings-sum-version-card {
+  padding-block: 16px;
+  padding-inline: 18px;
+}
+
+.settings-sum-label {
+  font-weight: 600;
+  font-size: var(--astral-text-micro);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--astral-ink-faint);
+}
+
+/* Игра: кадр настоящего мода под затемнением, слова поверх. */
+.settings-sum-game {
+  border-color: var(--astral-line-strong);
+  background: #080809;
+}
+
+/* Кадр занимает правые 62 % карточки и тает к тексту: слева лежат плашка, название и строка пути — кадр с яркой деталью (кольцо прицела) не должен ложиться на них. */
+.settings-sum-bg {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 56%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 62% 38%;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 34%);
+  mask-image: linear-gradient(90deg, transparent, #000 34%);
+}
+
+.settings-sum-game::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.62) 48%,
+      rgba(0, 0, 0, 0.12) 100%
+    ),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.7), transparent 55%);
+}
+
+.settings-sum-in {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding-block: 16px 14px;
+  padding-inline: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.settings-sum-pill {
+  height: 24px;
+  padding-inline: 9px;
+  gap: 6px;
+  align-items: center;
+  display: inline-flex;
+  max-width: 100%;
+  font-weight: 600;
+  font-size: var(--astral-text-small);
+  white-space: nowrap;
+  color: #fff;
+  border-radius: var(--astral-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.settings-sum-pill i {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--astral-ink-faint);
+}
+
+.settings-sum-pill i.is-pos,
+.settings-sum-stat.is-pos i {
+  background: var(--astral-positive);
+}
+
+.settings-sum-pill i.is-warn {
+  background: var(--astral-warning);
+}
+
+.settings-sum-pill i.is-bad {
+  background: var(--astral-danger);
+}
+
+.settings-sum-title {
+  margin-block: 10px 3px;
+  font-family: var(--astral-font-display);
+  font-weight: 400;
+  font-size: var(--general-fs-name);
+  line-height: 30px;
+  letter-spacing: -0.01em;
+}
+
+.settings-sum-title small {
+  margin-inline-start: 8px;
+  font-family: var(--astral-font);
+  font-weight: 500;
+  font-size: var(--astral-text-small);
+  letter-spacing: 0;
+  color: var(--astral-ink-muted);
+}
+
+.settings-sum-path {
+  max-width: 290px;
+  padding-block: 6px;
+  padding-inline: 9px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "JetBrains Mono", Consolas, "Cascadia Mono", monospace;
+  font-size: var(--astral-text-micro);
+  color: #c9c9ce;
+  border-radius: var(--astral-radius-sm);
+  border: 1px solid var(--astral-line);
+  /* Плотный фон: кадр с яркой деталью (кольцо прицела) за строкой пути не мешает её читать. */
+  background: rgba(4, 4, 5, 0.86);
+}
+
+.settings-sum-foot {
+  margin-block-start: auto;
+  /* Зазор над кнопкой: без него строка «прочее» стояла вплотную на «Очистить кэш», когда карточка заполнена. */
+  padding-block-start: 12px;
+  inline-size: 100%;
+  gap: 10px;
+  align-items: center;
+  display: flex;
+}
+
+.settings-sum-stat {
+  gap: 8px;
+  align-items: center;
+  display: inline-flex;
+  font-weight: 600;
+  font-size: var(--astral-text-body);
+  min-width: 0px;
+}
+
+/* Галочка состояния игры: белый кружок. */
+.settings-sum-stat i {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+  display: grid;
+  border-radius: 50%;
+  color: #000;
+  background: #fff;
+}
+
+.settings-sum-stat.is-warn i {
+  background: var(--astral-warning);
+}
+
+.settings-sum-stat.is-bad i {
+  background: var(--astral-danger);
+}
+
+.settings-sum-stat svg {
+  width: 12px;
+  height: 12px;
+}
+
+.settings-sum-open.ui-button {
+  min-block-size: 30px;
+  padding-inline: 11px;
+  margin-inline-start: auto;
+  font-size: var(--astral-text-small);
+  gap: 7px;
+}
+
+.settings-sum-open svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Место: итог, полоса из четырёх долей, легенда строками. */
+.settings-sum-big {
+  margin-block: 6px 10px;
+  font-family: var(--astral-font-display);
+  font-weight: 400;
+  font-size: var(--general-fs-big);
+  line-height: 36px;
+  letter-spacing: -0.01em;
+}
+
+.settings-sum-big small {
+  margin-inline-start: 8px;
+  font-family: var(--astral-font);
+  font-weight: 500;
+  font-size: var(--astral-text-body);
+  letter-spacing: 0;
+  color: var(--astral-ink-muted);
+}
+
+.settings-sum .storage-usage-meter {
+  height: 10px;
+  gap: 2px;
+  margin-block: 0;
+  border-radius: var(--astral-radius-xs);
+  background: var(--astral-surface-raised);
+}
+
+.settings-sum .storage-legend {
+  margin-block-start: 12px;
+  row-gap: 7px;
+  column-gap: 0px;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.settings-sum .storage-legend li {
+  gap: 8px;
+  display: flex;
+}
+
+.settings-sum .storage-legend li > i {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--astral-radius-xs);
+}
+
+.settings-sum .storage-legend li > b {
+  margin-inline-start: auto;
+  font-weight: 600;
+  color: #e8e8ea;
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-sum-note {
+  font-size: var(--astral-text-small);
+  color: var(--astral-ink-faint);
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-tile-empty {
+  margin-block-start: 8px;
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+  color: var(--astral-ink-muted);
+}
+
+/* Версия: номер и подпись; под ними — обновление, когда оно есть. */
+.settings-sum-version {
+  margin-block: 8px 4px;
+  font-family: var(--astral-font-display);
+  font-weight: 400;
+  font-size: var(--general-fs-version);
+  line-height: 30px;
+  letter-spacing: -0.01em;
+  min-width: 0px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-sum-sub {
+  font-size: var(--astral-text-small);
+  color: var(--astral-ink-muted);
+  /* Плашка обновления под ним стоит у низа карточки; на невысокой карточке между ними всё равно остаётся зазор. */
+  margin-block-end: 12px;
+}
+
+.settings-sum-update {
+  margin-block-start: auto;
+  padding-block: 11px;
+  padding-inline: 12px;
+  gap: 1px;
+  display: grid;
+  border-radius: var(--astral-radius);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.settings-sum-update b {
+  font-weight: 600;
+  font-size: var(--astral-text-body);
+}
+
+.settings-sum-update small {
+  font-size: var(--astral-text-small);
+  color: var(--astral-ink-muted);
+}
+
+.settings-sum-update.is-error {
+  border-color: rgba(217, 123, 117, 0.42);
+  background: rgba(217, 123, 117, 0.07);
+}
+
+.settings-sum-update .updates-bar {
+  margin-block-start: 8px;
+}
+
+.settings-sum-update-actions {
+  margin-block-start: 10px;
+  gap: 8px;
+  display: flex;
+}
+
+/* ---- Строки «Запуска и окна» с значками ---- */
+
+.settings-general .ui-select {
+  min-width: 170px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.settings-general .settings-path {
+  font-weight: 600;
+  font-size: var(--astral-text-body);
+  color: var(--astral-ink);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* «Запуск и окно» на всю ширину: строки растянуты. На очень широком окне (1920) строки в две колонки одного
+   блока — по две в ряд, нечётная последняя на обе, чтобы ни справа, ни снизу не оставалось дыры. */
+@media (min-width: 1700px) {
+  .settings-shell .settings-general .settings-card-cols {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+  }
+
+  .settings-shell
+    .settings-general
+    .settings-card-cols
+    > .settings-row
+    + .settings-row {
+    border-block-start: 0;
+  }
+
+  .settings-shell
+    .settings-general
+    .settings-card-cols
+    > .settings-row:nth-child(n + 3) {
+    border-block-start: 1px solid var(--prefs-edge);
+  }
+
+  .settings-shell
+    .settings-general
+    .settings-card-cols
+    > .settings-row:nth-child(even) {
+    border-inline-start: 1px solid var(--prefs-edge);
+  }
+
+  .settings-shell
+    .settings-general
+    .settings-card-cols
+    > .settings-row:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Скелет: место цифр, пока они едут (владелец 18.11.2026) ----
+   Каркас, подписи и острова стоят сразу; серые плиты занимают те же высоты, что и готовые числа, поэтому при
+   подстановке вёрстка не прыгает. Сама плита — общий `<Skeleton>` (`components/ui/Skeleton.jsx`). */
+.settings-sum-big .ui-skeleton {
+  display: inline-block;
+  inline-size: 96px;
+  block-size: 28px;
+  border-radius: var(--astral-radius);
+  vertical-align: middle;
+}
+
+.settings-sum-version-card .settings-skel-version {
+  inline-size: 168px;
+  block-size: 26px;
+  margin-block: 2px;
+}
+
+.settings-sum-version-card .settings-skel-sub {
+  inline-size: 120px;
+  margin-block-end: 12px;
+}
+
+.storage-legend .settings-skel-value {
+  inline-size: 52px;
+  block-size: 14px;
+}
+
+.settings-sum-space .settings-skel-note {
+  inline-size: 150px;
+  block-size: 14px;
+  display: block;
+}
+
+.settings-general .settings-skel-path {
+  inline-size: min(100%, 260px);
+  block-size: 20px;
+  display: block;
+}

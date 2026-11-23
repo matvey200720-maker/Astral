@@ -1,0 +1,46 @@
+/*
+ * Строка «отсюда в игру пока не ставится».
+ *
+ * Не предупреждение и не ошибка: человек ничего не сделал неправильно. Это
+ * ответ на вопрос, который он задаст глазами, не найдя «Применить», — поэтому
+ * строка спокойная, стоит на поверхности инспектора и читается за секунду.
+ */
+
+.ui-no-install {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 13px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface);
+  color: var(--astral-ink-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ui-no-install > svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--astral-ink-faint);
+}
+
+.ui-no-install > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ui-no-install b {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+  font-weight: 650;
+}
+
+/* Что делать сейчас — тем же кеглем, что причина, но приглушённее: это не
+   вторая половина отказа, а выход из него. */
+.ui-no-install-instead {
+  color: var(--astral-ink-faint);
+}

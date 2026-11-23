@@ -1,0 +1,274 @@
+/*
+ * Кастомизатор уличных фонарей.
+ *
+ * Рамку, шапку и колонку ручек даёт общая оболочка редактора
+ * (`styles/editor-shell.css`), кадр — общее окно предпросмотра со своей рамкой,
+ * своей ручкой высоты и своей шкалой суток под кадром. Здесь остаётся только
+ * то, что принадлежит фонарям: полоса над кадром, карточка coverage и органы
+ * управления светом.
+ *
+ * Цвета — из палитры Astral. Своих тридцати девяти шестнадцатеричных было
+ * ровно столько, чтобы редактор выглядел чужим в собственной мастерской:
+ * собственный фон #0a0a0b мимо `--astral-bg`, собственная шапка #0f0f10 мимо
+ * поверхностей, собственный «почти белый» вместо `--astral-ink`.
+ *
+ * Исключение одно, и оно то же, что в арене: тёмное стекло плашки поверх
+ * трёхмерной сцены. Под ней кадр с ночной улицей, а не страница Astral, и
+ * светлая панель на нём в светлой теме читается как дырка в картинке.
+ */
+
+/* Комната редактора не сжимается ниже той высоты, на которой кадр ещё кадр:
+   в общей рамке сцена занимает всё, что осталось, и без нижней границы
+   предпросмотр в короткой странице схлопывается до полоски. */
+/* Метку ставит оболочка редактора (`EditorShell`, `useHolds.js`), а не `:has()`: его браузер перепроверял на каждую правку в редакторе. */
+.desktop-app .workshop-studio[data-holds~="street-light-editor"] {
+  min-height: 520px;
+  box-sizing: border-box;
+}
+
+.street-light-editor {
+  --street-light-line: var(--astral-line);
+  --street-light-sunken: var(--astral-surface-sunken);
+  --street-light-muted: var(--astral-ink-muted);
+  --street-light-faint: var(--astral-ink-faint);
+  /* Тёмное стекло поверх сцены — единственные цвета мимо палитры, см. шапку. */
+  --street-light-glass: rgba(9, 11, 16, 0.74);
+  --street-light-glass-line: rgba(255, 255, 255, 0.13);
+  --street-light-glass-ink: rgba(255, 255, 255, 0.9);
+  color: var(--astral-ink);
+}
+
+/* --- Предпросмотр --- */
+
+.street-light-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/*
+ * Полоса над кадром: расстояние, чей фонарь стоит в кадре и оговорка про
+ * приближение. Всё это раньше лежало плашками поверх сцены — там же, где у
+ * окна предпросмотра его собственный отсчёт времени и цветная шкала суток.
+ */
+.street-light-view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--street-light-line);
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-raised);
+}
+.street-light-view-bar > button {
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+  background: none;
+  color: var(--street-light-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.street-light-view-bar > button:hover {
+  border-color: var(--street-light-line);
+  color: var(--astral-ink);
+}
+.street-light-view-bar > button.is-active {
+  border-color: var(--astral-accent);
+  color: var(--astral-accent);
+}
+.street-light-view-note {
+  color: var(--street-light-faint);
+  font-size: var(--astral-text-small);
+}
+.street-light-view-context {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--street-light-sunken);
+  color: var(--street-light-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+/* Оговорка уходит к правому краю: она про кадр целиком, а не про ручку рядом. */
+.street-light-view-badge {
+  margin-left: auto;
+  color: var(--street-light-faint);
+  font-size: var(--astral-text-micro);
+}
+
+.street-light-preview-stage {
+  position: relative;
+  min-height: 0;
+}
+
+/* Разбор кадра словами — для тех, кто кадра не видит. */
+.street-light-preview-summary {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Coverage --- */
+
+.street-light-coverage-card {
+  padding: 15px 17px;
+  border: 1px solid var(--street-light-line);
+  border-radius: var(--astral-radius-lg);
+  background: var(--astral-surface);
+}
+.street-light-coverage-card small {
+  color: var(--street-light-faint);
+  font-size: var(--astral-text-micro);
+}
+.street-light-coverage-card h3 {
+  margin: 3px 0;
+  font-size: var(--astral-text-strong);
+  font-weight: 500;
+}
+.street-light-coverage-card p {
+  margin: 0;
+  color: var(--street-light-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.street-light-family-select {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  color: var(--street-light-muted);
+  font-size: 12px;
+}
+.street-light-family-select select,
+.street-light-color-row input[type="number"] {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--street-light-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--street-light-sunken);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}
+.street-light-family-select select:focus-visible,
+.street-light-color-row input[type="number"]:focus-visible {
+  outline: none;
+  border-color: var(--astral-accent);
+}
+
+/* --- Правая колонка --- */
+
+/* Панель инспектора и её заголовок — у дизайн-системы (`.ui-panel`): здесь
+   лежали свой радиус, свой фон и свой кегль заголовка. */
+.street-light-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.street-light-presets button,
+.street-light-color-row button {
+  padding: 7px 10px;
+  border: 1px solid var(--street-light-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  cursor: pointer;
+}
+.street-light-presets button:hover,
+.street-light-color-row button:hover {
+  border-color: var(--astral-accent);
+}
+.street-light-color-row button.is-active {
+  border-color: var(--astral-accent);
+  color: var(--astral-accent);
+}
+.street-light-range {
+  display: block;
+  margin: 14px 0;
+}
+.street-light-range span {
+  display: flex;
+  justify-content: space-between;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}
+.street-light-range output {
+  color: var(--street-light-muted);
+  font-variant-numeric: tabular-nums;
+}
+.street-light-range input {
+  width: 100%;
+  accent-color: var(--astral-accent);
+}
+.street-light-color-row,
+.street-light-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.street-light-color-row input[type="number"] {
+  width: 110px;
+  min-width: 0;
+}
+.street-light-section-heading {
+  justify-content: space-between;
+}
+.street-light-section-heading input {
+  accent-color: var(--astral-accent);
+}
+.street-light-hint {
+  margin: 0;
+  color: var(--street-light-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.5;
+}
+/* Предупреждение — статусный цвет палитры, а не своя охра: зелёная галочка и
+   жёлтая плашка в продукте выглядят одинаково везде. */
+.street-light-hint.is-warning {
+  padding: 9px 10px;
+  border: 1px solid rgba(var(--astral-warning-rgb), 0.4);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-warning-soft);
+  color: var(--astral-warning);
+}
+
+/* --- Диалог установки --- */
+
+.street-light-apply-status {
+  padding: 12px;
+  border-radius: var(--astral-radius-sm);
+  background: var(--street-light-sunken);
+  color: var(--street-light-muted);
+  font-size: var(--astral-text-body);
+  line-height: 1.5;
+}
+.street-light-apply-status.is-blocked {
+  background: var(--astral-danger-soft);
+  color: var(--astral-danger);
+}
+.street-light-plan-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.street-light-plan-summary div {
+  padding: 10px;
+  border-radius: var(--astral-radius-sm);
+  background: var(--street-light-sunken);
+}
+.street-light-plan-summary dt {
+  color: var(--street-light-faint);
+  font-size: var(--astral-text-micro);
+}
+.street-light-plan-summary dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+}

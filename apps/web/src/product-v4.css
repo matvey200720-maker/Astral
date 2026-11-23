@@ -1,0 +1,244 @@
+.desktop-app {
+  --v4-bg: #0b0b0b;
+  --v4-panel: rgba(27, 27, 27, 0.82);
+  --v4-panel-solid: #191919;
+  --v4-panel-soft: #202020;
+  --v4-border: rgba(255, 255, 255, 0.1);
+  --v4-border-strong: rgba(255, 255, 255, 0.2);
+  --v4-text: #f6f7f9;
+  --v4-muted: #939393;
+  --v4-control: #f5f6f8;
+  --v4-control-text: #111111;
+  color: var(--v4-text);
+  background: var(--v4-bg);
+}
+
+.desktop-app .desktop-titlebar,
+.desktop-app .desktop-sidebar,
+.desktop-app .desktop-main > header {
+  color: var(--v4-text);
+  background: color-mix(in srgb, var(--v4-bg) 88%, transparent);
+  border-color: var(--v4-border);
+}
+
+.desktop-app .desktop-main,
+.desktop-app .desktop-content,
+.desktop-app .desktop-page,
+.desktop-app .settings-hub {
+  color: var(--v4-text);
+  background: var(--v4-bg);
+}
+.desktop-app .desktop-main {
+  margin-left: 0 !important;
+}
+
+.catalog-v3 {
+  --catalog-surface: var(--v4-panel-solid);
+  --catalog-surface-raised: var(--v4-panel-soft);
+  --catalog-border: var(--v4-border);
+  --catalog-muted: var(--v4-muted);
+  --catalog-text: var(--v4-text);
+  --catalog-accent: var(--v4-control);
+  /* 126 = полоса окна 40 + поля страницы 22 сверху и 64 снизу: при 112 страница с короткой пустой выдачей (библиотека без модов, каталог без находок)
+     выше окна на 14 px и листалась без нужды (ТЗ 29.10.2026-c). */
+  min-height: calc(100vh - 126px);
+  padding: 20px 24px 48px;
+  background: var(--v4-bg);
+}
+
+.weapon-slot-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 11px;
+}
+.weapon-slot-grid > :is(button, .weapon-slot-card) {
+  aspect-ratio: 0.96;
+  border-color: var(--v4-border);
+  border-radius: var(--astral-radius-lg);
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(255, 255, 255, 0.07),
+      transparent 58%
+    ),
+    var(--v4-panel-solid);
+}
+.weapon-slot-grid > :is(button, .weapon-slot-card):hover {
+  border-color: var(--v4-border-strong);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.24);
+}
+.weapon-slot-image {
+  width: 88%;
+  height: 57%;
+  position: absolute;
+  inset: 10% 6% auto;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 14px 14px rgba(0, 0, 0, 0.42));
+  pointer-events: none;
+}
+.weapon-slot-grid > :is(button, .weapon-slot-card) > div {
+  background: linear-gradient(
+    transparent,
+    color-mix(in srgb, var(--v4-bg) 96%, transparent) 40%
+  );
+}
+.weapon-slot-grid h3 {
+  color: var(--v4-text);
+  font-size: 13px;
+}
+.weapon-slot-grid span {
+  color: var(--v4-muted);
+}
+
+.catalog-v3-landing-grid button {
+  color: var(--v4-text);
+  border-color: var(--v4-border);
+  background: var(--v4-panel);
+}
+.catalog-v3-landing-grid button.clothing-slot {
+  grid-template-columns: 66px 1fr 30px;
+}
+.catalog-v3-landing-grid button.clothing-slot > img {
+  width: 54px;
+  height: 54px;
+  padding: 11px;
+  border-radius: var(--astral-radius-lg);
+  object-fit: contain;
+  background: var(--v4-panel-soft);
+  filter: invert(1);
+}
+
+.game-preset-catalog {
+  display: grid;
+  grid-template-columns: 315px minmax(0, 1fr);
+  gap: 14px;
+  min-height: 620px;
+}
+.game-preset-catalog > aside,
+.game-preset-catalog > article {
+  border: 1px solid var(--v4-border);
+  border-radius: var(--astral-radius-xl);
+  background: var(--v4-panel);
+}
+.game-preset-catalog > aside {
+  padding: 24px 18px;
+}
+.game-preset-catalog > aside > span,
+.game-preset-catalog > article header span,
+.game-preset-catalog > article > h3 {
+  color: var(--v4-muted);
+  font-family: var(--font-ui, Inter, sans-serif);
+  font-size: var(--astral-text-micro);
+  font-weight: 750;
+  font-style: normal;
+  line-height: 1;
+}
+.game-preset-catalog h2 {
+  margin: 10px 0 8px;
+  font-size: 24px;
+}
+.game-preset-catalog aside > p {
+  margin: 0 0 22px;
+  color: var(--v4-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+.game-preset-catalog aside > div {
+  display: grid;
+  gap: 8px;
+}
+.game-preset-catalog aside button {
+  min-height: 74px;
+  display: grid;
+  grid-template-columns: 1fr 18px;
+  gap: 5px;
+  padding: 14px 14px;
+  text-align: left;
+  color: var(--v4-text);
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-lg);
+  background: transparent;
+}
+.game-preset-catalog aside button:hover {
+  background: color-mix(in srgb, var(--v4-panel-soft) 78%, transparent);
+}
+.game-preset-catalog aside button.active {
+  border-color: var(--v4-border-strong);
+  background: var(--v4-panel-soft);
+}
+.game-preset-catalog aside button span {
+  font-size: 13px;
+  font-weight: 500;
+}
+.game-preset-catalog aside button small {
+  color: var(--v4-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.4;
+}
+.game-preset-catalog aside button svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 15px;
+}
+.game-preset-catalog > article {
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+}
+.game-preset-catalog > article header {
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid var(--v4-border);
+}
+.game-preset-catalog h1 {
+  margin: 10px 0 8px;
+  font-size: clamp(32px, 4vw, 54px);
+  letter-spacing: -0.045em;
+}
+.game-preset-catalog article header p {
+  margin: 0;
+  color: var(--v4-muted);
+  font-size: 12px;
+}
+.game-preset-catalog > article > h3 {
+  margin: 28px 0 10px;
+}
+/* Geometry only — the primary button's own look lives in styles/ui.css. */
+.apply-game-preset {
+  width: 100%;
+  margin-top: auto;
+}
+
+.settings-hub {
+  padding: 0 24px 50px;
+}
+.settings-hub > .desktop-page {
+  padding-inline: 0;
+}
+
+.desktop-app .clean-settings > article {
+  color: var(--v4-text);
+  border-color: var(--v4-border);
+  border-radius: var(--astral-radius-lg);
+  background: var(--v4-panel);
+}
+.desktop-app .game-path {
+  color: var(--v4-text) !important;
+  border-color: var(--v4-border) !important;
+  background: var(--v4-panel-soft) !important;
+}
+.desktop-app .settings-heading > svg {
+  color: var(--v4-text);
+}
+
+@media (max-width: 1180px) {
+  .weapon-slot-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .game-preset-catalog {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+}

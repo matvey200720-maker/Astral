@@ -1,0 +1,11 @@
+{
+  "name": "@modovik/mega-mall-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js",
+  "dependencies": {
+    "@modovik/mega-mall-contract": "*",
+    "sharp": "^0.35.3"
+  }
+}

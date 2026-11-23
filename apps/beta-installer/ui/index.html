@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Astral</title>
+    <link rel="icon" href="img/astral-icon.jpg" />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="motion.css" />
+    <link rel="stylesheet" href="vendor/tokens.css" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <div
+      id="app"
+      class="installer astral-first-run desktop-app"
+      data-screen="boot"
+      data-mode="install"
+      data-frame="custom"
+    >
+      <div class="installer-sky" id="sky" aria-hidden="true"></div>
+
+      <header class="installer-top" id="top">
+        <div class="brand">
+          <img
+            class="brand-mark"
+            src="img/astral-star-ring.webp"
+            alt=""
+            draggable="false"
+          />
+          <span class="brand-word">Astral</span>
+          <span class="brand-chip" id="brand-chip"></span>
+        </div>
+        <div class="top-actions">
+          <button
+            type="button"
+            class="lang-button"
+            id="lang-button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+          >
+            <span id="lang-code">RU</span>
+          </button>
+          <span id="lang-menu-slot"></span>
+          <button type="button" class="win-button" data-act="minimize"></button>
+          <button type="button" class="win-button" data-act="close"></button>
+        </div>
+      </header>
+
+      <main class="installer-stage">
+        <section class="hero" id="hero">
+          <div id="orbit-slot"></div>
+          <h1 class="hero-title" id="hero-title"></h1>
+          <p class="hero-sub" id="hero-sub"></p>
+        </section>
+        <section class="panel" id="panel" aria-live="polite"></section>
+      </main>
+
+      <!-- Подпись кадра игры под левой половиной (как на первом входе в приложении); в окне обновления её нет: там чёрный фон макета. -->
+      <p class="installer-cap" id="cap">
+        <b id="cap-badge"></b>
+        <span id="cap-name"></span>
+      </p>
+
+      <!-- Нижняя строка окна (макет обновления 16.11.2026): слева версия установщика, справа короткая подсказка. -->
+      <footer class="installer-foot">
+        <small class="hero-foot" id="hero-foot"></small>
+        <small class="hero-note" id="hero-note"></small>
+      </footer>
+
+      <div class="dialog-layer" id="dialogs" data-open="false"></div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

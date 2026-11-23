@@ -1,0 +1,34 @@
+/* Кнопка просмотра 3D-модели в углу превью мода. */
+
+.desktop-app .mod-model-preview-button {
+  font-weight: 600;
+  font-size: var(--astral-text-small);
+  color: #ffffff;
+  background: rgba(10, 10, 10, .52);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, .18);
+  border-radius: var(--astral-radius);
+  padding-left: 12px;
+  padding-right: 14px;
+  padding-block: 0;
+  height: 40px;
+  z-index: 5;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  align-items: center;
+  gap: 8px;
+  display: inline-flex;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(18, 18, 18, .82);
+  }
+
+  & svg {
+    width: 18px;
+    height: 18px;
+  }
+}

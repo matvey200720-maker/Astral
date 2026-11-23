@@ -1,0 +1,135 @@
+/*
+ * «Мои работы».
+ *
+ * Страница стоит в слое overrides рядом с полками мастерской: карточки — та
+ * же общая MediaCard, что на полке, здесь только сетка, угловые действия и
+ * окна «Моих работ» (сохранить, вставить код).
+ */
+
+.desktop-app .workshop-works-page {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+/* Под стрелкой назад полосы нет (владелец, 24.09.2026): без заголовка
+   страницы она отрезала бы кнопки от карточек, а не шапку от содержимого.
+   Ряд отступает от потолка окна, а не жмётся к нему, и стоит по краям
+   сетки карточек — стрелка над левой, «Добавить шаблон» над правой. */
+.desktop-app .workshop-works-topbar.ui-detail-topbar {
+  min-height: 0;
+  margin: 18px 0 6px;
+  border-bottom: 0;
+}
+
+/* Сетка — как у полок мастерской и библиотеки: карточка — орган полки
+   (`styles/shelf-card.css`), подпись под кадром. */
+.desktop-app .workshop-works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 28px 16px;
+}
+
+.desktop-app .workshop-work-card > .workshop-work-image {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Меню «⋯» вместо четырёх угловых кнопок на каждой карточке (Т-136): как у
+   карточек сборок — приглушена в покое (новичку без наведения не видно, что
+   действия есть, Т-166), полная при наведении и фокусе. Карточка — кнопка,
+   меню стоит рядом в обёртке. */
+.desktop-app .workshop-work-wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.desktop-app .workshop-work-wrap > .workshop-work-card {
+  width: 100%;
+}
+
+.desktop-app .workshop-work-menu {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 10px;
+  opacity: 0.72;
+  transition: opacity var(--astral-duration-fast) var(--astral-ease);
+}
+
+.desktop-app .workshop-work-wrap:hover .workshop-work-menu,
+.desktop-app .workshop-work-wrap:focus-within .workshop-work-menu,
+.desktop-app .workshop-work-menu.is-open {
+  opacity: 1;
+}
+
+/* Меню — тот же чёрный кружок, что знак действия на полке. */
+.desktop-app .workshop-work-menu > .ui-button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: var(--astral-ink);
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* Пустой экран зовёт туда же, куда кнопка сверху: пустота — не тупик. Стоит
+   он ближе к середине окна, чем к шапке (владелец, 24.09.2026): прижатый к
+   кнопкам, он читался её продолжением. */
+
+/* --- Окна «Моих работ» ------------------------------------------------ */
+
+.work-dialog-note {
+  margin: 12px 0 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: var(--astral-line-normal);
+}
+
+.work-dialog-note:first-child {
+  margin-top: 0;
+}
+
+/* Окно кода — поле и две кнопки, без шапки (владелец, 24.09.2026). Полоса
+   над кнопками делит окно, когда в нём есть шапка и тело; здесь делить
+   нечего, и кнопки стоят сразу под полем. */
+.work-code-dialog > .ui-dialog-body {
+  padding: 22px 22px 14px;
+}
+
+.work-code-dialog > footer {
+  padding-top: 4px;
+  border-top: 0;
+}
+
+@media (max-width: 620px) {
+  .desktop-app .workshop-works-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Скин оружия: кадр ствола на прозрачном фоне — ствол целиком, без обрезки. */
+.gun-work-cover {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      110% 80% at 50% 30%,
+      rgba(255, 255, 255, 0.05),
+      transparent 70%
+    ),
+    #040404;
+}
+.gun-work-cover img {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+}

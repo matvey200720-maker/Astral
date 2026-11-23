@@ -1,0 +1,64 @@
+/*
+ * «Полоска HP» (задача 2 ТЗ 11.10.2026): кадр — экран игры 16:9 с
+ * постановочной сценой, органы кадра в его углу, справа — панель взятого
+ * инструмента. Разделы и плитки носят вид мастерской эффектов
+ * (`fx-editor`); здесь только своё.
+ */
+
+/*
+ * Сцена занимает кадр каркаса целиком; поля вокруг экрана оставлены под
+ * органы кадра (правый верх), подпись (правый низ) и подсказки (левый низ).
+ */
+.target-hp-stage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/* Экран 16:9, вписанный в сцену целиком: ширина берётся от высоты, если
+   сцена шире экрана. */
+.target-hp-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 64px 32px 56px;
+  container-type: size;
+}
+
+.target-hp-scene > .target-hp-preview {
+  width: min(100%, calc(100cqh * 16 / 9));
+}
+
+.target-hp-preview .hud-preview-frame {
+  border-color: var(--fx-scene-line);
+  border-radius: var(--astral-radius);
+}
+
+/* Органы кадра не сжимаются: обрезанное «Крупн…» не говорит, что делает.
+   Сегменты масштаба — по своей подписи, а не поровну: поровну «Весь экран»
+   недобирал полпикселя и вставал с многоточием. */
+.target-hp-stage-bar > *,
+.target-hp-stage-bar .ui-segment {
+  flex: none;
+}
+
+.target-hp-backdrops {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.target-hp-backdrops > .ui-color-swatch {
+  width: var(--astral-control-h-xs);
+}
+
+/* Кнопки «Цифры в полоске» и «Только цифры» — в ряд. */
+.target-hp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

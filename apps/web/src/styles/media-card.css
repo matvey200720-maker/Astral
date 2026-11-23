@@ -1,0 +1,348 @@
+/* Медиа-карточка: обложка на весь фон, подпись снизу, значки «нравится» и «выбрать»; вариант «витрина» (.is-store). */
+
+/* Затемнение под подписью */
+.ui-media-card-shade {
+  position: absolute;
+  background: linear-gradient( 180deg, rgba(0, 0, 0, .05) 30%, rgba(0, 0, 0, .42) 62%, rgba(0, 0, 0, .84) 100% );
+  pointer-events: none;
+  inset-block: 0;
+  inset-inline: 0;
+  z-index: 1;
+}
+
+.ui-media-card-like {
+  &:hover {
+    border-color: rgba(255, 255, 255, .32);
+    color: #fff;
+  }
+}
+
+/* Значок справа внизу (счётчик, иконка) */
+.ui-media-card-trailing {
+
+  font-weight: 500;
+  white-space: nowrap;
+  gap: 5px;
+  bottom: 14px;
+  position: absolute;
+  right: 14px;
+  align-items: center;
+  font-size: var(--astral-text-micro);
+  color: rgba(255, 255, 255, .72);
+  text-shadow: rgba(0, 0, 0, .92) 0 2px 9px;
+  display: inline-flex;
+  z-index: 2;
+
+  & svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .desktop-app & {
+    color: rgba(255, 255, 255, .72) !important;
+  }
+}
+
+/* Подпись */
+.ui-media-card-copy {
+
+  gap: 4px;
+  position: absolute;
+  bottom: 14px;
+  min-inline-size: 0;
+  inset-inline: 16px 62px;
+  display: grid;
+  z-index: 2;
+
+  & small {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: var(--astral-text-micro);
+    color: rgba(255, 255, 255, .58);
+    text-overflow: ellipsis;
+  }
+
+  & h3 {
+    font-weight: 650;
+    white-space: nowrap;
+    line-height: 1.15;
+    overflow: hidden;
+    font-size: var(--astral-text-strong);
+    color: #fff;
+    letter-spacing: -.012em;
+    font-family: Inter, Arial, sans-serif;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  & p {
+    white-space: nowrap;
+    line-height: 1.35;
+    overflow: hidden;
+    color: rgba(255, 255, 255, .66);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    margin: 0;
+  }
+
+  .desktop-app & h3 {
+    color: #fff !important;
+  }
+
+  .desktop-app & small {
+    color: rgba(255, 255, 255, .58) !important;
+  }
+
+  .desktop-app & p {
+    color: rgba(255, 255, 255, .66) !important;
+  }
+}
+
+/* Кадр с обложкой */
+.ui-media-card-frame {
+  position: absolute;
+  background-position: center;
+  inset: 0;
+  background-size: cover;
+  display: block;
+  z-index: 0;
+
+  & > img,
+  & > .redux-visual-image {
+    inline-size: 100%;
+    object-fit: cover;
+    display: block;
+    block-size: 100%;
+    transition: var(--astral-ease) transform 600ms;
+  }
+}
+
+/* Круглые кнопки в углу: «нравится» и «выбрать» */
+.ui-media-card-like,
+.ui-media-card-select {
+  position: absolute;
+  background: rgba(13, 13, 13, .74);
+  right: 12px;
+  color: rgba(249, 250, 252, .9);
+  border: rgba(255, 255, 255, .12) solid 1px;
+  place-items: center;
+  display: grid;
+  border-radius: var(--astral-radius);
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  top: 12px;
+  transition: var(--astral-ease) color 160ms, var(--astral-ease) border-color 160ms, var(--astral-ease) background 160ms;
+
+  & svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.ui-media-card-select {
+  border-color: rgba(255, 255, 255, .28);
+}
+
+.ui-media-card {
+
+  background: var(--astral-surface-strong);
+  position: relative;
+  overflow: hidden;
+  min-inline-size: 0;
+  padding: 0;
+  color: var(--astral-ink);
+  border: var(--astral-line) solid 1px;
+  display: block;
+  border-radius: var(--astral-radius-lg);
+  isolation: isolate;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--astral-ease) transform var(--astral-duration), var(--astral-ease) border-color var(--astral-duration), cubic-bezier(.34, 1.56, .64, 1) scale var(--astral-duration-slow);
+
+  &:active {
+    transition-duration: var(--astral-duration), var(--astral-duration), var(--astral-duration-snap);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--astral-line-strong);
+
+    /* картинка при наведении чуть приближается */
+    & .ui-media-card-frame > img {
+      transform: scale(1.03);
+    }
+  }
+
+  &:focus-visible {
+    outline: var(--astral-line-focus) solid 2px;
+    outline-offset: 2px;
+  }
+
+  /* карточка без значка справа: подпись тянется до края */
+  &.is-cornerless > .ui-media-card-copy {
+    right: 16px;
+  }
+
+  &[aria-pressed="true"] .ui-media-card-select {
+    background: var(--astral-accent);
+    color: var(--astral-accent-ink);
+    border-color: var(--astral-accent);
+  }
+
+  /* внутри окна приложения: тёмная подложка и жёсткие цвета подписи */
+  .desktop-app & {
+
+    background: #0c0c0c;
+
+    /* витрина: подпись под картинкой, без рамки у самой карточки */
+    &.is-store {
+      gap: 12px;
+      background: none;
+      overflow: visible;
+      container-type: inline-size;
+      align-content: start;
+      grid-template-rows: auto auto;
+      border: 0;
+      display: grid;
+      border-radius: var(--astral-radius-lg);
+
+      &:hover {
+        transform: none;
+      }
+
+      & .ui-media-card-copy h3 {
+        font-weight: 600;
+        color: var(--astral-ink) !important;
+      }
+
+      & .ui-media-card-copy small {
+        font-size: var(--astral-text-small);
+        color: var(--astral-ink-muted) !important;
+        order: 2;
+      }
+
+      & .ui-media-card-copy p {
+        order: 3;
+        color: var(--astral-ink-muted) !important;
+      }
+
+      & > .ui-media-card-trailing {
+        color: var(--astral-ink-muted) !important;
+      }
+    }
+  }
+
+  /* витрина: все остальные части */
+  &.is-store {
+    & > .ui-media-card-frame {
+      aspect-ratio: 16 / 10;
+      position: relative;
+      box-shadow: var(--astral-highlight);
+      overflow: hidden;
+      border: var(--astral-line) solid 1px;
+      inset: auto;
+      border-radius: var(--astral-radius-lg);
+      background-color: #0b0b0c;
+      transition: var(--astral-ease) border-color var(--astral-duration-fast);
+
+      & > img {
+        inset: 0;
+        position: absolute;
+      }
+    }
+
+    &:hover > .ui-media-card-frame {
+      border-color: rgba(255, 255, 255, .28);
+    }
+
+    &.is-weapon-media > .ui-media-card-frame,
+    &.is-clothing-media > .ui-media-card-frame {
+      background: radial-gradient( ellipse 70% 70% at 50% 34%, rgba(255, 255, 255, .07), transparent 72% ), #050505;
+    }
+
+    & > .ui-media-card-shade {
+      display: none;
+    }
+
+    & > .ui-media-card-copy {
+      gap: 3px;
+      position: static;
+      padding: 0 2px;
+    }
+
+    &.has-trailing > .ui-media-card-copy {
+      padding-right: 84px;
+    }
+
+    & > .ui-media-card-trailing {
+      right: 2px;
+      text-shadow: none;
+      inset-block: 0 auto;
+      margin-top: calc(100cqw * 10 / 16 + 13px);
+    }
+
+    & > .ui-media-card-like {
+      right: 10px;
+      opacity: 0;
+      top: 10px;
+      transition: var(--astral-ease) opacity var(--astral-duration-fast), var(--astral-ease) color var(--astral-duration-fast), var(--astral-ease) border-color var(--astral-duration-fast);
+    }
+
+    &:hover > .ui-media-card-like,
+    &:focus-within > .ui-media-card-like,
+    & > .ui-media-card-like.is-liked {
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      outline: 0;
+
+      & > .ui-media-card-frame {
+        outline: var(--astral-line-focus) solid 2px;
+        outline-offset: 2px;
+      }
+    }
+
+    & .astral-store-render {
+      transition: var(--astral-ease) opacity var(--astral-duration), var(--astral-ease) transform 600ms;
+
+      &.is-contain {
+        object-fit: contain;
+        filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .7));
+        object-position: center;
+      }
+
+      &.is-pending {
+        opacity: 0;
+      }
+    }
+  }
+}
+
+/* Без анимации: карточка не двигается, картинка и значки не переливаются */
+@media (prefers-reduced-motion: reduce) {
+  .ui-media-card {
+    transition: none;
+
+    &:hover {
+      transform: none;
+
+      & .ui-media-card-frame > img {
+        transform: none;
+      }
+    }
+  }
+
+  .ui-media-card-frame {
+    & > img {
+      transition: none;
+    }
+  }
+
+  .ui-media-card-like {
+    transition: none;
+  }
+}

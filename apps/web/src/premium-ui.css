@@ -1,0 +1,342 @@
+:root {
+  --premium-bg: #0a0a0a;
+  --premium-panel: rgba(27, 27, 27, 0.82);
+  --premium-panel-strong: rgba(33, 33, 33, 0.94);
+  --premium-line: rgba(187, 187, 187, 0.13);
+  --premium-line-bright: rgba(203, 203, 203, 0.25);
+  --premium-text: #f6f7fb;
+  --premium-muted: #9a9a9a;
+  --premium-accent: #a7a7a7;
+  --premium-accent-2: #c9c9c9;
+  --premium-radius: 22px;
+  --premium-shadow: 0 28px 90px rgba(0, 0, 0, 0.46);
+}
+
+/*
+ * Подложку окна объявляет `styles/foundation.css` — и сразу для обеих тем
+ * (`html[data-theme="light"] body`). Здесь стояло безусловное `body` с чёрным
+ * `--premium-bg`, и оно выигрывало не весом селектора, а слоем: foundation
+ * лежит в `foundation`, этот лист — в `components`, а поздний слой берёт верх
+ * при любой специфичности. Из-за этого на светлой теме тело страницы
+ * оставалось #0a0a0a: чёрное проступало по краям окна, вокруг скруглений
+ * оболочки и на резинке прокрутки. Правило снято, тему держит foundation.
+ */
+
+.desktop-app {
+  isolation: isolate;
+  background:
+    radial-gradient(
+      70% 70% at 74% 0%,
+      rgba(107, 107, 107, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(
+      45% 65% at 12% 86%,
+      rgba(136, 136, 136, 0.08),
+      transparent 68%
+    ),
+    linear-gradient(135deg, #0a0a0a 0%, #0e0e0e 46%, #0a0a0a 100%) !important;
+}
+
+.desktop-app::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: 38px 0 0 88px;
+  pointer-events: none;
+  opacity: 0.5;
+  background:
+    linear-gradient(
+        30deg,
+        transparent 48.8%,
+        rgba(157, 157, 157, 0.065) 49.3%,
+        rgba(157, 157, 157, 0.065) 50.1%,
+        transparent 50.6%
+      )
+      88% 16% / 290px 290px no-repeat,
+    linear-gradient(
+        150deg,
+        transparent 48.8%,
+        rgba(157, 157, 157, 0.055) 49.3%,
+        rgba(157, 157, 157, 0.055) 50.1%,
+        transparent 50.6%
+      )
+      88% 16% / 290px 290px no-repeat,
+    linear-gradient(
+        30deg,
+        transparent 48.8%,
+        rgba(157, 157, 157, 0.04) 49.3%,
+        rgba(157, 157, 157, 0.04) 50.1%,
+        transparent 50.6%
+      )
+      4% 88% / 210px 210px no-repeat,
+    linear-gradient(
+        150deg,
+        transparent 48.8%,
+        rgba(157, 157, 157, 0.04) 49.3%,
+        rgba(157, 157, 157, 0.04) 50.1%,
+        transparent 50.6%
+      )
+      4% 88% / 210px 210px no-repeat;
+}
+
+.desktop-titlebar {
+  height: 40px !important;
+  background: rgba(14, 14, 14, 0.9) !important;
+  border-color: var(--premium-line) !important;
+}
+.desktop-titlebar b {
+  color: rgba(255, 255, 255, 0.72) !important;
+  letter-spacing: 0.22em !important;
+}
+
+.desktop-sidebar {
+  top: 40px !important;
+  width: 88px !important;
+  padding: 16px 11px 12px !important;
+  background: rgba(13, 13, 13, 0.82) !important;
+  border-color: var(--premium-line) !important;
+}
+.desktop-sidebar .desktop-logo {
+  height: 54px;
+  margin: 0 0 18px;
+  justify-content: center;
+}
+.desktop-logo > span {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: linear-gradient(145deg, #fff, #e3e3e3) !important;
+  color: #0a0a0a !important;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.38) inset;
+}
+.compact-sidebar .desktop-logo > b {
+  display: none !important;
+}
+.desktop-sidebar nav {
+  gap: 8px !important;
+}
+.desktop-sidebar nav button,
+.sidebar-account > button {
+  position: relative;
+  width: 54px !important;
+  height: 54px !important;
+  margin-inline: auto;
+  border: 1px solid transparent !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: transparent !important;
+  color: #868686 !important;
+  transition: 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+.desktop-sidebar nav button:hover,
+.sidebar-account > button:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  transform: translateY(-1px) !important;
+}
+.desktop-sidebar nav button.active,
+.sidebar-account > button.active {
+  color: #0e0e0e !important;
+  background: linear-gradient(145deg, #fff, #e9edf6) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.35),
+    0 0 0 4px rgba(167, 167, 167, 0.11) !important;
+}
+.desktop-sidebar nav button.active svg,
+.sidebar-account > button.active svg {
+  color: #171717 !important;
+}
+.desktop-sidebar button span {
+  display: none !important;
+}
+.desktop-sidebar button svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+.desktop-sidebar-bottom {
+  width: 66px !important;
+  left: 10px !important;
+  border-color: var(--premium-line) !important;
+}
+.sidebar-account {
+  display: grid !important;
+  gap: 7px !important;
+}
+.sidebar-account > button > i {
+  top: 5px !important;
+  right: 5px !important;
+}
+
+.desktop-main {
+  left: 88px !important;
+  top: 40px !important;
+  background: transparent !important;
+}
+.desktop-main > header {
+  min-height: 72px !important;
+  padding: 0 28px !important;
+  background: rgba(11, 11, 11, 0.56) !important;
+  border-color: var(--premium-line) !important;
+}
+.desktop-main > header::before {
+  content: "ASTRAL / DESKTOP";
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: #717171;
+}
+.desktop-content {
+  max-width: 1580px;
+  margin: 0 auto;
+}
+.desktop-page {
+  animation: premium-enter 0.42s cubic-bezier(0.16, 0.84, 0.28, 1) both;
+}
+@keyframes premium-enter {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+}
+
+.desktop-settings > article,
+.profile-plan-card,
+.profile-code-card {
+  border-color: var(--premium-line) !important;
+  border-radius: var(--premium-radius) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(30, 30, 30, 0.9),
+    rgba(20, 20, 20, 0.88)
+  ) !important;
+  box-shadow: 0 22px 62px rgba(0, 0, 0, 0.2) !important;
+}
+
+.desktop-catalog-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+.catalog-mod-card {
+  min-width: 0;
+  border-radius: var(--astral-radius-xl) !important;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+.desktop-catalog-cover {
+  min-height: 0 !important;
+  aspect-ratio: 1.52 / 1 !important;
+  border: 1px solid var(--premium-line) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background-position: center !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.25);
+  transition:
+    transform var(--astral-duration-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color var(--astral-duration-slow),
+    box-shadow var(--astral-duration-slow) !important;
+}
+.catalog-mod-card:hover .desktop-catalog-cover {
+  transform: translateY(-4px) scale(1.012);
+  border-color: rgba(193, 193, 193, 0.34) !important;
+  box-shadow: 0 26px 58px rgba(0, 0, 0, 0.38);
+}
+.catalog-card-shade {
+  background: linear-gradient(
+    180deg,
+    rgba(7, 7, 7, 0.02) 24%,
+    rgba(7, 7, 7, 0.76) 68%,
+    rgba(7, 7, 7, 0.98) 100%
+  ) !important;
+}
+.catalog-card-copy {
+  inset: auto 17px 15px !important;
+}
+.catalog-card-copy small {
+  color: #bababa !important;
+  font-size: var(--astral-text-micro) !important;
+  letter-spacing: 0.11em !important;
+}
+.catalog-card-copy h3 {
+  margin: 6px 0 4px !important;
+  font-size: var(--astral-text-title) !important;
+  color: #fff;
+}
+.catalog-card-copy p {
+  max-width: 90%;
+  color: #b9b9b9 !important;
+  font-size: var(--astral-text-micro) !important;
+  line-height: 1.45 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.catalog-card-copy span {
+  color: #ccd3df !important;
+  font-size: var(--astral-text-micro) !important;
+}
+.catalog-like {
+  top: 12px !important;
+  right: 12px !important;
+  width: 35px !important;
+  height: 35px !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(12, 12, 12, 0.6) !important;
+}
+.desktop-catalog-cover > b {
+  top: 12px !important;
+  left: 12px !important;
+  border-radius: var(--astral-radius-sm) !important;
+  background: #eef1f8 !important;
+  color: #151515 !important;
+}
+.desktop-settings.clean-settings {
+  gap: 16px !important;
+}
+.desktop-settings.clean-settings > article {
+  padding: 26px !important;
+}
+.settings-heading > svg {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 10px !important;
+  border-radius: var(--astral-radius) !important;
+  background: rgba(167, 167, 167, 0.11) !important;
+  color: #b0b0b0 !important;
+}
+.game-path {
+  background: rgba(14, 14, 14, 0.48) !important;
+  border-color: var(--premium-line) !important;
+}
+
+.liquid-mark {
+  width: 142px !important;
+  height: 142px !important;
+  /* Доля стороны, а не число: «капля» — пропорциональная форма, и при
+     любом её размере угол обязан остаться тем же на вид. */
+  border-radius: 30% !important;
+  border-color: rgba(185, 185, 185, 0.25) !important;
+  background: linear-gradient(145deg, #262626, #151515) !important;
+  box-shadow: 0 0 110px rgba(143, 143, 143, 0.22) !important;
+}
+.liquid-mark i {
+  background: linear-gradient(180deg, #c3c3c3, #919191 42%, #b2b2b2) !important;
+}
+.preparation-dock {
+  border-color: var(--premium-line-bright) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: rgba(25, 25, 25, 0.92) !important;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.52) !important;
+}
+
+@media (max-width: 1240px) {
+  .desktop-catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 960px) {
+  .desktop-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

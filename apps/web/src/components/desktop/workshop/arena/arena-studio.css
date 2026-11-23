@@ -1,0 +1,1223 @@
+@layer overrides {
+  /* Корень студии */
+  .arena-studio {
+    --arena-card: var(--astral-surface);
+    --arena-faint: var(--astral-ink-faint);
+    --arena-glass: rgba(9, 11, 16, 0.74);
+    --arena-glass-ink: rgba(255, 255, 255, 0.9);
+    --arena-glass-line: rgba(255, 255, 255, 0.13);
+    --arena-line: var(--astral-line);
+    --arena-muted: var(--astral-ink-muted);
+    --arena-panel: var(--astral-surface-raised);
+    --arena-sunken: var(--astral-surface-sunken);
+    color: var(--astral-ink);
+
+    .arena-modes {
+      width: 100%;
+    }
+
+    & .arena-add-decal {
+      align-self: flex-start;
+    }
+  }
+
+  /* Сцена */
+  .arena-stage {
+    --arena-timeline-height: 52px;
+    background: radial-gradient(circle at 50% 34%, #12161e 0%, #05070b 72%);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius-lg);
+    flex: auto;
+    height: calc(100vh - 210px);
+    max-height: 78vh;
+    min-height: 420px;
+    overflow: hidden;
+    position: relative;
+
+    canvas {
+      display: block;
+      height: 100%;
+      touch-action: none;
+      width: 100%;
+    }
+
+    & .preview-window {
+      display: flex;
+      flex-direction: column;
+      inset: 0;
+      position: absolute;
+    }
+
+    .preview-window-frame {
+      border: 0;
+      border-radius: 0;
+      flex: auto;
+      min-height: 0;
+    }
+
+    & .preview-window-timeline {
+      flex: none;
+      min-height: var(--arena-timeline-height);
+      padding: 6px 12px 8px;
+    }
+  }
+
+  /* Панель камеры */
+  .arena-camera-bar {
+    align-items: center;
+    background: var(--arena-glass);
+    border: 1px solid var(--arena-glass-line);
+    border-radius: var(--astral-radius);
+    display: flex;
+    gap: 8px;
+    inset: auto auto 20px 12px;
+    max-width: calc(100% - 24px);
+    padding: 6px;
+    position: absolute;
+
+    .arena-hall-toggle {
+      color: var(--arena-glass-ink);
+    }
+  }
+
+  /* Закладки */
+  .arena-bookmarks {
+    display: flex;
+    gap: 2px;
+
+    button {
+      align-items: center;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: var(--astral-radius-sm);
+      color: var(--arena-glass-ink);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: var(--astral-text-small);
+      gap: 6px;
+      padding: 6px 10px;
+      white-space: nowrap;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.09);
+      }
+    }
+  }
+
+  /* Полёт камеры */
+  .arena-fly {
+    align-items: center;
+    background: none;
+    border: 1px solid transparent;
+    border-color: var(--arena-glass-line);
+    border-radius: var(--astral-radius-sm);
+    color: var(--arena-glass-ink);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: var(--astral-text-small);
+    gap: 6px;
+    padding: 6px 10px;
+    white-space: nowrap;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    &.is-active {
+      border-color: var(--astral-accent);
+      color: var(--astral-accent);
+    }
+
+    & svg {
+      height: 15px;
+      width: 15px;
+    }
+  }
+
+  /* Скорость полёта в панели камеры */
+  .arena-camera-bar {
+    & .arena-speed {
+      align-items: center;
+      color: var(--arena-glass-ink);
+      display: flex;
+      font-size: var(--astral-text-micro);
+      gap: 8px;
+      margin: 0;
+      min-width: 168px;
+
+      & output,
+      .ui-slider-copy {
+        color: inherit;
+      }
+    }
+  }
+
+  /* Подсказка и флаги на сцене */
+  .arena-flag,
+  .arena-hint-bar {
+    border-radius: var(--astral-radius-sm);
+    font-size: var(--astral-text-small);
+    margin: 0;
+  }
+
+  .arena-hint-bar {
+    background: var(--arena-glass);
+    border: 1px solid var(--arena-glass-line);
+    color: rgba(255, 255, 255, 0.74);
+    inset: 12px 12px auto auto;
+    line-height: var(--astral-line-normal);
+    max-width: min(420px, calc(100% - 24px));
+    padding: 7px 11px;
+    position: absolute;
+  }
+
+  .arena-flags {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    inset: 12px auto auto 12px;
+    max-width: min(360px, calc(100% - 24px));
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .arena-flag {
+    background: rgba(48, 32, 10, 0.82);
+    border: 1px solid rgba(255, 176, 77, 0.5);
+    color: #ffcf8d;
+    padding: 6px 10px;
+  }
+
+  /* Секции инспектора */
+  .arena-section {
+    background: var(--arena-card);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius);
+    overflow: hidden;
+
+    + .arena-section {
+      margin-top: 8px;
+    }
+
+    &.is-open .arena-section-head {
+      border-bottom: 1px solid var(--arena-line);
+    }
+  }
+
+  .arena-section-head {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: var(--astral-ink);
+    cursor: pointer;
+    display: flex;
+    font-size: var(--astral-text-body);
+    gap: 8px;
+    padding: 10px 12px;
+    text-align: left;
+    width: 100%;
+
+    &:hover {
+      color: var(--astral-accent);
+    }
+  }
+
+  .arena-section-dot {
+    background: var(--astral-accent);
+    border-radius: 50%;
+    height: 6px;
+    width: 6px;
+  }
+
+  .arena-section-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .arena-inspector-body {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+    gap: 12px;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 4px;
+  }
+
+  .arena-inspector-head {
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--arena-line);
+    display: flex;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+
+  /* Имя и поля */
+  .arena-name {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 3px;
+    min-width: 0;
+
+    & span {
+      color: var(--arena-faint);
+      font-size: var(--astral-text-micro);
+    }
+
+    input {
+      background: var(--arena-sunken);
+      border: 1px solid var(--arena-line);
+      border-radius: var(--astral-radius-sm);
+      color: var(--astral-ink);
+      font-size: var(--astral-text-body);
+      padding: 5px 8px;
+      width: 100%;
+
+      &:focus-visible {
+        border-color: var(--astral-accent);
+        outline: none;
+      }
+    }
+  }
+
+  .arena-decal-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .arena-field {
+    align-items: center;
+    display: grid;
+    font-size: var(--astral-text-body);
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    & select {
+      background: var(--arena-sunken);
+      border: 1px solid var(--arena-line);
+      border-radius: var(--astral-radius-sm);
+      color: var(--astral-ink);
+      font-size: var(--astral-text-small);
+      min-width: 128px;
+      padding: 6px 8px;
+    }
+  }
+
+  .arena-field-copy {
+    color: var(--astral-ink);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+
+    small {
+      color: var(--arena-faint);
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  .arena-colour {
+    align-items: center;
+    display: inline-flex;
+    gap: 8px;
+
+    & b {
+      color: var(--arena-faint);
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  /* Строка «арена собрана старой версией» над панелью: текст и два действия (`RebuiltArenaBanner.jsx`). */
+  .arena-rebuilt {
+    background: var(--arena-sunken);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius-sm);
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .arena-rebuilt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Тексты-подсказки */
+  .arena-hint {
+    color: var(--arena-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .arena-count,
+  .arena-empty {
+    color: var(--arena-faint);
+    font-size: var(--astral-text-small);
+    margin: 0;
+  }
+
+  .arena-model-name {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    & small {
+      color: var(--arena-faint);
+    }
+  }
+
+  .arena-check {
+    align-items: center;
+    color: var(--arena-muted);
+    cursor: pointer;
+    display: flex;
+    font-size: var(--astral-text-small);
+    gap: 8px;
+  }
+
+  .arena-upload {
+    background: var(--arena-sunken);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  /* Посадка и заметки */
+  .arena-fit {
+    dl {
+      display: grid;
+      gap: 4px;
+      margin: 0;
+
+      > div {
+        align-items: baseline;
+        justify-content: space-between;
+        display: flex;
+        gap: 10px;
+      }
+    }
+
+    & dt {
+      color: var(--arena-faint);
+      font-size: var(--astral-text-micro);
+    }
+
+    dd {
+      color: var(--astral-ink);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--astral-text-small);
+      margin: 0;
+    }
+  }
+
+  .arena-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+
+    li {
+      border-left: 2px solid var(--arena-line);
+      color: var(--arena-muted);
+      font-size: var(--astral-text-small);
+      line-height: var(--astral-line-normal);
+      padding-left: 10px;
+
+      &.is-warn {
+        border-left-color: #ffb04d;
+        color: #ffcf8d;
+      }
+
+      &.is-error {
+        border-left-color: var(--astral-danger, #ff6b6b);
+        color: #ff9d9d;
+      }
+    }
+  }
+
+  /* Палитры и пресеты */
+  .arena-palette-grid,
+  .arena-preset-grid {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+
+    button {
+      align-items: flex-start;
+      background: var(--arena-card);
+      border: 1px solid var(--arena-line);
+      border-radius: var(--astral-radius);
+      color: var(--arena-muted);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px;
+      text-align: left;
+
+      &:hover {
+        color: var(--astral-ink);
+      }
+    }
+
+    & b {
+      font-weight: 500;
+      font-size: var(--astral-text-small);
+    }
+  }
+
+  .arena-preset-grid {
+    & button {
+      &.is-active {
+        border-color: var(--astral-accent);
+        color: var(--astral-ink);
+      }
+    }
+
+    small {
+      color: var(--arena-faint);
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  .arena-preset-mark {
+    background: var(--arena-sunken);
+    border-radius: var(--astral-radius-sm);
+    height: 26px;
+    position: relative;
+    width: 100%;
+
+    &::after,
+    &::before {
+      background: currentColor;
+      content: "";
+      opacity: 0.75;
+      position: absolute;
+    }
+
+    &::before {
+      border-radius: 2px;
+      height: 8px;
+      inset: auto 34% 6px;
+    }
+
+    &[data-shape="stadium"]::after {
+      border-radius: 3px 3px 0 0;
+      inset: 6px 34% 12px;
+    }
+
+    &[data-shape="throne"]::after {
+      border-radius: var(--astral-radius-xs) var(--astral-radius-xs) 0 0;
+      inset: 3px 30% 12px;
+    }
+
+    &[data-shape="bench"]::before {
+      height: 6px;
+      inset: auto 20% 9px;
+    }
+
+    &[data-shape="stool"]::before {
+      height: 5px;
+      inset: auto 42% 12px;
+    }
+
+    &[data-shape="stool"]::after {
+      height: 8px;
+      inset: auto 47% 6px;
+    }
+  }
+
+  .arena-palette-swatch {
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius-sm);
+    height: 22px;
+    width: 100%;
+  }
+
+  /* Сектора */
+  .arena-sectors {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    > div {
+      display: grid;
+      gap: 4px;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    button {
+      background: var(--arena-sunken);
+      border: 1px solid var(--arena-line);
+      border-radius: var(--astral-radius-sm);
+      color: var(--arena-faint);
+      cursor: pointer;
+      font-size: var(--astral-text-micro);
+      padding: 6px 0;
+
+      &.is-active {
+        background: var(--arena-card);
+        border-color: var(--astral-accent);
+        color: var(--astral-ink);
+      }
+    }
+  }
+
+  /* Поверхности */
+  .arena-surface-usage {
+    background: var(--arena-sunken);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 8px 10px;
+
+    & li {
+      align-items: baseline;
+      justify-content: space-between;
+      color: var(--arena-muted);
+      display: flex;
+      font-size: var(--astral-text-small);
+      gap: 8px;
+    }
+
+    b {
+      font-weight: 500;
+    }
+
+    & span {
+      color: var(--arena-faint);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  /* Наклейки */
+  .arena-decal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: var(--astral-radius);
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+
+      &.is-active {
+        background: var(--arena-card);
+        border-color: var(--astral-accent);
+      }
+    }
+  }
+
+  .arena-decal-pick {
+    align-items: center;
+    background: none;
+    border: 0;
+    color: var(--astral-ink);
+    cursor: pointer;
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    min-width: 0;
+    padding: 2px;
+    text-align: left;
+  }
+
+  .arena-decal-thumb {
+    background-color: var(--arena-sunken);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius-sm);
+    flex: none;
+    height: 30px;
+    width: 30px;
+  }
+
+  .arena-decal-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    & b {
+      font-weight: 500;
+      font-size: var(--astral-text-small);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    small {
+      color: var(--arena-faint);
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  .arena-decal-actions {
+    display: flex;
+    flex: none;
+    gap: 1px;
+
+    button {
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: 0;
+      border-radius: var(--astral-radius-sm);
+      color: var(--arena-faint);
+      cursor: pointer;
+      display: inline-flex;
+      height: 22px;
+      width: 22px;
+
+      &:hover {
+        background: var(--arena-sunken);
+        color: var(--astral-ink);
+      }
+    }
+
+    & svg {
+      height: 13px;
+      width: 13px;
+    }
+  }
+
+  .arena-decal-form {
+    background: var(--arena-sunken);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  /* Сцена на узком окне */
+  .arena-stage {
+    @media (max-width: 1180px) {
+      height: 62vh;
+    }
+  }
+
+  /* Закладки: подпись */
+  .arena-bookmarks-tag {
+    color: rgba(233, 240, 248, 0.5);
+    font-weight: 600;
+    font-size: var(--astral-text-micro);
+    letter-spacing: 0.06em;
+    margin: 0 2px 0 6px;
+
+    &:first-child {
+      margin-left: 2px;
+    }
+  }
+
+  /* Применение */
+  .arena-apply-source {
+    color: rgba(233, 240, 248, 0.75);
+    font-size: var(--astral-text-small);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .arena-apply-survey {
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: var(--astral-radius);
+    font-family: var(--astral-font-mono, ui-monospace, monospace);
+    font-size: var(--astral-text-micro);
+    margin: 0;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+  }
+
+  /* Зал */
+  .arena-hall-edit {
+    background: var(--arena-card);
+    border: 1px solid var(--astral-accent);
+    border-radius: var(--astral-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .arena-hall-name {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-body);
+    overflow-wrap: anywhere;
+  }
+
+  .arena-hall-roles {
+    background: var(--arena-card);
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .arena-hall-role {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr auto auto auto;
+
+    > span {
+      color: var(--astral-ink);
+      display: grid;
+      font-size: var(--astral-text-small);
+      min-width: 0;
+
+      small {
+        color: var(--arena-faint);
+        font-size: var(--astral-text-micro);
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+
+  .arena-actions,
+  .arena-hall-pictures {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .arena-hall-pictures {
+    & button {
+      background: var(--astral-surface);
+      border: 1px solid var(--arena-line);
+      border-radius: var(--astral-radius-sm);
+      cursor: pointer;
+      height: 32px;
+      overflow: hidden;
+      padding: 0;
+      width: 44px;
+
+      &.is-active {
+        border-color: var(--astral-accent);
+      }
+    }
+  }
+
+  .arena-hall-list {
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  .arena-hall-pick {
+    background: none;
+    border: 0;
+    color: var(--astral-ink);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 1px;
+    min-width: 0;
+    padding: 2px 4px;
+    text-align: left;
+
+    b {
+      font-size: var(--astral-text-small);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & small {
+      color: var(--arena-faint);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  .arena-hall-swatch {
+    border: 1px solid var(--arena-line);
+    border-radius: var(--astral-radius-xs);
+    flex: none;
+    height: 12px;
+    width: 12px;
+  }
+
+  /* Справка */
+  .ui-button.arena-help {
+    color: var(--astral-ink-faint);
+    flex: none;
+    height: var(--astral-control-h-xs);
+    min-height: var(--astral-control-h-xs);
+    min-width: var(--astral-control-h-xs);
+    padding: 0;
+    transition:
+      color var(--astral-duration-snap) var(--astral-ease),
+      background var(--astral-duration-snap) var(--astral-ease);
+    width: var(--astral-control-h-xs);
+
+    &.is-open,
+    &:hover {
+      background: var(--astral-surface-hover);
+      color: var(--astral-ink);
+    }
+
+    svg {
+      height: 15px;
+      width: 15px;
+    }
+  }
+
+  .arena-help-text {
+    margin: 0;
+  }
+
+  .arena-heading {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    gap: 8px;
+  }
+
+  .arena-section-tools {
+    align-items: center;
+    display: inline-flex;
+    flex: none;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .arena-subhead {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+
+    > .arena-help-text {
+      flex: 1 0 100%;
+    }
+  }
+
+  .recolor-actions {
+    > .arena-help-text {
+      flex: 1 0 100%;
+    }
+  }
+
+  /* Вкладки подразделов */
+  .arena-sub-tabs {
+    &.editor-sub-tools {
+      padding: 0 0 12px;
+    }
+
+    .ui-segmented {
+      display: grid;
+      gap: 1px;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      padding: 2px;
+      width: 100%;
+
+      & .ui-segment {
+        flex-direction: column;
+        gap: 4px;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+        min-height: 50px;
+        min-width: 0;
+        padding: 7px 0 6px;
+        transition:
+          color var(--astral-duration-snap) var(--astral-ease),
+          background var(--astral-duration-snap) var(--astral-ease),
+          border-color var(--astral-duration-snap) var(--astral-ease);
+
+        &.is-active {
+          font-weight: 500;
+        }
+
+        svg {
+          height: 18px;
+          width: 18px;
+        }
+      }
+
+      .ui-segment-label {
+        font-size: var(--astral-text-micro);
+        max-width: 100%;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  /* Группы и строки */
+  .arena-group {
+    display: grid;
+    gap: 8px;
+
+    + .arena-group {
+      border-top: 1px solid var(--astral-line);
+      margin-top: 6px;
+      padding-top: 12px;
+    }
+
+    > .recolor-subhead {
+      margin: 0;
+    }
+  }
+
+  .arena-rows {
+    display: grid;
+    gap: 2px;
+  }
+
+  .arena-row {
+    &.ui-button {
+      transition:
+        background var(--astral-duration-snap) var(--astral-ease),
+        box-shadow var(--astral-duration-snap) var(--astral-ease);
+
+      &.is-selected {
+        background: var(--astral-surface-raised);
+        box-shadow: inset 0 0 0 1px var(--astral-line);
+      }
+    }
+
+    .ui-button-trailing {
+      color: var(--astral-ink-muted);
+    }
+
+    & .ui-button-label > span {
+      -webkit-box-orient: vertical;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    &.is-selected .ui-button-trailing {
+      color: var(--astral-ink);
+    }
+  }
+
+  /* Метки мест и шаблонов */
+  .arena-place-mark {
+    background: var(--astral-surface-sunken);
+    border-radius: var(--astral-radius-xs);
+    box-shadow: inset 0 0 0 1px var(--astral-line);
+    color: var(--astral-ink-faint);
+    display: grid;
+    height: 26px;
+    overflow: hidden;
+    place-items: center;
+    transition: opacity var(--astral-duration-fast) var(--astral-ease);
+    width: 40px;
+
+    &.is-off {
+      opacity: 0.35;
+    }
+  }
+
+  .arena-template .arena-template-art > img,
+  .arena-place-mark > img,
+  .arena-hall-pictures img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+  }
+
+  .arena-template {
+    .arena-template-art {
+      background: var(--astral-surface-sunken);
+      border-radius: var(--astral-radius-xs);
+      box-shadow: inset 0 0 0 1px var(--astral-line);
+      display: block;
+      height: 30px;
+      overflow: hidden;
+      width: 52px;
+    }
+  }
+
+  .arena-template-group {
+    + .arena-template-group {
+      margin-top: 10px;
+    }
+  }
+
+  /* Статус */
+  .arena-status-dot {
+    background: var(--astral-accent);
+    border-radius: 50%;
+    display: block;
+    flex: none;
+    height: 8px;
+    margin: 0 4px;
+    width: 8px;
+
+    &.is-stock {
+      background: transparent;
+      box-shadow: inset 0 0 0 1.5px var(--astral-line-strong);
+    }
+
+    &.is-off {
+      background: transparent;
+      box-shadow: none;
+      outline: 1.5px dashed var(--astral-ink-faint);
+      outline-offset: -1.5px;
+    }
+  }
+
+  .arena-status-row {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    min-height: var(--astral-control-h);
+
+    > .ui-button {
+      flex: none;
+    }
+  }
+
+  .arena-status-copy {
+    display: grid;
+    flex: auto;
+    gap: 2px;
+    min-width: 0;
+
+    > b {
+      font-weight: 500;
+      font-size: var(--astral-text-body);
+    }
+
+    > small {
+      color: var(--astral-ink-muted);
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  /* Редактор: входы в мастерские и списки */
+  .arena-editor {
+    .ui-editor-inspector:has(> .ui-editor-panel-head > .ui-editor-panel-back) {
+      .arena-sub-tabs,
+      .ui-editor-panel-content > .arena-help-text {
+        display: none;
+      }
+    }
+
+    .ui-nav-row.ui-button.studio-entry {
+      background: var(--astral-surface-raised);
+      border: 1px solid var(--astral-line);
+      border-radius: var(--astral-radius);
+      margin: 4px 0;
+      min-height: 52px;
+      padding: 8px 10px;
+      transition:
+        border-color var(--astral-duration-snap) var(--astral-ease),
+        background var(--astral-duration-snap) var(--astral-ease);
+      width: 100%;
+
+      &:hover {
+        background: var(--astral-surface-hover);
+        border-color: var(--astral-line-strong);
+      }
+    }
+
+    & .recolor-actions > .ui-nav-row.ui-button.studio-entry {
+      flex-basis: 100%;
+    }
+
+    .fx-switch small {
+      -webkit-box-orient: vertical;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      white-space: normal;
+    }
+
+    & .ui-nav-row.studio-entry .ui-button-label small {
+      -webkit-box-orient: vertical;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-line-clamp: 2;
+      white-space: normal;
+    }
+
+    .studio-entry {
+      .ui-button-icon {
+        background: var(--astral-accent-soft);
+        border-radius: var(--astral-radius-sm);
+        color: var(--astral-ink);
+        display: grid;
+        height: 32px;
+        place-items: center;
+        width: 32px;
+
+        svg {
+          height: 17px;
+          width: 17px;
+        }
+      }
+
+      & .ui-button-trailing {
+        color: var(--astral-ink);
+      }
+    }
+
+    .ui-list-group-list {
+      > .ui-nav-row.ui-button.studio-entry {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        margin: 0;
+
+        &:not(:disabled):hover {
+          background: var(--astral-surface-hover);
+        }
+      }
+
+      > * + .ui-nav-row.ui-button.studio-entry {
+        border-top: 1px solid var(--astral-line);
+      }
+
+      > .studio-entry {
+        .ui-button-icon {
+          background: var(--astral-surface-strong);
+        }
+
+        & .ui-button-trailing {
+          color: var(--astral-ink-muted);
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "@modovik/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/start.js",
+    "./app": "./src/server.js"
+  },
+  "scripts": {
+    "dev": "node --watch src/start.js",
+    "start": "node src/start.js"
+  },
+  "dependencies": {
+    "@modovik/admin-store": "*",
+    "@modovik/auth-store": "*",
+    "@modovik/bloodfx": "*",
+    "@modovik/catalog": "*",
+    "@modovik/clothing": "*",
+    "@modovik/contracts": "*",
+    "@modovik/fx-scenes": "*",
+    "@modovik/game-discovery": "*",
+    "@modovik/gunpack": "*",
+    "@modovik/install-engine": "*",
+    "@modovik/manifest-authority": "*",
+    "@modovik/mod-targets": "*",
+    "@modovik/optimizer": "*",
+    "@modovik/publishing": "*",
+    "@modovik/tracer-contract": "*",
+    "@modovik/weapon-sound-pack": "*",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "hpp": "^0.2.3",
+    "sharp": "^0.35.3"
+  }
+}

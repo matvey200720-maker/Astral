@@ -1,0 +1,1636 @@
+/*
+ * The minimap editor.
+ *
+ * It used to be a fixed sheet portalled onto the document body: a second
+ * application dropped over the launcher, with its own greys, its own black and
+ * a purple badge nothing else in the product wears. Escaping the app root also
+ * put it outside `.desktop-app`, so the palette never reached it — the only
+ * way to dress it was to write the greys out by hand, and that is exactly what
+ * happened, a hundred and fifty times.
+ *
+ * Now it is a page inside the studio, sized like the reticle editor beside it,
+ * and every colour below comes from tokens.css. The `--mmc-*` names are kept
+ * because they are this editor's own shorthand for the four surfaces it uses;
+ * they alias the palette, they do not redefine it.
+ */
+
+/* Метку ставит оболочка редактора (`EditorShell`, `useHolds.js`), а не `:has()`: его браузер перепроверял на каждую правку в редакторе. */
+.desktop-app .workshop-studio[data-holds~="mmc-shell"] {
+  min-height: 520px;
+  box-sizing: border-box;
+}
+.mmc-shell {
+  --mmc-panel: var(--astral-surface-raised);
+  --mmc-card: var(--astral-surface);
+  --mmc-line: var(--astral-line);
+  --mmc-muted: var(--astral-ink-muted);
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: none;
+  color: var(--astral-ink);
+  font-family: var(--astral-font);
+}
+.mmc-shell * {
+  box-sizing: border-box;
+}
+/*
+ * Сброс шрифта у своих кнопок редактора — и только у своих.
+ *
+ * Правило существует ради «сырых» `<button>`, которые редактор рисует сам:
+ * браузер даёт им Arial 13.3px, и рядом с текстом приложения это видно. Но
+ * `.ui-button` и `.ui-segment` — примитивы дизайн-системы, у них свой кегль
+ * (11–12px) и свой вес, и `font: inherit` их перебивал: внутри редактора
+ * «Применить», «Отмена» и вкладки уезжали на 16px/400, то есть на шрифт
+ * страницы. Отсюда и «шрифт надо доработать там, где элементы, позиция на
+ * экране, применить, отмена» — они там были не такие, как везде.
+ *
+ * Исключение — по приставке `ui-`, а не поимённым списком: поимённый держался
+ * ровно до следующего примитива словаря. Так под сброс попали и поле значения
+ * ползунка (`.ui-slider-value`), и `<select>`: оба объявляют кегль 11, а
+ * `font: inherit` давал им 16 — рядом с подписью в 11. Органы внутри строки
+ * настройки вычеркнуты отдельно: там `input` своего класса не носит, набор ему
+ * задаёт сама строка.
+ */
+.mmc-shell :is(button, input, select, textarea):not([class*="ui-"]):not(
+    :is(.ui-field, .ui-slider, .ui-color, .ui-checkbox, .ui-switch) *
+  ) {
+  font: inherit;
+}
+.mmc-shell button:not(.ui-button) {
+  color: inherit;
+}
+/* Поверхность, поля и прокрутка панели справа приходят от каркаса
+   (`styles/editor-shell.css`, раскладка «как в Photoshop»): он один решает,
+   из чего она сделана и что в ней едет. Своя прокрутка здесь — из слоя
+   `overrides` — побила бы каркас, и заголовок панели уезжал бы вместе со
+   свитком. */
+.mmc-inspector {
+  min-width: 0;
+}
+
+/*
+ * Сцена занимает кадр каркаса целиком: рамку, скругление и фон даёт кадр.
+ * Карта — посередине; правый верхний угол — органы демонстрации
+ * (`StageBar`), правый нижний — подпись, левый нижний — подсказки
+ * управления, поэтому поля вокруг карты оставлены под них.
+ */
+.mmc-stage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.mmc-preview-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 64px 56px 56px;
+  container-type: size;
+}
+/* Карта растёт с кадром, но не выше него: ширину ограничивает и высота
+   кадра (через пропорцию сцены 191×136), иначе в низком окне низ карты с
+   полосами HP уходил бы под край. */
+.mmc-preview-frame > .mmc-map {
+  width: min(100%, 680px, calc(100cqh * 191 / 136));
+}
+/*
+ * Сцена мини-карты — весь кадр minimap.gfx, 191×136 точек.
+ *
+ * Радар — прямоугольник 179×115 в точке (6, 8); вокруг него поля, куда игра
+ * ставит полосы HP (под радаром) и куда их можно вынести. Поля прозрачные:
+ * в игре за ними мир, а не плашка.
+ *
+ * Кегль цифр и размер стрелки заданы в точках большого предпросмотра: 360 на
+ * ширину радара. `--mmc-unit` — одна такая точка в пикселях этой сцены: в
+ * большом предпросмотре около пикселя, в миниатюре вида — меньше.
+ */
+.mmc-map {
+  position: relative;
+  width: min(100%, 384px);
+  aspect-ratio: 191 / 136;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  user-select: none;
+  container-type: inline-size;
+  --mmc-unit: calc(100cqw * 179 / 191 / 360);
+  /* Сцена рисует HUD игры, а не хром лаунчера: белые стрелка, буква севера и
+     цифры с тенью — то, что игра ставит на экран, и тема их не красит. Цвета
+     живут на самой сцене, а не на оболочке редактора: обложки библиотеки и
+     «Моих работ» рисуют ту же сцену без редактора, и в светлой теме буква
+     севера наследовала тёмный текст страницы. */
+  --mmc-game-ink: white;
+  --mmc-game-shadow: rgba(0, 0, 0, 0.6);
+}
+/* HP отдельно от карты: элементы за краем сцены видны — в игре сцена растёт вместе с кадром. */
+.mmc-map.is-open {
+  overflow: visible;
+}
+.mmc-radar {
+  position: absolute;
+  left: calc(100% * 6 / 191);
+  top: calc(100% * 8 / 136);
+  width: calc(100% * 179 / 191);
+  height: calc(100% * 115 / 136);
+  overflow: hidden;
+  background: var(--astral-surface-sunken);
+  box-shadow: var(--astral-shadow);
+}
+/* Просмотр «большая карта» (10.11.2026): радар развёрнутого экрана в той же сцене — 115×120 точек в (38, 8),
+   картинка карты (`cover`) закрывает его целиком: в игре радар большой карты уже малого. */
+.mmc-map.is-big .mmc-radar {
+  left: calc(100% * 38 / 191);
+  top: calc(100% * 8 / 136);
+  width: calc(100% * 115 / 191);
+  height: calc(100% * 120 / 136);
+}
+/* «Скрыть карту» (задача 8): в игре на месте радара мир. В редакторе —
+   пунктир, от которого считаются полосы; в обложках и на экране — ничего. */
+.mmc-radar.is-hidden {
+  background: transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--astral-line-strong);
+  outline-offset: -1px;
+}
+.mmc-map.is-still .mmc-radar.is-hidden {
+  outline: 0;
+}
+/* Своя непрозрачность карты (задача 1 ТЗ 17.10.2026): сквозь карту виден
+   кадр под ней, как в игре сквозь маску потемнее. */
+.mmc-radar.is-translucent {
+  background: transparent;
+  box-shadow: none;
+}
+.mmc-radar.is-translucent > * {
+  opacity: var(--mmc-map-opacity, 1);
+}
+.mmc-radar > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: none;
+}
+/* Карта дальше штатной: мозаика из зеркальных копий квартала, центрированная
+   по радару. Размер ей задаёт разметка — доля радара на число копий. */
+.mmc-radar-mosaic {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  transform: translate(-50%, -50%);
+}
+.mmc-radar .mmc-radar-mosaic > img {
+  position: static;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+/* Штатная подложка полос под радаром: чёрная, наполовину прозрачная. */
+.mmc-strip {
+  position: absolute;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+/* `bar_bg` игры — чёрные подложки на штатных местах полос поверх ленты.
+   Прозрачность приходит строкой: это число из файла игры. */
+.mmc-strip-pad {
+  position: absolute;
+  z-index: 1;
+  background: black;
+  pointer-events: none;
+}
+/*
+ * Полосы мини-карты мода так, как они лежат в её `minimap.gfx`
+ * (`MinimapAuthored.jsx`, 25.10.2026): лента, подложка и дорожки — слои, полоса
+ * — рамка во всю длину с заливкой, которую открывает доля HP. Место, размер и
+ * цвет приходят строкой из файла; цифры стоят в рамке своего поля.
+ */
+.mmc-authored-layer,
+.mmc-authored-bar {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+.mmc-authored-layer {
+  z-index: 1;
+}
+.mmc-authored-bar {
+  z-index: 3;
+}
+.mmc-authored-bar > b {
+  display: block;
+  height: 100%;
+}
+.mmc-authored-digit {
+  position: absolute;
+  z-index: 5;
+  display: block;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px var(--mmc-game-shadow);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.mmc-authored-digit.is-font-cond {
+  font-stretch: 75%;
+  letter-spacing: -0.02em;
+}
+.mmc-authored-digit.is-font-regular {
+  font-stretch: 100%;
+  letter-spacing: 0;
+}
+/* Линия обводки карты. Место и размер считает контракт
+   (`minimapOutlineRects`) — теми же прямоугольниками обводка уходит в игру;
+   стоит под полосами, как и там. */
+.mmc-outline {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+.mmc-player-marker {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  color: var(--mmc-game-ink);
+  filter: drop-shadow(0 1px 1px var(--mmc-game-shadow));
+  pointer-events: none;
+}
+/* Стрелка нарисована носом вверх (`blips-art.js`), поправка на угол ей не
+   нужна — в отличие от прежней веб-иконки, смотревшей на северо-восток. */
+.mmc-player-marker.is-stock {
+  transform: translate(-50%, -50%);
+}
+.mmc-player-marker.is-custom {
+  display: block;
+  background: currentColor;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+/* Свои надписи и картинки (задача 1 ТЗ 17.10.2026): под полосами, над
+   картой; надпись — шрифтом той же ширины, что HUD игры. */
+.mmc-overlay {
+  position: absolute;
+  z-index: 5;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  touch-action: none;
+}
+button.mmc-overlay {
+  cursor: grab;
+}
+button.mmc-overlay:active {
+  cursor: grabbing;
+}
+.mmc-overlay.is-selected {
+  outline: 1px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+.mmc-overlay-text {
+  white-space: nowrap;
+  line-height: 1;
+  text-shadow: 0 1px 1px var(--mmc-game-shadow);
+}
+.mmc-overlay-text.is-font-cond {
+  font-stretch: 75%;
+  letter-spacing: -0.02em;
+}
+.mmc-overlay-text.is-font-regular {
+  font-weight: 600;
+}
+.mmc-overlay-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+}
+.mmc-map.is-compact .mmc-overlay {
+  pointer-events: none;
+}
+/* «Расстояние»: слово в пустом поле — пример, а не значение: курсивом и тусклее. */
+.mmc-distance-field .ui-text-field-control::placeholder {
+  font-style: italic;
+  opacity: 0.75;
+}
+/* «Расстояние»: строка «В игре» — как прочтётся расстояние со своими
+   словами (набросок владельца 17.10.2026). */
+.mmc-distance-sample {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--mmc-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--mmc-muted);
+  font-size: var(--astral-text-micro);
+}
+.mmc-distance-sample b {
+  color: var(--astral-ink);
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+/* Панель «Надписи и картинки»: две кнопки добавления в ряд. Картинка —
+   поле файла под видом кнопки, как «Загрузить» у значков. */
+.mmc-overlay-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.mmc-overlay-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.mmc-overlay-upload > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--mmc-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-raised);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  cursor: pointer;
+}
+.mmc-overlay-upload:focus-within > span {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+.mmc-overlay-upload.is-disabled > span {
+  opacity: 0.5;
+  cursor: default;
+}
+.mmc-overlay-upload svg {
+  width: 14px;
+  height: 14px;
+}
+/* Метки других людей для примера (задача 1 ТЗ 17.10.2026): кружок с тёмной
+   каймой цветом игрока, своя картинка — силуэтом того же цвета. */
+.mmc-other-blip {
+  position: absolute;
+  z-index: 3;
+  display: block;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: currentColor;
+  border: calc(var(--mmc-unit, 1px) * 2) solid var(--mmc-game-shadow);
+  pointer-events: none;
+}
+.mmc-other-blip.is-custom {
+  border: 0;
+  border-radius: 0;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+/* Буква N — значок игры `radar_north`: белая буква в чёрном круге у верхнего
+   края радара. Размеры приходят строкой: они в точках сцены. */
+.mmc-north-marker {
+  position: absolute;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #0b0d10;
+  color: var(--mmc-game-ink);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+/* Общий переход кнопок (цвет, поворот, сдвиг за 0.22 с) здесь выключен:
+   элемент карты обязан стоять там, куда его поставили, в тот же кадр, а
+   поворот раскладки «вдоль края» иначе на миг рисовал полосу наискось. */
+.mmc-widget {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  transition: none;
+}
+.mmc-widget:active {
+  cursor: grabbing;
+}
+/* Выбранный элемент — тонкая сплошная рамка акцентом. Пунктир по краю карты
+   читался как часть самой мини-карты. */
+.mmc-widget.is-selected {
+  outline: 1px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+/* Направляющая магнита (бета 15.10.2026): волосок акцентом через центр,
+   к которому встал элемент. Слой элемента бывает до 100 — линия выше всех;
+   тень держит её видимой и на светлой карте. Мышь она не ловит. */
+.mmc-snap-guide {
+  position: absolute;
+  z-index: 101;
+  display: block;
+  background: var(--astral-accent);
+  filter: drop-shadow(0 0 1px var(--mmc-game-shadow));
+  pointer-events: none;
+}
+.mmc-snap-guide.is-x {
+  width: 1px;
+  transform: translateX(-50%);
+}
+.mmc-snap-guide.is-y {
+  height: 1px;
+  transform: translateY(-50%);
+}
+.mmc-vital-track,
+.mmc-vital-fill,
+.mmc-damage-trail {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+/* Полоса без рамки — ни прозрачной у кнопки, ни тёмной у дорожки. Рамки
+   давали зазор в пару точек между HP и бронёй и у края карты, а в игре его
+   нет: дорожку и заливку компилятор ставит одной матрицей, а штатную подложку
+   полос (`bar_bg`) прячет. */
+.mmc-vital-track {
+  border-radius: 0 !important;
+  box-shadow: none;
+}
+.mmc-vital-fill,
+.mmc-damage-trail {
+  right: auto;
+  transition: width 0.22s ease;
+}
+/* Анимированная заливка (задача 8): холст во всю длину полосы, долю HP
+   открывает `clip-path` — как маска полосы в игре. */
+.mmc-vital-anim {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: clip-path 0.22s ease;
+}
+.mmc-damage-trail {
+  opacity: 0.72;
+}
+/* Линия контура полосы: место и размер считает контракт
+   (`minimapFrameRects`) — теми же прямоугольниками контур уходит в игру. Идёт
+   поверх заливки во всю длину полосы: заливку игра сжимает, а контур стоит. */
+.mmc-vital-outline {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+.mmc-widget.is-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mmc-widget.is-number b {
+  line-height: 1;
+  text-shadow: 0 1px 2px var(--mmc-game-shadow);
+}
+.mmc-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+/* Значок HP или брони — самостоятельный элемент карты: его двигают, как
+   полосу и цифры. Картинка кладётся маской, цвет берёт настройка. */
+.mmc-widget.is-icon {
+  display: block;
+}
+.mmc-widget-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+.mmc-indicator svg {
+  width: 1.05em;
+  height: 1.05em;
+  stroke-width: 2.6;
+}
+.mmc-custom-indicator-icon {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  flex: 0 0 1.1em;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+.mmc-widget.is-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  color: var(--mmc-game-ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-shadow: 0 2px 3px var(--mmc-game-shadow);
+}
+.mmc-damage-flash {
+  position: absolute;
+  z-index: 6;
+  background: radial-gradient(
+    circle,
+    transparent 40%,
+    var(--mmc-flash-color, var(--astral-danger)) 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  animation: mmc-flash 2100ms linear forwards;
+}
+.mmc-map.is-compact {
+  width: 100%;
+}
+.mmc-map.is-compact .mmc-radar {
+  box-shadow: var(--astral-shadow-soft);
+}
+.mmc-map.is-compact .mmc-widget {
+  pointer-events: none;
+}
+
+/*
+ * Положение на экране.
+ *
+ * Кадр игры и мини-карта на нём. Рамки безопасной зоны и заглушек чата нет:
+ * пунктир поверх кадра человек принимал за часть мини-карты, а в игре их не
+ * видно вовсе.
+ */
+.mmc-position-stage {
+  display: grid;
+  place-items: center;
+  padding: 64px 32px 56px;
+  container-type: size;
+}
+/* Экран игры вписан в кадр целиком: по ширине — пока хватает высоты, иначе
+   по высоте. Пропорцию экрана ставит разметка (`--mmc-screen-aspect`) — она
+   меняется с формой экрана в панели. */
+.mmc-screen-fit {
+  width: min(100%, calc(100cqh * var(--mmc-screen-aspect, 1.7778)));
+}
+.mmc-screen {
+  position: absolute;
+  inset: 0;
+}
+.mmc-positioned-map {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+  border-radius: var(--astral-radius-sm);
+}
+.mmc-positioned-map:active {
+  cursor: grabbing;
+}
+.mmc-positioned-map:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+.mmc-positioned-map .mmc-map {
+  width: 100%;
+  height: 100%;
+}
+/* Вид «Увеличенная» кадра «Экран» (21.11.2026): сцена развёрнутого радара на экране. Её место ведёт обычная карта, поэтому мышь она не берёт —
+   тянут только элементы HP (ручки выше неё). */
+.mmc-expanded-map {
+  position: absolute;
+  pointer-events: none;
+  border-radius: var(--astral-radius-sm);
+}
+.mmc-expanded-map .mmc-map {
+  width: 100%;
+  height: 100%;
+}
+/* HP отдельно от карты (задача 1 ТЗ 17.10.2026): рамка группы HP поверх
+   карты — её тянут, а карта стоит. */
+.mmc-vitals-handle {
+  position: absolute;
+  z-index: 120;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: 1px dashed var(--astral-line-focus);
+  outline-offset: 1px;
+  cursor: move;
+  touch-action: none;
+}
+.mmc-vitals-handle:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+}
+/*
+ * Размытие игры вокруг карты — когда человек оставил его «как в игре».
+ *
+ * Коробка стоит по записи `minimap_blur`, а форму ей даёт маска, снятая с
+ * текстуры игры `radarmasksm` (512×256): плотный прямоугольник карты и мягкий
+ * ореол вокруг. Проценты — края этого прямоугольника и конец ореола на
+ * текстуре. Убрано размытие — коробки нет, и край карты на кадре чёткий.
+ */
+.mmc-blur-halo {
+  position: absolute;
+  pointer-events: none;
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 5.5%,
+      black 11.3%,
+      black 64.1%,
+      transparent 69.9%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 4.7%,
+      black 16.4%,
+      black 83.2%,
+      transparent 94.9%
+    );
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(
+      to right,
+      transparent 5.5%,
+      black 11.3%,
+      black 64.1%,
+      transparent 69.9%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 4.7%,
+      black 16.4%,
+      black 83.2%,
+      transparent 94.9%
+    );
+  -webkit-mask-composite: source-in;
+}
+.mmc-position-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.mmc-position-grid > .ui-button:first-child {
+  grid-column: 1 / -1;
+}
+/*
+ * Стороны обводки: четыре кнопки вокруг маленькой карты, каждая на своём
+ * месте. Ряд из четырёх одинаковых кнопок заставлял читать подписи; здесь
+ * сторона выбирается местом, а карта посередине сразу показывает, что вышло.
+ * Кнопки — обычные `Button` словаря в состоянии «нажата».
+ */
+.mmc-sides {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    ". top ."
+    "left map right"
+    ". bottom .";
+  align-items: center;
+  gap: 6px;
+  margin: 9px 0;
+}
+.mmc-sides > [data-side="top"] {
+  grid-area: top;
+}
+.mmc-sides > [data-side="right"] {
+  grid-area: right;
+}
+.mmc-sides > [data-side="bottom"] {
+  grid-area: bottom;
+}
+.mmc-sides > [data-side="left"] {
+  grid-area: left;
+}
+/* Карта посередине: включённая сторона — цветом обводки, выключенная —
+   пунктир. Поле тёмное в обеих темах — это кусок HUD игры, а не поверхность
+   лаунчера: на светлой белая обводка на светлом поле пропала бы, а именно
+   белую берут чаще всего. */
+.mmc-sides-map {
+  grid-area: map;
+  aspect-ratio: 179 / 115;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  background: #14171d;
+}
+.mmc-section-hint {
+  margin: 0 0 10px;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  line-height: 1.45;
+}
+/* В разделе-сетке промежуток задаёт сам раздел: свои поля строки выбора и
+   пояснения ложились сверху — 25 px вместо 12 (18.10.2026, владелец:
+   «отступ слишком большой» в «Размытии»). */
+.mmc-panel-section > :is(.mmc-choice-row, .mmc-section-hint, .mmc-preset-picker) {
+  margin-block: 0;
+}
+/* Ссылка «Большая карта на мини-карте» (17.10): своя строка под дальностью. */
+.mmc-big-map-link {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--astral-line);
+}
+.mmc-big-map-link .mmc-section-hint {
+  margin: 0;
+}
+.mmc-widget-list {
+  display: grid;
+  gap: 5px;
+}
+/*
+ * Строка списка не коробка. Своя заливка у каждой строки превращала список в
+ * стопку одинаковых серых плашек, в которой выбранная отличалась только
+ * рамкой. Теперь заливка означает ровно одно — «эта выбрана», а остальные
+ * лежат прямо на колонке.
+ */
+.mmc-widget-row {
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  font-size: 11px;
+}
+.mmc-widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 9px;
+}
+.mmc-widget-row:hover {
+  background: var(--astral-surface);
+}
+.mmc-widget-pick {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 9px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mmc-widget-pick > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mmc-widget-pick:disabled {
+  cursor: default;
+}
+.mmc-widget-row.is-active {
+  border-color: var(--astral-line-strong);
+  background: var(--astral-surface-hover);
+}
+/* Снятый элемент правится только после того, как его вернули на карту:
+   строка приглушена, и выбрать её нельзя. */
+.mmc-widget-row.is-hidden {
+  opacity: 0.55;
+}
+.mmc-widget-list svg {
+  width: 14px;
+  color: var(--mmc-muted);
+}
+/* Поля выбранного элемента — под самой строкой, а не отдельным разделом
+   ниже: человек щёлкает по «Цифры HP» и тут же двигает их. */
+.mmc-widget-fields {
+  display: block;
+  padding: 2px 9px 10px;
+  border-top: 1px solid var(--astral-line);
+}
+.mmc-widget-fields .mmc-toggle-row {
+  margin-bottom: 0;
+}
+.mmc-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+  color: var(--mmc-muted);
+  font-size: 11px;
+}
+/* Вид выбора цвета общий (`.ui-color`); здесь остаётся только отступ между
+   строками: у мини-карты цвета идут списком, а не внутри плашки с готовым шагом. */
+.mmc-color-control {
+  margin: 9px 0;
+}
+.mmc-choice-row {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 13px;
+  color: var(--mmc-muted);
+  font-size: 11px;
+}
+.mmc-choice-row:last-child {
+  margin-bottom: 0;
+}
+.mmc-preset-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 11px 0 5px;
+  color: var(--mmc-muted);
+  font-size: 11px;
+}
+.mmc-preset-picker > div {
+  display: flex;
+  gap: 5px;
+}
+.mmc-preset-picker button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 32px;
+  border: 1px solid var(--mmc-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--mmc-panel);
+  color: var(--mmc-muted);
+  cursor: pointer;
+}
+.mmc-preset-picker button.is-active {
+  border-color: var(--astral-accent);
+  background: var(--astral-accent);
+  color: var(--astral-accent-ink);
+}
+.mmc-preset-picker svg {
+  width: 16px;
+  height: 16px;
+}
+/* Значки-шкалы HP и брони (10.11.2026): выбор вида — «Картинка» и шесть шкал в одну строку, подпись над ней (колонка инспектора узкая). */
+.mmc-vital-picker {
+  display: grid;
+  gap: 6px;
+  margin: 11px 0 5px;
+  color: var(--mmc-muted);
+  font-size: 11px;
+}
+.mmc-vital-picker i {
+  font-style: normal;
+}
+.mmc-vital-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mmc-vital-picker button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--mmc-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--mmc-panel);
+  color: var(--mmc-muted);
+  cursor: pointer;
+}
+.mmc-vital-picker button.is-active {
+  border-color: var(--astral-accent);
+  background: var(--astral-accent);
+  color: var(--astral-accent-ink);
+}
+.mmc-vital-picker svg {
+  width: 18px;
+  height: 18px;
+}
+.mmc-vital-thumb {
+  display: block;
+  overflow: visible;
+}
+.mmc-panel-section > .mmc-vital-picker {
+  margin-block: 0;
+}
+/* Шкала на карте: тот же квадрат, что у значка-картинки; цвет и подложка — в самой фигуре. */
+.mmc-vital-shape {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+/* Мигание малого запаса — как в игре: 12 кадров, на шестом шкала проседает до четверти яркости (длительность — из кадров фильма, в разметке). */
+.mmc-vital-blink {
+  animation-name: mmc-vital-blink;
+  animation-timing-function: step-end;
+  animation-iteration-count: infinite;
+}
+@keyframes mmc-vital-blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mmc-vital-blink {
+    animation: none;
+  }
+}
+.mmc-vital-preset {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+/* Вспышка как у игры: пик силы, задержка 0,2 с из 1,7 (12 %), затем гаснет
+   до нуля. */
+@keyframes mmc-flash {
+  0%,
+  12% {
+    opacity: var(--mmc-flash-peak, 0.75);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* Вылетающая цифра урона (задача 8): над полосой, поднимается на две с
+   небольшим высоты кегля, чуть растёт и гаснет — те же кадры, что кладёт в
+   игру компилятор. Длительность ставит разметка. */
+.mmc-float-number {
+  position: absolute;
+  z-index: 7;
+  color: var(--mmc-game-ink);
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px var(--mmc-game-shadow);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: mmc-float-rise 900ms ease-out forwards;
+}
+@keyframes mmc-float-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, calc(-50% - 0.5em)) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 2.2em)) scale(1.15);
+  }
+}
+.mmc-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mmc-section-head h3 {
+  margin: 0;
+}
+/* Узкое окно: кадр ниже, и поля вокруг карты уступают ей место. */
+@media (max-width: 1100px) {
+  .mmc-preview-frame {
+    padding: 56px 32px 48px;
+  }
+}
+.mmc-asset-upload {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 11px 0;
+  color: var(--mmc-muted);
+  font-size: 11px;
+}
+.mmc-asset-upload > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.mmc-asset-upload svg {
+  width: 14px;
+  height: 14px;
+}
+.mmc-asset-upload input {
+  display: none;
+}
+.mmc-asset-upload b {
+  padding: 7px 9px;
+  border: 1px solid var(--mmc-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-raised);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-micro);
+  cursor: pointer;
+  font-weight: 500;
+}
+/* Своя картинка урона: на своём месте внутри радара (`minimapDamageImageBox`),
+   что за краем радара — не видно, как в игре. */
+.mmc-damage-flash.has-image {
+  background: none;
+  overflow: hidden;
+}
+.mmc-damage-image {
+  position: absolute;
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+/* «Держать вспышку в предпросмотре»: стоит на пике, пока её настраивают. */
+.mmc-damage-flash.is-held {
+  animation-name: none;
+  opacity: var(--mmc-flash-peak, 0.75);
+}
+/* Анимации выключены (в Windows или в «Настройках»): выключатель движения
+   доигрывает затухание за 0,01 мс, и вспышки в предпросмотре не было вовсе —
+   правка силы, цвета и размера «не работала» (бета 14.10.2026, bondar). Без
+   движения вспышка стоит на пике свою длительность и пропадает без затухания:
+   её снимает таймер редактора. */
+[data-motion="off"] .mmc-damage-flash {
+  animation-name: none;
+  opacity: var(--mmc-flash-peak, 0.75);
+}
+/* Оттенок своей картинки урона — умножением, как в игре. */
+.mmc-damage-tint {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Ряд выбора: подпись над переключателем. Колонка инспектора узкая, и четыре
+   варианта в строку с подписью слева не помещались ни при какой ширине. */
+.mmc-choice-row {
+  display: grid;
+  gap: 7px;
+}
+
+.mmc-choice-row > span {
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+}
+
+/* Варианты — в одну строку поровну, пока влезают; не влезли — следующим рядом на всю ширину (орган
+   `ui-segmented`, ТЗ 22.10.2026, п. 3): прежняя сетка «поровну» резала подпись («Ohne Hinter…»). */
+
+/* Органы демонстрации урона — в углу кадра (`StageBar`): слева пуск, шаг и
+   сброс, справа то, что происходит с персонажем, и дальность, которую
+   показывает карта. Плашку угла рисует каркас; своей коробки у группы
+   кнопок нет — коробка в коробке читалась бы двумя органами. */
+.mmc-demo-transport {
+  display: inline-flex;
+  gap: 2px;
+}
+/* В разделе «Урон с картинками» три кнопки пробы идут столбиком, с подписями словами (22.11.2026). */
+.mmc-panel-section > .mmc-demo-transport {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.mmc-demo-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 0 8px;
+}
+
+.mmc-demo-readout > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+}
+
+.mmc-demo-readout b {
+  color: var(--astral-ink);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mmc-demo-readout small {
+  color: var(--astral-ink-faint);
+  font-size: 11px;
+}
+
+/* Значок на полосе HP и брони. Место и размер считает `minimapBarIconRect` —
+   тем же расчётом значок уходит в игру, — здесь только то, как рисуется маска. */
+.mmc-bar-icon {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+
+/* «Заливка полос» (задача 8): заголовок с «Стандартом», переключатели
+   полосы и вида заливки, сетка готовых анимаций. */
+.mmc-fill-panel {
+  display: grid;
+  gap: 10px;
+}
+.mmc-fill-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mmc-fill-head h3 {
+  margin: 0;
+}
+.mmc-fill-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.mmc-fill-preset {
+  display: grid;
+  gap: 5px;
+  min-height: 48px;
+  padding: 6px;
+  border: 1px solid var(--mmc-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--mmc-card);
+  color: var(--mmc-muted);
+  text-align: left;
+  cursor: pointer;
+}
+/* Кегль — у подписи: кнопки оболочки редактора наследуют шрифт панели
+   (`.mmc-shell :is(button, …)`), как у раскладок выше. */
+.mmc-fill-preset > span {
+  font-size: 11px;
+  line-height: 1.2;
+}
+.mmc-fill-preset.is-active {
+  border-color: var(--astral-accent);
+  background: var(--astral-surface-raised);
+  color: var(--astral-ink);
+}
+.mmc-fill-swatch {
+  display: block;
+  width: 100%;
+  height: 12px;
+  border-radius: var(--astral-radius-xs);
+}
+.mmc-section-hint.is-error {
+  color: var(--astral-danger);
+}
+.mmc-section-hint.is-warning {
+  color: var(--astral-warning);
+}
+.mmc-asset-upload.is-busy b {
+  cursor: progress;
+}
+
+/*
+ * «Структура» (задача 15 ТЗ 10.10.2026, вечер): плитки по две в ряд, в
+ * плитке — схема мини-карты с полосами там, где их поставит раскладка.
+ * Схема — кусок HUD игры, поэтому поле тёмное, а полосы — цветами работы.
+ */
+.mmc-structures {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+.mmc-structures .ui-choice-media {
+  aspect-ratio: 191 / 136;
+  background: transparent;
+}
+/* «Рамка» (ТЗ 22.10): шаблоны плитками по две в ряд, в плитке — радар и его рамка теми же сторонами и цветом. */
+.mmc-frame-templates {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+.mmc-frame-templates .ui-choice-media {
+  aspect-ratio: 100 / 64;
+  background: transparent;
+}
+.mmc-frame-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Кадр «Маршрута» — готовая картинка, а не карта под щелчок (ТЗ 22.10): курсор обычный. */
+.mmc-gps-stage .gps-map {
+  cursor: default;
+}
+/* Длины двух вариантов над кадром: выбранный подсвечен, второй виден для сравнения. */
+.mmc-gps-compare {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 6px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+.mmc-gps-compare > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.mmc-gps-compare > span.is-active {
+  color: var(--astral-ink);
+}
+.mmc-gps-compare b {
+  font-weight: 650;
+}
+.mmc-structure-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.mmc-structure-map {
+  fill: #2c333b;
+}
+.mmc-structure-strip {
+  fill: rgba(0, 0, 0, 0.55);
+}
+/* Плитка без картинки — текст не уходит под галочку выбранной. */
+.mmc-structures > .ui-choice .ui-choice-copy {
+  padding-right: 4px;
+}
+
+/* «Как отнимается HP»: подсказка и кнопка, когда цифр на карте нет. */
+.mmc-loss-numbers {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+
+/*
+ * Шрифт цифр в кадре: в игре — шрифт HUD самой игры (`$Font2_cond` или
+ * `$Font2`), здесь — шрифт Astral той же ширины, и подпись редактора так и
+ * говорит.
+ */
+.mmc-indicator.is-font-cond {
+  font-stretch: 75%;
+  letter-spacing: -0.02em;
+}
+.mmc-indicator.is-font-regular {
+  font-stretch: 100%;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+/* «Цифры»: щелчок по карте ставит цифры — курсор говорит об этом. */
+.mmc-stage.is-placing-numbers .mmc-radar {
+  cursor: text;
+}
+
+/*
+ * Как вылетает цифра урона (задача 15 ТЗ 10.10.2026, вечер) — те же кадры,
+ * что кладёт в игру компилятор (`floatNumberSprite`): вверх (`rise`, как
+ * было), вниз, вспышкой на месте, в сторону.
+ */
+.mmc-float-number.is-fall {
+  animation-name: mmc-float-fall;
+}
+.mmc-float-number.is-pop {
+  animation-name: mmc-float-pop;
+}
+.mmc-float-number.is-side {
+  animation-name: mmc-float-side;
+}
+@keyframes mmc-float-fall {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, calc(-50% + 0.3em)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 1.6em)) scale(0.9);
+  }
+}
+@keyframes mmc-float-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+@keyframes mmc-float-side {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(calc(-50% + 0.4em), calc(-50% - 0.2em)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + 2.4em), calc(-50% - 0.9em)) scale(1.05);
+  }
+}
+
+/*
+ * Экран: метка прицела и ручки элементов (21.11.2026).
+ *
+ * Метка — крестик в середине экрана игры, там стоит прицел: белый, с тёмной обводкой, чтобы читался и на светлом кадре, и на тёмном.
+ * Мышь она не берёт — под ней карта и её ручки. Ручка — по одной на каждый видимый элемент группы HP (`ScreenHandles.jsx`): рамка
+ * пунктиром на месте элемента, значок внутри красится цветом своей стороны (HP или броня); взятая — сплошной рамкой.
+ * Две готовые раскладки индикатора лежат рядом, по две в ряд (`.mmc-position-grid` не годится: его первая кнопка идёт на всю строку).
+ */
+.mmc-aim-mark {
+  --mmc-aim-ink: var(--astral-ink);
+  --mmc-aim-edge: var(--astral-surface-strong);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.mmc-aim-mark::before,
+.mmc-aim-mark::after {
+  content: "";
+  position: absolute;
+  background: var(--mmc-aim-ink);
+  box-shadow: 0 0 0 1px var(--mmc-aim-edge);
+}
+.mmc-aim-mark::before {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+.mmc-aim-mark::after {
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+.mmc-screen-handle {
+  position: absolute;
+  z-index: 130;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px dashed var(--astral-line-focus);
+  border-radius: var(--astral-radius-xs);
+  background: transparent;
+  color: var(--astral-ink);
+  cursor: move;
+  touch-action: none;
+  transform: translate(-50%, -50%);
+}
+.mmc-screen-handle svg {
+  width: 14px;
+  height: 14px;
+  filter: drop-shadow(0 0 2px var(--astral-surface-strong));
+}
+.mmc-screen-handle:hover {
+  background: var(--astral-surface-hover);
+}
+.mmc-screen-handle.is-selected {
+  border-style: solid;
+  border-color: var(--astral-ink);
+  background: var(--astral-surface-raised);
+}
+.mmc-screen-handle:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+.mmc-indicator-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/*
+ * Плашка под HP и бронёй (21.11.2026).
+ *
+ * Слой плашки — весь кадр сцены, фигуры лежат в точках сцены; цвет и прозрачность приходят из проекта строкой. Мышь он не берёт. Когда броня «только когда она есть» уходит,
+ * плашка сжимается и гаснет, а значок и цифры брони гаснут вместе с ней: контур (`d`) и прозрачность идут плавно за один промежуток (`--astral-duration`).
+ * Значок и цифры брони при этом не пропадают из разметки — стоят на своих местах невидимыми и мышь не берут.
+ */
+.mmc-vital-plate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.mmc-vital-plate-shape,
+.mmc-vital-plate-divider {
+  transition:
+    d var(--astral-duration) var(--astral-ease),
+    opacity var(--astral-duration) var(--astral-ease);
+}
+.mmc-widget.is-fading {
+  transition: opacity var(--astral-duration) var(--astral-ease);
+}
+.mmc-widget.is-absent {
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--astral-duration) var(--astral-ease),
+    visibility 0s linear var(--astral-duration);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mmc-vital-plate-shape,
+  .mmc-vital-plate-divider,
+  .mmc-widget.is-fading,
+  .mmc-widget.is-absent {
+    transition: none;
+  }
+}
+/* Раздел «Подложка и броня»: выбор вида плашки — те же кнопки с миниатюрой, что у вида значка; недоступный вид стоит бледным. */
+.mmc-vital-picker button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* Готовых раскладок четыре («Числа со значком», «Шкала», «Плашка HP», «Сердце и жилет»): два ряда по две кнопки. */
+
+/*
+ * «Тонкая настройка» (22.11.2026, владелец: «должно быть всё просто»): всё, кроме готового вида и главных ручек, лежит в одном сворачиваемом
+ * разделе в конце панели, по умолчанию закрытом (`minimap-tools/FineSettings.jsx`). Разделы внутри — те же, что и в панели:
+ * заголовок и воздух, без коробки в коробке.
+ */
+.mmc-fine {
+  border-top: 1px solid var(--astral-line);
+}
+.mmc-fine[hidden] {
+  display: none;
+}
+.mmc-fine-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.mmc-fine-summary::-webkit-details-marker {
+  display: none;
+}
+.mmc-fine-summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+}
+.mmc-fine[open] > .mmc-fine-summary::before {
+  content: "\2212";
+}
+.mmc-fine-summary:hover {
+  color: inherit;
+}
+[data-theme].desktop-app .mmc-inspector .mmc-fine .mmc-fine-body > .ui-panel {
+  padding: 14px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent none !important;
+}
+[data-theme].desktop-app .mmc-inspector .mmc-fine .mmc-fine-body > .ui-panel + .ui-panel {
+  border-top: 1px solid var(--astral-line);
+}
+
+/* Проба здоровья и брони в углу кадра (22.11.2026): подпись, числа и одна кнопка жилета. */
+.mmc-demo-probe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.mmc-demo-probe-title {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+}
+/* Пункт меню «Фон кадра»: название и подсказка в строку. */
+.mmc-menu-choice {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+.mmc-menu-choice small {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* «Разрешение игры» (22.11.2026): готовые разрешения кнопками по две в ряд, затем своё — ширина, высота и формат. */
+.mmc-resolution {
+  display: grid;
+  gap: 10px;
+}
+.mmc-resolution-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.mmc-resolution-presets > .ui-button[aria-pressed="true"] {
+  border-color: var(--astral-accent);
+}
+.mmc-resolution-custom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+.mmc-resolution-custom > :last-child {
+  grid-column: 1 / -1;
+}
+
+/* «Разрешение игры»: «Как в игре» — кнопкой, как готовые разрешения; «Своё разрешение» — под одной строкой (22.11.2026). */
+.mmc-resolution-reset {
+  width: 100%;
+}
+.mmc-resolution-own {
+  display: grid;
+  gap: 8px;
+}
+.mmc-resolution-own-summary {
+  cursor: pointer;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  list-style: none;
+}
+.mmc-resolution-own-summary::-webkit-details-marker {
+  display: none;
+}
+.mmc-resolution-own-summary::before {
+  content: "+";
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+}
+.mmc-resolution-own[open] > .mmc-resolution-own-summary::before {
+  content: "\2212";
+}
+.mmc-resolution-own > :not(summary) {
+  margin-top: 8px;
+}

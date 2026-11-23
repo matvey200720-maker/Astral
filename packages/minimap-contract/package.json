@@ -1,0 +1,23 @@
+{
+  "name": "@modovik/minimap-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./fills": "./fills.js",
+    "./vital-icons": "./vital-icons.js",
+    "./gps": "./gps.js",
+    "./group-markers": "./group-markers.js",
+    "./paths": "./paths.js",
+    "./gps-marker": "./gps-marker.js",
+    "./overlays": "./overlays.js",
+    "./distance": "./distance.js",
+    "./big-map": "./big-map.js",
+    "./game-screen": "./game-screen.js",
+    "./reconcile": "./reconcile.js",
+    "./vital-plate": "./vital-plate.js",
+    "./big-screen": "./big-screen.js",
+    "./vital-plate-layout": "./vital-plate-layout.js"
+  }
+}

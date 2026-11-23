@@ -1,0 +1,642 @@
+/*
+  «Сборки» — новая сборка (дизайн 15.11.2026, макет r3/builds/builds-C-create, вариант «Стопка»): три колонки — откуда и вид, список, «Ваша стопка».
+  Лист ленивый: едет в куске страницы сборок (`BuildCreatePage.jsx`).
+*/
+@layer overrides {
+  .desktop-app .builds-create {
+    --builds-chrome: 40px;
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr) 400px;
+    height: calc(100vh - var(--builds-chrome));
+    min-height: 560px;
+    overflow: hidden;
+  }
+
+  /* ---------- слева: откуда и вид ---------- */
+  .desktop-app .builds-create-nav {
+    min-height: 0;
+    padding: 26px 14px;
+    overflow-y: auto;
+    border-right: 1px solid var(--astral-line);
+  }
+
+  .desktop-app .builds-create-crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    margin: 0 6px 18px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-create-crumb:hover {
+    color: #fff;
+  }
+
+  .desktop-app .builds-create-crumb svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .desktop-app .builds-create-nav h2,
+  .desktop-app .builds-create-stack h2 {
+    margin: 0 8px 8px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .desktop-app .builds-create-nav h2.builds-create-nav-gap {
+    margin-top: 22px;
+  }
+
+  .desktop-app .builds-create-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius);
+    background: transparent;
+    color: #cfcfd3;
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-create-nav-item:hover {
+    color: #fff;
+  }
+
+  .desktop-app .builds-create-nav-item.is-active {
+    border-color: var(--astral-line-strong);
+    background: rgba(255, 255, 255, 0.065);
+    color: #fff;
+  }
+
+  .desktop-app .builds-create-nav-item:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 1px;
+  }
+
+  .desktop-app .builds-create-nav-item svg {
+    flex: none;
+    width: 17px;
+    height: 17px;
+  }
+
+  .desktop-app .builds-create-nav-item span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-create-nav-item b {
+    margin-left: auto;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+  }
+
+  .desktop-app .builds-create-nav-item em {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: auto;
+    border-radius: var(--astral-radius-xs);
+    background: #fff;
+    color: #000;
+    font-size: var(--astral-text-micro);
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  /* ---------- посередине: название, поиск, список ---------- */
+  .desktop-app .builds-create-mid {
+    min-width: 0;
+    min-height: 0;
+    padding: 24px 28px 28px;
+    overflow-y: auto;
+  }
+
+  .desktop-app .builds-create-title {
+    display: flex;
+    align-items: center;
+    height: 54px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .desktop-app .builds-create-title input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--astral-text-hero);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    outline: 0;
+  }
+
+  .desktop-app .builds-create-title input::placeholder {
+    color: rgba(244, 244, 245, 0.62);
+  }
+
+  .desktop-app .builds-create-pen {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-left: 8px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.07);
+    color: #e6e6e8;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-create-pen:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .desktop-app .builds-create-pen svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .desktop-app .builds-create-title.is-code input {
+    font-family: var(
+      --astral-font-mono,
+      "JetBrains Mono",
+      Consolas,
+      "Cascadia Mono",
+      monospace
+    );
+    font-size: var(--astral-text-section);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .desktop-app .builds-create-title input:focus-visible {
+    box-shadow: 0 1px 0 0 var(--astral-line-focus);
+  }
+
+  .desktop-app .builds-create-hint {
+    margin: 8px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .builds-create-hint.is-error {
+    color: var(--astral-danger);
+  }
+
+  .desktop-app .builds-create-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 12px;
+  }
+
+  .desktop-app .builds-create-search {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .builds-create-search:focus-within {
+    border-color: var(--astral-line-focus);
+  }
+
+  .desktop-app .builds-create-search svg {
+    flex: none;
+    width: 17px;
+    height: 17px;
+  }
+
+  .desktop-app .builds-create-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: var(--astral-text-body);
+    outline: 0;
+  }
+
+  .desktop-app .builds-create-search input::placeholder {
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .builds-create-seg {
+    display: flex;
+    padding: 3px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .builds-create-seg button {
+    height: 34px;
+    padding: 0 15px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-create-seg button.is-on {
+    border-color: var(--astral-line-strong);
+    background: rgba(255, 255, 255, 0.065);
+    color: #fff;
+  }
+
+  .desktop-app .builds-create-bulk {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+
+  .desktop-app .builds-create-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .desktop-app .builds-create-row {
+    margin-bottom: 3px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius);
+  }
+
+  .desktop-app .builds-create-row > label,
+  .desktop-app .builds-create-row:not(:has(> label)) {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 60px;
+    padding: 0 12px 0 8px;
+  }
+
+  .desktop-app .builds-create-row > label {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-create-row > label > input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-create-row:has(> label > input:focus-visible) {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 1px;
+  }
+
+  .desktop-app .builds-create-row.is-sel {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .builds-create-row.is-blocked {
+    opacity: 0.6;
+  }
+
+  .desktop-app .builds-create-box {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 1.5px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    color: #000;
+  }
+
+  .desktop-app .builds-create-box.is-on {
+    border-color: #fff;
+    background: #fff;
+  }
+
+  .desktop-app .builds-create-box svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .desktop-app .builds-create-thumb,
+  .desktop-app .builds-stack-thumb,
+  .desktop-app .builds-fan-pic {
+    display: block;
+    flex: none;
+    overflow: hidden;
+    background: var(--astral-surface-sunken);
+  }
+
+  .desktop-app .builds-create-thumb {
+    width: 84px;
+    height: 46px;
+    border: 1px solid var(--astral-line);
+    border-radius: 8px;
+  }
+
+  .desktop-app .builds-create-thumb img,
+  .desktop-app .builds-stack-thumb img,
+  .desktop-app .builds-fan-pic img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .desktop-app .is-contain img {
+    object-fit: contain;
+  }
+
+  .desktop-app .builds-create-thumb > *,
+  .desktop-app .builds-stack-thumb > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  .desktop-app .builds-create-name {
+    display: grid;
+    min-width: 0;
+  }
+
+  .desktop-app .builds-create-name b {
+    overflow: hidden;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-create-name > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-create-name > span.is-caution {
+    color: var(--astral-warning);
+  }
+
+  .desktop-app .builds-create-size {
+    margin-left: auto;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-create-note {
+    margin: 18px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.5;
+  }
+
+  /* ---------- справа: «Ваша стопка» ---------- */
+  .desktop-app .builds-create-side {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-left: 1px solid var(--astral-line);
+    background: #050506;
+  }
+
+  .desktop-app .builds-create-stack {
+    flex: 1;
+    min-height: 0;
+    padding: 26px 24px 0;
+    overflow-y: auto;
+  }
+
+  .desktop-app .builds-fan-wrap {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 150px;
+    margin-bottom: 18px;
+    padding-bottom: 6px;
+    border-radius: var(--astral-radius-lg);
+    background: radial-gradient(
+      70% 90% at 50% 100%,
+      rgba(255, 255, 255, 0.08),
+      transparent 70%
+    );
+  }
+
+  .desktop-app .builds-fan-stack {
+    position: relative;
+    height: 102px;
+  }
+
+  .desktop-app .builds-fan-card {
+    position: absolute;
+    top: 8px;
+    width: 140px;
+    height: 86px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    transform-origin: 50% 100%;
+  }
+
+  .desktop-app .builds-fan-pic {
+    width: 100%;
+    height: 100%;
+  }
+
+  .desktop-app .builds-stack-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .builds-stack-total b {
+    font-weight: 600;
+  }
+
+  .desktop-app .builds-stack-total > span {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .builds-stack-meter {
+    display: flex;
+    gap: 2px;
+    height: 10px;
+    margin: 6px 0 10px;
+    overflow: hidden;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .builds-stack-meter i {
+    display: block;
+    height: 100%;
+  }
+
+  .desktop-app .builds-stack-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 0;
+    padding: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    list-style: none;
+  }
+
+  .desktop-app .builds-stack-legend li::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 2px;
+    background: var(--c);
+  }
+
+  .desktop-app .builds-stack-compare {
+    display: flex;
+    gap: 22px;
+    margin: 14px 0 0;
+  }
+
+  .desktop-app .builds-stack-compare div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .desktop-app .builds-stack-compare dt {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .builds-stack-compare dd {
+    margin: 0;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .desktop-app .builds-stack-compare dd.is-caution {
+    color: var(--astral-warning);
+  }
+
+  .desktop-app .builds-stack-list {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .desktop-app .builds-stack-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 40px;
+    padding: 0 6px 0 4px;
+    border-bottom: 1px solid var(--astral-line);
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .builds-stack-list li > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-stack-thumb {
+    width: 44px;
+    height: 28px;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .builds-stack-list em {
+    margin-left: auto;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-stack-more {
+    margin: 8px 4px 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .builds-stack-warn {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 0;
+    padding: 11px 13px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    color: #d7d7da;
+    font-size: var(--astral-text-body);
+    line-height: 1.4;
+  }
+
+  .desktop-app .builds-stack-warn svg {
+    flex: none;
+    width: 17px;
+    height: 17px;
+    margin-top: 1px;
+  }
+
+  .desktop-app .builds-create-cta {
+    display: flex;
+    gap: 10px;
+    padding: 16px 24px 26px;
+  }
+
+  .desktop-app .builds-create-cta .ui-button.is-primary {
+    flex: 1;
+    justify-content: center;
+  }
+}

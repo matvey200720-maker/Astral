@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
+    <meta name="robots" content="noindex" />
+    <!--
+      Стенд наложения эффекта на кадр игры (docs/fx-scenes.md). Синтетическая сцена того же формата (кадр РИСОВАННЫЙ: колонна, земля,
+      стена), правила частиц — из базы игрока, которую отдаёт dev-сервер (/__astral/qa/impact-base). Отдельная страница разработчика, как
+      ptfx-lab: в продуктовую сборку не входит.
+    -->
+    <title>Astral — стенд кадра игры</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #050505; color: #ddd; font: 13px system-ui, sans-serif; }
+      #lab { display: grid; grid-template-columns: 1fr 300px; height: 100%; }
+      #stage { position: relative; min-height: 0; display: grid; place-items: center; }
+      #frame { position: relative; max-width: 100%; max-height: 100%; }
+      #frame canvas { width: 100%; height: 100%; display: block; }
+      #caption { position: absolute; left: 10px; bottom: 8px; padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.55); color: #ccc; font-size: 12px; }
+      #panel { padding: 12px; overflow: auto; border-left: 1px solid #222; display: grid; gap: 10px; align-content: start; }
+      label { display: grid; gap: 4px; }
+      select, input, button { width: 100%; box-sizing: border-box; }
+      #info { white-space: pre-wrap; font: 11px ui-monospace, monospace; color: #9a9a9a; }
+    </style>
+  </head>
+  <body>
+    <div id="lab">
+      <div id="stage">
+        <div id="frame"><canvas id="canvas"></canvas><div id="caption"></div></div>
+      </div>
+      <div id="panel">
+        <label>Сцена
+          <select id="scene">
+            <option value="tracer">tracer — очередь по вееру impacts[]</option>
+            <option value="hit-chest">hit — в тело (chest)</option>
+            <option value="hit-head">hit — в голову (head)</option>
+            <option value="kill">kill — серия кадров</option>
+            <option value="screen-hit-third">screen-hit — от третьего лица</option>
+            <option value="screen-hit-first">screen-hit — от первого лица</option>
+          </select>
+        </label>
+        <label>Ширина кадра <select id="width"><option value="640">640</option><option value="1280" selected>1280</option></select></label>
+        <label>Точек в веере <select id="fan"><option value="1">1</option><option value="8">8</option><option value="10" selected>10</option><option value="12">12</option></select></label>
+        <button id="shoot" type="button">Выстрел</button>
+        <label><span><input id="loop" type="checkbox" style="width:auto" /> Повторять</span></label>
+        <label><span><input id="occlusion" type="checkbox" style="width:auto" checked /> Глубина кадра (отсечение)</span></label>
+        <div id="info"></div>
+      </div>
+    </div>
+    <script type="module" src="/dev/fx-frame-lab/main.js"></script>
+  </body>
+</html>

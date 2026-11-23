@@ -1,0 +1,15 @@
+/*
+ * Петля на плитке каталога при наведении (`HoverLoop.jsx`, 10.11.2026): ролик ложится на кадр плитки поверх картинки, под плашкой и подписью.
+ * Он не ловит мышь — карточка остаётся нажимаемой целиком. Лист ленивый, едет вместе с первой плиткой, у которой есть петля.
+ */
+@layer overrides {
+  .desktop-app .ui-media-card-frame > .astral-hover-loop {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+}

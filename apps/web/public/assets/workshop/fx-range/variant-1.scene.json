@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "video": "variant-1.loop.mp4",
+  "poster": "variant-1.poster.webp",
+  "size": [1280, 720],
+  "fps": 24,
+  "camera": "locked",
+  "muzzle": [0.524, 0.501],
+  "targets": [
+    { "id": "near", "at": [0.568, 0.406], "distance": 0.57 },
+    { "id": "mid", "at": [0.635, 0.372], "distance": 0.81 },
+    { "id": "far", "at": [0.732, 0.386], "distance": 1.0 }
+  ],
+  "occluders": [],
+  "ambient": { "tone": "#efbd8b", "shake": 1.5 },
+  "belt": { "tracerEvery": 5 }
+}

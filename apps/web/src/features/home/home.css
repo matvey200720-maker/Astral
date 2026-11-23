@@ -1,0 +1,1564 @@
+/*
+ * Главная («Обзор») и статья новости в диалоге.
+ * Порядок объявлений в каждом правиле один: переменные, переходы и анимации,
+ * курсор и указатель, цвет текста, эффекты (фильтр, прозрачность,
+ * трансформации, маски), поверхность (тень, обводка, фон), шрифт и перенос,
+ * обрезка, отступы, размеры, раскладка, положение.
+ * Предок в :is() не меняет вес селектора.
+ */
+
+/* ── Статья новости ── */
+
+.news-picture {
+  border-top-left-radius: var(--astral-radius-lg);
+  border-top-right-radius: var(--astral-radius-lg);
+  border-bottom-right-radius: var(--astral-radius-lg);
+  border-bottom-left-radius: var(--astral-radius-lg);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--astral-line);
+  background-color: #0b0b0c;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  margin-block: 0 18px;
+  margin-inline: 0;
+}
+
+:is(.news-picture) img {
+  height: auto;
+  max-height: 420px;
+  width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+:is(.news-changes) h3 {
+  color: var(--astral-ink);
+  font-weight: 600;
+  font-size: var(--astral-text-small);
+  margin-block: 0 12px;
+  margin-inline: 0;
+}
+
+:is(.news-changes) ul {
+  list-style: none;
+  padding-block: 0;
+  padding-inline: 0;
+  margin-block: 0;
+  margin-inline: 0;
+  row-gap: 10px;
+  column-gap: 10px;
+  display: grid;
+}
+
+:is(.news-changes) li {
+  color: var(--astral-ink-muted);
+  line-height: var(--astral-line-normal);
+  font-size: var(--astral-text-body);
+  padding-left: 18px;
+  position: relative;
+}
+
+:is(.news-changes) li::before {
+  border-top-left-radius: 50%;
+  border-top-right-radius: 50%;
+  border-bottom-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  background-color: var(--astral-ink-faint);
+  content: "";
+  height: 5px;
+  width: 5px;
+  left: 3px;
+  top: .62em;
+  position: absolute;
+}
+
+:is(.desktop-app) :is(.news-article.ui-dialog) {
+  width: min(760px, 100%);
+}
+
+:is(.desktop-app) :is(.news-article.ui-dialog) > header {
+  padding-block: 26px 18px;
+  padding-inline: 28px;
+}
+
+:is(.desktop-app) :is(.news-article.ui-dialog) > header h2 {
+  line-height: 1.12;
+  font-weight: 700;
+  font-size: var(--astral-text-hero);
+  letter-spacing: -.025em;
+  margin-top: 4px;
+}
+
+:is(.desktop-app) :is(.news-article.ui-dialog) > header p {
+  color: var(--astral-ink-muted);
+  line-height: var(--astral-line-normal);
+  font-size: var(--astral-text-strong);
+  margin-top: 8px;
+  max-width: 620px;
+}
+
+:is(.desktop-app) :is(.news-article.ui-dialog) > :is(.ui-dialog-body) {
+  padding-block: 4px 24px;
+  padding-inline: 28px;
+}
+
+.news-article-banner {
+  border-top-left-radius: var(--astral-radius-lg);
+  border-top-right-radius: var(--astral-radius-lg);
+  border-bottom-right-radius: var(--astral-radius-lg);
+  border-bottom-left-radius: var(--astral-radius-lg);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--astral-line);
+  background:
+    radial-gradient(ellipse 60% 90% at 50% 0%, rgba(var(--astral-accent-rgb), .16), rgba(0, 0, 0, 0) 70%),
+    radial-gradient(ellipse 50% 70% at 100% 100%, rgba(255, 255, 255, .05), rgba(0, 0, 0, 0) 70%),
+    #070708;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  margin-block: 0 22px;
+  margin-inline: 0;
+  aspect-ratio: 16/5;
+  justify-content: center;
+  align-items: center;
+  row-gap: 14px;
+  column-gap: 14px;
+  display: flex;
+}
+
+:is(.news-article-banner) img {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
+:is(.news-article-banner) span {
+  color: var(--astral-ink);
+  font-weight: 650;
+  font-size: var(--astral-text-title);
+  letter-spacing: -.01em;
+}
+
+:is(.news-article) :is(.news-changes) li {
+  color: var(--astral-ink);
+  border-top-left-radius: var(--astral-radius);
+  border-top-right-radius: var(--astral-radius);
+  border-bottom-right-radius: var(--astral-radius);
+  border-bottom-left-radius: var(--astral-radius);
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--astral-line);
+  background-color: var(--astral-surface);
+  padding-block: 11px;
+  padding-left: 34px;
+  padding-right: 14px;
+}
+
+:is(.news-article) :is(.news-changes) li::before {
+  background-color: var(--astral-accent);
+  left: 16px;
+  top: calc(11px + .62em);
+}
+
+.news-article-pager {
+  row-gap: 4px;
+  column-gap: 4px;
+  display: flex;
+}
+
+/* ── Страница и корень главной ── */
+
+/*
+ * Главная «Кино» (владелец 15.11.2026): герой → «Продолжить» → «Подборка модов». Числа — из макета `design-1511/r6/home`.
+ * Страница одна высота окна: герой тянется по высоте окна, остальное — по месту. 1180×720 — самое тесное окно.
+ * Кегли вне шкалы (68 и 56 пикселей названия героя) идут локальными свойствами.
+ */
+
+[data-page="overview"].desktop-content {
+  padding: 0 !important;
+  max-width: none;
+}
+
+.astral-home {
+  --home-pad: 34px;
+  /* Текст героя слева ещё мельче (владелец, 16.11.2026 вечер: «ты делаешь всё чересчур огромным», мерка — «Серьга Teddy Bear» или чуть меньше):
+     обычное название 40 px, длинное (больше 24 знаков) 30 px, очень длинное (больше 44) 26 px, не больше двух строк с многоточием; кнопки 36 px.
+     Размеры до 34 px — со шкалы аудита (11 · 12 · 13 · … · 26 · 28 · 30 · 34): 32 px сверка называла «мимо шкалы». */
+  --home-title-size: 40px;
+  --home-title-long: 30px;
+  --home-title-very-long: 26px;
+  --home-title-line: 44px;
+  --home-card-w: 206px;
+  --home-card-h: 116px;
+  --home-thumb-w: 128px;
+  --home-thumb-h: 72px;
+  --home-banner-ease: cubic-bezier(0.22, 0.72, 0.24, 1);
+  --home-banner-duration: 900ms;
+  --home-glass: rgba(10, 10, 12, 0.55);
+  color: var(--astral-ink);
+  isolation: isolate;
+  min-width: 0;
+  position: relative;
+  /* Страница ровно по высоте окна (минус заголовок): герой берёт всё, что остаётся после «Продолжить» и ленты, от 332 px (472 — база роста). Прокрутки нет на любом окне от 1180×720, а значит нет и полосы, из-за которой линия под героем не доходила до края;
+     на 1920×1080 и 2560×1440 низ не пустует: герой тянется, а карточки и «Продолжить» растут ярусами (`min-height: 1000px` и `1300px`, ниже). */
+  display: flex;
+  flex-direction: column;
+  height: max(calc(100vh - 40px), 660px);
+}
+
+.astral-home-title {
+  white-space: nowrap;
+  font-size: var(--astral-text-page);
+  overflow: hidden;
+  clip-path: inset(50%);
+  margin: 0;
+  height: 1px;
+  width: 1px;
+  position: absolute;
+}
+
+/* ── Герой: подложка, затемнение, кнопка-обложка ── */
+
+.astral-home-hero {
+  background-color: #000;
+  border-bottom: 1px solid var(--astral-line-strong);
+  overflow: clip;
+  flex: 1 1 472px;
+  min-height: 332px;
+  position: relative;
+}
+
+.astral-home-hero-stage {
+  overflow: hidden;
+  z-index: 0;
+  inset: 0;
+  position: absolute;
+}
+
+.is-render.astral-home-hero .astral-home-hero-stage {
+  background:
+    radial-gradient(ellipse 46% 62% at 69% 38%, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.02) 46%, rgba(0, 0, 0, 0) 72%),
+    radial-gradient(ellipse 34% 6% at 69% 80%, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0) 70%),
+    #000;
+}
+
+/* Три затемнения макета: сверху 150 пикселей, слева 760, снизу 340 — под плашку, название и ленту. */
+.astral-home-hero::before {
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0)) top / 100% 150px no-repeat,
+    linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0)) left / 760px 100% no-repeat,
+    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.9)) bottom / 100% 340px no-repeat;
+  content: "";
+  z-index: 1;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-hero-open {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  z-index: 2;
+  inset: 0;
+  position: absolute;
+}
+
+/* ── Герой: картинка ── */
+
+.astral-home-hero .editorial-featured-media {
+  height: 100%;
+  width: 100%;
+  object-position: 50% 52%;
+  object-fit: cover;
+  display: block;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-hero .is-render.editorial-featured-media,
+.astral-home-hero .is-map.editorial-featured-media,
+.astral-home-hero .is-wave.editorial-featured-media {
+  object-position: center;
+  object-fit: contain;
+}
+
+.astral-home-hero .is-map.editorial-featured-media,
+.astral-home-hero .is-wave.editorial-featured-media {
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* Ствол и вещь на чёрной сцене: правее названия и выше ленты из пяти модов. */
+.astral-home-hero .is-render.editorial-featured-media {
+  -webkit-box-reflect: below 2px linear-gradient(rgba(0, 0, 0, 0) 76%, rgba(255, 255, 255, 0.12));
+  filter: drop-shadow(0 28px 36px rgba(0, 0, 0, 0.7));
+  height: 56%;
+  width: 56%;
+  left: 40%;
+  right: auto;
+  bottom: auto;
+  top: 16%;
+}
+
+.astral-home-hero .is-map.editorial-featured-media {
+  --edge-fade: linear-gradient(90deg, rgba(0, 0, 0, 0), #000 20%, #000 80%, rgba(0, 0, 0, 0)), linear-gradient(180deg, rgba(0, 0, 0, 0), #000 5%, #000 95%, rgba(0, 0, 0, 0));
+  -webkit-mask-image: var(--edge-fade);
+  mask-image: var(--edge-fade);
+  height: 64%;
+  width: 54%;
+  left: auto;
+  right: 4%;
+  bottom: auto;
+  top: 13%;
+}
+
+.astral-home-hero .is-wave.editorial-featured-media {
+  --edge-fade: linear-gradient(90deg, rgba(0, 0, 0, 0), #000 22%, #000 78%, rgba(0, 0, 0, 0)), linear-gradient(180deg, rgba(0, 0, 0, 0), #000 15%, #000 85%, rgba(0, 0, 0, 0));
+  -webkit-mask-image: var(--edge-fade);
+  mask-image: var(--edge-fade);
+  height: 56%;
+  width: 52%;
+  left: auto;
+  right: 4%;
+  bottom: auto;
+  top: 16%;
+}
+
+/* Смена витрины: кадр проявляется, уходящий гаснет; подпись уезжает вверх, новая въезжает снизу. */
+.astral-home-hero .is-current.editorial-featured-media {
+  animation: both astral-home-media-in var(--home-banner-ease) var(--home-banner-duration);
+}
+
+.astral-home-hero .is-previous.editorial-featured-media {
+  animation: both astral-home-media-out var(--home-banner-ease) var(--home-banner-duration);
+}
+
+.astral-home-hero .is-previous.is-render.editorial-featured-media {
+  animation-name: astral-home-render-out;
+  animation-duration: calc(0.5 * var(--home-banner-duration));
+}
+
+/* ── Герой: верхняя полоса ── */
+
+.editorial-featured-topbar {
+  pointer-events: none;
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+  z-index: 4;
+  left: var(--home-pad);
+  right: 30px;
+  top: 22px;
+  position: absolute;
+}
+
+.editorial-featured-topbar > * {
+  pointer-events: auto;
+}
+
+.astral-home-top-left {
+  align-items: center;
+  column-gap: 12px;
+  display: flex;
+}
+
+.editorial-featured-topbar em {
+  color: #000;
+  font-style: normal;
+  font-weight: 600;
+  font-size: var(--astral-text-small);
+  white-space: nowrap;
+  border-radius: 8px;
+  background-color: #fff;
+  height: 24px;
+  padding: 0 9px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.astral-home-bars {
+  align-items: center;
+  column-gap: 5px;
+  display: flex;
+}
+
+.astral-home-bars i {
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+  height: 4px;
+  width: 30px;
+  display: block;
+  position: relative;
+}
+
+.astral-home-bars i.is-done {
+  background-color: #fff;
+}
+
+.astral-home-bars b {
+  transform-origin: left;
+  border-radius: 2px;
+  background-color: #fff;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-bars b[data-running] {
+  animation: both astral-home-progress linear 7000ms;
+}
+
+/* Справа вверху — Discord и Telegram вместо поиска (владелец, 16.11.2026): две кнопки одной высоты с кнопками героя, белые знаки, подпись — название сети. */
+.astral-home-community {
+  column-gap: 8px;
+  align-items: center;
+  display: flex;
+}
+
+.astral-home-net {
+  color: #fff;
+  font-family: inherit;
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--astral-duration-fast) var(--astral-ease), border-color var(--astral-duration-fast) var(--astral-ease);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--astral-radius);
+  background-color: rgba(10, 10, 12, 0.5);
+  padding: 0 12px 0 10px;
+  height: 32px;
+  column-gap: 7px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.astral-home-net:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.astral-home-net svg {
+  flex: none;
+  height: 16px;
+  width: 16px;
+}
+
+.astral-home-net:focus-visible,
+.astral-home-pager-item:focus-visible,
+.astral-home-continue-card:focus-visible,
+.astral-home-card:has(.editorial-latest-open:focus-visible) {
+  outline-offset: 2px;
+  outline: 2px solid var(--astral-line-focus);
+}
+
+/* ── Герой: название, описание, кнопки ── */
+
+.astral-home-hero .editorial-featured-bottom {
+  pointer-events: none;
+  max-width: 560px;
+  z-index: 4;
+  left: var(--home-pad);
+  bottom: 30px;
+  position: absolute;
+}
+
+.astral-home-hero .editorial-featured-bottom :is(a, button, [data-approximate]) {
+  pointer-events: auto;
+}
+
+.astral-home-hero .is-previous.editorial-featured-bottom {
+  animation: astral-home-caption-out both var(--home-banner-ease) calc(0.36 * var(--home-banner-duration));
+}
+
+.astral-home-hero .is-entering.editorial-featured-bottom {
+  animation: astral-home-caption-in var(--home-banner-ease) both calc(0.7 * var(--home-banner-duration)) calc(0.3 * var(--home-banner-duration));
+}
+
+.editorial-featured-copy {
+  justify-items: start;
+  display: grid;
+}
+
+.astral-home-hero-kicker {
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+  font-size: var(--astral-text-small);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.editorial-featured-copy h2 {
+  color: #fff;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  font-family: var(--astral-font-display);
+  font-weight: 400;
+  font-size: var(--home-title-size);
+  line-height: var(--home-title-line);
+  letter-spacing: -0.01em;
+  /* Не больше двух строк, дальше многоточие; не шире колонки текста (560 px) и не выше своего места: блок стоит от низа. */
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 6px 0;
+  max-width: 100%;
+  display: -webkit-box;
+}
+
+.editorial-featured-copy h2[data-length="long"] {
+  font-size: var(--home-title-long);
+  line-height: 1.12;
+}
+
+.editorial-featured-copy h2[data-length="very-long"] {
+  font-size: var(--home-title-very-long);
+  line-height: 1.14;
+}
+
+.astral-home-hero-text {
+  color: rgba(255, 255, 255, 0.84);
+  text-wrap: balance;
+  font-size: var(--astral-text-strong);
+  line-height: 20px;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  max-width: 460px;
+  display: -webkit-box;
+}
+
+.astral-home-hero-actions {
+  align-items: center;
+  column-gap: 8px;
+  margin-top: 14px;
+  display: flex;
+}
+
+/* Кнопки героя компактнее (владелец, 16.11.2026 вечер): 36 px вместо 44, шрифт «тела» (12 px). */
+.astral-home-hero-actions .ui-button.is-lg,
+.astral-home-state {
+  border-radius: var(--astral-radius);
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+  min-block-size: 36px;
+  padding-inline: 16px;
+}
+
+.astral-home-hero-actions .ui-button.is-secondary {
+  border-color: var(--astral-line);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.astral-home-hero-actions .ui-button.is-secondary:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+.astral-home-state {
+  color: #fff;
+  border-radius: var(--astral-radius);
+  background-color: rgba(255, 255, 255, 0.12);
+  height: 36px;
+  column-gap: 8px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.astral-home-state svg {
+  height: 16px;
+  width: 16px;
+}
+
+/* «Откат в один клик»: одна строка, без пояснения про точку возврата (владелец: точку возврата нигде не писать). */
+.astral-home-rollback {
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--astral-text-body);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--astral-radius);
+  background-color: var(--home-glass);
+  margin-left: 2px;
+  padding: 0 12px 0 8px;
+  height: 36px;
+  column-gap: 8px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.astral-home-rollback > span:first-child {
+  border-radius: var(--astral-radius-sm);
+  background-color: rgba(255, 255, 255, 0.12);
+  height: 22px;
+  width: 22px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.astral-home-rollback svg {
+  height: 14px;
+  width: 14px;
+}
+
+.editorial-featured-metrics {
+  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--astral-text-body);
+  column-gap: 14px;
+  margin-top: 8px;
+  align-items: center;
+  display: flex;
+}
+
+.editorial-featured-metrics span {
+  column-gap: 6px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.editorial-featured-metrics svg {
+  height: 15px;
+  width: 15px;
+}
+
+/* ── Герой: пять модов справа внизу ── */
+
+/* Лента превью без подложки (владелец, 16.11.2026 вечер: «так и не убрал»): ни рамки, ни фона, ни отступов вокруг ряда; превью меньше (96×54 вместо 118×66),
+   у каждого своя тонкая рамка и тёмная плашка, чтобы читались на любом кадре. */
+.astral-home-pager {
+  column-gap: 6px;
+  display: flex;
+  z-index: 4;
+  right: 30px;
+  bottom: 30px;
+  position: absolute;
+}
+
+.astral-home-pager-item {
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity var(--astral-duration-fast) var(--astral-ease), border-color var(--astral-duration-fast) var(--astral-ease);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--astral-radius-sm);
+  background-color: #0b0b0c;
+  overflow: hidden;
+  padding: 0;
+  height: 54px;
+  width: 96px;
+  position: relative;
+}
+
+.astral-home-pager-item:hover {
+  opacity: 1;
+}
+
+.astral-home-pager-item.is-active {
+  opacity: 1;
+  border-color: #fff;
+  box-shadow: 0 0 0 1px #fff;
+}
+
+.astral-home-pager-item img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.astral-home-pager-item img[data-render] {
+  padding: 6px 8px 14px;
+  object-fit: contain;
+}
+
+.astral-home-pager-item img[data-wave] {
+  padding: 4px 6px 14px;
+  object-fit: contain;
+}
+
+.astral-home-pager-item b {
+  color: #fff;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  font-size: var(--astral-text-micro);
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.85));
+  overflow: hidden;
+  padding: 12px 7px 5px;
+  display: block;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  position: absolute;
+}
+
+/* ── Герой: загрузка и пустой каталог ── */
+
+.astral-home-hero.is-loading .astral-home-hero-plate {
+  border-radius: 0;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-tag-plate {
+  border-radius: var(--astral-radius-sm);
+  height: 24px;
+  width: 110px;
+  display: block;
+}
+
+.astral-home-hero.is-loading .editorial-featured-bottom {
+  pointer-events: none;
+}
+
+.astral-home-plate-kick,
+.astral-home-plate-line,
+.astral-home-plate-title {
+  border-radius: var(--astral-radius-sm);
+  display: block;
+}
+
+.astral-home-plate-kick {
+  height: 14px;
+  width: 220px;
+}
+
+.astral-home-plate-title {
+  margin-top: 14px;
+  height: 46px;
+  width: 360px;
+}
+
+.astral-home-plate-line {
+  margin-top: 18px;
+  height: 14px;
+  width: 520px;
+}
+
+.astral-home-plate-line.is-short {
+  margin-top: 10px;
+  width: 380px;
+}
+
+.astral-home-plate-button {
+  border-radius: var(--astral-radius);
+  height: 36px;
+  width: 140px;
+  display: block;
+}
+
+.astral-home-plate-button.is-small {
+  width: 112px;
+}
+
+.astral-home-hero.is-empty {
+  background:
+    radial-gradient(60% 80% at 50% 45%, rgba(255, 255, 255, 0.05), transparent),
+    #050506;
+}
+
+.astral-home-hero.is-empty::before {
+  content: none;
+}
+
+.astral-home-empty {
+  text-align: center;
+  row-gap: 10px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  z-index: 2;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-empty-icon {
+  color: #d8d8dc;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-lg);
+  background-color: var(--astral-surface-raised);
+  height: 56px;
+  width: 56px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.astral-home-empty-icon svg {
+  height: 26px;
+  width: 26px;
+}
+
+.astral-home-empty h2 {
+  font-weight: 700;
+  font-size: var(--astral-text-title);
+  margin: 0;
+}
+
+.astral-home-empty p {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+  line-height: 21px;
+  margin: 0;
+  max-width: 420px;
+}
+
+.astral-home-empty-actions .ui-button {
+  font-weight: 600;
+}
+
+.astral-home-empty-actions {
+  column-gap: 10px;
+  margin-top: 6px;
+  align-items: center;
+  display: flex;
+}
+
+/* ── Под героем ── */
+
+.astral-home-below {
+  flex: none;
+  padding: 0 var(--home-pad);
+}
+
+.astral-home-meta {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  line-height: 22px;
+  margin: 12px 0 0;
+  height: 22px;
+}
+
+.astral-home-section {
+  --home-head-gap: 11px;
+  min-width: 0;
+}
+
+.astral-home-continue {
+  margin-top: 18px;
+}
+
+.astral-home-ribbon-section {
+  --home-head-gap: 0px;
+  margin-top: 22px;
+}
+
+.astral-home-section-head {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--home-head-gap);
+  height: 28px;
+  display: flex;
+}
+
+.astral-home-section-head h2 {
+  color: var(--astral-ink);
+  font-weight: 700;
+  font-size: var(--astral-text-section);
+  line-height: 24px;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.astral-home-section-head .ui-button {
+  font-weight: 600;
+  font-size: var(--astral-text-body);
+  min-block-size: 28px;
+}
+
+.astral-home-note {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+  line-height: 18px;
+}
+
+/* ── «Продолжить» ── */
+
+.astral-home-continue-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 14px;
+  display: grid;
+}
+
+.astral-home-continue-card,
+.astral-home-continue-empty {
+  text-align: left;
+  color: inherit;
+  font-family: inherit;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  background-color: var(--astral-surface);
+  padding: 10px 16px 10px 10px;
+  min-width: 0;
+  column-gap: 14px;
+  align-items: center;
+  display: flex;
+}
+
+.astral-home-continue-card {
+  cursor: pointer;
+  transition: background-color var(--astral-duration-fast) var(--astral-ease), border-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.astral-home-continue-card:hover {
+  border-color: var(--astral-line-strong);
+  background-color: var(--astral-surface-hover);
+}
+
+.astral-home-continue-thumb {
+  color: var(--astral-ink-muted);
+  border-radius: var(--astral-radius-sm);
+  background-color: #0d0d0f;
+  overflow: hidden;
+  height: var(--home-thumb-h);
+  width: var(--home-thumb-w);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex: none;
+}
+
+.astral-home-continue-empty .astral-home-continue-thumb {
+  width: var(--home-thumb-h);
+}
+
+.astral-home-continue-thumb img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.astral-home-continue-thumb img.is-contain {
+  padding: 8px;
+  object-fit: contain;
+}
+
+.astral-home-continue-thumb svg {
+  height: 26px;
+  width: 26px;
+}
+
+.astral-home-continue-text {
+  min-width: 0;
+}
+
+.astral-home-continue-text b {
+  color: var(--astral-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: var(--astral-text-strong);
+  overflow: hidden;
+  display: block;
+}
+
+.astral-home-continue-text > span {
+  color: var(--astral-ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--astral-text-small);
+  margin-top: 3px;
+  overflow: hidden;
+  display: block;
+}
+
+.astral-home-continue-go {
+  border-radius: var(--astral-radius-sm);
+  background-color: rgba(255, 255, 255, 0.08);
+  margin-left: auto;
+  height: 34px;
+  width: 34px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex: none;
+}
+
+.astral-home-continue-go svg {
+  height: 16px;
+  width: 16px;
+}
+
+.astral-home-continue-empty {
+  grid-column: 1 / -1;
+}
+
+.astral-home-continue-empty p {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+  margin: 0;
+  flex: 1;
+}
+
+.astral-home-continue-plate {
+  border-radius: var(--astral-radius-lg);
+  height: 94px;
+  display: block;
+}
+
+/* ── Лента: два комплекта карточек, сдвиг только transform ── */
+
+.astral-home-ribbon {
+  --home-lap: 52s;
+  margin: 0 calc(var(--home-pad) * -1);
+  position: relative;
+}
+
+.astral-home-ribbon-view {
+  overflow: hidden;
+  padding: 13px 0 10px;
+}
+
+.astral-home-ribbon-track {
+  /* Первые 4 секунды лента стоит: открытая главная, как на макете, начинается с целой первой карточки у края колонки, а не с уже сдвинутой. */
+  animation: astral-home-ribbon var(--home-lap) linear 4s infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  margin-left: var(--home-pad);
+  width: max-content;
+  display: flex;
+}
+
+.astral-home-ribbon-set {
+  padding-right: 14px;
+  column-gap: 14px;
+  display: flex;
+  flex: none;
+}
+
+/* Лента едет и под курсором (владелец, 16.11.2026 вечер: «не останавливается при наведении, листается дальше»): ни наведение, ни фокус её не держат.
+   Пауза — только когда окно в фоне или движение выключено. */
+.astral-home-ribbon[data-paused] .astral-home-ribbon-track,
+:root[data-attention]:not([data-attention="active"]) .astral-home-ribbon-track {
+  animation-play-state: paused;
+}
+
+.astral-home-fade {
+  pointer-events: none;
+  z-index: 3;
+  width: 84px;
+  top: 0;
+  bottom: 0;
+  position: absolute;
+}
+
+.astral-home-fade.is-left {
+  background: linear-gradient(90deg, var(--astral-void) 0, rgba(0, 0, 0, 0.7) 30%, rgba(0, 0, 0, 0.26) 64%, rgba(0, 0, 0, 0));
+  left: 0;
+}
+
+.astral-home-fade.is-right {
+  background: linear-gradient(270deg, var(--astral-void) 0, rgba(0, 0, 0, 0.7) 30%, rgba(0, 0, 0, 0.26) 64%, rgba(0, 0, 0, 0));
+  right: 0;
+}
+
+/* «Меньше движения»: лента стоит, листается колесом и перетаскиванием. */
+.astral-home-ribbon.is-still .astral-home-ribbon-view {
+  overflow-x: auto;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+.astral-home-ribbon.is-still .astral-home-ribbon-view::-webkit-scrollbar {
+  display: none;
+}
+
+.astral-home-ribbon.is-dragging .astral-home-ribbon-view {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.astral-home-ribbon.is-still .astral-home-ribbon-track {
+  animation: none;
+}
+
+.astral-home-ribbon.is-still .astral-home-ribbon-set {
+  padding-right: var(--home-pad);
+}
+
+.astral-home-skeletons {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: 14px;
+  padding: 13px 0 10px;
+  display: grid;
+}
+
+.astral-home-skeletons .ui-skeleton {
+  border-radius: var(--astral-radius-lg);
+  aspect-ratio: 16 / 9;
+  display: block;
+}
+
+/* ── Карточка ленты ── */
+
+.astral-home-card {
+  transition:
+    transform var(--astral-duration-slow) cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color var(--astral-duration-fast) var(--astral-ease),
+    box-shadow var(--astral-duration-slow) var(--astral-ease);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  background-color: #101012;
+  overflow: hidden;
+  height: var(--home-card-h);
+  width: var(--home-card-w);
+  flex: none;
+  position: relative;
+}
+
+/* Фото целиком, без затемнения поверх: тёмная подложка стоит только под подписью, в нижней трети (владелец, 16.11.2026: «убери плашку под фото, фото оставь»). */
+.astral-home-card::after {
+  pointer-events: none;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0) 38%);
+  content: "";
+  z-index: 1;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-card:is(:hover, :focus-within) {
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.astral-home-card .editorial-latest-open {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+  z-index: 4;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-card-art {
+  overflow: hidden;
+  inset: 0;
+  position: absolute;
+}
+
+.is-weapon-media.astral-home-card .astral-home-card-art {
+  background-color: #050505;
+}
+
+.astral-home-card .editorial-latest-media {
+  transition: transform 500ms var(--astral-ease), opacity var(--astral-duration-slow) var(--astral-ease);
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  inset: 0;
+  position: absolute;
+}
+
+.astral-home-card .is-pending.editorial-latest-media {
+  opacity: 0;
+}
+
+.astral-home-card:is(:hover, :focus-within) .editorial-latest-media {
+  transform: scale(1.05);
+}
+
+.astral-home-card .editorial-fresh-badge {
+  color: #000;
+  font-weight: 700;
+  font-size: var(--astral-text-small);
+  border-radius: var(--astral-radius-sm);
+  background-color: #fff;
+  height: 22px;
+  padding: 0 9px;
+  align-items: center;
+  display: flex;
+  z-index: 3;
+  left: 10px;
+  top: 10px;
+  position: absolute;
+}
+
+.astral-home-card:is(:hover, :focus-within) .editorial-fresh-badge {
+  display: none;
+}
+
+/* Под курсором и по фокусу — только «Установить» (кнопки «i» нет: владелец, 16.11.2026 вечер; щелчок по карточке открывает карточку мода); пока не нужна, из порядка обхода выпадает сама. */
+.astral-home-card-quick {
+  pointer-events: none;
+  column-gap: 6px;
+  display: none;
+  z-index: 5;
+  right: 10px;
+  top: 10px;
+  position: absolute;
+}
+
+.astral-home-card:is(:hover, :focus-within) .astral-home-card-quick {
+  display: flex;
+}
+
+.astral-home-card-quick > * {
+  pointer-events: auto;
+}
+
+.astral-home-card-install,
+.astral-home-card-done {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: var(--astral-text-small);
+  border-radius: var(--astral-radius-sm);
+  height: 30px;
+  align-items: center;
+  display: flex;
+}
+
+.astral-home-card-install,
+.astral-home-card-done {
+  column-gap: 6px;
+  padding: 0 11px;
+}
+
+.astral-home-card-install {
+  color: #000;
+  cursor: pointer;
+  border: none;
+  background-color: #fff;
+}
+
+.astral-home-card-install:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.astral-home-card-done {
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+.astral-home-card-quick svg {
+  height: 14px;
+  width: 14px;
+}
+
+.astral-home-card-copy {
+  pointer-events: none;
+  min-width: 0;
+  z-index: 2;
+  left: 12px;
+  right: 12px;
+  bottom: 11px;
+  position: absolute;
+}
+
+.astral-home-card-copy h3 {
+  color: #fff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: var(--astral-text-strong);
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  margin: 0;
+}
+
+.astral-home-card-copy p {
+  color: #cfcfd4;
+  font-size: var(--astral-text-small);
+  margin: 3px 0 0;
+  min-height: 15px;
+  min-width: 0;
+  column-gap: 6px;
+  align-items: center;
+  display: flex;
+}
+
+.astral-home-card-kind {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.astral-home-card-fact {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex: none;
+}
+
+.astral-home-card-kind + .astral-home-card-fact::before,
+.astral-home-card-fact + .astral-home-card-fact::before {
+  content: "·";
+  margin-right: 6px;
+}
+
+.astral-home-card-fact svg {
+  display: none;
+}
+
+/* ── Окно уже 1300 пикселей и ниже 800 ── */
+
+@media (max-width: 1300px) {
+  .astral-home-rollback {
+    display: none;
+  }
+
+  .astral-home-pager {
+    column-gap: 5px;
+  }
+
+  .astral-home-pager-item {
+    height: 47px;
+    width: 84px;
+  }
+
+  .astral-home-continue-go {
+    display: none;
+  }
+
+  .astral-home {
+    --home-thumb-w: 104px;
+    --home-thumb-h: 58px;
+  }
+
+  .astral-home-continue-card,
+  .astral-home-continue-empty {
+    column-gap: 12px;
+    padding: 9px 12px 9px 9px;
+  }
+
+  .astral-home-continue-text b {
+    font-size: var(--astral-text-body);
+  }
+}
+
+@media (max-height: 800px) {
+  .astral-home {
+    --home-title-size: 34px;
+    --home-title-line: 38px;
+    --home-title-long: 28px;
+    --home-title-very-long: 24px;
+    --home-card-w: 176px;
+    --home-card-h: 99px;
+    --home-thumb-w: 96px;
+    --home-thumb-h: 54px;
+  }
+
+  .astral-home-hero .editorial-featured-bottom,
+  .astral-home-pager {
+    bottom: 26px;
+  }
+
+  .astral-home-hero-text {
+    line-height: 18px;
+    max-width: 440px;
+  }
+
+  .astral-home-hero-actions {
+    margin-top: 12px;
+  }
+
+  .astral-home-hero-actions .ui-button.is-lg,
+  .astral-home-state {
+    min-block-size: 34px;
+    padding-inline: 14px;
+  }
+
+  .astral-home-state {
+    height: 34px;
+  }
+
+  .astral-home-rollback {
+    height: 34px;
+  }
+
+  .editorial-featured-metrics {
+    margin-top: 8px;
+  }
+
+  .astral-home-meta {
+    line-height: 18px;
+    margin-top: 8px;
+    height: 18px;
+  }
+
+  .astral-home-section {
+    --home-head-gap: 6px;
+  }
+
+  .astral-home-continue {
+    margin-top: 14px;
+  }
+
+  .astral-home-ribbon-section {
+    --home-head-gap: 0px;
+    margin-top: 14px;
+  }
+
+  .astral-home-ribbon-view,
+  .astral-home-skeletons {
+    padding: 9px 0 8px;
+  }
+
+  .astral-home-continue-card,
+  .astral-home-continue-empty {
+    padding-block: 7px;
+  }
+
+  .astral-home-continue-plate {
+    height: 70px;
+  }
+}
+
+/* ── Высокие окна: низ страницы не пустует ──
+   1920×1080 (высота страницы ~1040) и 2560×1440 (~1400): герой тянется (`flex: 1 1`), а то, что под ним, растёт ярусом вместе с окном — карточки ленты (16:9), кадры «Продолжить»,
+   кадры справа в герое. Размеры карточек ленты читает и `HomeRibbon.jsx` (ширина превью), числа там те же. */
+
+@media (min-height: 1000px) {
+  .astral-home {
+    --home-card-w: 264px;
+    --home-card-h: 149px;
+    --home-thumb-w: 152px;
+    --home-thumb-h: 86px;
+    --home-title-size: 46px;
+    --home-title-line: 50px;
+    --home-title-long: 34px;
+    --home-title-very-long: 28px;
+  }
+
+  .astral-home-meta {
+    margin-top: 16px;
+  }
+
+  .astral-home-continue {
+    margin-top: 22px;
+  }
+
+  .astral-home-ribbon-section {
+    margin-top: 26px;
+  }
+
+  .astral-home-pager-item {
+    height: 63px;
+    width: 112px;
+  }
+}
+
+@media (min-height: 1300px) {
+  .astral-home {
+    --home-pad: 48px;
+    --home-card-w: 340px;
+    --home-card-h: 191px;
+    --home-thumb-w: 192px;
+    --home-thumb-h: 108px;
+    --home-title-size: 54px;
+    --home-title-line: 58px;
+    --home-title-long: 40px;
+    --home-title-very-long: 34px;
+  }
+
+  .astral-home-continue {
+    margin-top: 30px;
+  }
+
+  .astral-home-ribbon-section {
+    margin-top: 34px;
+  }
+
+  .astral-home-pager-item {
+    height: 79px;
+    width: 140px;
+  }
+}
+
+/* ── «Меньше движения» без JS: лента стоит, второй комплект скрыт ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .astral-home-bars b[data-running],
+  .astral-home-hero .editorial-featured-bottom,
+  .astral-home-hero .editorial-featured-media,
+  .astral-home-ribbon-track {
+    animation: none;
+  }
+
+  .astral-home-ribbon-view {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .astral-home-ribbon-set + .astral-home-ribbon-set {
+    display: none;
+  }
+
+  .astral-home-card,
+  .astral-home-card .editorial-latest-media {
+    transition: none;
+  }
+}
+
+/* ── Кадры анимаций ── */
+
+@keyframes astral-home-ribbon {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes astral-home-media-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+}
+
+@keyframes astral-home-media-out {
+  0%,
+  45% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes astral-home-render-out {
+  100% {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+@keyframes astral-home-caption-out {
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes astral-home-caption-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes astral-home-progress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}

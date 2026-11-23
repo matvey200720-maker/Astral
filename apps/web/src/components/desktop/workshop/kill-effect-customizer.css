@@ -1,0 +1,291 @@
+/*
+ * Редактор килл-эффекта.
+ *
+ * Вид — у мастерской эффектов (`effects-studio.css`): редактор носит её имя
+ * `fx-editor` рядом со своим, и разделы панели, разбор того, что уйдёт в
+ * игру, и сетка готовых эффектов у него те же, что у эффектов попадания и
+ * трейсеров (владелец, 25.09.2026). Раскладка — мастерская «как в Photoshop»
+ * (`styles/editor-shell.css`, владелец, 03.10.2026). Здесь остаётся только
+ * своё: кадр с матовой стеной, шкала времени в полосе органов, сетка
+ * шаблонов с кадрами и строки каналов.
+ */
+
+/* ── Сцена ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Сцена — на весь кадр каркаса (мастерская «как в Photoshop», владелец,
+ * 03.10.2026): без своей рамки и высоты, их даёт рамка `.ui-editor-canvas`.
+ * Органы проигрывания — полосой сверху, подсказки и подпись — снизу.
+ */
+.kill-effect-editor .kill-stage {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Кадр — сама матовая стена: холст рисует её вместе со вспышкой, фон под
+ * ним — та же основа, чтобы кадр не мигал чёрным до первой отрисовки.
+ *
+ * Стена — экран между полосой органов (12 + 44) и подсказками с подписью
+ * (12 + 28), а не под ними: вспышка — кайма вдоль всех четырёх краёв, и
+ * полоса поверх неё прятала бы верхний край — ровно то, что здесь правят.
+ */
+.kill-scene {
+  position: absolute;
+  inset: 64px 12px 48px;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--fx-scene-line);
+  border-radius: var(--astral-radius);
+  background: #030303;
+}
+
+.kill-effect-stage {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Органы проигрывания — полоса кадра во всю ширину верха (`StageBar wide`):
+ * шкале времени нужна ширина, а левый верхний угол, который каркас держит под
+ * плашку полёта, у килла свободен — полёта у плоского кадра нет.
+ */
+
+.kill-stage-bar > .ui-button,
+.kill-stage-bar > .ui-segmented {
+  flex: none;
+}
+
+/* Узкий кадр (окно 1280 и колонка инструментов с названиями): органы не вылезают за полосу — шкала времени уходит
+   второй строкой во всю ширину. */
+.kill-stage-bar.ui-stage-bar.is-wide {
+  flex-wrap: wrap;
+}
+
+/* Шкала времени занимает остаток полосы: слева дорожка, справа время, которое
+   можно набрать, и длительность. Вид дорожки — у общего ползунка
+   (`.ui-slider`). */
+.kill-scrub.ui-slider {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+  gap: 8px;
+  /* Колонка инструментов с названиями (192 px) делает кадр уже: уступает шкала, а не переключатели вида. */
+  min-width: 160px;
+  padding-inline: 6px;
+}
+
+.kill-scrub input[type="range"] {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Время — поле, которое можно набрать: в покое та же рамка, что у числа
+   ползунка, поле выдают курсор и рамка под мышью, в фокусе — акцент. */
+.kill-scrub-value {
+  flex: none;
+  width: 68px;
+  height: var(--astral-control-h-xs);
+  padding: 0 6px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: var(--astral-surface-sunken);
+  font-family: inherit;
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: text;
+}
+
+.kill-scrub-value:hover {
+  border-color: var(--astral-line-strong);
+}
+
+.kill-scrub-value:focus-visible {
+  border-color: var(--astral-accent);
+  outline: none;
+}
+
+.kill-scrub-total {
+  flex: none;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*
+ * «Редукс выключил эффект» и «в игре уже не ваш» стоят поверх кадра, а не в
+ * панели: это не настройка, а диагноз. Человек пришёл сюда потому, что
+ * вспышки в игре нет, и узнать причину он должен там, куда смотрит.
+ */
+.kill-stage-alerts {
+  position: absolute;
+  inset: 12px 12px auto;
+  display: grid;
+  gap: 8px;
+}
+
+.kill-stage-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid
+    color-mix(in srgb, var(--astral-warning, #e0a33c) 55%, transparent);
+  border-radius: var(--astral-radius);
+  background: rgba(11, 11, 12, 0.82);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.kill-stage-alert > svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--astral-warning, #e0a33c);
+}
+
+.kill-stage-alert div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kill-stage-alert b {
+  font-size: var(--astral-text-small);
+}
+
+.kill-stage-alert small {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: var(--astral-text-micro);
+}
+
+.kill-stage-alert .ui-button {
+  flex: none;
+  margin-inline-start: auto;
+}
+
+/* ── Готовые эффекты ───────────────────────────────────────────────────── */
+
+/* Полка и сетка — общий орган (`PresetShelf`), в панели «Шаблоны» — в два
+   столбца без переключателя: тринадцать кадров видно разом, и сравнивают
+   их глазами, а не по одному. */
+
+/* Вид, рама, поля и обводка выбранного — у общей плитки (`.ui-choice`);
+   фон — матовый, как у пресетов эффектов. */
+.kill-effect-editor .kill-template-card {
+  background: var(--fx-matte);
+}
+
+.kill-effect-editor .kill-template-card:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+.kill-template-card .ui-choice-media {
+  aspect-ratio: 16 / 9;
+  background: #030303;
+}
+
+.kill-template-swatch {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Панель инструмента ────────────────────────────────────────────────── */
+
+/* «Сейчас в игре» — над готовыми эффектами: стоящий эффект открывается
+   одной кнопкой. Сведения — нейтральной рамкой. Шаг до полки — у сетки
+   панели, свой нижний отступ заметки здесь лишний. */
+.kill-game-note {
+  margin: 0;
+}
+
+.kill-game-note .ui-button {
+  justify-self: start;
+  margin-top: 4px;
+}
+
+.kill-game-note.is-info {
+  border-color: var(--fx-line);
+}
+
+/* Готовая длительность — четыре плитки по две в ряд, подпись и время. */
+.kill-duration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* Канал внутри раздела: подпись с выключателем, под ней его поля. */
+.kill-channel {
+  display: grid;
+  gap: 10px;
+}
+
+.kill-channel + .kill-channel {
+  padding-top: 10px;
+  border-top: 1px solid var(--fx-line);
+}
+
+.kill-channel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.kill-channel-head b {
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+/* ── Знак на килле ─────────────────────────────────────────────────────── */
+
+/* Значки и эмодзи — сеткой по четыре, как картинки у эффектов попадания:
+   образец и подпись в строку. */
+.kill-marker-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.kill-marker-tile {
+  gap: 6px;
+  padding: 6px;
+}
+
+.kill-marker-tile .ui-choice-copy > b {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.kill-marker-tile .ui-choice-media {
+  display: grid;
+  aspect-ratio: 1 / 1;
+  place-items: center;
+  background: var(--fx-matte, #101012);
+}
+
+.kill-marker-icon {
+  display: block;
+  width: 70%;
+  height: 70%;
+}
+
+.kill-marker-glyph {
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji",
+    sans-serif;
+  font-size: var(--astral-text-hero);
+  line-height: 1;
+}
+
+/* Готовые движения — по два в ряд, как готовая длительность: название и
+   одна строка, что оно делает. */
+.kill-marker-motions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}

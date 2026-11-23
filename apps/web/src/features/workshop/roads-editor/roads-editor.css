@@ -1,0 +1,22 @@
+/*
+ * «Дороги»: плитка шаблона — настоящий лист игры в облике шаблона во всю
+ * плитку; строка линии разметки — режим и цвет друг под другом.
+ */
+.recolor-preset .ui-choice-media > .roads-sheet-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.roads-line {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Вид кадра — сегменты по ширине подписи: жирная «Вблизи» не помещалась в
+   ровную долю и резалась многоточием. */
+.roads-views .ui-segment {
+  flex: 0 0 auto;
+}

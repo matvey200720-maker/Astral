@@ -1,0 +1,134 @@
+/* Витрина одежды: подпись на медиа редукса, варианты установки и поиск по каталогу. */
+
+/* ---- подпись поверх медиа редукса ---- */
+.redux-product-media-caption {
+  max-inline-size: calc(100% - 140px);
+  padding-block-start: 5px;
+  padding-block-end: 5px;
+  padding-inline-start: 10px;
+  padding-inline-end: 10px;
+  inset-block-start: 14px;
+  inset-inline-start: 16px;
+  position: absolute;
+  z-index: 4;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: var(--astral-radius-xl);
+  border-width: 1px;
+  border-color: var(--astral-line);
+  border-style: solid;
+  background: var(--astral-scrim);
+  color: var(--astral-ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--astral-text-micro);
+}
+
+/* ---- варианты установки: сетка превью и образцы цвета ---- */
+.clothing-install-variants {
+  --variant-fill: auto-fill;
+  row-gap: 8px;
+  column-gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(var(--variant-fill), minmax(120px, 1fr));
+}
+
+.clothing-install-variant img {
+  inline-size: 100%;
+  aspect-ratio: 1;
+  display: block;
+  object-fit: contain;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-strong);
+}
+
+.clothing-install-swatch {
+  background: var(--astral-surface-raised);
+  border-radius: var(--astral-radius-sm);
+  inline-size: 100%;
+  aspect-ratio: 1;
+  display: block;
+}
+
+/* ---- строка поиска ---- */
+.clothing-showcase-search {
+  transition-property: border-color;
+  transition-duration: var(--astral-duration-fast);
+  transition-timing-function: var(--astral-ease);
+  transition-delay: 0s;
+  display: flex;
+  align-items: center;
+  block-size: var(--astral-control-h-sm);
+  min-inline-size: 0;
+  padding-block-start: 0;
+  padding-block-end: 0;
+  padding-inline-start: 36px;
+  padding-inline-end: 10px;
+  position: relative;
+  border-width: 1px;
+  border-color: var(--astral-line);
+  border-style: solid;
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-sunken);
+
+  &:focus-within {
+    --search-focus: var(--astral-line-focus);
+    border-color: var(--search-focus);
+  }
+
+  /* лупа слева, поверх поля */
+  & > svg {
+    color: var(--astral-ink-faint);
+    inset-inline-start: 12px;
+    position: absolute;
+    inline-size: 16px;
+    block-size: 16px;
+  }
+
+  & input {
+    font: inherit;
+    flex: 1 1 auto;
+    outline: none;
+    border: 0;
+    padding: 0;
+    min-inline-size: 0;
+    block-size: 100%;
+    background: transparent;
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink);
+
+    &::placeholder {
+      color: var(--astral-ink-faint);
+    }
+
+    /* свой крестик очистки, встроенный прячем */
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+}
+
+.clothing-showcase-search-clear {
+  --clear-size: var(--astral-control-h-xs);
+  display: inline-grid;
+  justify-items: center;
+  align-items: center;
+  cursor: pointer;
+  inline-size: var(--clear-size);
+  block-size: var(--clear-size);
+  padding: 0;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-muted);
+  background: transparent;
+
+  & svg {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+
+  &:hover {
+    color: var(--astral-ink);
+    background: var(--astral-surface-hover);
+  }
+}

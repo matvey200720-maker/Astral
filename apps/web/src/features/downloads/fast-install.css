@@ -1,0 +1,91 @@
+/*
+  «Быстрая установка» (13.11.2026): плашка первой установки (выключатель в шапке «Загрузок» — `ribbon/DlToggle.jsx`).
+  Плашка — небольшая стеклянная карточка в правом нижнем углу окна: стекло и рамка берутся из общего договора
+  (`ui-matte-glass-contract.css`, `.astral-glass-surface`), здесь только раскладка. Тост действий стоит по центру
+  снизу и с плашкой не пересекается.
+*/
+
+/* ---------- плашка первой установки ---------- */
+.fast-install-offer {
+  position: fixed;
+  z-index: 255;
+  inset-block-end: max(20px, env(safe-area-inset-bottom));
+  inset-inline-end: 20px;
+  inline-size: min(400px, calc(100vw - 40px));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 12px;
+  align-items: start;
+  padding: 16px;
+  border: 1px solid var(--astral-glass-border);
+  border-radius: var(--astral-radius-lg);
+  color: var(--astral-ink);
+  animation: fast-install-offer-in var(--astral-duration-slow) var(--astral-ease) both;
+}
+
+.fast-install-offer-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--astral-accent);
+
+  & > svg {
+    inline-size: 18px;
+    block-size: 18px;
+  }
+}
+
+.fast-install-offer-body {
+  min-inline-size: 0;
+  display: grid;
+  row-gap: 6px;
+
+  & > h2 {
+    margin: 0;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  & > p {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.45;
+  }
+
+  & > .fast-install-offer-guide {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+}
+
+.fast-install-offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 8px;
+  margin-block-start: 8px;
+}
+
+.fast-install-offer-close {
+  margin-block-start: -4px;
+  margin-inline-end: -4px;
+}
+
+@keyframes fast-install-offer-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fast-install-offer {
+    animation: none;
+  }
+}

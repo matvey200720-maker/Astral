@@ -1,0 +1,105 @@
+/* Settings are one continuous lens. The shell owns the material; its children
+   only define spacing and hierarchy instead of becoming separate white slabs. */
+.desktop-app[data-theme] .settings-page .settings-unified-glass {
+  position: relative;
+  display: grid;
+  gap: 0 !important;
+  overflow: hidden;
+  isolation: isolate;
+  /* «Пульт» (15.11.2026): страница настроек без собственной рамки — рамка у окна, а оно во всю область. */
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  > :is(
+    .appearance-settings,
+    .settings-section-tabs,
+    .settings-section-stage,
+    .settings-danger-zone
+  ),
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  .settings-section-panel,
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  .settings-section-panel
+  > article {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  > .appearance-settings {
+  padding: 28px 28px 30px !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  > .appearance-settings::before {
+  display: none !important;
+  content: none !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  > .settings-section-tabs {
+  padding: 20px 28px !important;
+  border-top: 1px solid var(--astral-glass-border) !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  > .settings-section-stage {
+  padding: 0 28px 28px;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  > .settings-danger-zone {
+  margin: 0 !important;
+  padding: 28px !important;
+  border-top: 1px solid var(--astral-glass-border) !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  :is(.appearance-motion) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.desktop-app[data-theme]
+  .settings-page
+  .settings-unified-glass
+  :is(.language-picker, .language-picker-options) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* В окне настроек подложка непрозрачная, и стеклу карточек там нечего
+   размывать. Хуже того: тень стекла (58px) ложилась тёмными пятнами между
+   карточками, а размытие под анимируемой панелью раздела смещалось
+   относительно содержимого. Карточка в окне — плоская плита с волосяной
+   рамкой (в «Пульте» — со светлой заливкой в 2,8 %). Правило здесь, в слое контрактов: `!important` стекла живёт в нём
+   же, и перебить его можно только равной силой и большей специфичностью. */
+.desktop-app[data-theme] .settings-window .settings-card {
+  background: var(--astral-surface) !important;
+  border-color: var(--astral-line) !important;
+  box-shadow: none !important;
+}

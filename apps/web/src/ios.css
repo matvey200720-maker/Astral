@@ -1,0 +1,761 @@
+/* Astral product polish — calm, tactile and platform-native without copying iOS. */
+:root {
+  --mv-blue: var(--astral-accent, #f4f4f5);
+  --mv-blue-2: var(--astral-accent, #f4f4f5);
+  --mv-green: var(--astral-positive, var(--astral-positive));
+  --mv-red: var(--astral-danger, var(--astral-danger));
+  --mv-dark: #090909;
+  --mv-panel: rgba(27, 27, 27, 0.82);
+  --mv-line: rgba(255, 255, 255, 0.085);
+  --mv-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), 0 2px 12px rgba(0, 0, 0, 0.18);
+  --mv-font: var(--astral-font);
+}
+
+/* Desktop product */
+.desktop-app,
+.desktop-app button,
+.desktop-app input,
+.desktop-app select,
+.desktop-app textarea {
+  font-family: var(--mv-font) !important;
+}
+.desktop-app {
+  background:
+    radial-gradient(
+      circle at 58% -20%,
+      rgba(115, 115, 115, 0.12),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 104% 65%,
+      rgba(102, 102, 102, 0.08),
+      transparent 34%
+    ),
+    #090909;
+  color: #f5f5f7;
+}
+.desktop-titlebar {
+  background: rgba(11, 11, 11, 0.82);
+  border-bottom-color: var(--mv-line);
+}
+.desktop-titlebar > span {
+  display: none;
+}
+.desktop-titlebar b {
+  font-family: var(--mv-font);
+  font-size: var(--astral-text-micro);
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+}
+.desktop-titlebar small {
+  font-size: var(--astral-text-micro);
+  color: rgba(255, 255, 255, 0.34);
+}
+.desktop-sidebar {
+  background: rgba(12, 12, 12, 0.76);
+  border-right-color: var(--mv-line);
+}
+.desktop-sidebar:after,
+.desktop-main > header {
+  border-color: var(--mv-line) !important;
+  background-color: rgba(11, 11, 11, 0.66) !important;
+}
+.desktop-logo > span {
+  border-radius: var(--astral-radius);
+  background: linear-gradient(145deg, #fff, #e7e7eb);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+  font-family: var(--mv-font);
+  font-size: var(--astral-text-strong);
+  font-weight: 800;
+  font-style: normal;
+  line-height: normal;
+}
+.desktop-logo > b {
+  font-family: var(--mv-font);
+  font-size: var(--astral-text-title);
+  font-weight: 800;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: 0.035em;
+}
+.desktop-sidebar nav {
+  gap: 7px;
+}
+.desktop-sidebar button {
+  height: 47px;
+  border-radius: var(--astral-radius-lg);
+  color: #92929a;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+.desktop-sidebar button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  transform: translateX(2px);
+}
+.desktop-sidebar button.active {
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.055),
+    0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.desktop-sidebar button.active svg {
+  color: var(--astral-ink);
+}
+.desktop-sidebar button > i {
+  background: var(--mv-blue);
+  font-weight: 500;
+}
+.desktop-sidebar-bottom {
+  border-top-color: var(--mv-line) !important;
+}
+.sidebar-account > button {
+  border-radius: var(--astral-radius) !important;
+}
+.desktop-content {
+}
+.desktop-empty h2,
+.catalog-card-copy h3,
+.profile-summary h2,
+.desktop-profile-grid h3,
+.settings-heading h3,
+.profile-plan-card h2,
+.profile-code-card h3 {
+  font-family: var(--mv-font) !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.025em !important;
+}
+.ui-page-heading-copy > span {
+  letter-spacing: 0.1em;
+  color: #86868b;
+}
+.profile-plan-card button,
+.profile-code-card button {
+  border-radius: var(--astral-radius) !important;
+  min-height: 42px;
+  background: #f5f5f7 !important;
+  color: #121212 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+}
+
+.profile-summary,
+.download-overview article,
+.profile-plan-card,
+.profile-code-card,
+.game-path {
+  border-color: var(--mv-line) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.1);
+}
+.profile-code-card input {
+  border: 1px solid var(--mv-line) !important;
+  border-radius: var(--astral-radius) !important;
+  background: rgba(0, 0, 0, 0.22) !important;
+  color: #fff !important;
+  outline: none !important;
+}
+.profile-code-card input:focus {
+  border-color: rgba(115, 115, 115, 0.7) !important;
+  box-shadow: 0 0 0 4px rgba(115, 115, 115, 0.14);
+}
+.library-tabs button,
+.duration-switch button {
+  border-radius: var(--astral-radius) !important;
+}
+.library-tabs button.active,
+.duration-switch button.active {
+  background: #f5f5f7 !important;
+  color: #121212 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+.desktop-catalog-grid {
+  gap: 18px;
+}
+.desktop-catalog-grid > .catalog-mod-card,
+.installed-manage-grid > article {
+  border: 1px solid var(--mv-line) !important;
+  border-radius: var(--astral-radius-xl);
+  background: #151515 !important;
+  overflow: hidden;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+.desktop-catalog-grid > .catalog-mod-card:hover,
+.installed-manage-grid > article:hover {
+  transform: translateY(-4px) scale(1.008);
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.28);
+}
+.desktop-catalog-cover {
+  border-radius: var(--astral-radius-xl);
+  background-color: #060606 !important;
+}
+.catalog-card-shade {
+  background: linear-gradient(
+    0deg,
+    rgba(6, 6, 6, 0.92),
+    rgba(6, 6, 6, 0.08) 70%
+  );
+}
+.catalog-card-copy h3 {
+  font-size: var(--astral-text-title);
+}
+.catalog-card-copy small {
+  color: #b7b7be;
+}
+.catalog-card-copy p {
+  color: #d1d1d6;
+}
+.desktop-catalog-cover > button {
+  border-radius: var(--astral-radius) !important;
+  background: rgba(23, 23, 23, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+.desktop-catalog-cover > button.catalog-like {
+  border-radius: 50% !important;
+  background: rgba(21, 21, 21, 0.7) !important;
+}
+.desktop-catalog-cover > button.catalog-like.liked {
+  background: #fff !important;
+  color: var(--astral-danger) !important;
+}
+.desktop-catalog-cover > b,
+.availability.installed {
+  background: rgba(var(--astral-positive-rgb), 0.18) !important;
+  color: var(--astral-positive) !important;
+  border: 1px solid rgba(var(--astral-positive-rgb), 0.24) !important;
+}
+
+.installed-status {
+  border-color: var(--mv-line) !important;
+  border-radius: var(--astral-radius-xl) !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.12);
+}
+.installed-status {
+  background: rgba(var(--astral-positive-rgb), 0.08) !important;
+  border-color: rgba(var(--astral-positive-rgb), 0.22) !important;
+}
+.installed-manage-grid button {
+  border-radius: var(--astral-radius) !important;
+}
+
+.clean-settings {
+  gap: 18px !important;
+}
+/* Sections carry no plate, so they carry no plate padding either. */
+.clean-settings > article {
+  padding: 0 !important;
+}
+.reset-settings > button {
+  border-radius: var(--astral-radius) !important;
+  background: rgba(var(--astral-danger-rgb), 0.11) !important;
+  color: var(--astral-danger) !important;
+  border-color: rgba(var(--astral-danger-rgb), 0.25) !important;
+}
+.profile-summary-icon {
+  border-radius: var(--astral-radius-lg);
+  background: var(--mv-blue);
+  box-shadow: 0 12px 30px rgba(115, 115, 115, 0.24);
+}
+.desktop-toast {
+  right: 24px;
+  bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--astral-radius-lg);
+  background: rgba(245, 245, 247, 0.94);
+  box-shadow: var(--mv-shadow);
+}
+.desktop-app button:focus-visible,
+.desktop-app a:focus-visible {
+  outline: 3px solid rgba(115, 115, 115, 0.55);
+  outline-offset: 3px;
+}
+
+/* The public website intentionally keeps its original art direction. */
+body {
+  font-family: var(--mv-font);
+}
+@media (max-width: 1180px) {
+  .desktop-content {
+    padding-inline: 20px;
+  }
+}
+@media (max-width: 760px) {
+  .desktop-content {
+    padding-inline: 14px;
+  }
+}
+
+/* Refined desktop shell: keep the useful polish, return to the compact launcher structure. */
+.desktop-app {
+  grid-template-columns: 88px 1fr;
+  background: #0f0f0f;
+}
+.desktop-sidebar.compact-sidebar {
+  width: 88px;
+  padding: 0 10px 12px;
+  background: #0b0b0b;
+  border-right: 1px solid #282828;
+}
+.compact-sidebar .desktop-logo {
+  height: 70px !important;
+  justify-content: center;
+}
+.compact-sidebar .desktop-logo > b {
+  display: none;
+}
+.compact-sidebar .desktop-logo > span {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--astral-radius);
+  box-shadow: none;
+}
+.compact-sidebar nav {
+  margin-top: 18px !important;
+  gap: 8px;
+}
+.compact-sidebar nav button {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto;
+  padding: 0;
+  justify-content: center;
+  border-radius: var(--astral-radius);
+}
+.compact-sidebar nav button span {
+  display: none;
+}
+.compact-sidebar nav button:hover {
+  transform: none;
+}
+.compact-sidebar nav button.active {
+  background: #fff;
+  color: #0c0c0c;
+  box-shadow: none;
+}
+.compact-sidebar nav button.active svg {
+  color: #0c0c0c;
+}
+.desktop-main > header {
+  background: #0f0f0f !important;
+}
+.desktop-titlebar {
+  background: #0a0a0a;
+}
+.compact-sidebar .desktop-sidebar-bottom {
+  margin: 0 !important;
+  padding: 12px 0 0 !important;
+  min-height: 62px;
+}
+.compact-sidebar .sidebar-account {
+  display: block;
+}
+.compact-sidebar .sidebar-account > button {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--astral-radius) !important;
+}
+.compact-sidebar .sidebar-account > button span {
+  display: none;
+}
+.desktop-content {
+}
+.desktop-catalog-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  justify-content: stretch;
+  gap: 14px;
+}
+.desktop-catalog-grid > .catalog-mod-card {
+  width: 100%;
+  min-width: 0;
+}
+.installed-manage-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  justify-content: stretch;
+}
+.installed-manage-grid > article {
+  min-width: 0;
+}
+.desktop-catalog-grid > .catalog-mod-card,
+.installed-manage-grid > article {
+  border-radius: var(--astral-radius);
+  box-shadow: none;
+}
+.desktop-catalog-cover {
+  border-radius: var(--astral-radius);
+}
+.desktop-catalog-grid > .catalog-mod-card:hover,
+.installed-manage-grid > article:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.26);
+}
+.settings-hub > .desktop-page {
+  padding-top: 0;
+}
+@media (max-width: 1180px) {
+  .desktop-catalog-grid,
+  .installed-manage-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+  .desktop-content {
+    padding-inline: 18px;
+  }
+  .catalog-card-copy {
+    left: 10px;
+    right: 44px;
+    bottom: 9px;
+  }
+  .catalog-card-copy h3 {
+    font-size: var(--astral-text-strong);
+  }
+  .catalog-card-copy p {
+    display: none;
+  }
+  .desktop-catalog-cover > button.catalog-like {
+    width: 30px;
+    height: 30px;
+    top: 8px;
+    right: 8px;
+  }
+}
+@media (max-width: 760px) {
+  .desktop-app {
+    min-width: 860px;
+  }
+  .desktop-content {
+    padding-inline: 14px;
+  }
+  .desktop-catalog-grid,
+  .installed-manage-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Focused dialogs, photo-only detail and a visible sequential operation center. */
+.compact-sidebar .desktop-sidebar-bottom {
+  margin-top: auto !important;
+}
+.compact-sidebar .sidebar-account > button {
+  position: relative;
+}
+.compact-sidebar .sidebar-account > button + button {
+  margin-top: 7px;
+}
+.compact-sidebar .sidebar-account > button > i {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--astral-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+  font-weight: 500;
+  box-shadow: 0 0 0 3px #0b0b0b;
+}
+.build-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin: 18px 0 12px;
+}
+.build-impact-grid > span {
+  min-width: 0;
+  border: 1px solid #333333;
+  border-radius: var(--astral-radius);
+  background: #111111;
+  padding: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.build-impact-grid b {
+  font-size: 12px;
+}
+.build-impact-grid small {
+  color: #848484;
+  font-size: var(--astral-text-micro);
+}
+.build-change-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  max-height: 180px;
+  overflow: auto;
+  margin: 12px 0;
+}
+.build-change-list article {
+  min-width: 0;
+  min-height: 58px;
+  border: 1px solid #333333;
+  border-radius: var(--astral-radius);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 7px;
+  display: grid;
+  grid-template-columns: 70px 1fr 18px;
+  align-items: center;
+  gap: 9px;
+}
+.build-change-list article > span {
+  height: 42px;
+  border-radius: var(--astral-radius-sm);
+  background-size: cover;
+  background-position: center;
+}
+.build-change-list article > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.build-change-list b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+.build-change-list small {
+  color: var(--astral-positive);
+  font-size: var(--astral-text-micro);
+}
+.build-change-list svg {
+  width: 14px;
+  color: var(--astral-positive);
+}
+.build-change-list article.remove small,
+.build-change-list article.remove svg {
+  color: var(--astral-danger);
+}
+.build-plan-warning {
+  margin-top: 8px;
+  border: 1px solid rgba(242, 177, 74, 0.28);
+  border-radius: var(--astral-radius);
+  background: rgba(207, 138, 34, 0.08);
+  padding: 11px 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.build-plan-warning > svg {
+  width: 17px;
+  color: #f0b85c;
+  flex: none;
+}
+.build-plan-warning > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.build-plan-warning b {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+.build-plan-warning small {
+  color: #a69b86;
+  font-size: var(--astral-text-micro);
+  line-height: 1.45;
+}
+@media (max-width: 1100px) {
+}
+
+/* Library editor, crisp typography and user-selectable product themes. */
+.desktop-app {
+  --mv-accent: var(--astral-accent);
+  --mv-accent-2: var(--astral-accent);
+  --mv-accent-rgb: 244, 244, 245;
+  --mv-accent-contrast: var(--astral-accent-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-synthesis: none;
+}
+.desktop-app .settings-heading > svg,
+.desktop-app .download-overview article > svg {
+  color: var(--mv-accent) !important;
+}
+.desktop-app .compact-sidebar .sidebar-account > button > i,
+.desktop-app .desktop-catalog-cover > b {
+  background: var(--mv-accent) !important;
+  color: var(--mv-accent-contrast) !important;
+}
+.desktop-app button:focus-visible,
+.desktop-app [role="button"]:focus-visible {
+  outline-color: rgba(var(--mv-accent-rgb), 0.7) !important;
+}
+
+.modovik-mark {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(145deg, #fff, #dfe3ea) !important;
+  color: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
+}
+.modovik-mark:before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -8px;
+  bottom: -12px;
+  width: 34px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(var(--mv-accent-rgb), 0.3);
+  filter: blur(2px);
+}
+.modovik-mark i {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 13px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--mv-accent);
+  transform: rotate(-38deg);
+  box-shadow: 0 5px 14px rgba(var(--mv-accent-rgb), 0.45);
+}
+.modovik-mark b {
+  font-family: var(--mv-font);
+  font-size: var(--astral-text-strong);
+  font-weight: 850;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  transform: translateX(-1px);
+}
+
+/* The legacy class name remains for saved desktop layouts; its visual is Astral. */
+.modovik-mark {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #1b1b1b, #040404 72%) !important;
+  border-color: rgba(159, 159, 159, 0.36);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 22px rgba(41, 41, 41, 0.32) !important;
+}
+.modovik-mark::before,
+.modovik-mark i,
+.modovik-mark b {
+  display: none;
+}
+.modovik-mark img {
+  display: block;
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(186, 186, 186, 0.32));
+}
+
+.desktop-catalog-grid > .catalog-mod-card {
+  isolation: isolate;
+  contain: layout paint;
+  min-width: 0;
+  transform: none !important;
+}
+.desktop-catalog-grid > .catalog-mod-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25) !important;
+}
+.desktop-catalog-cover {
+  overflow: hidden;
+  isolation: isolate;
+}
+.catalog-card-copy {
+  min-width: 0;
+}
+.catalog-card-copy h3 {
+  font-size: var(--astral-text-title) !important;
+  line-height: 1.1;
+  letter-spacing: -0.015em !important;
+}
+.catalog-card-copy small,
+.catalog-card-copy > span {
+  font-size: var(--astral-text-micro) !important;
+  line-height: 1.35;
+}
+.catalog-card-copy p {
+  font-size: var(--astral-text-micro) !important;
+  line-height: 1.4;
+}
+.desktop-catalog-cover > button.catalog-remove {
+  right: 10px !important;
+  bottom: 10px !important;
+  top: auto !important;
+  width: auto !important;
+  height: 32px !important;
+  border-radius: var(--astral-radius-sm) !important;
+  padding: 0 10px !important;
+  background: rgba(62, 22, 29, 0.9) !important;
+  color: var(--astral-danger) !important;
+  border: 1px solid rgba(var(--astral-danger-rgb), 0.28) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: var(--astral-text-micro) !important;
+  font-weight: 500 !important;
+}
+.desktop-catalog-cover > button.catalog-remove svg {
+  width: 13px;
+}
+.desktop-catalog-cover > button.catalog-remove span {
+  display: inline !important;
+}
+.library-remove-all {
+  height: 36px;
+  border: 1px solid #56313a;
+  border-radius: var(--astral-radius-sm);
+  background: #24171b;
+  color: var(--astral-danger);
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+.library-remove-all svg {
+  width: 14px;
+}
+.compact-empty {
+  min-height: 280px !important;
+  grid-column: 1/-1;
+}
+.library-tabs + .installed-status {
+  margin-top: 12px;
+}
+.settings-path-error {
+  display: block;
+  margin-top: 10px;
+  color: var(--astral-danger);
+  font-size: 11px;
+}
+.profile-code-card button:disabled {
+  opacity: 0.55;
+}

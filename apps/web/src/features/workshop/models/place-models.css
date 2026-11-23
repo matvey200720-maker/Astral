@@ -1,0 +1,237 @@
+/*
+ * Инструмент «Модели» мест мастерской (задача 1 ТЗ 11.10.2026, вечер):
+ * список-слои с раскрытой выбранной и плашка ручек над кадром. Строки —
+ * как у списка эмблем (`recolor-editor.css`), раскрытая — с настройками.
+ */
+
+.place-models-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.place-models-row {
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+}
+
+.place-models-row.is-selected {
+  border-color: var(--astral-line);
+  background: color-mix(in srgb, var(--astral-ink) 6%, transparent);
+}
+
+.place-models-row.is-hidden .place-models-copy,
+.place-models-row.is-hidden .place-models-thumb {
+  opacity: 0.45;
+}
+
+.place-models-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding-right: 4px;
+}
+
+.place-models-pick {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 4px 6px 6px;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.place-models-pick:hover {
+  background: var(--astral-surface-hover);
+}
+
+.place-models-pick:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+.place-models-caret {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  color: var(--astral-ink-muted);
+}
+
+.place-models-thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background:
+    repeating-conic-gradient(rgba(255, 255, 255, 0.08) 0% 25%, transparent 0% 50%) 0 0 / 8px 8px,
+    var(--fx-matte);
+}
+
+.place-models-thumb.is-sphere,
+.place-models-thumb.is-cylinder {
+  border-radius: 999px;
+}
+
+.place-models-thumb > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.place-models-copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.place-models-copy b,
+.place-models-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.place-models-copy b {
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.place-models-copy small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.place-models-settings {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 4px 10px 12px;
+}
+
+
+.place-models-axes {
+  display: grid;
+  gap: 6px;
+}
+
+/* Живая картинка: в снимке строки — первый кадр атласа. */
+.place-models-thumb.is-live {
+  place-items: start;
+}
+
+/* Повороты шагами — одним рядом кнопок: шаги — по подписи, «Развернуть» — остаток. */
+.place-models-turns {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 4px;
+}
+
+/* «Точно» — свёрнутый раздел точных цифр: общая кнопка, подпись — к левому краю. */
+.place-models-exact-toggle.ui-button {
+  justify-content: flex-start;
+}
+
+.place-models-exact {
+  display: grid;
+  gap: 10px;
+}
+
+.place-models-problem {
+  color: var(--astral-ink);
+}
+
+/* Пять форм — сеткой по три: в ряд подписи обрезались бы. */
+.place-models-shapes.ui-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+/* Плашка ручек над кадром — на месте плашки «Эмблема в руке». */
+.place-models-stagebar .ui-segmented {
+  flex: none;
+}
+
+.place-models-stagebar .ui-segmented .ui-segment {
+  flex: none;
+  padding: 0 10px;
+}
+
+/*
+ * «?» у заголовка общего раздела (`features/workshop/section-help.jsx`: «Свои модели», «Узоры», «Эмблемы и
+ * надписи»; ТЗ владельца 29.10.2026, п. 3.1) — как «?» у заголовков инспектора арены: тихий значок, раскрытый —
+ * светлее. Лист «Своих моделей» стоит в `styles/index.css` и есть у всех редакторов — поэтому правила здесь.
+ */
+/* Заголовок с «?» и своими органами (`actions`): имя занимает строку, «?» и органы — справа одной группой. */
+.section-help-head > h3 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.section-help.ui-button {
+  flex: none;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  color: var(--astral-ink-faint);
+  transition:
+    color var(--astral-duration-snap) var(--astral-ease),
+    background var(--astral-duration-snap) var(--astral-ease);
+}
+
+.section-help.ui-button:hover,
+.section-help.ui-button.is-open {
+  color: var(--astral-ink);
+  background: var(--astral-surface-hover);
+}
+
+.section-help.ui-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.section-help-note {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.section-help-text {
+  display: grid;
+  gap: 6px;
+}
+
+.section-help-text > p {
+  margin: 0;
+}
+
+/* «Гифка на стену» (11.11.2026): нагрузка живых гифок на место и жёлтые предупреждения. */
+.place-models-load {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.place-models-warn.fx-hint {
+  color: var(--astral-warning);
+}

@@ -1,0 +1,581 @@
+/*
+ * Левая панель — итог F (владелец, 15.11.2026): каркас «Контур» и значки
+ * «Силуэт». Чёрный фон, кнопка 44 px (было 48: владелец 16.11.2026, «значки в левой рейке чуть меньше»), у выбранного раздела плашка и белая
+ * полоска у левого края; подписей на рейке нет, имя и «Ctrl N» — в подсказке.
+ *
+ * Лист один на всю рейку и держит `!important` намеренно: вид рейки раньше
+ * складывался из тринадцати листов, и последняя правка не выигрывала. Лист
+ * лежит в слое `workshop-contracts` сразу за стеклянным контрактом: важные
+ * объявления читают слои в обратном порядке, так что отсюда контракт достаёт
+ * до всех тринадцати. Поверхность рейки остаётся за
+ * `ui-matte-glass-contract.css`.
+ *
+ * Состояния переключаются `opacity` и `transform` (композитор); заливка
+ * наведения — цвет фона, он дешёвый. Выключатель движения (`motion-switch.css`)
+ * идёт раньше и гасит всё объявленное здесь.
+ */
+
+.desktop-app {
+  /* Шаг ряда = слот + зазор: на этих числах стоят и сетка, и подсветка. */
+  --rail-slot: 44px;
+  --rail-gap: 6px;
+  --rail-pad: 14px;
+  --rail-step: calc(var(--rail-slot) + var(--rail-gap));
+  --rail-radius: var(--astral-radius);
+  --rail-glyph: 21px;
+  --rail-ink: #8e8e94;
+  --rail-ink-hover: #ffffff;
+  --rail-hover: rgba(255, 255, 255, 0.06);
+  --rail-pill: rgba(255, 255, 255, 0.1);
+  --rail-pill-ink: #ffffff;
+  /* Цифры бейджа — по шкале кеглей, самый мелкий шаг (аудит окна 16.11.2026: 9 px не входил в шкалу и был ниже минимума). */
+  --rail-badge-size: var(--astral-text-small);
+
+  --rail-ease: cubic-bezier(0.22, 0.86, 0.28, 1);
+  /* Небольшой перелёт: подсветка приезжает в слот, а не подползает в него. */
+  --rail-spring: cubic-bezier(0.32, 1.24, 0.4, 1);
+}
+
+/* Геометрия ---------------------------------------------------------------- */
+
+.desktop-app .desktop-sidebar.compact-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: var(--rail-pad) 0 !important;
+  /* Подсказка выходит за край рейки, поэтому рейка её не обрезает. */
+  overflow: visible !important;
+  z-index: 20 !important;
+}
+
+.desktop-app .compact-sidebar nav {
+  position: relative !important;
+  display: grid !important;
+  width: var(--rail-slot) !important;
+  margin: 0 auto !important;
+  grid-auto-rows: var(--rail-slot) !important;
+  gap: var(--rail-gap) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+}
+
+/* Нижние кнопки — те же, что и наверху, внизу рейки. */
+.desktop-app .compact-sidebar .desktop-sidebar-bottom {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: var(--rail-pad) !important;
+  left: 0 !important;
+  width: auto !important;
+  min-height: 0 !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+}
+
+.desktop-app .compact-sidebar .sidebar-account {
+  display: grid !important;
+  width: var(--rail-slot) !important;
+  margin-inline: auto !important;
+  grid-auto-rows: var(--rail-slot) !important;
+  gap: var(--rail-gap) !important;
+}
+
+.desktop-app .compact-sidebar :is(nav, .sidebar-account) > button {
+  position: relative !important;
+  z-index: 1;
+  width: var(--rail-slot) !important;
+  height: var(--rail-slot) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: var(--rail-radius) !important;
+  color: var(--rail-ink) !important;
+  background: none !important;
+  box-shadow: none !important;
+  /* Движение кнопки — только `transform` отсюда: общие правила
+     (`product-v5.css`) подбрасывали значок под курсором и сжимали его сильнее
+     плашки под ним. */
+  translate: none !important;
+  scale: none !important;
+  cursor: pointer;
+  transition:
+    color var(--astral-duration) ease,
+    background-color var(--astral-duration-fast) ease,
+    transform var(--astral-duration) var(--rail-ease) !important;
+}
+
+.desktop-app .compact-sidebar :is(nav, .sidebar-account) > button > svg {
+  position: relative;
+  z-index: 2;
+  width: var(--rail-glyph) !important;
+  height: var(--rail-glyph) !important;
+  overflow: visible;
+  color: currentColor !important;
+  /* Постоянный слой композитора на каждый значок не нужен: он поднимается
+     только на время росчерка. */
+  will-change: auto !important;
+  transform-box: view-box !important;
+  transform-origin: 50% 50% !important;
+}
+
+/* Наведение: значок в полный свет и тихая заливка под ним; у выбранной
+   заливки нет — под ней уже стоит плашка. */
+.desktop-app
+  .compact-sidebar
+  :is(nav, .sidebar-account)
+  > button:not(.active):hover {
+  color: var(--rail-ink-hover) !important;
+  background: var(--rail-hover) !important;
+}
+
+.desktop-app .compact-sidebar :is(nav, .sidebar-account) > button:active {
+  transform: scale(0.93) !important;
+  transition-duration: var(--astral-duration-snap) !important;
+}
+
+.desktop-app
+  .compact-sidebar
+  :is(nav, .sidebar-account)
+  > button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.75) !important;
+  outline-offset: 2px !important;
+}
+
+/* Выбранное ---------------------------------------------------------------- */
+
+.desktop-app .compact-sidebar :is(nav, .sidebar-account) > button.active {
+  color: var(--rail-pill-ink) !important;
+}
+
+/* Одна плашка на всю навигацию: она переезжает между слотами, а не
+   зажигается заново в каждом. Полоска у левого края едет вместе с ней.
+   Тени у плашки нет: под полупрозрачной заливкой она ложилась бы грязным
+   пятном на рейку. */
+.desktop-app .compact-sidebar .nav-rail-pill {
+  --rail-shift: calc(var(--rail-active, 0) * var(--rail-step));
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: var(--rail-slot);
+  height: var(--rail-slot);
+  border-radius: var(--rail-radius);
+  background: var(--rail-pill);
+  opacity: 0;
+  transform: translate3d(0, var(--rail-shift), 0) scale(0.84);
+  pointer-events: none;
+  transition:
+    transform 420ms var(--rail-spring),
+    opacity var(--astral-duration) ease;
+}
+
+.desktop-app .compact-sidebar nav[data-rail-active] .nav-rail-pill {
+  opacity: 1;
+  transform: translate3d(0, var(--rail-shift), 0) scale(1);
+}
+
+.desktop-app
+  .compact-sidebar
+  nav[data-rail-active]:has(> button.active:active)
+  .nav-rail-pill {
+  transform: translate3d(0, var(--rail-shift), 0) scale(0.93);
+  transition-duration: var(--astral-duration-snap);
+}
+
+/* Внизу «выбрано» — режим, а не место в списке: общей плашке ехать некуда, и
+   каждая кнопка зажигает свою (плашка — `::after`, полоска — `::before`). */
+.desktop-app .compact-sidebar .nav-rail-pill::before,
+.desktop-app .compact-sidebar .sidebar-account > button::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: -12px;
+  width: 3px;
+  height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: var(--rail-pill-ink);
+}
+
+.desktop-app .compact-sidebar .sidebar-account > button::before {
+  opacity: 0;
+  transition: opacity var(--astral-duration) ease;
+}
+
+.desktop-app .compact-sidebar .sidebar-account > button::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: var(--rail-radius);
+  background: var(--rail-pill);
+  opacity: 0;
+  transform: scale(0.84);
+  pointer-events: none;
+  transition:
+    opacity var(--astral-duration) ease,
+    transform var(--astral-duration-slow) var(--rail-spring);
+}
+
+.desktop-app .compact-sidebar .sidebar-account > button.active::before {
+  opacity: 1;
+}
+
+.desktop-app .compact-sidebar .sidebar-account > button.active::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Число в углу: бейдж корзины и счётчик загрузок один и тот же — мелкие белые
+   цифры на чёрной плашке с тонкой рамкой. */
+.desktop-app .compact-sidebar .rail-badge {
+  position: absolute;
+  z-index: 3;
+  top: 3px;
+  right: 3px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: var(--astral-radius-xs);
+  color: var(--rail-pill-ink);
+  background: #000000;
+  font:
+    700 var(--rail-badge-size) / 1 Inter,
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.desktop-app .compact-sidebar :is(.active, :hover) > .rail-badge {
+  background: #161618;
+}
+
+/* Подсказка: имя раздела (и «Ctrl N») справа от кнопки. */
+.desktop-app .compact-sidebar .rail-tip {
+  position: absolute;
+  z-index: 9;
+  top: 50%;
+  left: calc(100% + 14px);
+  display: none !important;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--astral-radius-sm);
+  color: #f4f4f5;
+  background: #0f0f10;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  font:
+    600 var(--astral-text-small) / 1.2 Inter,
+    system-ui,
+    sans-serif;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.desktop-app .compact-sidebar button:is(:hover, :focus-visible) > .rail-tip {
+  display: flex !important;
+}
+
+.desktop-app .compact-sidebar .rail-tip i {
+  color: #a6a6ac;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.desktop-app .compact-sidebar .rail-tip kbd {
+  padding: 2px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--astral-radius-xs);
+  color: #a6a6ac;
+  font:
+    600 var(--astral-text-micro) / 1.2 Inter,
+    system-ui,
+    sans-serif;
+}
+
+/* Появление --------------------------------------------------------------- */
+
+.desktop-app .compact-sidebar :is(nav, .sidebar-account) > button {
+  animation: astral-rail-item-in 420ms var(--rail-ease) backwards !important;
+  animation-delay: calc(var(--rail-index, 0) * 40ms) !important;
+}
+
+@keyframes astral-rail-item-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-10px, 0, 0) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Движение значков --------------------------------------------------------
+   Каждый значок Phosphor — один `path`, поэтому анимировать по частям нечего:
+   прежние правила разбирали значок на `:nth-child(2)`, `:nth-child(3)` и
+   `path:first-child`, которых в разметке нет, и половина «фирменных» движений
+   рельса не проигрывалась ни разу. Движение живёт на самом `svg`, по одному
+   росчерку на раздел, и `will-change` включается только на время росчерка. */
+
+.desktop-app .compact-sidebar button.is-nav-icon-pop > svg,
+.desktop-app .compact-sidebar button.is-download-impact > svg,
+.desktop-app .compact-sidebar button.is-settings-gear-spin > svg {
+  will-change: transform !important;
+}
+
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="overview"]
+  > svg {
+  animation: astral-rail-house-land 0.58s var(--rail-spring) !important;
+}
+
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="catalog"]
+  > svg {
+  animation: astral-rail-grid-frame 0.6s var(--rail-spring) !important;
+}
+
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="workshop"]
+  > svg {
+  animation: astral-rail-wrench-turn 0.64s var(--rail-spring) !important;
+}
+
+/* Книги на полке: наклонились и встали на место. */
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="library"]
+  > svg {
+  animation: astral-rail-books-settle 0.62s var(--rail-spring) !important;
+}
+
+/* DLSS 5: кадр наводится в фокус — чуть дальше, ближе и резко. */
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="reshade"]
+  > svg {
+  animation: astral-rail-lens-focus 0.6s var(--rail-spring) !important;
+}
+
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="game-settings"]
+  > svg {
+  animation: astral-rail-file-lift 0.6s var(--rail-spring) !important;
+}
+
+.desktop-app
+  .compact-sidebar
+  button.is-nav-icon-pop[data-nav-motion="profiles"]
+  > svg {
+  animation: astral-rail-layers-stack 0.6s var(--rail-spring) !important;
+}
+
+.desktop-app .compact-sidebar button.is-download-impact > svg {
+  animation: astral-rail-download-impact 0.62s cubic-bezier(0.18, 0.88, 0.24, 1) !important;
+}
+
+.desktop-app .compact-sidebar button.is-settings-gear-spin > svg {
+  animation: astral-rail-gear-turn 0.7s var(--rail-spring) !important;
+}
+
+@keyframes astral-rail-house-land {
+  0% {
+    transform: translateY(3px) scale(0.94);
+  }
+  42% {
+    transform: translateY(-4px) scale(1.06);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-grid-frame {
+  0% {
+    transform: rotate(-8deg) scale(0.9);
+  }
+  46% {
+    transform: rotate(5deg) scale(1.08);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-wrench-turn {
+  0% {
+    transform: rotate(-22deg) scale(0.94);
+  }
+  48% {
+    transform: rotate(14deg) scale(1.07);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-books-settle {
+  0% {
+    transform: translateX(-3px) rotate(-9deg) scale(0.94);
+  }
+  46% {
+    transform: translateX(2px) rotate(6deg) scale(1.06);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-lens-focus {
+  0% {
+    transform: scale(0.86) rotate(-6deg);
+  }
+  48% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-file-lift {
+  0% {
+    transform: translateY(4px) rotate(-5deg);
+  }
+  46% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-layers-stack {
+  0% {
+    transform: translateY(-5px) scaleY(0.82);
+  }
+  52% {
+    transform: translateY(2px) scaleY(1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-download-impact {
+  0% {
+    transform: translateY(-4px) scale(0.96);
+  }
+  46% {
+    transform: translateY(5px) scaleY(0.86) scaleX(1.14);
+  }
+  72% {
+    transform: translateY(0) scaleY(1.06) scaleX(0.96);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes astral-rail-gear-turn {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  58% {
+    transform: rotate(205deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(180deg) scale(1);
+  }
+}
+
+/* Редактор мастерской открыт — рейка уходит --------------------------------- */
+
+/*
+ * Владелец, 03.10.2026: вошёл в редактор мастерской — левая панель лаунчера
+ * плавно прячется и отдаёт место кадру; вышел — так же плавно возвращается.
+ * Редактор «как в Photoshop» — это колонка инструментов, кадр и панель, и
+ * четвёртая колонка рейки слева от них только отнимала у кадра ширину.
+ *
+ * Признак — сама раскладка редактора на странице (`data-layout` у каркаса,
+ * `EditorShell`: «studio» — редактор, «board» — карточки оптимизации), а не
+ * состояние где-то в оболочке. Открытый
+ * редактор живёт в памяти раздела, и оболочка о нём не знает; заводить ей
+ * подписку значило бы держать два источника правды — и однажды рейка
+ * осталась бы спрятанной над закрытым редактором. Здесь их нет: редактор
+ * исчез из разметки — правило перестало совпадать — рейка вернулась.
+ *
+ * Колонка сетки и сама рейка едут вместе: колонка сжимается до нуля, рейка
+ * уходит влево на свою ширину. Видимость гаснет после ухода — спрятанные
+ * кнопки не ловят Tab и не говорят с читалкой.
+ */
+.desktop-app {
+  transition:
+    grid-template-columns 460ms var(--rail-ease),
+    color 0.42s,
+    background-color 0.42s,
+    border-color 0.42s,
+    box-shadow 0.42s !important;
+}
+
+/* Редактор «как в Photoshop» помечает оболочку сам (`EditorShell`, `useHolds.js`). Метка трижды — вес
+   прежнего `:has(.desktop-content .ui-editor-shell[data-layout])`, чтобы каскад не сдвинулся. */
+.desktop-app[data-holds~="editor-layout"][data-holds~="editor-layout"][data-holds~="editor-layout"] {
+  grid-template-columns: 0px minmax(0, 1fr) !important;
+}
+
+.desktop-app .desktop-sidebar.compact-sidebar {
+  visibility: visible;
+  transition:
+    transform 460ms var(--rail-ease),
+    opacity 360ms ease,
+    visibility 0s !important;
+}
+
+.desktop-app[data-holds~="editor-layout"][data-holds~="editor-layout"][data-holds~="editor-layout"]
+  .desktop-sidebar.compact-sidebar {
+  visibility: hidden;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-100%) !important;
+  transition:
+    transform 460ms var(--rail-ease),
+    opacity 360ms ease,
+    visibility 0s linear 460ms !important;
+}
+
+/* Моды пропали после проверки файлов: янтарная точка на шестерёнке (владелец, 16.11.2026). */
+.desktop-app .compact-sidebar .app-settings-button {
+  position: relative;
+}
+
+.desktop-app .compact-sidebar .app-settings-button > .rail-alert-dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 3;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: var(--astral-warning) !important;
+  pointer-events: none;
+}

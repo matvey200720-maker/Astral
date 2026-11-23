@@ -1,0 +1,58 @@
+/*
+  Сминание листа работы: стандартный переход корня гасим,
+  а лист и тень рисуют отдельные слои поверх страницы.
+*/
+
+/* Вложенные псевдоэлементы перехода — единственное место листа, которое стоит
+   один раз проверить глазами в окне при сминании: `&` раскрывается в
+   `:is(html.is-work-crumpling)`, а разбор `::view-transition-*(имя)` после него
+   ни стенд, ни тесты не покрывают. Запасной вариант — полные селекторы
+   `html.is-work-crumpling::view-transition-…` без вложенности. */
+html.is-work-crumpling {
+  /* сам корень не участвует в переходе */
+  view-transition-name: none;
+
+  &::view-transition-new(astral-work-sheet) {
+    mix-blend-mode: soft-light;
+    animation: none;
+    opacity: 0;
+  }
+
+  &::view-transition-old(astral-work-sheet) {
+    mix-blend-mode: normal;
+    animation: none;
+    opacity: 1;
+  }
+
+  &::view-transition-image-pair(astral-work-sheet) {
+    isolation: isolate;
+    animation: none;
+  }
+
+  &::view-transition-group(astral-work-sheet) {
+    animation: none;
+  }
+
+  &::view-transition {
+    pointer-events: none;
+  }
+}
+
+/* складки и затемнение лежат поверх страницы и не ловят мышь */
+.work-crumple-folds,
+.work-crumple-shade {
+  pointer-events: none;
+  position: fixed;
+}
+
+.work-crumple-folds {
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.work-crumple-shade {
+  --crumple-veil: var(--astral-scrim);
+  z-index: 900;
+  opacity: 0;
+  background: var(--crumple-veil);
+}

@@ -1,0 +1,232 @@
+/* Витрина: слот с карточкой (своя, платная, лента, полоса, сборки), бейдж, спонсорская подпись и кнопка «скрыть». */
+
+/* Сама карточка */
+.showcase-card {
+  aspect-ratio: 2 / 1;
+  isolation: isolate;
+  width: 100%;
+  background: var(--astral-surface-sunken);
+  overflow: hidden;
+  border: var(--astral-line) solid 1px;
+  border-radius: var(--astral-radius-lg);
+  position: relative;
+
+  /* своя карточка: картинка затемняется снизу, текст поверх */
+  &.is-own {
+    & .showcase-media::after {
+      inset: 0;
+      background: linear-gradient( 180deg, rgba(0, 0, 0, .2) 0%, rgba(0, 0, 0, .72) 42%, rgba(0, 0, 0, .9) 100% );
+      position: absolute;
+      content: "";
+    }
+
+    & .showcase-copy {
+      min-width: 0;
+      inset-inline: 12px;
+      bottom: 12px;
+      z-index: 1;
+      display: grid;
+      gap: 4px;
+      justify-items: start;
+      position: absolute;
+
+      /* узкая карточка: описание не показываем */
+      & > span {
+        @container showcase (max-width: 300px) {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+.showcase-slot--feed .showcase-card {
+  aspect-ratio: auto;
+  height: 100%;
+}
+
+/* Виды слота */
+.showcase-slot--card {
+  container-name: showcase;
+  container-type: inline-size;
+}
+
+/* Слот: рамка места на странице */
+.showcase-slot {
+  min-width: 0;
+  width: 100%;
+  position: relative;
+
+  /* карточка ещё грузится: фон посветлее */
+  &.is-pending .showcase-card {
+    background: var(--astral-surface);
+  }
+}
+
+/* Полоса: картинка слева, текст справа */
+.showcase-slot--strip {
+  & .showcase-card,
+  & .showcase-link {
+    grid-template-columns: 256px minmax(0, 1fr);
+    display: grid;
+  }
+
+  & .showcase-card {
+    aspect-ratio: auto;
+    height: 128px;
+
+    &.is-own .showcase-media::after {
+      display: none;
+    }
+
+    &.is-paid .showcase-copy > span {
+      color: var(--astral-ink-muted);
+    }
+  }
+
+  & .showcase-link {
+    grid-column: 1 / -1;
+  }
+
+  & .showcase-media {
+    inset: auto;
+    height: 100%;
+    grid-column: 1;
+    position: relative;
+  }
+
+  & .showcase-copy,
+  & .showcase-card.is-own .showcase-copy {
+    grid-column: 2;
+    align-content: center;
+    padding: 12px 56px 12px 20px;
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+    position: static;
+  }
+
+  & .showcase-sponsor {
+    left: 264px;
+  }
+}
+
+/* Бейдж в левом верхнем углу */
+.showcase-badge {
+  left: 8px;
+  top: 8px;
+  align-items: center;
+  padding: 0 2px 0 8px;
+  border-radius: var(--astral-radius-sm);
+  display: inline-flex;
+  gap: 2px;
+
+  & .showcase-info {
+    min-height: var(--astral-control-h-xs);
+    min-width: var(--astral-control-h-xs);
+    color: var(--astral-ink);
+  }
+}
+
+/* Сборки: слот с минимальной высотой */
+.showcase-slot--builds {
+  min-height: 160px;
+
+  & .showcase-card {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+}
+
+.showcase-slot--feed,
+.showcase-slot--builds {
+  height: 100%;
+  contain: size;
+}
+
+.showcase-hide {
+  right: 8px;
+  top: 8px;
+}
+
+/* Текст под заголовком карточки */
+.showcase-copy {
+  & time {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+
+  /* заголовок и описание: не больше двух строк */
+  & strong,
+  & > span {
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+  }
+
+  & strong {
+    color: var(--astral-ink);
+    line-height: 1.25;
+    font-weight: 600;
+    font-size: var(--astral-text-strong);
+  }
+
+  & > span {
+    color: var(--astral-ink-muted);
+    line-height: 1.4;
+    font-size: var(--astral-text-small);
+  }
+
+  & .showcase-open {
+    margin-top: 4px;
+  }
+}
+
+/* Бейдж, подпись спонсора и кнопка «скрыть»: плашки поверх картинки */
+.showcase-badge,
+.showcase-sponsor,
+.showcase-hide {
+  background: var(--astral-scrim);
+  color: var(--astral-ink);
+  z-index: 2;
+  position: absolute;
+}
+
+/* Подпись спонсора внизу карточки */
+.showcase-sponsor {
+  inset-inline: 8px;
+  bottom: 8px;
+  margin: 0;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: var(--astral-radius-sm);
+  font-size: var(--astral-text-small);
+}
+
+.showcase-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Ссылка на всю карточку и подложка под картинку: одно положение */
+.showcase-link,
+.showcase-media {
+  inset: 0;
+  display: block;
+  position: absolute;
+}
+
+.showcase-image {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+  display: block;
+  user-select: none;
+}
+
+.showcase-mark {
+  color: var(--astral-ink);
+  letter-spacing: .02em;
+  font-size: var(--astral-text-micro);
+}

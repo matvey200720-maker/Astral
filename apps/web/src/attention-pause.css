@@ -1,0 +1,32 @@
+/*
+ * Пауза бесконечных анимаций, пока окно не в фокусе или включён режим «горячо».
+ * Режим движения «выключено» (data-motion="off") сюда не попадает: там анимаций нет вовсе.
+ */
+
+/* Сцены студии и карт: на паузу уходят только при потере внимания, «горячий» режим их не трогает */
+:not([data-attention="active"])[data-attention]:not([data-motion="off"]):root :is(
+    .studio-weapon-smoke,
+    .studio-map-player,
+    .studio-tracer,
+    .studio-sniper-reticle,
+    .is-flowing.blips-route-arrow,
+    .studio-shell,
+    .studio-muzzle,
+    .studio-minimap-damage,
+    .studio-impact,
+    .studio-map-route,
+    .is-pulsing.studio-minimap-vitals,
+    .studio-atmosphere > i,
+    .is-flowing.blips-route-line,
+    .is-blinking.blips-blip .blips-art
+  ) {
+  animation-play-state: paused !important;
+}
+
+/* Каркас окна, тур и бег по идущему этапу загрузки: на паузе и при потере внимания, и в «горячем» режиме */
+:not([data-motion="off"]):is([data-power="hot"], :not([data-attention="active"])[data-attention]):root .dl-page .dl-stage.is-active .dl-bar::after,
+:is(:not([data-attention="active"])[data-attention], [data-power="hot"]):root:not([data-motion="off"]) :is(.ui-tour-spot, .desktop-app)::after,
+:root:is([data-power="hot"], :not([data-attention="active"])[data-attention]):not([data-motion="off"]) .desktop-app::before,
+:is(:not([data-attention="active"])[data-attention], [data-power="hot"]):not([data-motion="off"]):root :is(.ui-tour-arrow, .is-compact.studio-preview-scene *) {
+  animation-play-state: paused !important;
+}

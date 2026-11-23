@@ -1,0 +1,316 @@
+/*
+ * Полный предпросмотр на весь экран окна (`PreviewWindow.jsx`, Каталог 2.0, часть 2, доски `Preview-*`). Лист ленивый, едет с окном; правила — целиком в слое `overrides`.
+ * Окно стоит в оверлейном хосте приложения: левая колонка меню видна, остальное затенено. Цвета, углы, кегли и длительности — токены.
+ */
+@layer overrides {
+  .desktop-app .pv-window {
+    position: fixed;
+    inset: 56px 28px 28px 100px;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-xl);
+    background: var(--astral-surface-strong);
+    box-shadow:
+      0 0 0 100vmax rgba(0, 0, 0, 0.62),
+      var(--astral-shadow);
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .pv-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 16px;
+    min-height: 56px;
+    padding: 8px 60px 8px 28px;
+    border-bottom: 1px solid var(--astral-line);
+  }
+
+  .desktop-app .pv-title {
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--astral-text-strong);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .pv-controls {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .desktop-app .pv-switches {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .desktop-app .pv-switches .fx-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  /* Крестик — голый, справа вверху, 8 px от краёв, как у остальных окон предпросмотра страницы мода: ни плиты, ни рамки, значок с обводкой, наведение и фокус подсвечивают значок. */
+  .desktop-app .pv-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: var(--astral-control-h);
+    height: var(--astral-control-h);
+    padding: 0;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    box-shadow: none;
+    color: color-mix(in srgb, var(--astral-ink) 82%, transparent);
+    cursor: pointer;
+    transition: color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .pv-close svg {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(
+        0 0 1px color-mix(in srgb, var(--astral-void) 95%, transparent)
+      )
+      drop-shadow(
+        0 1px 3px color-mix(in srgb, var(--astral-void) 90%, transparent)
+      );
+  }
+
+  .desktop-app .pv-close:hover {
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .pv-close:focus {
+    outline: none;
+  }
+
+  .desktop-app .pv-close:focus-visible {
+    color: var(--astral-ink);
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -4px;
+  }
+
+  .desktop-app .pv-body {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 20px 28px 24px;
+  }
+
+  .desktop-app .pv-skeleton {
+    flex: 1 1 auto;
+    min-height: 240px;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  /*
+   * Место сцены (16.11.2026): внизу фото кадра и загрузчик по центру (`.pv-wait`), поверх — живая сцена (`.pv-live`), которая стоит прозрачной, пока не нарисует первый
+   * кадр, и проявляется, когда окно получило `data-shown`. Проявление и уход фото идут одной длительностью — это одна плавная смена, а не два мигания. Только opacity: слой
+   * сцены живёт на композиторе, ничего не пересчитывается.
+   */
+  .desktop-app .pv-stage {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .desktop-app .pv-live {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    opacity: 0;
+    transition: opacity 420ms var(--astral-ease);
+  }
+
+  .desktop-app .pv-window[data-shown] .pv-live {
+    opacity: 1;
+  }
+
+  .desktop-app .pv-wait {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 420ms var(--astral-ease);
+  }
+
+  .desktop-app .pv-window[data-shown] .pv-wait {
+    opacity: 0;
+  }
+
+  /* Фото кадра целиком по центру, чуть притушено: загрузчик над ним читается. */
+  .desktop-app .pv-poster {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0.62);
+  }
+
+  .desktop-app .pv-wait > .pv-skeleton {
+    grid-area: 1 / 1;
+    align-self: stretch;
+    justify-self: stretch;
+  }
+
+  /* Подпись ожидания — плашка макета «Загружаем кадр…» (r8/loaders): 26 px, радиус 8, полупрозрачная тёмная, тонкая обводка, бегущая черта снизу. Стоит по центру кадра. */
+  .desktop-app .pv-loader {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .desktop-app .pv-loader-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    padding: 0 10px 0 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--astral-radius);
+    background: rgba(0, 0, 0, 0.66);
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .desktop-app .pv-loader-chip > svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .desktop-app .pv-loader-bar {
+    position: absolute;
+    right: 8px;
+    bottom: 0;
+    left: 8px;
+    height: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .desktop-app .pv-loader-bar::after {
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    border-radius: 2px;
+    background: var(--astral-ink);
+    transform: translateX(-100%);
+    animation: pv-bar 1400ms linear 12;
+    content: "";
+  }
+
+  @keyframes pv-bar {
+    to {
+      transform: translateX(250%);
+    }
+  }
+
+  /* Органы вида в шапке встают вместе со сценой: до этого управлять нечем. */
+  .desktop-app .pv-controls {
+    opacity: 0;
+    transition: opacity 420ms var(--astral-ease);
+  }
+
+  .desktop-app .pv-window[data-shown] .pv-controls {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .pv-loader-bar::after {
+      animation-duration: 2800ms;
+    }
+  }
+
+  .desktop-app .pv-failure {
+    margin: auto;
+    max-width: 52ch;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    text-align: center;
+  }
+
+  /* Миникарта: слева «в игре, 1:1», справа крупно; подписи под кадрами. */
+  .desktop-app .pv-minimap {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 56px;
+    min-height: 0;
+  }
+
+  .desktop-app .pv-minimap figure {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    min-width: 0;
+  }
+
+  /* Развёрнутый радар (как по Z) — 115 × 120 точек из сцены 191 × 136: по высоте он занимает 120/191 ширины фигуры. Окно отдаёт ему всё место справа
+     от малой карты, но не выше окна: ширина фигуры не больше (высота окна − 220 px) × 191 / 120, иначе радар вышел бы мельче прежней увеличенной карты. */
+  .desktop-app .pv-minimap-big {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: min(980px, calc((100vh - 220px) * 191 / 120));
+  }
+
+  /* Сцена мини-карты сама ограничена шириной 384 px (`minimap-customizer.css`, `.mmc-map`): без этого развёрнутый радар оставался в 230 px при любой ширине фигуры. */
+  .desktop-app .pv-minimap-big .mmc-map {
+    width: 100%;
+  }
+
+  .desktop-app .pv-minimap figcaption {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    text-align: center;
+  }
+
+  /* Небо и прицел: сцена мастерской на весь кадр окна. */
+  .desktop-app .pv-sky,
+  .desktop-app .pv-reticle {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .desktop-app .pv-sky > *,
+  .desktop-app .pv-reticle > * {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}

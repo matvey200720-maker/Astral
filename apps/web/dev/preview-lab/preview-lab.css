@@ -1,0 +1,186 @@
+/*
+ * Оформление стенда. Ни один общий файл стилей продукта здесь не подключён:
+ * стенд обязан подниматься без цепочки приложения, а вместе с ней приедет и
+ * настольный мост. Поэтому — свой короткий набор правил, без токенов.
+ *
+ * Панель нарочно тёмная и плотная: кадр сцены сравнивают с игрой, и светлая
+ * рамка вокруг сбивала бы оценку яркости.
+ */
+
+:root {
+  color-scheme: dark;
+  --lab-ink: #f2f4f8;
+  --lab-mute: #8c93a1;
+  --lab-line: #23262e;
+  --lab-bar: #0d0e12;
+  --lab-accent: #6ea8ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#preview-lab-root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #050505;
+  color: var(--lab-ink);
+  font: 13px/1.45 "Segoe UI", system-ui, sans-serif;
+}
+
+.lab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.lab__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 16px;
+  background: var(--lab-bar);
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.lab__brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-right: 4px;
+}
+
+.lab__group {
+  display: flex;
+  gap: 4px;
+}
+
+.lab__chip {
+  padding: 5px 11px;
+  border: 1px solid var(--lab-line);
+  border-radius: 999px;
+  background: #14161c;
+  color: var(--lab-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.lab__chip:hover {
+  border-color: #3a3f4b;
+}
+
+.lab__chip--ghost {
+  background: transparent;
+  color: var(--lab-mute);
+  padding: 4px 9px;
+}
+
+.lab__field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lab__field--wide {
+  min-width: 220px;
+  flex: 1 1 220px;
+}
+
+/* Список сцен собирается с диска, и длина названия заранее неизвестна: место
+   под него берётся с запасом, чтобы панель не переставляла соседей на каждую
+   новую сцену. */
+.lab__field--scene select {
+  min-width: 190px;
+  max-width: 320px;
+}
+
+.lab__field input[type="range"] {
+  width: 100%;
+  accent-color: var(--lab-accent);
+}
+
+.lab__field select {
+  background: #14161c;
+  color: var(--lab-ink);
+  border: 1px solid var(--lab-line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+}
+
+.lab__label {
+  color: var(--lab-mute);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lab__label b {
+  color: var(--lab-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.lab__state {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--lab-line);
+  color: var(--lab-mute);
+  font-size: 11px;
+}
+
+.lab__state--on {
+  color: #7fe0a4;
+  border-color: #23503a;
+}
+
+/* Сцена занимает всё, что осталось. Окно превью само решает, как заполнить
+   этот прямоугольник, — стенд лишь отдаёт ему площадь и не мешает. */
+.lab__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #000;
+}
+
+.lab__stage > * {
+  width: 100%;
+  height: 100%;
+}
+
+.lab__notice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 32px 40px;
+  background: rgba(5, 5, 5, 0.94);
+}
+
+.lab__notice h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.lab__notice p {
+  margin: 0;
+  color: #ff9b8a;
+}
+
+.lab__notice ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--lab-mute);
+}
+
+.lab__notice .lab__hint {
+  color: var(--lab-mute);
+  margin-top: 10px;
+}

@@ -1,0 +1,160 @@
+/* Верхний ряд мастерской и поверхность раскрытия каталога оружия.
+   Лист подключён после листов темы, чтобы вид ряда не зависел от того, какой
+   из них правили последним.
+
+   Сборки здесь больше нет. Вход карточки был написан четырьмя проходами сразу,
+   и один из них жил в этом листе; теперь вся хореография появления — каталог,
+   полки мастерской, каталог оружия, комната редактора — собрана в
+   assembly-motion.css. Сюда её не возвращать: смысл того листа в том, что
+   очередь карточек описана в одном месте. */
+
+.desktop-app .catalog-v3[data-workshop-section] {
+  --workshop-motion-ease: cubic-bezier(0.16, 0.88, 0.24, 1);
+}
+
+/* The disclosure is now a native workshop surface instead of a white system
+   select. */
+.desktop-app .weapon-catalog-disclosure {
+  min-height: 72px;
+  margin: 4px 18px 18px !important;
+  padding: 10px 12px 10px 16px !important;
+  align-items: center;
+  border: 1px solid var(--workshop-outline) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: color-mix(
+    in srgb,
+    var(--workshop-surface-strong) 84%,
+    transparent
+  ) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 12px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.desktop-app .weapon-catalog-disclosure-summary {
+  display: flex;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.desktop-app .weapon-catalog-disclosure-summary > span {
+  color: var(--workshop-ink) !important;
+  font-size: 13px !important;
+  font-weight: 820 !important;
+  letter-spacing: -0.01em;
+}
+
+.desktop-app .weapon-catalog-disclosure-summary > strong {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 5px 8px;
+  color: var(--workshop-ink-soft) !important;
+  border: 1px solid var(--workshop-outline);
+  border-radius: 999px;
+  background: var(--workshop-surface-soft);
+}
+
+.desktop-app .weapon-catalog-disclosure-summary > strong b {
+  color: var(--workshop-ink);
+  font-size: 12px;
+}
+
+.desktop-app .weapon-catalog-disclosure-summary > strong small {
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.desktop-app .weapon-catalog-disclosure > button,
+.desktop-app .weapon-catalog-disclosure > button:hover {
+  min-width: 220px;
+  min-height: 50px !important;
+  padding: 7px 7px 7px 15px !important;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--workshop-ink) !important;
+  border: 1px solid var(--workshop-outline-strong) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background:
+    linear-gradient(135deg, rgba(155, 155, 155, 0.12), transparent 72%),
+    var(--workshop-surface-soft) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 8px 18px rgba(0, 0, 0, 0.06) !important;
+}
+
+.desktop-app .weapon-catalog-disclosure > button:hover {
+  border-color: rgba(155, 155, 155, 0.48) !important;
+  background:
+    linear-gradient(135deg, rgba(155, 155, 155, 0.2), transparent 72%),
+    var(--workshop-surface-strong) !important;
+  transform: translateY(-1px);
+}
+
+.desktop-app .weapon-catalog-disclosure-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  text-align: left;
+}
+
+.desktop-app .weapon-catalog-disclosure-copy b {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 820;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app .weapon-catalog-disclosure-copy small {
+  color: var(--workshop-ink-soft);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.desktop-app .weapon-catalog-disclosure-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  color: var(--workshop-ink);
+  border-radius: var(--astral-radius);
+  background: color-mix(in srgb, var(--workshop-ink) 8%, transparent);
+  place-items: center;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    transform var(--astral-duration-slow) var(--workshop-motion-ease);
+}
+
+.desktop-app
+  .weapon-catalog-disclosure
+  > button.is-expanded
+  .weapon-catalog-disclosure-icon {
+  color: rgb(155, 155, 155);
+  background: rgba(155, 155, 155, 0.14);
+  transform: rotate(180deg);
+}
+
+.desktop-app .weapon-catalog-disclosure-icon svg,
+.desktop-app
+  .weapon-catalog-disclosure
+  > button.is-expanded
+  .weapon-catalog-disclosure-icon
+  svg {
+  width: 16px;
+  height: 16px;
+  transform: none !important;
+}
+
+@media (max-width: 720px) {
+  .desktop-app .weapon-catalog-disclosure {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .desktop-app .weapon-catalog-disclosure > button {
+    width: 100%;
+    min-width: 0;
+  }
+}

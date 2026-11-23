@@ -1,0 +1,502 @@
+/*
+ * Кастомизатор фасадов торгового центра.
+ *
+ * Шапка, тело и колонка справа приходят из общего каркаса
+ * (`styles/editor-shell.css`), кадр — из общего окна превью
+ * (`preview/preview-window.css`). Здесь остаётся то, что принадлежит именно
+ * этому редактору: список сторон здания, слои, плашки поверх трёхмерной сцены.
+ *
+ * Цвета — из палитры `--astral-*`. Своих здесь было полсотни: собственный фон
+ * #0d0d0e мимо палитры, четыре оттенка серого на панели, три на кнопки, свой
+ * зелёный и свой жёлтый на статусы. Переживает переход одно исключение, и оно
+ * то же, что у арены: тёмное стекло плашек поверх сцены. Под ними трёхмерное
+ * здание, а не страница Astral, и светлая панель на нём в светлой теме
+ * читается как дырка в картинке.
+ */
+
+.mega-mall-customizer {
+  --mall-glass: rgba(9, 11, 16, 0.78);
+  --mall-glass-line: rgba(255, 255, 255, 0.13);
+  --mall-glass-ink: rgba(255, 255, 255, 0.92);
+  /* Шкала суток стоит под кадром и забирает свою высоту у него: плашки в
+     нижнем углу сцены поднимаются ровно на неё, иначе они лягут на полосу
+     времени — единственный орган, которым здесь и правят освещение. */
+  --mall-timeline-height: 52px;
+  color: var(--astral-ink);
+}
+
+/*
+ * Сброс шрифта у своих кнопок редактора — и только у своих.
+ *
+ * Правило существует ради «сырых» `<button>`, которые редактор рисует сам:
+ * браузер даёт им Arial 13.3px, и рядом с текстом приложения это видно. Но
+ * `.ui-button` и `.ui-segment` — примитивы дизайн-системы, у них свой кегль
+ * (11–12px) и свой вес, и `font: inherit` их перебивал: внутри редактора
+ * «Применить», «Отмена» и вкладки уезжали на 16px/400, то есть на шрифт
+ * страницы. Отсюда и «шрифт надо доработать там, где элементы, позиция на
+ * экране, применить, отмена» — они там были не такие, как везде.
+ *
+ * Исключение — по приставке `ui-`, а не поимённым списком: поимённый держался
+ * ровно до следующего примитива словаря. Под сброс попал `<select>`: он
+ * объявляет кегль 11, а `font: inherit` давал ему 16 — и список наложений
+ * («Затемнить», «Осветлить», «Контрастно», «Мягкий свет») стоял в колонке
+ * шрифтом крупнее всего, что рядом. То же доставалось полю кода цвета и полю
+ * значения ползунка. Органы внутри строки настройки вычеркнуты отдельно: там
+ * `input` своего класса не носит, набор ему задаёт сама строка.
+ */
+.mega-mall-customizer :is(button, input, select, textarea):not([class*="ui-"]):not(
+    :is(.ui-field, .ui-slider, .ui-color, .ui-checkbox, .ui-switch) *
+  ) {
+  font: inherit;
+}
+
+/* --- Кадр --- */
+
+.mega-mall-customizer-stage {
+  position: relative;
+  min-width: 0;
+}
+
+.mega-mall-3d-preview {
+  position: relative;
+  min-width: 0;
+}
+
+.mega-mall-3d-preview .preview-window-timeline {
+  min-height: var(--mall-timeline-height);
+}
+
+.mega-mall-view-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mega-mall-view-bar span {
+  color: var(--astral-ink-faint);
+  font-size: 11px;
+}
+
+.mega-mall-3d-hud {
+  position: absolute;
+  inset: 12px 12px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.mega-mall-3d-hud span,
+.mega-mall-3d-hud b {
+  padding: 5px 8px;
+  border: 1px solid var(--mall-glass-line);
+  border-radius: 999px;
+  color: var(--mall-glass-ink);
+  background: var(--mall-glass);
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+}
+
+.mega-mall-3d-hud b {
+  margin-left: auto;
+  color: var(--astral-accent);
+  border-color: var(--astral-line-focus);
+}
+
+/* Откуда взято здание: реальная модель из игры или схема. Человек должен
+   видеть разницу, не разбираясь в логах. */
+.mega-mall-3d-hud .mega-mall-3d-source[data-state="real"] {
+  color: var(--astral-positive);
+  border-color: rgba(var(--astral-positive-rgb), 0.42);
+}
+
+.mega-mall-3d-hud .mega-mall-3d-source[data-state="loading"] {
+  opacity: 0.72;
+}
+
+.mega-mall-3d-surface-buttons {
+  position: absolute;
+  inset: auto 12px calc(12px + var(--mall-timeline-height));
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.mega-mall-3d-surface-buttons button {
+  min-height: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--mall-glass-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--mall-glass-ink);
+  background: var(--mall-glass);
+  font-size: var(--astral-text-micro);
+  cursor: pointer;
+}
+
+.mega-mall-3d-surface-buttons img {
+  width: 24px;
+  height: 14px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.mega-mall-3d-surface-buttons button.is-active {
+  border-color: var(--astral-line-focus);
+  color: var(--astral-accent);
+}
+
+/* --- Строка хода работы --- */
+
+/* Не вторая шапка, а место, где видно живое: сколько поверхностей уже
+   пересобрано и что редактор только что сказал. Строка под названием стоит на
+   месте, эта меняется на глазах. */
+.mega-mall-statusbar {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+}
+.mega-mall-statusbar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mega-mall-statusbar svg {
+  width: 14px;
+  height: 14px;
+}
+.mega-mall-statusbar .is-gated {
+  color: var(--astral-warning);
+}
+.mega-mall-statusbar b {
+  margin-left: auto;
+  color: var(--astral-ink);
+  font-weight: 500;
+}
+
+/* --- Колонка справа --- */
+
+/*
+ * Стороны здания, материалы и права живут в одной колонке каркаса, а не в двух
+ * своих. Колонка при этом прокручивается сама: слоёв на стороне до четырёх, у
+ * каждого свой разбор, и вместе они длиннее любого экрана — прокручивать ради
+ * них всю страницу значит увозить кадр, по которому и правят.
+ */
+.mega-mall-inspector {
+  max-height: calc(100vh - 150px);
+  overflow: auto;
+}
+
+/* Шапка раздела: значок, название, подпись. Кегль названия общий
+   (`styles/editor-shell.css`); здесь оно было 16/700 — крупнее и тяжелее
+   названия самого редактора в шапке. Отступ снизу тоже ушёл: его
+   держит `gap` плашки. */
+.mega-mall-panel-title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.mega-mall-panel-title span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mega-mall-panel-title small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+.mega-mall-panel-title svg,
+.mega-mall-statusbar svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mega-mall-surfaces nav {
+  display: grid;
+  gap: 6px;
+}
+.mega-mall-surfaces nav button,
+.mega-mall-layer-list button,
+.mega-mall-presets button {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  text-align: left;
+  background: var(--astral-surface);
+  cursor: pointer;
+}
+.mega-mall-surfaces nav button.is-active,
+.mega-mall-layer-list button.is-active {
+  border-color: var(--astral-accent);
+  background: var(--astral-surface-raised);
+}
+.mega-mall-surfaces nav span,
+.mega-mall-layer-list span,
+.mega-mall-presets span {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.mega-mall-surfaces nav small,
+.mega-mall-layer-list small,
+.mega-mall-presets small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+.mega-mall-surfaces nav i {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-style: normal;
+}
+
+/* Три раздела в одной колонке: стороны здания, материалы, права. Волосок между
+   ними разделяет их — без него колонка читается одним длинным списком, в
+   котором палитра фасада стоит впритык к чекбоксу про авторские права. */
+.mega-mall-materials,
+.mega-mall-rights {
+  padding-top: 14px;
+  border-top: 1px solid var(--astral-line);
+}
+
+.mega-mall-rights {
+  display: grid;
+  gap: 10px;
+}
+.mega-mall-rights label,
+.mega-mall-layer-inspector label {
+  display: grid;
+  gap: 5px;
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+}
+.mega-mall-rights label:first-of-type {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  line-height: 1.35;
+}
+.mega-mall-rights input:not([type="checkbox"]),
+.mega-mall-rights select,
+.mega-mall-layer-inspector input:not([type="range"]),
+.mega-mall-layer-inspector select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: var(--astral-surface-sunken);
+  padding: 0 8px;
+}
+
+.mega-mall-presets > div:last-child {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.mega-mall-presets button {
+  padding: 7px;
+}
+.mega-mall-presets button > i {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: var(--astral-radius-sm);
+}
+
+.mega-mall-palette-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--astral-line);
+}
+.mega-mall-selected-surface {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 10px;
+  padding: 9px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+}
+.mega-mall-selected-surface label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--astral-ink);
+  font-size: 11px;
+}
+.mega-mall-selected-surface input {
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.mega-mall-selected-surface small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+.mega-mall-palette-grid label {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+}
+.mega-mall-palette-grid input {
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.mega-mall-add-layer {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--astral-line);
+}
+.mega-mall-add-layer > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+.mega-mall-add-layer button,
+.mega-mall-layer-actions button,
+.mega-mall-reset-surface {
+  min-height: 35px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--astral-line-strong);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: var(--astral-surface);
+  cursor: pointer;
+}
+.mega-mall-customizer button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mega-mall-add-layer svg,
+.mega-mall-layer-list svg,
+.mega-mall-layer-actions svg,
+.mega-mall-reset-surface svg {
+  width: 15px;
+  height: 15px;
+}
+.mega-mall-layer-list {
+  display: grid;
+  gap: 5px;
+  padding: 12px 0;
+}
+.mega-mall-layer-inspector {
+  display: grid;
+  gap: 11px;
+  padding-top: 12px;
+  border-top: 1px solid var(--astral-line);
+}
+.mega-mall-layer-inspector input[type="range"] {
+  width: 100%;
+  accent-color: var(--astral-accent);
+}
+.mega-mall-layer-actions {
+  display: flex;
+  gap: 6px;
+}
+.mega-mall-layer-actions button {
+  min-height: 31px;
+  padding: 0 8px;
+}
+.mega-mall-layer-actions button.is-danger {
+  margin-left: auto;
+  color: var(--astral-danger);
+}
+.mega-mall-empty-inspector {
+  padding: 18px 8px;
+  color: var(--astral-ink-muted);
+  font-size: 11px;
+  text-align: center;
+  border-top: 1px solid var(--astral-line);
+}
+.mega-mall-reset-surface {
+  width: 100%;
+  margin-top: 14px;
+  color: var(--astral-warning);
+}
+
+/* Модель из игры: детализация, что показывать, отчёт о кадре. Строки —
+   общие `.ui-field`, чтобы выключатели стояли в одну колонку с остальными
+   настройками мастерской. */
+.mega-mall-model {
+  display: grid;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--astral-line);
+}
+.mega-mall-model .mega-mall-panel-title {
+  margin-bottom: 6px;
+}
+.mega-mall-model .ui-field {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.mega-mall-model-toggle {
+  min-height: 26px;
+}
+.mega-mall-model-stats {
+  display: grid;
+  gap: 3px;
+  margin: 6px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-sunken);
+  font-size: var(--astral-text-micro);
+}
+.mega-mall-model-stats > div {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.mega-mall-model-stats dt {
+  color: var(--astral-ink-muted);
+}
+.mega-mall-model-stats dd {
+  margin: 0;
+  color: var(--astral-ink);
+  font-variant-numeric: tabular-nums;
+}
+.mega-mall-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Под узким окном колонка уезжает под кадр — это делает каркас, — и держать
+   её высоту на весь экран становится незачем. */
+@media (max-width: 1180px) {
+  .mega-mall-inspector {
+    max-height: none;
+  }
+  .mega-mall-presets > div:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

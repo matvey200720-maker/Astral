@@ -1,0 +1,89 @@
+{
+  "format": "astral-map-template",
+  "version": 1,
+  "assets": "bigmap-coal",
+  "pack": "BIG MAP by Egzo",
+  "kind": "vector",
+  "author": "Egzo (Infinity Mods)",
+  "grid": {
+    "columns": 2,
+    "rows": 3
+  },
+  "tileSide": 1024,
+  "tiles": [
+    {
+      "row": 0,
+      "column": 0,
+      "file": "tile-0-0.webp",
+      "side": 1024,
+      "bytes": 72434,
+      "sha256": "a32c9cde7845d0bf04da166cc10d8e2b9403e05c6bf662bd7c41e06bffed0edd"
+    },
+    {
+      "row": 0,
+      "column": 1,
+      "file": "tile-0-1.webp",
+      "side": 1024,
+      "bytes": 68528,
+      "sha256": "a79daeecbd6ff46b9fe6ee75ef5322eb8c389903735c9fd3b14292e142369650"
+    },
+    {
+      "row": 1,
+      "column": 0,
+      "file": "tile-1-0.webp",
+      "side": 1024,
+      "bytes": 71698,
+      "sha256": "ccb42f277cd76d18c78dd46fb83e0671f1a36649178d645157ef4a1a98c144ee"
+    },
+    {
+      "row": 1,
+      "column": 1,
+      "file": "tile-1-1.webp",
+      "side": 1024,
+      "bytes": 71796,
+      "sha256": "d27733bd1477aa02370d2e280a022a9bb12ba2fe6a1284ea0e5d6e49df7c2508"
+    },
+    {
+      "row": 2,
+      "column": 0,
+      "file": "tile-2-0.webp",
+      "side": 1024,
+      "bytes": 63856,
+      "sha256": "636f13f85434320924ea36ff02990d3b78cc2a45d2552f95fc4108ce0c142162"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "file": "tile-2-1.webp",
+      "side": 1024,
+      "bytes": 62484,
+      "sha256": "f910b87f8ec077a25d51e6e5832d7dac797592ee611954aa5593feb9f0a84224"
+    }
+  ],
+  "map": {
+    "file": "map.webp",
+    "width": 2048,
+    "height": 3072,
+    "bytes": 360836,
+    "sha256": "fbc23a9a903907954447a8fab0331de45e297ff7cc798431751a0bfa02ae1b6a"
+  },
+  "card": {
+    "file": "card.webp",
+    "width": 640,
+    "height": 400
+  },
+  "state": {
+    "file": "state.webp",
+    "width": 512,
+    "height": 768
+  },
+  "geometry": {
+    "file": "geometry.apgz",
+    "bytes": 818951,
+    "sha256": "03fa81c4311ce841455ebf42d9cb36439796a5f829eb7ead440f7138b913d22f",
+    "tiles": 65,
+    "triangles": 204140,
+    "groups": 27,
+    "below": 13.5
+  }
+}

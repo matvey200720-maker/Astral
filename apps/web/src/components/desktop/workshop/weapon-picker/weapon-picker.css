@@ -1,0 +1,212 @@
+/*
+ * Выбор ствола на кадре (`WeaponPicker.jsx`) — мастерская оружия и студия
+ * звуков. Карточка — одной высоты с соседними кнопками органов кадра;
+ * полка закрывает кадр целиком матовым фоном, без прозрачности (владелец,
+ * 02.11.2026), сверху оставляет место органам кадра и
+ * прокручивается сама.
+ */
+.weapon-pick-chip.ui-button {
+  height: auto;
+  min-height: var(--astral-control-h-sm);
+  padding-block: 2px;
+  gap: 8px;
+}
+
+.weapon-pick-chip .ui-button-icon {
+  width: 44px;
+  height: 22px;
+}
+
+.weapon-pick-chip .ui-button-icon > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.weapon-pick-chip .ui-button-label {
+  justify-items: start;
+  text-align: left;
+}
+
+.weapon-pick-chip .ui-button-label small {
+  order: -1;
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.weapon-pick-chip.is-active .ui-button-label small {
+  color: rgba(10, 10, 11, 0.64);
+}
+
+/* Фон полки — отдельным слоем на весь кадр; органы кадра (карточка, кнопки
+   вида) лежат выше (z-index 5) и остаются живыми. */
+.weapon-pick-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: var(--astral-surface-float);
+}
+
+/* Прокручивается только то, что под органами кадра (фикс 4 ТЗ 07.10.2026):
+   верх полки меряет `useSheetTop`, и плитки больше не уезжают под карточку
+   «Ствол» и кнопки вида. */
+.weapon-pick-sheet {
+  position: absolute;
+  inset: var(--weapon-pick-top, 64px) 0 0;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 16px;
+  overflow: hidden auto;
+  padding: 0 16px 16px;
+  overscroll-behavior: contain;
+}
+
+/* Поиск и категории остаются на виду, когда полка прокручена к выбранному
+   стволу: строка липнет к верху полки и закрывает плитки под собой. */
+.weapon-pick-tools {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 12px;
+  min-width: 0;
+  margin: 0 -16px;
+  padding: 0 16px 8px;
+  background: var(--astral-surface-float);
+}
+
+.weapon-pick-search {
+  flex: 0 1 280px;
+}
+
+.weapon-pick-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: var(--astral-text-micro);
+}
+
+/* Закрытие — в правом углу строки, на какой бы ряд она ни перенеслась. */
+.weapon-pick-close {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+}
+
+.weapon-pick-empty {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.weapon-pick-sheet > section {
+  display: grid;
+  gap: 8px;
+}
+
+.weapon-pick-sheet h4 {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+}
+
+.weapon-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 8px;
+}
+
+.weapon-pick-tile.ui-choice {
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+}
+
+/* Длинное имя ствола («Специальный карабин Mk II») — в две строки с
+   многоточием, без вылета за плитку. */
+.weapon-pick-tile .ui-choice-copy > b {
+  overflow-wrap: anywhere;
+}
+
+/* Ствол на плитке целиком: картинка вписана, а не обрезана по плитке.
+   Картинка лежит поверх гнезда, а не задаёт его высоту: `height: 100%` у
+   гнезда с `aspect-ratio` не срабатывает, и квадратная картинка (вещи
+   одежды, 512×512) вставала квадратом в гнездо 2:1 и обрезалась (фикс 2
+   ТЗ 07.10.2026). */
+.weapon-pick-tile .ui-choice-media {
+  position: relative;
+  aspect-ratio: 2 / 1;
+}
+
+.weapon-pick-tile .ui-choice-media > img {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+/* Своё у ствола (покраска, звук) — точка, без слов; подпись — в легенде. */
+.weapon-pick-legend::before,
+.weapon-pick-tile.is-marked .ui-choice-media::after,
+.weapon-pick-tile.has-sound .ui-choice-media::after {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--astral-positive, var(--astral-accent));
+  content: "";
+}
+
+.weapon-pick-tile.is-marked .ui-choice-media::after,
+.weapon-pick-tile.has-sound .ui-choice-media::after {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* Плитка без картинки (иконок игры ещё нет или ствол без иконки): точка —
+   в углу самой плитки, иначе метку не видно вовсе. */
+.weapon-pick-tile:is(.is-marked, .has-sound):not(:has(.ui-choice-media)) {
+  position: relative;
+}
+
+.weapon-pick-tile:is(.is-marked, .has-sound):not(:has(.ui-choice-media))::after {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--astral-positive, var(--astral-accent));
+  content: "";
+}
+
+/*
+ * Карточка ствола в левом верхнем углу кадра — у редакторов без своей
+ * пластины (прицел): тот же вид, что у мастерской оружия
+ * (`.gun-stage-picker`) и органов кадра справа. Органы справа не наезжают
+ * на неё.
+ */
+.weapon-pick-corner {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  left: 12px;
+  padding: 4px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: rgba(10, 10, 11, 0.72);
+}
+
+/* Угол над кадром отмечает холст сам (`StageCorner`, `useHolds.js`), а не `:has()` — его браузер перепроверял на каждую правку в кадре. */
+.ui-editor-canvas[data-holds~="stage-corner"] .ui-stage-bar {
+  max-width: calc(100% - 300px);
+}

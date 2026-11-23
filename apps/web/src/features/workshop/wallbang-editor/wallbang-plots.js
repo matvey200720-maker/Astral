@@ -1,0 +1,26 @@
+/*
+ * Сгенерировано scripts/prepare-wallbang-scenes.mjs — руками не править.
+ *
+ * Куски карты вокруг укрытий «Прострелов»: начало сцены — точка места из мода, форма оболочки ложится на неё тем же
+ * поворотом и масштабом, что у сущности мода (`rotation` — как записан в карте, игра обращает его, см.
+ * `@modovik/climb-contract/recolor/placement`). `centre` — середина формы относительно начала, метры.
+ */
+
+export const WALLBANG_PLOTS = Object.freeze({
+  fence: {"zone":"MIRR","count":1,"origin":[970.2,-703.32,57.67],"rotation":[0,0,0,1],"scale":[1,1],"centre":[6.55,-26.77],"half":30.7,"view":{"yaw":-0.393,"pitch":0.3},"triangles":85605,"bytes":1060222,"textures":116,"dropped":[],"size":[61.4,61.4,46.8]},
+  long_fence: {"zone":"LMESA","count":1,"origin":[861.33,-585.96,57.35],"rotation":[0,0,0,1],"scale":[1,1],"centre":[-22.44,25.74],"half":33.8,"view":{"yaw":0.393,"pitch":0.48},"triangles":97077,"bytes":1190682,"textures":131,"dropped":["prop_palm_huge_01a","prop_tree_oak_01","prop_palm_fan_03_b","prop_tree_birch_03b","prop_palm_fan_03_c","prop_bush_lrg_04b"],"size":[67.7,67.7,33.9]},
+  gate: {"zone":"MIRR","count":1,"origin":[898.44,-622.22,57.06],"rotation":[0,0,0.93362,-0.35828],"scale":[1,1],"centre":[6.18,-6.49],"half":24,"view":{"yaw":-0.393,"pitch":0.3},"triangles":98334,"bytes":1328961,"textures":101,"dropped":["prop_palm_huge_01a","prop_palm_fan_03_b"],"size":[48,48,25.4]},
+  wood_fence: {"zone":"SANDY","count":1,"origin":[2045.4,3728.85,33.21],"rotation":[0,0,-0.40964,0.91225],"scale":[1,1],"centre":[-0.03,0.12],"half":24,"view":{"yaw":-1.963,"pitch":0.3},"triangles":34046,"bytes":440516,"textures":68,"dropped":[],"size":[48,48,16.4]},
+  transformer: {"zone":"SANDY","count":2,"origin":[2057.33,3691.13,33.63],"rotation":[0,0,0.49975,0.86617],"scale":[1,1],"centre":[-0.04,-0.02],"half":24,"view":{"yaw":-0.785,"pitch":0.66},"triangles":67980,"bytes":740533,"textures":69,"dropped":[],"size":[48,48,16.3]},
+  roof_aircon: {"zone":"PALETO","count":17,"origin":[-78.55,6516.53,40.43],"rotation":[0,0,0.92483,0.38039],"scale":[1.0329,1.0329],"centre":[-0.18,0.06],"half":24,"view":{"yaw":-0.393,"pitch":0.3},"triangles":71465,"bytes":857121,"textures":133,"dropped":[],"size":[48,48,16.4]},
+  roof_box: {"zone":"PALETO","count":4,"origin":[-96.63,6504.46,40.36],"rotation":[0,0,0.92388,0.38268],"scale":[1.0189,1.0189],"centre":[-0.15,0.14],"half":24,"view":{"yaw":-0.393,"pitch":0.3},"triangles":92395,"bytes":1187096,"textures":167,"dropped":[],"size":[48,48,18.7]},
+  big_aircon: {"zone":"PALETO","count":4,"origin":[54.6,6333.02,37.85],"rotation":[0,0,-0.26374,0.96459],"scale":[1,1],"centre":[0.03,0],"half":24,"view":{"yaw":-0.785,"pitch":0.3},"triangles":23878,"bytes":314660,"textures":82,"dropped":[],"size":[48,48,26.7]},
+  trailer: {"zone":"RANCHO","count":7,"origin":[555.59,-1936.1,23.8],"rotation":[0,0,0.45787,0.88902],"scale":[1,1],"centre":[0.26,0.19],"half":24,"view":{"yaw":2.749,"pitch":0.3},"triangles":66930,"bytes":802441,"textures":92,"dropped":[],"size":[48,48,22.3]},
+  parapet: {"zone":"MIRR","count":1,"origin":[1055.38,-365,68.27],"rotation":[0,0,0,1],"scale":[1.0643,1.0643],"centre":[-0.08,-0.31],"half":24,"view":{"yaw":-1.963,"pitch":0.3},"triangles":42639,"bytes":613829,"textures":146,"dropped":[],"size":[48,48,35.7]},
+  garages: {"zone":"MIRR","count":1,"origin":[970.2,-703.32,57.67],"rotation":[0,0,0,1],"scale":[1,1],"centre":[13.47,-10.92],"half":43.7,"view":{"yaw":-1.178,"pitch":0.48},"triangles":129054,"bytes":1460906,"textures":163,"dropped":["prop_palm_huge_01a","prop_palm_med_01b","prop_bush_lrg_04b","prop_palm_fan_03_d","prop_palm_fan_03_c","prop_tree_oak_01","prop_palm_fan_03_a","prop_bush_lrg_02b"],"size":[87.5,87.5,36.4]},
+  house_garage: {"zone":"MIRR","count":1,"origin":[919.18,-638.4,58.21],"rotation":[0,0,0,1],"scale":[1,1],"centre":[-9.88,-2.68],"half":28.2,"view":{"yaw":-1.178,"pitch":0.3},"triangles":102031,"bytes":1210772,"textures":113,"dropped":["prop_palm_fan_03_c","prop_palm_huge_01a","prop_tree_oak_01","prop_bush_lrg_04b","prop_palm_fan_03_b","prop_palm_fan_02_a","prop_palm_fan_03_a","prop_palm_fan_03_d"],"size":[56.4,56.4,20.8]},
+  house: {"zone":"MIRR","count":1,"origin":[898.43,-622.23,57.06],"rotation":[0,0,0.93362,-0.35828],"scale":[1,1],"centre":[0.15,1.07],"half":27.8,"view":{"yaw":-0.785,"pitch":0.3},"triangles":97616,"bytes":1152852,"textures":108,"dropped":["prop_palm_fan_03_b","prop_palm_huge_01a","prop_palm_fan_03_c","prop_tree_oak_01"],"size":[55.7,55.7,12.3]},
+  corner_wall: {"zone":"ROCKF","count":1,"origin":[-783.67,165.53,67.95],"rotation":[0,0,0,1],"scale":[1,1],"centre":[11.19,-5.12],"half":25.7,"view":{"yaw":0.393,"pitch":0.48},"triangles":72508,"bytes":828788,"textures":102,"dropped":[],"size":[51.5,51.5,25.3]},
+  fence_panels: {"zone":"ROCKF","count":1,"origin":[-830.41,273.9,87.04],"rotation":[0,0,0,1],"scale":[1,1],"centre":[0.08,-0.65],"half":24,"view":{"yaw":1.178,"pitch":0.3},"triangles":87474,"bytes":1032310,"textures":123,"dropped":[],"size":[48,48,17]},
+  dumpster: {"zone":"DAVIS","count":4,"origin":[219.25,-2010.98,18.14],"rotation":[-0.06687,0.03234,0.32846,0.94159],"scale":[1,1],"centre":[-0.14,-0.15],"half":24,"view":{"yaw":-0.393,"pitch":0.48},"triangles":99653,"bytes":1234837,"textures":121,"dropped":[],"size":[48,48,35.9]},
+});

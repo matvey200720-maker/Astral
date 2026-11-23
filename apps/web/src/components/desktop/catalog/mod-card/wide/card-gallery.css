@@ -1,0 +1,921 @@
+/*
+ * Страница мода — «карточки» (`WideCard.jsx`, 21.11.2026, макет владельца): шапка с действиями, галерея «большой кадр и край следующего», название и теги, разделитель и лента
+ * «Подборка модов»; поверх страницы — предпросмотр по клику на кадр и панель справа «Состав». Лист ленивый, едет вместе со страницей мода; правила — целиком в слое `overrides`.
+ * Цвета, углы, кегли и длительности — только токены `packages/astral-design/tokens.css`; размеры 44 (орган), 28 (метка), 76 % (кадр галереи) и 460 (панель) — из макета.
+ */
+@layer overrides {
+  .desktop-app .mod-wide {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    isolation: isolate;
+  }
+
+  /* ---------- шапка ---------- */
+
+  .desktop-app .mod-wide .xw-topbar {
+    flex-wrap: wrap;
+    min-height: var(--astral-control-h-sm);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  /* «Назад» — квадрат 34 px, как остальные органы шапки (эталон Network: 32; владелец, 22.11.2026). */
+  .desktop-app .mod-wide .xw-topbar .ui-detail-back {
+    width: var(--astral-control-h-sm);
+    min-width: var(--astral-control-h-sm);
+    height: var(--astral-control-h-sm);
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .mod-wide .xw-crumbs {
+    flex: 1 1 120px;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-wide .xw-actions.is-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* «Установить» — компактная кнопка 34 px, слово 14 (эталон Network, владелец 22.11.2026): не «Установить сборку» на пол-шапки. */
+  .desktop-app .mod-wide .xw-install,
+  .desktop-app .xw-drawer .xw-install {
+    min-block-size: var(--astral-control-h-sm);
+    min-width: 0;
+    padding-inline: 16px;
+    border-radius: var(--astral-radius-sm);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .desktop-app .mod-wide .xw-icon,
+  .desktop-app .xw-drawer .xw-icon {
+    flex: none;
+    width: var(--astral-control-h-sm);
+    min-width: var(--astral-control-h-sm);
+    height: var(--astral-control-h-sm);
+    padding: 0;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  /* Главные органы шапки (карандаш) — с яркой кромкой, второстепенные (сердце, корзина, ссылка) — тише: так в макете. */
+  .desktop-app .mod-wide .xw-icon.xw-tool {
+    border-color: var(--astral-line-strong);
+  }
+
+  .desktop-app .mod-wide .xw-icon.xw-share,
+  .desktop-app .mod-wide .xw-icon.xw-heart,
+  .desktop-app .mod-wide .xw-icon.xw-cart {
+    color: var(--astral-ink-muted);
+  }
+
+  .desktop-app .mod-wide .xw-icon.xw-heart.is-on {
+    color: var(--astral-heart);
+  }
+
+  .desktop-app .xw-tool-failure {
+    max-width: 280px;
+    color: var(--astral-danger);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .mod-wide .xw-notes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px 16px;
+    margin-top: -6px;
+  }
+
+  /* ---------- галерея ---------- */
+
+  .desktop-app .mod-wide .xw-gallery {
+    position: relative;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .desktop-app .mod-wide .xw-gallery:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 4px;
+  }
+
+  .desktop-app .mod-wide .xw-gallery.is-empty {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    max-height: 420px;
+    border: 1px solid var(--astral-line);
+    background: var(--astral-surface);
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .mod-wide .xw-gallery.is-empty svg {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Окно галереи (режет лишнее) и один движущийся ряд кадров `.xw-strip`: сдвиг и плавность — у ряда, а не у каждого кадра (см. `shiftOf` в `CardGallery.jsx`). */
+  .desktop-app .mod-wide .xw-track {
+    overflow: hidden;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .desktop-app .mod-wide .xw-strip {
+    display: flex;
+    gap: 12px;
+    transform: translateX(var(--xw-shift, 0px));
+    transition: transform var(--astral-duration-slow) var(--astral-ease);
+    will-change: transform;
+  }
+
+  .desktop-app .mod-wide .xw-slide {
+    position: relative;
+    display: block;
+    flex: 0 0 76%;
+    min-width: 0;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface-strong);
+    color: var(--astral-ink);
+    cursor: pointer;
+  }
+
+  /* Один кадр — на всю ширину: пустого края у галереи нет. */
+  .desktop-app .mod-wide .xw-gallery.is-single .xw-slide {
+    flex-basis: 100%;
+    cursor: zoom-in;
+  }
+
+  .desktop-app .mod-wide .xw-slide:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -2px;
+  }
+
+  .desktop-app .mod-wide .xw-slide-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Вырезанная одежда и стволы на ровном фоне — целиком, а не обрезкой по рамке. */
+  .desktop-app .mod-wide.is-contained-media .xw-slide-image,
+  .desktop-app .mod-wide.is-weapon-media .xw-slide-image {
+    object-fit: contain;
+  }
+
+  .desktop-app .mod-wide .xw-slide-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .mod-wide .xw-slide-empty svg {
+    width: 56px;
+    height: 56px;
+  }
+
+  .desktop-app .mod-wide .xw-slide-play {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    margin: -38px 0 0 -38px;
+    border: 1px solid var(--astral-line-focus);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--astral-void) 62%, transparent);
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .mod-wide .xw-slide-play svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .desktop-app .mod-wide .xw-slide-chip,
+  .desktop-app .mod-wide .xw-counter {
+    display: inline-flex;
+    align-items: center;
+    height: var(--astral-control-h-xs);
+    padding: 0 12px;
+    border-radius: var(--astral-radius-sm);
+    background: color-mix(in srgb, var(--astral-void) 72%, transparent);
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .desktop-app .mod-wide .xw-slide-chip {
+    position: absolute;
+    inset: auto auto 14px 14px;
+    max-width: calc(100% - 28px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-wide .xw-slide-name {
+    position: absolute;
+    inset: 14px auto auto 14px;
+    max-width: calc(100% - 28px);
+    padding: 4px 12px;
+    overflow: hidden;
+    border-radius: var(--astral-radius-sm);
+    background: color-mix(in srgb, var(--astral-void) 72%, transparent);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-wide .xw-counter {
+    position: absolute;
+    inset: auto 14px 14px auto;
+    pointer-events: none;
+  }
+
+  /* Стрелки — тонкие «‹ ›» у краёв кадра, без кругов и плиты (эталон Network, владелец 22.11.2026): тише картинки, кромка читается тенью самого значка; площадь нажатия — широкая и прозрачная. */
+  .desktop-app .mod-wide .xw-arrow {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: var(--astral-control-h);
+    height: calc(var(--astral-control-h) * 2);
+    margin-top: calc(var(--astral-control-h) * -1);
+    padding: 0;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    color: color-mix(in srgb, var(--astral-ink) 56%, transparent);
+    cursor: pointer;
+    transition: color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .mod-wide .xw-arrow svg {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(
+      0 1px 2px color-mix(in srgb, var(--astral-void) 85%, transparent)
+    );
+  }
+
+  .desktop-app .mod-wide .xw-arrow.is-left {
+    left: 0;
+  }
+
+  .desktop-app .mod-wide .xw-arrow.is-right {
+    right: 0;
+  }
+
+  .desktop-app .mod-wide .xw-arrow:hover {
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .mod-wide .xw-arrow:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -2px;
+  }
+
+  /* ---------- название и теги ---------- */
+
+  .desktop-app .mod-wide .xw-head {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .desktop-app .mod-wide .xw-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .desktop-app .mod-wide .xw-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .desktop-app .mod-wide .xw-chips {
+    display: contents;
+  }
+
+  .desktop-app .mod-wide .xw-chip,
+  .desktop-app .mod-wide .xw-tag {
+    display: inline-flex;
+    align-items: center;
+    height: var(--astral-control-h-xs);
+    padding: 0 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Сервер — первой и ярче: это выбор, где мод работает. */
+  .desktop-app .mod-wide .xw-chip {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-hover);
+    color: var(--astral-ink);
+    font-weight: 600;
+  }
+
+  /* Переключатель сервера — настоящая кнопка: мишень не ниже 34 px, а не 28 px метки. */
+  .desktop-app .mod-wide .xw-chip.is-button {
+    min-height: var(--astral-control-h-sm);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .desktop-app .mod-wide .xw-chip.is-button:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .desktop-app .mod-wide .xw-chip.is-active {
+    border-color: transparent;
+    background: var(--astral-accent);
+    color: var(--astral-accent-ink);
+  }
+
+  .desktop-app .mod-wide .xw-chip.is-button:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .mod-wide .xw-byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 18px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .mod-wide .xw-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--astral-ink-muted);
+    font: inherit;
+  }
+
+  .desktop-app .mod-wide .xw-author b {
+    font-weight: 600;
+  }
+
+  /* Кнопка «автор» — мишень не ниже 34 px. */
+  .desktop-app .mod-wide .xw-author.is-button {
+    min-height: var(--astral-control-h-sm);
+    cursor: pointer;
+  }
+
+  .desktop-app .mod-wide .xw-author.is-button:hover b {
+    color: var(--astral-ink);
+  }
+
+  /* Кружок автора (правила `.author-avatar` лежат в листе страницы под `.mod-card`): тон — из имени, размер 24. */
+  .desktop-app .mod-wide .xw-author .author-avatar {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+  }
+
+  .desktop-app .mod-wide .xw-author .account-mark {
+    --account-mark-size: 24px;
+    border-color: var(--astral-line-strong);
+    background: linear-gradient(
+      145deg,
+      hsl(var(--author-hue) 26% 30%),
+      hsl(var(--author-hue) 30% 13%)
+    );
+    color: var(--astral-ink);
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+  }
+
+  .desktop-app .mod-wide .xw-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- разделитель и лента ---------- */
+
+  .desktop-app .mod-wide .xw-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .desktop-app .mod-wide .xw-divider {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 6px;
+  }
+
+  .desktop-app .mod-wide .xw-divider h2 {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Линия сплошная посередине; к краям и к надписи сходит острыми хвостами — надписи не касается. */
+  .desktop-app .mod-wide .xw-divider-line {
+    flex: 1 1 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--astral-line-focus) 18%,
+      var(--astral-line-focus) 80%,
+      transparent 100%
+    );
+    clip-path: polygon(0 50%, 18% 0, 80% 0, 100% 50%, 80% 100%, 18% 100%);
+  }
+
+  .desktop-app .mod-wide .xw-divider-line.is-right {
+    transform: scaleX(-1);
+  }
+
+  .desktop-app .mod-wide .xw-feed-track {
+    display: flex;
+    gap: 14px;
+  }
+
+  .desktop-app .mod-wide .xw-feed-card {
+    display: flex;
+    flex: 0 0 236px;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--astral-ink);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .desktop-app .mod-wide .xw-feed-card:disabled {
+    cursor: default;
+  }
+
+  .desktop-app .mod-wide .xw-feed-card:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 4px;
+    border-radius: var(--astral-radius);
+  }
+
+  .desktop-app .mod-wide .xw-feed-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-strong);
+  }
+
+  .desktop-app .mod-wide .xw-feed-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .desktop-app .mod-wide .xw-feed-card b {
+    overflow: hidden;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .mod-wide .xw-feed-card small {
+    margin-top: -6px;
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---------- слои поверх страницы ---------- */
+
+  .desktop-app .xw-overlay {
+    position: fixed;
+    inset: 36px 0 0;
+    z-index: 5000;
+    display: flex;
+    background: color-mix(in srgb, var(--astral-scrim) 92%, transparent);
+  }
+
+  .desktop-app .xw-overlay.is-preview {
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .desktop-app .xw-preview-card {
+    position: relative;
+    width: 100%;
+    max-width: 1120px;
+    max-height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface-float);
+    box-shadow: var(--astral-shadow);
+  }
+
+  /* Окно с плеером — 16 : 9, по центру, во всю доступную ширину, но не выше окна: ширина считается от доступной высоты (окно минус полоса 36 и поля 40 сверху и снизу). */
+  .desktop-app .xw-preview-card.is-player {
+    width: min(100%, calc((100vh - 36px - 80px) * 16 / 9));
+  }
+
+  /* Крестик закрытия — один вид у всех окон предпросмотра страницы мода (картинка, плеер, 3D ствола и вещи, живая часть/мод): справа вверху, 8 px от краёв, без плиты, рамки и
+     тени вокруг; значок 22 px с тёмной обводкой самого значка (не теряется на светлом кадре); наведение и фокус — подсветка значка, а не плашка. Мишень 44 px шире значка. */
+  .desktop-app .xw-overlay-x,
+  .desktop-app .mod-model-dialog .mod-model-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: var(--astral-control-h);
+    height: var(--astral-control-h);
+    padding: 0;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    box-shadow: none;
+    color: color-mix(in srgb, var(--astral-ink) 82%, transparent);
+    cursor: pointer;
+    transition: color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .xw-overlay-x svg,
+  .desktop-app .mod-model-dialog .mod-model-close svg {
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(
+        0 0 1px color-mix(in srgb, var(--astral-void) 95%, transparent)
+      )
+      drop-shadow(
+        0 1px 3px color-mix(in srgb, var(--astral-void) 90%, transparent)
+      );
+  }
+
+  .desktop-app .xw-overlay-x:hover,
+  .desktop-app .mod-model-dialog .mod-model-close:hover {
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .xw-overlay-x:focus,
+  .desktop-app .mod-model-dialog .mod-model-close:focus {
+    outline: none;
+  }
+
+  .desktop-app .xw-overlay-x:focus-visible,
+  .desktop-app .mod-model-dialog .mod-model-close:focus-visible {
+    color: var(--astral-ink);
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -4px;
+  }
+
+  /* Окно «3D» (`ModelWindow`): тело без полей, сцена — на всё окно и опора для крестика (8 px от краёв, как у остальных окон), просмотрщик — на всю сцену. Размер окну даёт именно этот лист: `mod-stage.css`, где
+     эти правила жили раньше, страница не грузит (жалоба на 1.0.3: окно «3D» на карточке ганпака пустое — сцена без высоты, просмотрщик в нулевой рамке). */
+  .desktop-app .mod-model-dialog .mod-model-dialog-body {
+    display: grid;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .desktop-app .mod-model-dialog .mod-model-stage {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    background: radial-gradient(
+        ellipse 64% 66% at 50% 38%,
+        color-mix(in srgb, var(--astral-ink) 7.5%, transparent),
+        transparent 72%
+      ),
+      var(--astral-void);
+  }
+
+  .desktop-app
+    .mod-model-dialog
+    .mod-model-stage
+    :is(.weapon-viewer-embedded, .weapon-viewer-stage, canvas) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    background: transparent;
+  }
+
+  /* Подпись про цвет и про сборку персонажа — внизу по центру, тихо, поверх модели. */
+  .desktop-app .mod-model-dialog .mod-model-note {
+    position: absolute;
+    right: 0;
+    bottom: 16px;
+    left: 0;
+    margin: 0;
+    text-align: center;
+    pointer-events: none;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .xw-drawer-head .xw-overlay-close {
+    flex: none;
+  }
+
+  .desktop-app .xw-preview-figure {
+    display: grid;
+    place-items: center;
+    margin: 0;
+  }
+
+  .desktop-app .xw-preview-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 36px - 82px);
+    object-fit: contain;
+  }
+
+  .desktop-app .xw-player {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--astral-void);
+  }
+
+  .desktop-app .xw-player > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  .desktop-app .xw-player video,
+  .desktop-app .xw-player .xw-video,
+  .desktop-app .xw-player .xw-video-media {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: contain;
+  }
+
+  /* Плеер YouTube (рамка `YoutubeStage`, жалоба владельца 22.11.2026: «крошечный, в левом углу»): правила рамки и самого `<iframe>` жили в `mod-stage.css`, который страница-галерея не грузит, —
+     у рамки не было размера и плеер вставал по умолчанию 300×150. Рамка и iframe — на всю область предпросмотра, 16 : 9 с чёрными полями. */
+  .desktop-app .xw-player figure {
+    position: relative;
+    display: block;
+    margin: 0;
+  }
+
+  .desktop-app .xw-player iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: var(--astral-void);
+  }
+
+  /* Автор запретил встраивание: вместо чужой страницы ошибки — картинка ролика и кнопка «Смотреть на YouTube» (системный браузер). */
+  .desktop-app .xw-player .mod-stage-youtube.is-blocked {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .desktop-app .xw-player .mod-stage-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.5);
+  }
+
+  .desktop-app .xw-player .mod-stage-watch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: var(--astral-control-h);
+    padding: 0 22px 0 18px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--astral-void) 78%, transparent);
+    color: var(--astral-ink);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .desktop-app .xw-player .mod-stage-watch svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .desktop-app .xw-player .mod-stage-watch:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  /* ---------- панель «Состав» ---------- */
+
+  .desktop-app .xw-overlay.is-drawer {
+    justify-content: flex-end;
+  }
+
+  .desktop-app .xw-drawer {
+    display: flex;
+    flex-direction: column;
+    width: min(460px, 100%);
+    min-height: 0;
+    border-left: 1px solid var(--astral-line-strong);
+    background: var(--astral-surface-float);
+    box-shadow: var(--astral-shadow);
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .xw-drawer-head {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 22px 22px 14px;
+  }
+
+  .desktop-app .xw-drawer-tools {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .desktop-app .xw-drawer-tools .ui-button {
+    width: var(--astral-control-h-sm);
+    min-width: var(--astral-control-h-sm);
+    height: var(--astral-control-h-sm);
+    padding: 0;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  /* Значок окна «Компоненты» — мелкий и без подложки, как крестик предпросмотра (ведущая, 22.11.2026): второстепенное, не тянет на себя. */
+  .desktop-app .xw-drawer-tools .mod-card-components {
+    border: 0;
+    background: transparent;
+    color: var(--astral-ink-muted);
+  }
+
+  .desktop-app .xw-drawer-tools .mod-card-components:hover:not(:disabled) {
+    background: transparent;
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .xw-drawer-tools .mod-card-components svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .desktop-app .xw-drawer-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .desktop-app .xw-drawer-copy h2 {
+    margin: 0;
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+  }
+
+  .desktop-app .xw-drawer-copy p {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .xw-drawer-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0 10px;
+  }
+
+  .desktop-app .xw-drawer .xw-card {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  /* Низ панели: «Как было» и «Установить N из M» — обычной плотной высоты, прижаты вправо, а не одна кнопка во всю ширину (владелец, 22.11.2026). */
+  .desktop-app .xw-drawer-foot {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 22px 16px;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  .desktop-app .xw-drawer-foot .xw-actions {
+    display: flex;
+    flex: none;
+    min-width: 0;
+  }
+
+  .desktop-app .xw-drawer-foot .xw-install {
+    min-width: 0;
+  }
+
+  .desktop-app .xw-drawer-foot .xw-reset {
+    flex: none;
+  }
+
+  /* ---------- узкое окно и движение ---------- */
+
+  @media (max-width: 1099px) {
+    .desktop-app .mod-wide .xw-feed-card {
+      flex-basis: 200px;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .desktop-app .mod-wide .xw-crumbs {
+      flex-basis: 100%;
+      order: 3;
+    }
+
+    .desktop-app .xw-overlay.is-preview {
+      padding: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .mod-wide .xw-strip,
+    .desktop-app .mod-wide .xw-arrow {
+      transition: none;
+    }
+  }
+}

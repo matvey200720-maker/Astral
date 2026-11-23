@@ -1,0 +1,160 @@
+/* Состав мода: кнопки частей, подсказка под карточкой, обложки частей,
+   всплывающее описание (peek) и набор сопоставлений. */
+
+.desktop-app {
+  --contents-text: var(--astral-ink);
+  --contents-text-dim: var(--astral-ink-muted);
+  --contents-size-body: var(--astral-text-body);
+  --contents-ok: var(--astral-positive);
+
+  /* ---------- кнопки установки частей ---------- */
+  & .mod-part-action.ui-button {
+    &:not([aria-disabled=true]):active {
+      transform: scale(.92);
+    }
+
+    &.is-installed {
+      cursor: default;
+      color: var(--contents-ok);
+    }
+
+    &.is-failed {
+      color: var(--astral-warning);
+    }
+
+    &.is-queued {
+      & .ui-button-icon {
+        opacity: .5;
+      }
+    }
+
+    &.is-running {
+      & .ui-button-icon {
+        opacity: .7;
+      }
+    }
+  }
+
+  /* ---------- карточка мода ---------- */
+  & .mod-card {
+    & .mod-contents-note {
+      font-size: var(--astral-text-micro);
+      color: var(--contents-text-dim);
+      margin-inline: 0;
+      margin-block: 14px 0;
+    }
+
+    & .mod-mapping-set {
+      & > header {
+        flex-wrap: wrap;
+      }
+
+      & .mod-mapping-install {
+        margin-inline-start: auto;
+      }
+    }
+  }
+
+  /* ---------- обложки частей ---------- */
+  & .mod-components-split {
+    & .ui-pick-media {
+      & > .workshop-cover {
+        left: 0;
+        bottom: 0;
+        right: 0;
+        top: 0;
+        position: absolute;
+      }
+    }
+  }
+
+  & .workshop-cover {
+    & > .is-contain.part-cover-image {
+      object-fit: contain;
+      padding-inline: 14px;
+      padding-block: 10px 56px;
+    }
+  }
+
+  /* ---------- всплывающее описание ---------- */
+  & .mod-peek-body {
+    gap: 22px;
+    display: grid;
+  }
+
+  & .mod-peek-section {
+    gap: 10px;
+    display: grid;
+
+    & > h3 {
+      font-weight: 600;
+      font-size: var(--contents-size-body);
+      color: var(--contents-text);
+      margin: 0;
+    }
+  }
+
+  & .mod-peek-facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 8px;
+    display: grid;
+
+    & > li {
+      line-height: 1.5;
+      font-size: var(--contents-size-body);
+      color: var(--contents-text-dim);
+      padding-left: 18px;
+      position: relative;
+
+      /* зелёная точка-маркер */
+      &::before {
+        background: var(--contents-ok);
+        border-radius: 50%;
+        height: 6px;
+        width: 6px;
+        left: 4px;
+        top: .62em;
+        position: absolute;
+        content: "";
+      }
+    }
+  }
+
+  & .mod-peek-shot {
+    overflow: hidden;
+    border-radius: var(--astral-radius-card, 16px);
+    aspect-ratio: 16 / 9;
+    position: relative;
+  }
+
+  & .mod-peek-detail,
+  & .mod-peek-note {
+    line-height: 1.5;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-faint);
+    margin: 0;
+  }
+
+  /* detail идёт после общего правила: цвет и размер у него свои */
+  & .mod-peek-detail {
+    font-size: var(--contents-size-body);
+    color: var(--contents-text-dim);
+
+    & > b {
+      font-weight: 600;
+      color: var(--contents-text);
+    }
+  }
+}
+
+/* без анимации: после основного правила, чтобы перебить его transform */
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app {
+    & :not([aria-disabled=true]):active.mod-part-action.ui-button {
+      transform: none;
+    }
+  }
+}

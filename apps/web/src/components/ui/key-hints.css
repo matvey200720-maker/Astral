@@ -1,0 +1,75 @@
+/*
+ * Строка подсказок клавиш в углу кадра редактора (`KeyHints.jsx`). Тёмная подложка без размытия — над живым холстом стекла нет
+ * (`docs/3D.md`, правило 9); цвета, радиусы и кегли — из токенов. Не ловит мышь, кроме кнопки «все клавиши».
+ *
+ * Ряд один, и в нём всё видно целиком. Не поместилось — уходит подсказка целиком, а не обрезается на полуслове, и первой уходит
+ * самая левая: порядок в разметке — от менее важного к более важному («ПКМ вращение» … «F весь рост», «F1 все клавиши»), а ряд
+ * раскладывается справа налево (`row-reverse`, у каждой подсказки свой `order` от `KeyHints.jsx`), поэтому первыми в ряд встают
+ * правые, а те, кому места не хватило, переносятся на второй ряд, который `max-height` и `overflow` не показывают.
+ * Раньше строка резалась с конца (`overflow: hidden` при `max-width: calc(100% - 260px)`), и на окне 1280×720 у ru и fr терялось
+ * «все клавиши» (17.11.2026), хотя в комментарии обещано, что остаётся именно оно.
+ */
+@layer overrides {
+  .ui-key-hints {
+    /* Высота одного ряда: плашка клавиши и подпись; полки сверху и снизу — поля подложки. */
+    --ui-key-hints-row: 20px;
+    position: absolute;
+    z-index: 4;
+    bottom: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    /* Справа в углу стоит масштаб кадра (`.wear-zoom`, 170 px) с полем 12 px, слева поле строки 12 px и зазор 12 px: строке достаётся весь остальной угол. */
+    max-width: calc(100% - 206px);
+    max-height: calc(var(--ui-key-hints-row) + 14px);
+    padding: 6px 10px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    color: var(--astral-ink-muted);
+    background: rgba(10, 10, 11, 0.72);
+    font-size: var(--astral-text-small);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .ui-key-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    height: var(--ui-key-hints-row);
+  }
+
+  /* Подсказка, что не поместилась, уходит целиком (`fitKeyHints` в `KeyHints.jsx`): `display` выше сильнее атрибута `hidden`. */
+  .ui-key-hint[hidden] {
+    display: none;
+  }
+
+  .ui-key-hints-all {
+    /* Нажимаемая строка не ниже мишени (аудит «hit-target»): высота — за счёт поля, подложка строки та же. */
+    min-height: 28px;
+    margin: -4px -4px -4px 0;
+    padding: 0 4px;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .ui-key-hints-all:hover {
+    color: var(--astral-ink);
+  }
+
+  .ui-key-hints-all:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+    border-radius: var(--astral-radius-xs);
+  }
+}

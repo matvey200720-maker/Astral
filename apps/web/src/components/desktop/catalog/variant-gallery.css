@@ -1,0 +1,370 @@
+/* Галерея вариантов: сцена с картинкой, панель действий, поиск и сетка вариантов.
+   Корень вложенности — .desktop-app, с которого начинаются все селекторы. */
+
+.desktop-app {
+  --gallery-track: minmax(0, 1fr);
+  --gallery-text: var(--astral-ink);
+  --gallery-text-dim: var(--astral-ink-muted);
+  --gallery-text-quiet: var(--astral-ink-faint);
+  --gallery-edge: var(--astral-line);
+  --gallery-edge-strong: var(--astral-line-strong);
+  --gallery-edge-focus: var(--astral-line-focus);
+  --gallery-fill: var(--astral-surface);
+  --gallery-sheen: var(--astral-highlight);
+  --gallery-leading: var(--astral-line-normal);
+  --gallery-size-body: var(--astral-text-body);
+  --gallery-size-small: var(--astral-text-small);
+  --gallery-corner-xl: var(--astral-radius-xl);
+  --gallery-corner-lg: var(--astral-radius-lg);
+
+  /* ---------- корень галереи ---------- */
+  & .astral-gallery {
+    padding-bottom: var(--astral-page-pad-bottom);
+    min-width: 0;
+    gap: 28px;
+    display: grid;
+
+    /* оружие и карты вписываются в кадр целиком */
+    &:is(.is-map-media, .is-weapon-media) {
+      & .astral-gallery-stage {
+        & > img {
+          object-fit: contain;
+          padding: 6%;
+          box-sizing: border-box;
+        }
+      }
+
+      & .astral-gallery-variant-art {
+        & img {
+          object-fit: contain;
+          padding: 8%;
+          box-sizing: border-box;
+        }
+      }
+    }
+  }
+
+  & .astral-gallery-top {
+    gap: 36px;
+    align-items: start;
+    grid-template-columns: var(--gallery-track) max(300px, min(26vw, 380px));
+    display: grid;
+  }
+
+  /* ---------- сцена ---------- */
+  & .astral-gallery-stage {
+    overflow: hidden;
+    background: radial-gradient(ellipse 64% 66% at 50% 38%, rgba(255, 255, 255, .07), transparent 72%), #050505;
+    box-shadow: var(--gallery-sheen);
+    border-radius: var(--gallery-corner-xl);
+    border-color: var(--gallery-edge);
+    border-style: solid;
+    border-width: 1px;
+    aspect-ratio: 16 / 9;
+    max-height: 520px;
+    position: relative;
+    place-items: center;
+    display: grid;
+
+    & > img {
+      object-fit: cover;
+      filter: var(--workshop-variant-filter, none);
+      height: 100%;
+      width: 100%;
+    }
+
+    & .workshop-vanilla-plate {
+      text-align: center;
+      color: var(--gallery-text-dim);
+      padding: 24px;
+      max-width: 360px;
+      gap: 10px;
+      justify-items: center;
+      display: grid;
+
+      & svg {
+        color: var(--gallery-text-quiet);
+        height: 34px;
+        width: 34px;
+      }
+
+      & b {
+        font-weight: 650;
+        font-size: var(--astral-text-title);
+        color: var(--gallery-text);
+      }
+
+      & small {
+        line-height: var(--gallery-leading);
+        font-size: var(--gallery-size-body);
+      }
+    }
+  }
+
+  /* svg и «графические» картинки — после правил оружия и карт, чтобы перебить их порядком */
+  & .is-artwork-media.astral-gallery .astral-gallery-stage > img,
+  & .astral-gallery-stage > img[src$=".svg"] {
+    object-fit: contain;
+    filter: invert(1) brightness(.86);
+    opacity: .82;
+    padding: 0;
+    height: 52%;
+    width: 34%;
+  }
+
+  /* ---------- панель справа ---------- */
+  & .astral-gallery-panel {
+    background: var(--gallery-fill);
+    box-shadow: var(--gallery-sheen), var(--astral-shadow-soft);
+    border-radius: var(--gallery-corner-xl);
+    border-color: var(--gallery-edge);
+    border-style: solid;
+    border-width: 1px;
+    padding-inline: 18px;
+    padding-block: 22px 18px;
+    gap: 14px;
+    align-content: start;
+    display: grid;
+
+    & h1 {
+      overflow-wrap: anywhere;
+      letter-spacing: -.025em;
+      line-height: 1.08;
+      font-weight: 700;
+      font-size: var(--astral-text-hero);
+      color: var(--gallery-text);
+      margin: 0;
+    }
+
+    & > p {
+      line-height: var(--gallery-leading);
+      font-size: var(--gallery-size-body);
+      color: var(--gallery-text-dim);
+      margin: 0;
+    }
+  }
+
+  & .astral-gallery-install,
+  & .astral-gallery-actions {
+    gap: 8px;
+    display: grid;
+  }
+
+  & .astral-gallery-actions {
+    margin-top: 4px;
+
+    & .ui-button {
+      width: 100%;
+    }
+  }
+
+  & .astral-gallery-install-failure {
+    line-height: var(--gallery-leading);
+    font-size: var(--gallery-size-small);
+    color: var(--astral-danger);
+  }
+
+  & .astral-gallery-downloads {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--gallery-size-small);
+    color: var(--gallery-text-quiet);
+    gap: 6px;
+    align-items: center;
+    display: inline-flex;
+
+    & svg {
+      height: 14px;
+      width: 14px;
+    }
+  }
+
+  /* ---------- поиск ---------- */
+  & .astral-gallery-tools {
+    gap: 12px;
+    align-items: center;
+    display: flex;
+  }
+
+  & .astral-gallery-search {
+    background: var(--gallery-fill);
+    color: var(--gallery-text-dim);
+    border-radius: 999px;
+    border-color: var(--gallery-edge);
+    border-style: solid;
+    border-width: 1px;
+    padding-inline: 14px;
+    padding-block: 0;
+    height: 44px;
+    width: min(420px, 100%);
+    gap: 10px;
+    align-items: center;
+    display: flex;
+
+    &:focus-within {
+      outline-offset: 2px;
+      outline-color: var(--gallery-edge-focus);
+      outline-style: solid;
+      outline-width: 2px;
+      border-color: var(--gallery-edge-strong);
+    }
+
+    & svg {
+      height: 17px;
+      width: 17px;
+      flex: none;
+    }
+
+    & input {
+      font: inherit;
+      font-size: var(--gallery-size-body);
+      background-color: transparent;
+      color: var(--gallery-text);
+      outline: 0;
+      border: 0;
+      padding: 0;
+      height: 100%;
+      min-width: 0;
+      flex-basis: auto;
+      flex-shrink: 1;
+      flex-grow: 1;
+    }
+  }
+
+  /* ---------- сетка вариантов ---------- */
+  & .astral-gallery-grid {
+    column-gap: 16px;
+    row-gap: 26px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: grid;
+  }
+
+  /* hover-рамка варианта; идёт раньше .is-selected, чтобы выбранный остался с акцентной рамкой */
+  & .astral-gallery-variant-select {
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    background: none;
+    color: inherit;
+    border: 0;
+    padding: 0;
+    width: 100%;
+    gap: 10px;
+    display: grid;
+
+    &:hover {
+      & .astral-gallery-variant-art {
+        border-color: rgba(255, 255, 255, .28);
+      }
+    }
+
+    &:focus-visible {
+      outline: 0;
+
+      & .astral-gallery-variant-art {
+        outline-offset: 2px;
+        outline-color: var(--gallery-edge-focus);
+        outline-style: solid;
+        outline-width: 2px;
+      }
+    }
+  }
+
+  & .astral-gallery-variant {
+    min-width: 0;
+
+    &.is-selected {
+      & .astral-gallery-variant-art {
+        --gallery-selected: rgba(var(--astral-accent-rgb), .9);
+
+        box-shadow: 0 0 0 1px var(--gallery-selected), var(--gallery-sheen);
+        border-color: var(--gallery-selected);
+      }
+    }
+  }
+
+  & .astral-gallery-variant-art {
+    transition-delay: 0s;
+    transition-timing-function: var(--astral-ease);
+    transition-duration: var(--astral-duration-fast);
+    transition-property: border-color;
+    overflow: hidden;
+    background: radial-gradient(ellipse 70% 70% at 50% 36%, rgba(255, 255, 255, .06), transparent 72%), #050505;
+    box-shadow: var(--gallery-sheen);
+    border-radius: var(--gallery-corner-lg);
+    border-color: var(--gallery-edge);
+    border-style: solid;
+    border-width: 1px;
+    aspect-ratio: 16 / 10;
+    position: relative;
+    place-items: center;
+    display: grid;
+
+    & img {
+      object-fit: cover;
+      height: 100%;
+      width: 100%;
+    }
+
+    &.is-glyph {
+      & img {
+        object-fit: contain;
+        filter: invert(1) brightness(.86);
+        opacity: .8;
+        padding: 0;
+        height: 56%;
+        width: 42%;
+      }
+    }
+  }
+
+  & .astral-gallery-vanilla-card {
+    color: var(--gallery-text-quiet);
+    place-items: center;
+    display: grid;
+
+    & svg {
+      height: 30px;
+      width: 30px;
+    }
+  }
+
+  & .astral-gallery-variant-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    font-size: var(--astral-text-strong);
+    color: var(--gallery-text);
+    padding-inline: 2px;
+    padding-block: 0;
+  }
+
+  & .astral-gallery-empty {
+    font-size: var(--gallery-size-body);
+    color: var(--gallery-text-dim);
+    border-radius: var(--gallery-corner-lg);
+    border-color: var(--gallery-edge-strong);
+    border-style: dashed;
+    border-width: 1px;
+    padding: 18px;
+    gap: 10px;
+    align-items: center;
+    grid-column: 1 / -1;
+    display: flex;
+
+    & svg {
+      height: 18px;
+      width: 18px;
+    }
+  }
+}
+
+/* узкое окно: после основного правила .astral-gallery-top, чтобы перебить его колонки */
+
+@media (max-width: 1180px) {
+  .desktop-app {
+    & .astral-gallery-top {
+      grid-template-columns: var(--gallery-track);
+    }
+  }
+}

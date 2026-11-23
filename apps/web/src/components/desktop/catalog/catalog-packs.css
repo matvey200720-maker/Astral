@@ -1,0 +1,47 @@
+/* Кнопка прослушивания звука поверх карточки пака. */
+
+.sound-pack-play {
+  color: rgba(249, 250, 252, .9);
+  background: rgba(13, 13, 13, .62);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, .12);
+  border-radius: var(--astral-radius);
+  width: 34px;
+  height: 34px;
+  z-index: 4;
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  place-items: center;
+  display: grid;
+  cursor: pointer;
+  transition-property: color, border-color, background;
+  transition-duration: var(--astral-duration-fast), var(--astral-duration-fast), var(--astral-duration-fast);
+  transition-timing-function: var(--astral-ease), var(--astral-ease), var(--astral-ease);
+  transition-delay: 0s, 0s, 0s;
+
+  & svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: #ffffff;
+    background: rgba(37, 37, 37, .78);
+    border-color: rgba(255, 255, 255, .32);
+  }
+
+  /* нажатое состояние идёт после :hover и перебивает его цвета */
+  &[aria-pressed="true"] {
+    color: var(--astral-accent-ink);
+    background: var(--astral-accent);
+    border-color: var(--astral-accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sound-pack-play {
+    transition: none;
+  }
+}

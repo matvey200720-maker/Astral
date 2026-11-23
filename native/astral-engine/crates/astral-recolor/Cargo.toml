@@ -1,0 +1,18 @@
+[package]
+name = "astral-recolor"
+description = "Сборка наборов перекраски Astral: пиксели контракта, листы и словари текстур — байт в байт с прежней сборкой на JS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+rage-res = { path = "../rage-res" }
+rage-rpf = { path = "../rage-rpf" }
+sha2 = "0.10"
+# Та же библиотека и та же версия, что у модуля `native/astral-rs` (сжатие ресурса в сборке на JS): поток deflate выходит тем же.
+libdeflater = "1.26"
+
+[lints]
+workspace = true

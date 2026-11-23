@@ -1,0 +1,891 @@
+/*
+ * «Анимации» мастерской (ТЗ 29.10.2026-d; раскладка мастерской оружия — 02.11.2026). Каркас `EditorShell` с колонкой разделов слева
+ * (`tools`), кадр «На сервере» → «У тебя» посередине во всю высоту, справа панель — поиск, свои файлы и сетка анимаций. Цвета, радиусы и
+ * шрифты — токены словаря; панели плотные, без размытия (docs/3D.md, правило 9: над живым холстом стекла нет).
+ */
+
+@layer overrides {
+  /* Панель справа шире общей (320 px): в ней сетка карточек всех анимаций, а не настройки одного инструмента. */
+  .animations-studio[data-layout="studio"] {
+    --editor-panel-w: clamp(320px, 28vw, 560px);
+  }
+
+  /* Листается не вся панель, а сетка под поиском: поиск и свои файлы остаются на месте, а `VirtualGrid` меряет свою коробку
+     (`.animation-grid-scroll`) — в документе только видимые ряды. */
+  .animations-studio[data-layout="studio"] .ui-editor-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    /* Поля по бокам держат сами строки панели: полоса прокрутки сетки стоит у края колонки, а не в 16 px от него. */
+    padding: 2px 0 0;
+    overflow: hidden;
+  }
+
+  .animations-studio[data-layout="studio"] .ui-editor-panel-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .animations-studio .ui-editor-panel-copy > h2 b {
+    font-weight: inherit;
+  }
+
+  /* Абзацы «?» у имени панели — тихим текстом в полях панели, как строки под ним. */
+  .animations-studio .ui-editor-panel-help {
+    display: grid;
+    flex: none;
+    gap: 4px;
+    padding: 0 16px 10px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  .animations-studio .ui-editor-panel-help p {
+    margin: 0;
+  }
+
+  .animations-library {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Середина: строка с именем выбранной сверху, под ней (если есть) строка установки, ниже — кадр во всю оставшуюся высоту. */
+  .animations-room {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .animations-detail-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px 10px;
+  }
+
+  /* Поиск и рядом с ним фильтр «Мои замены» (3.11.2026: переключателя в шапке больше нет). */
+  .animations-filters {
+    display: grid;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px 8px;
+  }
+
+  .animations-mine-filter {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .animations-sources {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 0 16px 10px;
+  }
+
+  .animations-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 0 2px 0 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+
+  .animations-source b {
+    overflow: hidden;
+    max-width: 180px;
+    color: var(--astral-ink);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animations-problem {
+    flex: none;
+    margin: 0 16px 8px;
+    color: var(--astral-warning);
+    font-size: var(--astral-text-micro);
+    line-height: 1.4;
+  }
+
+  .animation-grid-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4px 16px 14px;
+    overscroll-behavior: contain;
+  }
+
+  .animation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  /* Карточка — сама картинка позы, подпись (вид и имя) лежит поверх её низа на затемнении, без отдельной плашки (2.11.2026, владелец).
+     Фигура в снимке стоит над подписью (`TILE_CAPTION` в `animation-scene.js`), поэтому затемнение не закрывает ноги. */
+  .animation-card {
+    position: relative;
+    display: block;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    color: var(--astral-ink);
+    background: var(--astral-surface-sunken);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--astral-duration-fast) var(--astral-ease),
+      background-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .animation-card:hover:not(:disabled) {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-hover);
+  }
+
+  .animation-card[data-selected] {
+    border-color: var(--astral-accent);
+    box-shadow: 0 0 0 1px var(--astral-accent);
+  }
+
+  .animation-card:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .animation-card[data-marked]::after {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--astral-accent);
+    content: "";
+  }
+
+  .animation-card-pose {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 120 / 150;
+    color: var(--astral-ink-faint);
+  }
+
+  .animation-card-pose canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .animation-card-pose svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .animation-card-pose[data-state="ready"] svg {
+    display: none;
+  }
+
+  /* Подпись поверх низа картинки: вид («Эмоция») тихой строкой, под ней имя; под текстом — затемнение кадра, а не серая плашка.
+     Коробка постоянной высоты: нижние 28 % карточки, ровно та доля снимка, что оставлена под неё (`TILE_CAPTION` в `animation-scene.js`).
+     Вид и имя — по одной строке, имя целиком — в подсказке карточки: длинное имя больше не поднимает подпись на ноги фигуры (лид, 2.11.2026). */
+  .animation-card-caption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 1px;
+    min-width: 0;
+    height: 28%;
+    padding: 0 8px 6px;
+    overflow: hidden;
+    background: linear-gradient(to top, var(--astral-scrim) 0%, var(--astral-scrim) 55%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .animation-card-kind {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animation-card-name {
+    overflow: hidden;
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animations-loading {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 56px 20px;
+    color: var(--astral-ink-muted);
+    text-align: center;
+  }
+
+  .animations-loading b {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+  }
+
+  .animations-loading small {
+    max-width: 280px;
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  .animations-loading i,
+  .animation-window-note i {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--astral-line-strong);
+    border-top-color: var(--astral-ink);
+    border-radius: 50%;
+    animation: animation-spin 0.9s linear infinite;
+  }
+
+  @keyframes animation-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animations-loading i,
+    .animation-window-note i {
+      animation: none;
+    }
+  }
+
+  .animation-rows {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .animation-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px;
+    padding-right: 6px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+  }
+
+  .animation-row[data-selected] {
+    border-color: var(--astral-accent);
+  }
+
+  .animation-row-main {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 0;
+    color: var(--astral-ink);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .animation-row-pair {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    font-size: var(--astral-text-small);
+  }
+
+  .animation-row-pair b {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+
+  .animation-row-pair i {
+    color: var(--astral-ink-faint);
+    font-style: normal;
+  }
+
+  .animation-row-main small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+
+  .animations-detail-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .animations-detail-copy h2 {
+    margin: 0;
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+    line-height: var(--astral-line-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animations-detail-meta,
+  .animations-detail-note {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .animations-detail-note {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+  }
+
+  .animations-detail-actions {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .animations-soon {
+    display: flex;
+    flex: none;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0 16px 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink-muted);
+    background: var(--astral-surface-sunken);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .animations-soon svg {
+    flex: none;
+    margin-top: 2px;
+  }
+
+  .animations-soon b {
+    color: var(--astral-ink);
+    font-weight: 500;
+  }
+
+  /* Кадр сверху, полоса длины под ним: кадру остаётся вся высота, что полоса не заняла. */
+  .animations-detail-stage {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  .animation-stage {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .animation-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .animation-windows {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    pointer-events: none;
+  }
+
+  .animation-window {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 36px 16px 44px;
+  }
+
+  .animation-window + .animation-window {
+    border-left: 1px solid var(--astral-line);
+  }
+
+  .animation-window-label {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    right: 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+    text-align: center;
+  }
+
+  /* Под фигурой: вид («Эмоция») тихой строкой и имя — так же, как на карточке. */
+  .animation-window-caption {
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    left: 16px;
+    display: grid;
+    gap: 2px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .animation-window-kind {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+
+  .animation-window-name {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animation-window-note {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    max-width: 260px;
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+    text-align: center;
+  }
+
+  .animation-window-note.is-error {
+    color: var(--astral-warning);
+  }
+
+  /* Персонаж уже стоит в позе плитки, клип ещё читается: подпись не закрывает фигуру, а стоит над названием. */
+  .animation-window[data-preview] .animation-window-note {
+    position: absolute;
+    right: 16px;
+    bottom: 40px;
+    left: 16px;
+    max-width: none;
+    grid-auto-flow: column;
+    justify-content: center;
+    align-items: center;
+    font-size: var(--astral-text-micro);
+  }
+
+  .animation-window[data-preview] .animation-window-note i {
+    width: 12px;
+    height: 12px;
+    border-width: 1.5px;
+  }
+
+  .animation-window-note small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+    overflow-wrap: anywhere;
+  }
+
+  .animation-arrow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 50%;
+    color: var(--astral-ink-muted);
+    background: var(--astral-surface);
+    transform: translate(-50%, -50%);
+  }
+
+  .animation-arrow svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .animation-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+
+  /* ---------- полоса длины под фигурами (дизайн 15.11.2026, r8/anim/dur.css) ---------- */
+  .animation-dur {
+    --dur-label: 150px;
+    --dur-pad: 24px;
+    flex: none;
+    padding: 12px 28px 14px;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  .animation-dur-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 26px;
+  }
+
+  .animation-dur-title {
+    flex: 1;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .animation-dur-delta {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .animation-dur-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 26px;
+    padding: 0 11px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface);
+    color: #d2d2d6;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .animation-dur-chip svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .animation-dur-chip.is-warn {
+    border-color: rgba(var(--astral-warning-rgb), 0.36);
+    background: rgba(var(--astral-warning-rgb), 0.1);
+    color: #ecd3ae;
+  }
+
+  .animation-dur-chip.is-warn svg {
+    color: var(--astral-warning);
+  }
+
+  .animation-dur-rows {
+    position: relative;
+    margin-top: 4px;
+  }
+
+  .animation-dur-row {
+    display: grid;
+    grid-template-columns: var(--dur-label) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .animation-dur-lane-row {
+    height: 42px;
+  }
+
+  .animation-dur-ruler {
+    position: relative;
+    height: 38px;
+    margin-right: var(--dur-pad);
+  }
+
+  .animation-dur-ruler::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: var(--astral-line-strong);
+    content: "";
+  }
+
+  .animation-dur-tick {
+    position: absolute;
+    bottom: 4px;
+    z-index: 5;
+    padding: 1px 3px;
+    background: var(--astral-bg);
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  .animation-dur-tick i {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    width: 1px;
+    height: 5px;
+    background: var(--astral-line-strong);
+  }
+
+  .animation-dur-label {
+    min-width: 0;
+    padding-right: 10px;
+    line-height: 1.25;
+  }
+
+  .animation-dur-label b {
+    display: block;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .animation-dur-label span {
+    display: block;
+    overflow: hidden;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .animation-dur-lane {
+    position: relative;
+    height: 26px;
+    margin-right: var(--dur-pad);
+  }
+
+  .animation-dur-seg {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-width: 6px;
+    padding-left: 9px;
+    border-radius: var(--astral-radius-sm);
+    font-style: normal;
+  }
+
+  .animation-dur-seg em {
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .animation-dur-seg.is-first {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.17);
+    color: #fff;
+  }
+
+  [data-lane="mine"] .animation-dur-seg.is-first {
+    border-color: transparent;
+    background: #fff;
+    color: #000;
+  }
+
+  .animation-dur-seg.is-repeat {
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.022);
+  }
+
+  /* Поверх шкалы и дорожек: сетка делений и метка проигрывания (едет `transform`-ом, ширину шкалы читает `AnimationDuration`). */
+  .animation-dur-overlay {
+    position: absolute;
+    top: 0;
+    right: var(--dur-pad);
+    bottom: 0;
+    left: var(--dur-label);
+    pointer-events: none;
+  }
+
+  .animation-dur-grid {
+    position: absolute;
+    top: 38px;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .animation-dur-head-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
+    z-index: 4;
+    width: 2px;
+    border-radius: 1px;
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65);
+    will-change: transform;
+  }
+
+  .animation-dur-head-line b {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: var(--astral-radius-xs);
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    color: #000;
+    font-size: var(--astral-text-micro);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    line-height: 20px;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  .animation-dur-note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    margin: 8px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--astral-line);
+    color: #cfcfd4;
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  .animation-dur-note svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--astral-ink-faint);
+  }
+
+  @media (max-width: 1300px) {
+    .animation-dur {
+      --dur-label: 128px;
+      --dur-pad: 22px;
+      padding-inline: 24px;
+    }
+  }
+
+  @media (max-height: 800px) {
+    .animation-dur {
+      padding-block: 10px;
+    }
+
+    .animation-dur-lane-row {
+      height: 36px;
+    }
+
+    .animation-dur-lane {
+      height: 24px;
+    }
+
+    .animation-dur-ruler {
+      height: 34px;
+    }
+
+    .animation-dur-grid {
+      top: 34px;
+    }
+
+    .animation-dur-note {
+      margin-top: 5px;
+      padding-top: 7px;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    /*
+     * Общая раскладка редакторов (`editor-shell.css`) на узком окне ставит колонки стопкой и снимает у страницы высоту окна: едет страница. Студии анимаций
+     * стопка вредна: сетка карточек и холст проигрывания живут в высоте окна, и без неё сетка не узнаёт, где её край, — монтирует все 1461 карточек, а холст
+     * сцены растёт вслед за собственным размером до 100 тысяч пикселей (1.11.2026: «лагает, пикселится, тридцать кадров» — окно ≤ 1100 px это ноутбук 1366
+     * при масштабе 125 % и любое не развёрнутое окно). Высота окна остаётся, как на широком экране. Страницу находит метка `data-holds` от самой студии (`useHolds`), а не `:has()`: тот браузер перепроверяет на каждую правку внутри (`has-invalidation.test.jsx`).
+     */
+    .desktop-content[data-editor-page="window"][data-holds~="animations-studio"],
+    .workshop-studio[data-editor-host="window"][data-holds~="animations-studio"] {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Общая раскладка мастерской на узком окне уводит панель под кадр и пускает её во всю длину (`editor-shell.css`): сетке
+       карточек это то же, что стопка выше. Три колонки остаются, панель уже. */
+    .animations-studio[data-layout="studio"] > .ui-editor-body {
+      grid-template-columns: var(--editor-tools-w) minmax(0, 1fr) var(--editor-panel-w);
+    }
+
+    .animations-studio[data-layout="studio"] {
+      --editor-panel-w: clamp(260px, 34vw, 360px);
+    }
+
+    .animations-studio[data-layout="studio"] .ui-editor-canvas {
+      min-height: 0;
+    }
+
+    .animations-studio[data-layout="studio"] .ui-editor-inspector {
+      grid-column: auto;
+      overflow: hidden;
+      border-top: 0;
+      border-left: 1px solid var(--astral-line);
+    }
+
+    .animations-studio[data-layout="studio"] .ui-editor-panel {
+      overflow: hidden;
+    }
+
+    .animations-detail-head {
+      flex-wrap: wrap;
+    }
+  }
+}

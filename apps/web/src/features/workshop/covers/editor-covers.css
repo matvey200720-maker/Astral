@@ -1,0 +1,164 @@
+/*
+ * Обложки редакторов (`EditorCover.jsx`).
+ *
+ * Обложка стоит там же, где у соседних карточек картинка, — в первой строке
+ * сетки карточки, подпись остаётся под ней. Плашка под рисунком тёмная в обеих
+ * темах, как и сам кадр карточки: на ней лежат светящиеся вещи — след пули,
+ * пламя, метка залаза, — и на светлом они не читаются.
+ *
+ * Знак «установлено» теперь круглая галочка в углу, а не плашка со словом,
+ * поэтому рисунок стоит по центру кадра: места под слово над ним больше не
+ * нужно.
+ *
+ * Правила плашки не привязаны к карточке: той же обложкой работа показывается
+ * в очереди применения на экране «В процессе» — там кадр не карточка, а
+ * квадратик строки. Привязка к `.ui-media-card` осталась только у того, что
+ * и правда про карточку, — у высокой карточки «Моих работ».
+ */
+.desktop-app .workshop-cover {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  place-items: center;
+  padding: 12px;
+  overflow: hidden;
+  /* Чёрная, без светлого пятна посередине (владелец, 18.10.2026: «как у
+     эффектов попадания — чёрный, для всех»). */
+  background: #000;
+  container-type: size;
+  isolation: isolate;
+}
+
+/* Мини-карта целиком: размер берётся от кадра по обеим сторонам — узкая
+   карточка не обрезает полосы снизу, широкая не растягивает радар. */
+.desktop-app .workshop-cover > .mmc-map {
+  width: min(100cqw, calc(100cqh * 191 / 136));
+  height: auto;
+  max-width: none;
+}
+
+/* Рисунки во весь кадр: холст, снимок неба, полоса большой карты. */
+.desktop-app .workshop-cover > .workshop-cover-canvas,
+.desktop-app .workshop-cover > .workshop-cover-image,
+.desktop-app .workshop-cover > .workshop-cover-map,
+.desktop-app .workshop-cover > .workshop-cover-reticle,
+.desktop-app .workshop-cover > .workshop-cover-sky-fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.desktop-app .workshop-cover > .workshop-cover-image {
+  object-fit: cover;
+}
+
+/* Скелет под обложкой (`PhotoSkeleton` в `EditorCover.jsx`, ТЗ 23.10, п. A): на чёрной плите серое
+   место светлее, чем на карточке. Картинка ложится поверх плиты, плита растворяется по её `load`. */
+.desktop-app .workshop-cover {
+  --ui-skeleton-base: rgba(255, 255, 255, 0.075);
+  --ui-skeleton-sheen: rgba(255, 255, 255, 0.11);
+}
+
+/* Схема зон МСЛ — картинка 8 : 5 целиком по центру плитки любой пропорции:
+   без размеров она вставала в натуральную величину и уезжала вниз за край. */
+.desktop-app .workshop-cover > .workshop-cover-canvas > .workshop-cover-zones {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Небо без WebGL2: спокойный дневной градиент вместо пустой плашки. */
+.desktop-app .workshop-cover > .workshop-cover-sky-fallback {
+  background: linear-gradient(180deg, #2f6fb4 0%, #7fb2e0 58%, #d6e6f2 100%);
+}
+
+/* Знак вместо кадра: у звука кадра нет. */
+.desktop-app .workshop-cover > .workshop-cover-glyph {
+  display: grid;
+  width: min(64px, 52cqh);
+  height: min(64px, 52cqh);
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: rgba(247, 250, 255, 0.86);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.desktop-app .workshop-cover > .workshop-cover-glyph svg {
+  width: 52%;
+  height: 52%;
+}
+
+/* Звуки оружия: рендер ствола из каталога вписан целиком, знак звука — в
+   углу, с числом стволов, если их несколько. */
+.desktop-app .workshop-cover > .workshop-cover-weapon {
+  position: absolute;
+  inset: 12%;
+  width: 76%;
+  height: 76%;
+  object-fit: contain;
+}
+
+.desktop-app .workshop-cover > .workshop-cover-sound-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(247, 250, 255, 0.9);
+  font-size: var(--astral-text-micro);
+}
+
+/* «Мои работы»: карточка выше полочной, сверху ряд действий, снизу подпись
+   поверх кадра — рисунку в центре нужен запас с обеих сторон. */
+.desktop-app .ui-media-card.workshop-work-card > .workshop-cover {
+  --workshop-cover-top: 56px;
+  --workshop-cover-bottom: 58px;
+  position: absolute;
+  inset: 0;
+  height: auto;
+  padding: var(--workshop-cover-top) 16px var(--workshop-cover-bottom);
+}
+
+/* Рисунки во весь кадр — замещаемые элементы, поля плашки их не сжимают:
+   место под действия и подпись отдаётся им высотой. */
+.desktop-app
+  .ui-media-card.workshop-work-card
+  > .workshop-cover
+  > :is(
+    .workshop-cover-canvas,
+    .workshop-cover-image,
+    .workshop-cover-map,
+    .workshop-cover-reticle,
+    .workshop-cover-sky-fallback
+  ) {
+  top: var(--workshop-cover-top);
+  bottom: auto;
+  height: calc(100% - var(--workshop-cover-top) - var(--workshop-cover-bottom));
+}
+
+/* Небо — кадр, а не вещь на плашке: ему, как фотографии, положено идти под
+   действия и подпись во всю карточку. Килл-эффект сюда больше не входит: его
+   обложка — вспышка на матовой плашке, и стоит она в свободном поле. */
+.desktop-app
+  .ui-media-card.workshop-work-card
+  > .workshop-cover[data-cover="sky"]
+  > :is(
+    .workshop-cover-canvas,
+    .workshop-cover-image,
+    .workshop-cover-sky-fallback
+  ) {
+  top: 0;
+  height: 100%;
+}

@@ -1,0 +1,161 @@
+/*
+ * «Расписание» на карте (18.10): строки табло — значок, название, время, меню;
+ * выбор значка раскрывается под строкой.
+ */
+
+/*
+ * Ленивый лист (18.10): едет вместе с редактором большой карты по `import()`
+ * (импорт — `WorldMapCustomizer.jsx`), а не в стартовом `main.css` (потолок
+ * 190 KiB, `scripts/verify-web-architecture.js`). Слой тот же, `overrides`;
+ * лист приходит после `main.css`, порядок листов карты — порядок импортов.
+ */
+@layer overrides {
+  .wmc-schedule-rows {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .wmc-schedule-rows > li.is-hidden .wmc-schedule-row {
+    opacity: 0.5;
+  }
+
+  .wmc-schedule-row {
+    display: grid;
+    grid-template-columns: var(--astral-control-h-xs) minmax(0, 1.2fr) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .wmc-schedule-icon {
+    display: grid;
+    place-items: center;
+    width: var(--astral-control-h-xs);
+    height: var(--astral-control-h-xs);
+    padding: 0;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink);
+    background: var(--astral-surface-hover);
+    cursor: pointer;
+  }
+
+  .wmc-schedule-icon > img,
+  .wmc-schedule-icon > svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Значки сервера чёрные на прозрачном: на тёмной кнопке — белыми. */
+  .wmc-schedule-icon > img,
+  .wmc-schedule-picker img {
+    filter: invert(1);
+  }
+
+  .wmc-schedule-icon-none {
+    width: 14px;
+    height: 14px;
+    border-radius: var(--astral-radius-xs);
+    box-shadow: inset 0 0 0 1px var(--astral-line-strong);
+  }
+
+  .wmc-schedule-input {
+    min-width: 0;
+    min-height: var(--astral-control-h-xs);
+    padding: 4px 6px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink);
+    background: transparent;
+    font: inherit;
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-schedule-input:focus-visible {
+    outline: 2px solid var(--astral-accent);
+    outline-offset: 0;
+  }
+
+  .wmc-schedule-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 0 6px calc(var(--astral-control-h-xs) + 4px);
+  }
+
+  .wmc-schedule-picker > button {
+    display: grid;
+    place-items: center;
+    width: var(--astral-control-h-xs);
+    height: var(--astral-control-h-xs);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink);
+    background: var(--astral-surface-hover);
+    cursor: pointer;
+  }
+
+  .wmc-schedule-picker > button.is-active {
+    border-color: var(--astral-accent);
+  }
+
+  .wmc-schedule-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+
+/* Задача 36 (19.10): выбранная строка, строка в две строчки, готовые виды. */
+@layer overrides {
+  .wmc-schedule-rows > li.is-active > .wmc-schedule-row {
+    border-radius: var(--astral-radius-sm);
+    box-shadow: 0 0 0 1px var(--astral-accent);
+  }
+
+  /* Поле строки растёт по тексту (задача 36): длинное название или время переносится, а не прячется за краем. Невидимый
+     двойник по data-value задаёт высоту, поле лежит поверх. */
+  .wmc-grow {
+    display: grid;
+    min-width: 0;
+  }
+
+  .wmc-grow::after {
+    content: attr(data-value) ".";
+    grid-area: 1 / 1;
+    visibility: hidden;
+    padding: 4px 6px;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: var(--astral-text-small);
+    line-height: 1.25;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  /* Специфичность выше общего сброса шрифта у форм в оболочке редактора (0,3,1): иначе кегль поля — страничный. Сам сброс
+     здесь не повторяем (проверка editor-font-reset ищет его по тексту правил), гарнитура и жирность — от родителя. */
+  .wmc-schedule-rows .wmc-grow > textarea.wmc-schedule-input.wmc-schedule-input {
+    grid-area: 1 / 1;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: var(--astral-text-small);
+    line-height: 1.25;
+    resize: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .wmc-schedule-presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}

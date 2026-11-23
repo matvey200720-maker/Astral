@@ -1,0 +1,126 @@
+/*
+ * Строка окна установки: отметка, название, «?» → заменёнка, подпись (`ReplacePairRow.jsx`: комплект одежды и тату). Едет с окнами, а не в общем `main.css`.
+ * Здесь же — картинка тату игры (`TattooPicture`): окна тату открываются и из каталога, где листа мастерской одежды нет.
+ */
+
+@layer overrides {
+  .wear-outfit-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+  .wear-outfit-row {
+    display: grid;
+    grid-template-columns: 22px minmax(110px, 1fr) auto minmax(120px, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+  .wear-outfit-row.is-skipped {
+    opacity: 0.55;
+  }
+  .wear-outfit-name {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .wear-outfit-name b {
+    font-size: var(--astral-text-body);
+  }
+  /* Текст строки переносится целиком: «Тело · татуировки» с обрезанным «…» читался как оборванный (владелец, 30.10.2026). */
+  .wear-outfit-name small,
+  .wear-outfit-meta {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+  .wear-outfit-meta small {
+    display: block;
+    margin-top: 2px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+  }
+  .wear-outfit-check {
+    display: grid;
+    place-items: center;
+    width: 22px;
+  }
+  .wear-outfit-pair {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .wear-outfit-from,
+  .wear-outfit-to {
+    width: 76px;
+    height: 76px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-sunken);
+    color: var(--astral-ink-muted);
+  }
+  .wear-outfit-from {
+    border-style: dashed;
+    cursor: pointer;
+    transition: border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+  .wear-outfit-from.is-chosen {
+    border-style: solid;
+  }
+  .wear-outfit-from:hover:not(:disabled),
+  .wear-outfit-from:focus-visible {
+    border-color: var(--astral-ink);
+  }
+  .wear-outfit-from:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+  .wear-outfit-question {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-hero);
+    font-weight: 600;
+  }
+  .wear-outfit-from .game-item-picture,
+  .wear-outfit-from img,
+  .wear-outfit-to img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .wear-outfit-arrow {
+    color: var(--astral-ink-faint);
+  }
+  .wear-outfit-status.is-waiting {
+    color: var(--astral-ink);
+  }
+
+  /* Картинка тату: тушь бывает и тёмной, и белой, всегда на прозрачном — подложка серая, середина шкалы. */
+  .wear-tattoo-pic {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: color-mix(in srgb, var(--astral-surface) 55%, var(--astral-ink));
+    font-size: 24px;
+  }
+  .wear-outfit-from .wear-tattoo-pic,
+  .wear-outfit-to .wear-tattoo-pic {
+    background: color-mix(in srgb, var(--astral-ink) 52%, var(--astral-surface));
+  }
+  .wear-outfit-from .wear-tattoo-pic img,
+  .wear-outfit-to .wear-tattoo-pic img {
+    box-sizing: border-box;
+    padding: 4px;
+  }
+}

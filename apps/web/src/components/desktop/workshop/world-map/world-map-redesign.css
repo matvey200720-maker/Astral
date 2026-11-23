@@ -1,0 +1,1805 @@
+/* Редактор большой карты: вид и цвета, наборы, подписи, образцы инструментов.
+   Порядок правил с равной специфичностью важен (состояния, условия движения). */
+
+@layer overrides {
+  /* ── Подписи в одну строку с многоточием ── */
+
+  .wmc-colors-copy b,
+  .wmc-set-row-toggle b {
+    white-space: nowrap;
+    font-weight: 600;
+    overflow: hidden;
+    font-size: var(--astral-text-body);
+    text-overflow: ellipsis;
+  }
+
+  .wmc-colors-copy small,
+  .wmc-look-card-copy small,
+  .wmc-nav-row .ui-button-label small {
+    text-overflow: ellipsis;
+    font-size: var(--astral-text-micro);
+    white-space: nowrap;
+    color: var(--astral-ink-muted);
+    overflow: hidden;
+  }
+
+  .wmc-palette small,
+  .wmc-picture-option small {
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: var(--astral-text-micro);
+    text-overflow: ellipsis;
+  }
+
+  /* ── Колонка «Карта»: каркас, страницы, разделы ── */
+
+  .wmc-map-panel {
+    display: grid;
+  }
+
+  .wmc-map-page {
+    --wm-curve: var(--astral-duration-slow) var(--astral-ease);
+    row-gap: 10px;
+    column-gap: 10px;
+    display: grid;
+
+    &[data-dir] {
+      animation: wmc-map-page-in var(--wm-curve) both;
+    }
+
+    &[data-dir=forward] {
+      --wmc-page-from: 14px;
+    }
+
+    &[data-dir=back] {
+      --wmc-page-from: -14px;
+    }
+  }
+
+  .wmc-map-section {
+    --astral-surface: transparent;
+    border: solid 1px var(--astral-line);
+
+    > header {
+      & .ui-switch {
+        margin-inline-start: auto;
+      }
+
+      & h3 {
+        align-items: center;
+        column-gap: 8px;
+        row-gap: 8px;
+        display: inline-flex;
+      }
+    }
+  }
+
+  .wmc-list-switch > span > svg,
+  .wmc-map-section > header h3 > svg {
+    block-size: 16px;
+    color: var(--astral-ink-muted);
+    inline-size: 16px;
+  }
+
+  .wmc-map-list.ui-panel {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    gap: 2px;
+  }
+
+  .wmc-templates {
+    row-gap: 10px;
+    column-gap: 10px;
+    display: grid;
+  }
+
+  /* ── Строки цветов ── */
+
+  .wmc-color-group > h4,
+  .wmc-shelf-title {
+    margin-block: 0 2px;
+    font-weight: 400;
+    margin-inline: 0;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+  }
+
+  .wmc-color-lines {
+    row-gap: 2px;
+    column-gap: 2px;
+    display: grid;
+  }
+
+  .wmc-color-line {
+    min-block-size: 34px;
+    padding-block: 0;
+    padding-inline: 2px;
+    font-size: var(--astral-text-body);
+    grid-auto-flow: column;
+    grid-auto-columns: auto;
+    grid-template-columns: auto minmax(0px, 1fr);
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 10px;
+    display: grid;
+
+    & > span {
+      text-overflow: ellipsis;
+      column-gap: 6px;
+      row-gap: 6px;
+      color: var(--astral-ink);
+      white-space: nowrap;
+      align-items: center;
+      overflow: hidden;
+      display: inline-flex;
+    }
+  }
+
+  .wmc-color-strength {
+    padding-block: 0 6px;
+    padding-inline: 38px 2px;
+  }
+
+  .wmc-changed-dot {
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--astral-accent);
+    inline-size: 6px;
+    block-size: 6px;
+  }
+
+  .wmc-colors-body {
+    --wm-rim: 1px solid var(--astral-line);
+    padding-top: 12px;
+    margin-top: 10px;
+    gap: 14px;
+    border-block-start: var(--wm-rim);
+    display: grid;
+  }
+
+  .wmc-colors-copy {
+    min-inline-size: 0;
+    gap: 1px;
+    display: grid;
+  }
+
+  /* Шапка группы цветов и строка «Цвета карты» делят раскладку */
+  .wmc-colors-head,
+  .wmc-colors-row {
+    --wm-fade: background var(--astral-duration-fast) var(--astral-ease);
+    cursor: pointer;
+    text-align: left;
+    transition: var(--wm-fade);
+    padding-block: 4px;
+    padding-inline: 4px 8px;
+    color: var(--astral-ink);
+    min-inline-size: 0;
+    grid-template-columns: auto minmax(0px, 1fr) auto;
+    border-radius: var(--astral-radius);
+    column-gap: 12px;
+    row-gap: 12px;
+    align-items: center;
+    display: grid;
+  }
+
+  .wmc-colors-head {
+    background: none;
+    flex: 1 1 0%;
+    border: 0 none;
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+    }
+  }
+
+  .wmc-colors-row {
+    --wm-rim: 1px solid var(--astral-line);
+    border: var(--wm-rim);
+    min-block-size: 44px;
+    inline-size: 100%;
+    background: var(--astral-surface);
+
+    & > svg {
+      color: var(--astral-ink-muted);
+      block-size: 14px;
+      inline-size: 14px;
+    }
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+      border-color: var(--astral-line-strong);
+    }
+  }
+
+  .wmc-colors-strip {
+    box-shadow: inset 0px 0px 0px 1px var(--astral-line-strong);
+    border-radius: var(--astral-radius-sm);
+    overflow: hidden;
+    inline-size: 64px;
+    block-size: 28px;
+    display: flex;
+
+    & > i {
+      min-inline-size: 0;
+      flex: 1 1 0%;
+    }
+  }
+
+  .wmc-colors-top {
+    column-gap: 4px;
+    row-gap: 4px;
+    align-items: center;
+    display: flex;
+  }
+
+  /* ── Раскрывашка ── */
+
+  .wmc-disclosure-body {
+    padding-top: 4px;
+    gap: 10px;
+    display: grid;
+  }
+
+  .wmc-disclosure-caret {
+    --wm-turn: transform var(--astral-duration-fast) var(--astral-ease);
+    transition: var(--wm-turn);
+    transform: rotate(-90deg);
+    inline-size: 14px;
+    block-size: 14px;
+  }
+
+  .wmc-disclosure-toggle {
+    & .ui-button-trailing {
+      margin-inline-start: auto;
+      place-items: center;
+      display: inline-grid;
+    }
+
+    &.ui-button {
+      color: var(--astral-ink-muted);
+      justify-content: space-between;
+      font-weight: 400;
+      padding-left: 4px;
+      padding-right: 6px;
+      inline-size: 100%;
+
+      &:hover {
+        color: var(--astral-ink);
+      }
+    }
+
+    &[aria-expanded=true] .wmc-disclosure-caret {
+      transform: rotate(0turn);
+    }
+  }
+
+  /* ── Глаз и сброс ── */
+
+  .wmc-eye {
+    --wm-tile: var(--astral-control-h-xs);
+    background: none;
+    cursor: pointer;
+    inline-size: var(--wm-tile);
+    block-size: var(--wm-tile);
+    padding: 0;
+    border: 0 none;
+    color: var(--astral-ink-muted);
+    border-radius: var(--astral-radius-sm);
+    place-items: center;
+    display: grid;
+
+    & > svg {
+      inline-size: 16px;
+      block-size: 16px;
+    }
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+      color: var(--astral-ink);
+    }
+
+    &[aria-pressed=false] {
+      color: var(--astral-ink-faint);
+    }
+  }
+
+  .wmc-eye-text[aria-pressed=false] {
+    text-decoration: line-through;
+    color: var(--astral-ink-faint);
+  }
+
+  /* ── Списки ── */
+
+  .wmc-group-lines,
+  .wmc-set-items {
+    padding-inline: 0;
+    margin-block: 0;
+    padding-block: 0;
+    margin-inline: 0;
+    list-style: none;
+    gap: 2px;
+    display: grid;
+  }
+
+  .wmc-group-lines {
+    grid-template-columns: minmax(0px, 1fr);
+  }
+
+  .wmc-list-sub {
+    padding-block: 0 10px;
+    padding-inline: 28px 0;
+    gap: 10px;
+    display: grid;
+  }
+
+  .wmc-list-switch {
+    & > span {
+      align-items: center;
+      column-gap: 10px;
+      row-gap: 10px;
+      display: inline-flex;
+    }
+
+    &.ui-field {
+      min-block-size: 44px;
+      padding-block: 0;
+      padding-inline: 2px;
+    }
+  }
+
+  .wmc-switch-line > span {
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink);
+  }
+
+  /* ── Карточка вида ── */
+
+  .wmc-look-card {
+    --wm-fast: var(--astral-duration-fast) var(--astral-ease);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color var(--wm-fast), background var(--wm-fast);
+    border: solid 1px var(--astral-line);
+    padding-block: 6px;
+    padding-inline: 6px 12px;
+    inline-size: 100%;
+    color: var(--astral-ink);
+    border-radius: var(--astral-radius);
+    grid-template-columns: 88px minmax(0px, 1fr) auto;
+    background: var(--astral-surface);
+    gap: 12px;
+    align-items: center;
+    display: grid;
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+      border-color: var(--astral-line-strong);
+    }
+  }
+
+  .wmc-look-card-action {
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+  }
+
+  .wmc-look-card-copy {
+    min-inline-size: 0;
+    gap: 2px;
+    display: grid;
+  }
+
+  /* Названия в две строки */
+  .wmc-look-card-copy b,
+  .wmc-look-grid .ui-choice-copy b {
+    line-height: 1.25;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    font-size: var(--astral-text-body);
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    display: -webkit-box;
+  }
+
+  /* Рамка картинки у карточки вида, плитки вида и плитки набора */
+  .wmc-look-card-picture,
+  .wmc-look-grid .ui-choice-media,
+  .wmc-set-media {
+    border-radius: var(--astral-radius-sm);
+    overflow: hidden;
+    background: rgb(11 13 16);
+    aspect-ratio: 16 / 10;
+    display: block;
+  }
+
+  .wmc-look-card-picture {
+    & .wmc-style-swatch,
+    & img {
+      object-fit: cover;
+      block-size: 100%;
+      inline-size: 100%;
+    }
+  }
+
+  /* ── Плитки видов карты ── */
+
+  .wmc-look-grid.ui-choice-grid,
+  .wmc-set-grid {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+    grid-auto-rows: 1fr;
+    gap: 10px;
+    display: grid;
+  }
+
+  .wmc-look-grid {
+    & .ui-choice-mark {
+      inset-inline-end: 12px;
+      inset-block-start: 12px;
+    }
+
+    & .ui-choice-media {
+      & .wmc-style-swatch,
+      & img {
+        --wm-zoom: transform var(--astral-duration-slow) var(--astral-ease);
+        transition: var(--wm-zoom);
+        object-fit: cover;
+        block-size: 100%;
+        inline-size: 100%;
+        display: block;
+      }
+    }
+
+    & .ui-choice:hover .ui-choice-media img {
+      transform: scale(1.04, 1.04);
+    }
+  }
+
+  .wmc-look-grid .ui-choice,
+  .wmc-set-card.ui-choice {
+    padding-block: 6px 10px;
+    padding-inline: 6px;
+    gap: 8px;
+  }
+
+  .wmc-look-grid .ui-choice-copy,
+  .wmc-set-card .ui-choice-copy {
+    padding-block: 0;
+    padding-inline: 4px;
+  }
+
+  .wmc-look-grid .ui-choice-copy small,
+  .wmc-set-card .ui-choice-copy small {
+    -webkit-box-orient: vertical;
+    color: var(--astral-ink-muted);
+    overflow: hidden;
+    font-size: var(--astral-text-micro);
+    display: -webkit-box;
+  }
+
+  .wmc-look-grid .ui-choice-copy small {
+    -webkit-line-clamp: 1;
+  }
+
+  .wmc-set-card .ui-choice-copy small {
+    -webkit-line-clamp: 2;
+  }
+
+  /* ── Кнопки-строки входа ── */
+
+  .wmc-nav-row {
+    & .ui-button-icon {
+      color: var(--astral-ink-muted);
+
+      & svg {
+        inline-size: 16px;
+        block-size: 16px;
+      }
+    }
+
+    & .ui-button-label > span {
+      font-size: var(--astral-text-body);
+    }
+
+    & .ui-button-trailing svg {
+      block-size: 14px;
+      inline-size: 14px;
+    }
+
+    &.ui-button {
+      color: var(--astral-ink);
+      border-radius: var(--astral-radius-sm);
+      justify-content: flex-start;
+      padding-block: 5px;
+      padding-inline: 8px;
+      margin-left: -6px;
+      margin-right: -6px;
+      min-block-size: 44px;
+      inline-size: calc(100% + 12px);
+      gap: 10px;
+
+      &:hover {
+        background: none var(--astral-surface-hover);
+      }
+    }
+  }
+
+  /* ── Свои наборы ── */
+
+  .wmc-own-actions {
+    padding-block: 0 16px;
+    padding-inline: 16px;
+    display: grid;
+  }
+
+  .wmc-own-card {
+    position: relative;
+    min-inline-size: 0;
+    display: grid;
+
+    & > .wmc-set-card {
+      min-inline-size: 0;
+    }
+  }
+
+  .wmc-own-menu {
+    --wm-ink: 8, 10, 14;
+    position: absolute;
+    z-index: 1;
+    inset-block-start: 10px;
+    inset-inline-end: 10px;
+
+    & .ui-button {
+      background: rgba(var(--wm-ink), .82);
+      border-radius: var(--astral-radius-sm);
+    }
+  }
+
+  .wmc-own-pick {
+    gap: 2px;
+    display: grid;
+  }
+
+  .wmc-own-save {
+    gap: 12px;
+    display: grid;
+  }
+
+  /* ── Палитры ── */
+
+  .wmc-palettes {
+    grid-template-columns: repeat(3, minmax(0px, 1fr));
+    gap: 6px;
+    display: grid;
+  }
+
+  .wmc-palette {
+    --wm-fast: var(--astral-duration-fast) var(--astral-ease);
+    --wm-snap: var(--astral-duration-snap) var(--astral-ease);
+    cursor: pointer;
+    transition: border-color var(--wm-fast), transform var(--wm-snap);
+    justify-items: stretch;
+    background: var(--astral-surface);
+    padding-block: 5px 6px;
+    padding-inline: 5px;
+    color: var(--astral-ink-muted);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    gap: 4px;
+    border-radius: var(--astral-radius-sm);
+    display: grid;
+
+    &:active {
+      transform: scale(.96, .96);
+    }
+
+    &:hover {
+      color: var(--astral-ink);
+      border-color: var(--astral-line-strong);
+    }
+  }
+
+  .wmc-palette-strip {
+    overflow: hidden;
+    border-radius: var(--astral-radius-xs);
+    block-size: 16px;
+    display: flex;
+
+    & > i {
+      flex: 1 1 0%;
+    }
+  }
+
+  /* ── Ряды плиток с картинкой ── */
+
+  .wmc-picture-choice {
+    grid-template-columns: repeat(var(--columns, 3), minmax(0px, 1fr));
+    gap: 6px;
+    display: grid;
+  }
+
+  .wmc-picture-media {
+    --wm-snow: 255, 255, 255;
+    overflow: hidden;
+    border-radius: var(--astral-radius-sm);
+    display: block;
+    background: rgba(var(--wm-snow), .04);
+    aspect-ratio: 56 / 36;
+  }
+
+  .wmc-picture-media > svg,
+  .wmc-zone-sample > svg {
+    display: block;
+    block-size: 100%;
+    inline-size: 100%;
+  }
+
+  .wmc-zone-sample {
+    overflow: hidden;
+    box-shadow: inset 0px 0px 0px 1px var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    aspect-ratio: 160 / 64;
+  }
+
+  .wmc-picture-option {
+    --wm-fast: var(--astral-duration-fast) var(--astral-ease);
+    cursor: pointer;
+    transition: border-color var(--wm-fast), color var(--wm-fast);
+    color: var(--astral-ink-muted);
+    background: var(--astral-surface);
+    min-inline-size: 0;
+    padding-block: 4px 6px;
+    border: solid var(--astral-line) 1px;
+    padding-inline: 4px;
+    gap: 4px;
+    border-radius: var(--astral-radius-sm);
+    display: grid;
+
+    & small.wmc-picture-detail {
+      white-space: normal;
+      line-height: 1.25;
+      color: var(--astral-ink-faint);
+    }
+
+    &:hover {
+      color: var(--astral-ink);
+      border-color: var(--astral-line-strong);
+    }
+
+    &.is-active {
+      box-shadow: inset 0px 0px 0px 1px var(--astral-accent);
+      color: var(--astral-ink);
+      border-color: var(--astral-accent);
+    }
+  }
+
+  /* ── Карточки наборов ── */
+
+  .wmc-set-card {
+    &.is-selected {
+      box-shadow: inset 0px 0px 0px 1px var(--astral-accent);
+      border-color: var(--astral-accent);
+    }
+
+    &.ui-choice {
+      position: relative;
+    }
+
+    & .ui-choice-copy b {
+      font-size: var(--astral-text-body);
+    }
+  }
+
+  .wmc-set-grid > .wmc-set-card:nth-child(odd):last-child {
+    grid-column: 1 / -1;
+
+    & .wmc-set-media {
+      aspect-ratio: 32 / 10;
+    }
+  }
+
+  .wmc-set-media {
+    position: relative;
+
+    & .ui-choice-mark {
+      inset-inline-end: 8px;
+      inset-block-start: 8px;
+    }
+
+    & > canvas {
+      pointer-events: none;
+      display: block;
+      block-size: 100%;
+      inline-size: 100%;
+    }
+  }
+
+  /* ── Предметы набора ── */
+
+  .wmc-set-item-name {
+    --wm-tile: var(--astral-control-h-xs);
+    white-space: nowrap;
+    text-align: left;
+    color: var(--astral-ink);
+    line-height: var(--wm-tile) !important;
+    font-size: var(--astral-text-body) !important;
+    min-block-size: var(--wm-tile);
+    background: none;
+    padding-block: 0;
+    padding-inline: 4px;
+    border-radius: var(--astral-radius-sm);
+    border: 0 none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  button.wmc-set-item-name {
+    cursor: pointer;
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+    }
+  }
+
+  .wmc-set-items {
+    overflow-y: auto;
+    max-height: 280px;
+    overflow-x: hidden;
+
+    & > li {
+      min-block-size: 34px;
+      grid-template-columns: auto minmax(0px, 1fr) auto auto;
+      gap: 6px;
+      align-items: center;
+      display: grid;
+
+      &.is-hidden {
+        & .wmc-set-item-name {
+          color: var(--astral-ink-faint);
+        }
+      }
+    }
+  }
+
+  /* ── Строки набора внутри шаблона ── */
+
+  .wmc-set-row {
+    --wm-corner: var(--astral-radius-sm);
+    background: var(--astral-surface);
+    border-radius: var(--wm-corner);
+
+    &.is-hidden {
+      & .wmc-set-row-toggle b {
+        color: var(--astral-ink-faint);
+      }
+    }
+  }
+
+  .wmc-set-row-head {
+    min-block-size: 36px;
+    padding-block: 0;
+    padding-inline: 4px 2px;
+    gap: 4px;
+    align-items: center;
+    display: flex;
+  }
+
+  .wmc-set-row-toggle {
+    min-block-size: var(--astral-control-h-xs);
+    min-inline-size: 0;
+    cursor: pointer;
+    text-align: left;
+    padding-block: 0;
+    padding-inline: 6px;
+    background: none;
+    color: var(--astral-ink);
+    flex: 1 1 0%;
+    border-radius: var(--astral-radius-sm);
+    gap: 8px;
+    border: 0 none;
+    align-items: center;
+    display: flex;
+
+    & > svg {
+      flex: 0 0 auto;
+      inline-size: 12px;
+      block-size: 12px;
+      color: var(--astral-ink-muted);
+    }
+
+    & small {
+      font-variant-numeric: tabular-nums;
+      flex: 0 0 auto;
+      font-size: var(--astral-text-micro);
+      color: var(--astral-ink-muted);
+    }
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+    }
+  }
+
+  .wmc-set-row-body {
+    --wm-rim: 1px solid var(--astral-line);
+    padding-block: 6px 10px;
+    padding-inline: 10px;
+    gap: 4px;
+    border-block-start: var(--wm-rim);
+    display: grid;
+  }
+
+  /* ── Образец вида при загрузке ── */
+
+  .wmc-style-swatch {
+    display: block;
+
+    &.is-loading {
+      --wm-land: var(--swatch-land, rgb(29 29 29));
+      --wm-road: var(--swatch-roads, rgb(180 180 180));
+      --wm-sea: var(--swatch-water, rgb(56 74 80));
+      --wm-block: var(--swatch-buildings, rgb(65 65 65));
+      --wm-spot-a: radial-gradient(circle at 28% 34%, var(--wm-road) 0 14%, transparent 34%);
+      --wm-spot-b: radial-gradient(circle at 74% 66%, var(--wm-sea) 0 24%, transparent 46%);
+      --wm-spot-c: radial-gradient(circle at 60% 24%, var(--wm-block) 0 16%, transparent 36%);
+      --wm-glint: 255 255 255;
+      position: relative;
+      overflow: hidden;
+      background: var(--wm-land);
+
+      &::before {
+        content: "";
+        position: absolute;
+        inset-block: -25%;
+        inset-inline: -25%;
+        filter: blur(14px);
+        background: var(--wm-spot-a), var(--wm-spot-b), var(--wm-spot-c), var(--wm-land);
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset-block: 0;
+        inset-inline: 0;
+        background: linear-gradient(100deg, transparent 30%, rgb(var(--wm-glint) / .16) 50%, transparent 70%);
+        animation: 1400ms linear infinite wmc-swatch-shimmer;
+        background-size: 220% 100%;
+      }
+    }
+  }
+
+  /* ── Без движения: условные правила идут после безусловных ── */
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-dir].wmc-map-page,
+    .is-loading.wmc-style-swatch::after {
+      animation: none;
+    }
+
+    .wmc-disclosure-caret {
+      transition: none;
+    }
+  }
+
+  /* ── Кадры анимаций ── */
+
+  @keyframes wmc-map-page-in {
+    0% {
+      transform: translateX(var(--wmc-page-from, 0px));
+      opacity: 0;
+    }
+  }
+
+  @keyframes wmc-swatch-shimmer {
+    100% {
+      background-position: -60% 0px;
+    }
+    0% {
+      background-position: 160% 0px;
+    }
+  }
+
+  /* ── Подсветка перехода к органу «Чёткость» ── */
+
+  .wmc-anchor {
+    scroll-margin-top: 24px;
+    scroll-margin-bottom: 24px;
+    row-gap: inherit;
+    column-gap: inherit;
+    border-radius: var(--astral-radius-sm);
+    display: grid;
+
+    &.is-flash {
+      animation: 1600ms var(--astral-ease) both wmc-anchor-flash;
+    }
+  }
+
+  /* При выключенном движении вместо мигания — постоянная подсветка, образцы стоят */
+  .desktop-app[data-motion=off] {
+    & .wmc-anchor.is-flash {
+      --wm-halo: var(--astral-surface-hover);
+      box-shadow:
+        0px 0px 0px 6px var(--wm-halo),
+        0 0 0 7px var(--astral-line-strong);
+      background-color: var(--wm-halo);
+      animation: none;
+    }
+
+    & .wmc-tool-demo * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Слои подложки на карте ── */
+
+  .wmc-base-layers {
+    padding-block: 8px 4px;
+    padding-inline: 2px;
+    border-top: solid 1px var(--astral-line);
+    flex-wrap: wrap;
+    gap: 4px;
+    display: flex;
+  }
+
+  .wmc-base-layer {
+    min-height: var(--astral-control-h-xs);
+    padding-block: 0;
+    padding-inline: 8px;
+    cursor: pointer;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink);
+    border: solid var(--astral-line) 1px;
+    background: var(--astral-surface);
+    align-items: center;
+    border-radius: 999px;
+    gap: 6px;
+    display: inline-flex;
+
+    & > i {
+      --wm-snow: 255, 255, 255;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      box-shadow: inset 0px 0px 0px 1px rgba(var(--wm-snow), .2);
+    }
+
+    & > svg {
+      width: 14px;
+      height: 14px;
+      color: var(--astral-ink-muted);
+    }
+
+    &.is-off {
+      color: var(--astral-ink-faint);
+
+      & > span {
+        text-decoration: line-through;
+      }
+    }
+
+    &:hover {
+      border-color: var(--astral-line-strong);
+    }
+  }
+
+  /* ── Шапка группы цветов без раскрытия ── */
+
+  .wmc-colors-head.is-static {
+    cursor: default;
+
+    &:hover {
+      background: none;
+    }
+  }
+
+  /* ── Поля, подписи, служебные обёртки ── */
+
+  .wmc-field-block {
+    row-gap: 6px;
+    column-gap: 6px;
+    display: grid;
+  }
+
+  .wmc-field-caption {
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+  }
+
+  .wmc-game-page {
+    display: contents;
+  }
+
+  .wmc-map-panel {
+    padding-block-start: 10px;
+  }
+
+  .wmc-layers-empty.is-compact {
+    padding-block: 2px 6px;
+    padding-inline: 4px;
+    margin: 0;
+  }
+
+  .wmc-set-link.ui-button {
+    margin-block-end: 2px;
+  }
+
+  /* Шрифт подписи: названия шрифтов одного размера */
+  .wmc-label-fonts .wmc-font-row {
+    & > b {
+      font-size: var(--astral-text-body) !important;
+    }
+
+    &.is-inherit > b {
+      font-weight: 400;
+      color: var(--astral-ink-muted);
+    }
+  }
+
+  /* ── Готовый рельеф ── */
+
+  .wmc-relief-presets {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+    gap: 8px;
+    display: grid;
+  }
+
+  .wmc-relief-preset {
+    --wm-fast: var(--astral-duration-fast) var(--astral-ease);
+    padding: 6px;
+    cursor: pointer;
+    color: var(--astral-ink-muted);
+    transition:
+      border-color var(--wm-fast),
+      background-color var(--wm-fast);
+    background: none;
+    border: solid var(--astral-line) 1px;
+    gap: 6px;
+    border-radius: var(--astral-radius);
+    display: grid;
+
+    & small {
+      text-align: center;
+      font-size: var(--astral-text-micro);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+    }
+
+    &.is-active {
+      background: none var(--astral-surface-raised);
+      color: var(--astral-ink);
+      border-color: var(--astral-line-focus);
+    }
+  }
+
+  .wmc-relief-sample {
+    --wm-base: rgb(43 47 53);
+    --wm-white: 255, 255, 255;
+    --wm-black: 0, 0, 0;
+    --wm-frost: 180, 210, 255;
+    background: var(--wm-base);
+    display: block;
+    border-radius: var(--astral-radius-sm);
+    aspect-ratio: 4 / 3;
+
+    &.is-lines {
+      background:
+        repeating-radial-gradient(circle at 45% 50%, transparent 0px 4px, rgba(var(--wm-white), .5) 4px 5px),
+        var(--wm-base);
+    }
+
+    &.is-mountains {
+      --wm-cone: conic-gradient(
+        from 210deg at 50% 60%,
+        rgba(var(--wm-white), .3),
+        rgba(var(--wm-black), .55),
+        rgba(var(--wm-white), .3)
+      );
+      background: var(--wm-cone), var(--wm-base);
+    }
+
+    &.is-soft {
+      --wm-glow: radial-gradient(circle at 35% 35%, rgba(var(--wm-white), .22), transparent 45%);
+      --wm-dusk: radial-gradient(circle at 70% 70%, rgba(var(--wm-black), .35), transparent 55%);
+      background: var(--wm-glow), var(--wm-dusk), var(--wm-base);
+    }
+
+    &.is-topo {
+      background:
+        repeating-radial-gradient(circle at 50% 55%, transparent 0px 5px, rgba(var(--wm-frost), .45) 5px 6px),
+        linear-gradient(135deg, rgb(61 90 58), rgb(138 122 92));
+    }
+  }
+
+  /* ── Наборы «Подписи» и «Зоны» ── */
+
+  .wmc-set-item-dot {
+    display: block;
+    margin-left: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: inset 0px 0px 0px 1px var(--astral-line-strong);
+  }
+
+  .wmc-set-shelves {
+    gap: 14px;
+    display: grid;
+  }
+
+  .wmc-set-shelf {
+    gap: 6px;
+    display: grid;
+  }
+
+  .wmc-set-type {
+    padding-top: 10px;
+    border-top: solid 1px var(--astral-line);
+    gap: 10px;
+    display: grid;
+  }
+
+  .wmc-sets-copy {
+    min-width: 0;
+    gap: 1px;
+    display: grid;
+
+    & b {
+      font-weight: 500;
+      font-size: var(--astral-text-body);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    & small {
+      font-size: var(--astral-text-micro);
+      color: var(--astral-ink-muted);
+    }
+  }
+
+  .wmc-sets-list {
+    margin-block: 0;
+    padding-block: 0;
+    list-style: none;
+    margin-inline: 0;
+    padding-inline: 0;
+    gap: 2px;
+    display: grid;
+
+    & > li {
+      grid-template-columns: minmax(0px, 1fr) auto;
+      align-items: center;
+      gap: 4px;
+      display: grid;
+
+      &.is-hidden {
+        & .wmc-sets-copy b {
+          color: var(--astral-ink-faint);
+        }
+      }
+    }
+  }
+
+  .wmc-sets-open {
+    --wm-fade: background var(--astral-duration-fast) var(--astral-ease);
+    min-height: 44px;
+    min-width: 0;
+    text-align: left;
+    transition: var(--wm-fade);
+    padding-block: 4px;
+    padding-inline: 4px 8px;
+    cursor: pointer;
+    background: none;
+    color: var(--astral-ink);
+    grid-template-columns: auto minmax(0px, 1fr) auto;
+    border-radius: var(--astral-radius);
+    gap: 10px;
+    border: 0 none;
+    align-items: center;
+    display: grid;
+
+    & > svg {
+      width: 14px;
+      height: 14px;
+      color: var(--astral-ink-muted);
+    }
+
+    &:hover {
+      background: none var(--astral-surface-hover);
+    }
+  }
+
+  .wmc-sets-sample {
+    background: var(--astral-surface-sunken);
+    width: 36px;
+    height: 36px;
+    box-shadow: inset 0px 0px 0px 1px var(--astral-line);
+    overflow: hidden;
+    place-items: center;
+    border-radius: var(--astral-radius-sm);
+    display: grid;
+
+    &.is-labels {
+      font-weight: 700;
+      font-size: var(--astral-text-body);
+    }
+
+    &.is-zones {
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: 1fr;
+      display: grid;
+
+      & > i {
+        min-width: 0;
+        display: block;
+      }
+    }
+  }
+
+  .wmc-sets-search {
+    height: var(--astral-control-h-sm);
+    background: var(--astral-surface-sunken);
+    padding-block: 0;
+    padding-inline: 8px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--astral-line);
+    color: var(--astral-ink-muted);
+    align-items: center;
+    border-radius: var(--astral-radius-sm);
+    gap: 6px;
+    display: flex;
+
+    & > svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    & input {
+      font-size: var(--astral-text-small);
+      color: var(--astral-ink);
+      flex: 1 1 0%;
+      min-width: 0;
+      outline: 0 none;
+      border: 0 none;
+      background: none;
+    }
+  }
+
+  .wmc-sets-tool {
+    & .wmc-set-items {
+      max-height: none;
+
+      & > li {
+        grid-template-columns: auto minmax(0px, 1fr) auto;
+      }
+    }
+  }
+
+  /* ── Органы поверх кадра ── */
+
+  .wmc-stage-warning .wmc-stage-warning-action.ui-button {
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .wmc-stage-warning,
+  .wmc-stage-zoom {
+    --wm-glass: var(--astral-surface-strong);
+    background: color-mix(in srgb, var(--wm-glass) 94%, transparent);
+  }
+
+  /* ── Выключатели ── */
+
+  .wmc-switch-line.ui-field,
+  .wmc-toggle.ui-field {
+    min-height: 34px;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    display: flex;
+  }
+
+  .wmc-switch-line.ui-field > .ui-switch,
+  .wmc-toggle.ui-field > .ui-switch {
+    margin-left: auto;
+    flex: 0 0 auto;
+  }
+
+  .wmc-toggle.ui-field > span {
+    min-width: 0;
+    font-size: var(--astral-text-body);
+    flex: 1 1 auto;
+    color: var(--astral-ink);
+    gap: 2px;
+    display: grid;
+  }
+
+  /* ── Готовые стили надписей ── */
+
+  .wmc-text-presets {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+    gap: 6px;
+    display: grid;
+  }
+
+  .wmc-text-preset {
+    --wm-fast: var(--astral-duration-fast) var(--astral-ease);
+    --wm-snap: var(--astral-duration-snap) var(--astral-ease);
+    min-height: 64px;
+    overflow: hidden;
+    padding-block: 10px 6px;
+    padding-inline: 6px;
+    cursor: pointer;
+    transition:
+      border-color var(--wm-fast),
+      transform var(--wm-snap);
+    background: var(--astral-surface);
+    align-content: center;
+    border: solid var(--astral-line) 1px;
+    justify-items: center;
+    border-radius: var(--astral-radius-sm);
+    gap: 4px;
+    display: grid;
+
+    & > b {
+      max-width: 100%;
+      line-height: 1.1;
+      white-space: nowrap;
+      font-size: var(--astral-text-strong);
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    & > small {
+      font-size: var(--astral-text-micro);
+      color: var(--astral-ink-muted);
+    }
+
+    &:active {
+      transform: scale(.97, .97);
+    }
+
+    &:hover {
+      background: none var(--astral-surface-raised);
+      border-color: var(--astral-line-strong);
+    }
+
+    &.is-active {
+      box-shadow: inset 0px 0px 0px 1px var(--astral-accent);
+      border-color: var(--astral-accent);
+    }
+  }
+
+  /* ── Поле «Текст» выбранной подписи ── */
+
+  .wmc-text.is-block {
+    grid-template-columns: minmax(0px, 1fr);
+    gap: 6px;
+    display: grid;
+
+    & > span {
+      font-size: var(--astral-text-small);
+      color: var(--astral-ink-muted);
+    }
+
+    & textarea {
+      font: inherit;
+      width: 100%;
+      line-height: 1.35;
+      resize: none;
+      padding-block: 7px;
+      padding-inline: 10px;
+      font-size: var(--astral-text-body);
+      min-height: var(--astral-control-h-sm);
+      color: var(--astral-ink);
+      background: var(--astral-surface-sunken);
+      border-width: 1px;
+      border-style: solid;
+      border-color: var(--astral-line);
+      border-radius: var(--astral-radius-sm);
+
+      &:focus {
+        border-color: var(--astral-line-focus);
+        outline: 0 none;
+      }
+    }
+  }
+
+  /* ── Живые образцы инструментов ── */
+
+  .wmc-tool-demo {
+    --wm-snow: 255, 255, 255;
+    --wm-shade: 0, 0, 0;
+    position: relative;
+    overflow: hidden;
+    background: rgb(28 60 82);
+    border-radius: var(--astral-radius-sm);
+    aspect-ratio: 160 / 64;
+    box-shadow:
+      inset 0px 0px 0px 1px var(--astral-line),
+      0px 10px 24px -18px rgba(var(--wm-shade), .9);
+
+    & > svg {
+      display: block;
+      block-size: 100%;
+      inline-size: 100%;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(var(--wm-snow), .07), transparent 38%);
+    }
+
+    & .wmc-demo-label {
+      font-weight: 650;
+      font-family: var(--astral-font-ui, Inter, system-ui, sans-serif);
+    }
+
+    &.is-brush .wmc-demo-draw {
+      stroke-dashoffset: 0;
+    }
+
+    &.is-eraser {
+      --wm-run: 4.2s linear infinite;
+
+      & .is-hit-1 {
+        opacity: 0;
+        animation: wmc-demo-hit-1 var(--wm-run);
+      }
+
+      & .is-hit-2 {
+        animation: wmc-demo-hit-2 var(--wm-run);
+      }
+
+      & .is-hit-3 {
+        animation: wmc-demo-hit-3 var(--wm-run);
+      }
+
+      & .wmc-demo-erase-trail {
+        stroke-dasharray: 1 1;
+        stroke-dashoffset: .45;
+        animation: wmc-demo-erase var(--wm-run);
+      }
+
+      & .wmc-demo-eraser {
+        --wm-mid-x: calc((var(--to-x) + var(--from-x)) / 2);
+        --wm-mid-y: calc((var(--to-y) + var(--from-y)) / 2);
+        transform: translate(var(--wm-mid-x), var(--wm-mid-y));
+        animation: wmc-demo-eraser var(--wm-run);
+      }
+
+      & .wmc-demo-hit {
+        transform-origin: center;
+        transform-box: fill-box;
+      }
+    }
+
+    &.is-images .wmc-demo-picture {
+      transform-origin: center;
+      transform-box: fill-box;
+      animation: 5s ease-in-out infinite wmc-demo-picture;
+    }
+
+    &.is-markers .wmc-demo-drop {
+      --wm-step: .55s;
+      --wm-beat: 4.5s var(--astral-ease) infinite;
+      animation: wmc-demo-drop var(--wm-beat);
+      animation-delay: calc(var(--i) * var(--wm-step));
+    }
+
+    &.is-shapes {
+      --wm-loop: 4s var(--astral-ease) infinite;
+
+      & .wmc-demo-pointer {
+        transform: translate(103px, 52px);
+        animation: wmc-demo-pointer var(--wm-loop);
+      }
+
+      & .wmc-demo-stretch {
+        transform-origin: 0 0;
+        transform-box: fill-box;
+        animation: wmc-demo-stretch var(--wm-loop);
+      }
+    }
+
+    &.is-text {
+      & .wmc-demo-click {
+        opacity: 0;
+        transform-origin: center;
+        transform-box: fill-box;
+        animation: 4s ease-out infinite wmc-demo-click;
+      }
+
+      & .wmc-demo-type {
+        transform-origin: 0 0;
+        transform: scaleX(1);
+        animation: 4s steps(9, end) infinite wmc-demo-type;
+      }
+    }
+  }
+
+  :root[data-attention]:not([data-attention=active]) {
+    & .wmc-tool-demo * {
+      animation-play-state: paused !important;
+    }
+  }
+
+  /* ── Без движения: условные правила идут после безусловных ── */
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-flash.wmc-anchor {
+      --wm-halo: var(--astral-surface-hover);
+      background-color: var(--wm-halo);
+      animation: none;
+      box-shadow:
+        0 0 0 6px var(--wm-halo),
+        0px 0px 0px 7px var(--astral-line-strong);
+    }
+
+    .wmc-tool-demo * {
+      animation: none !important;
+    }
+  }
+
+  /* ── Кадры анимаций ── */
+
+  @keyframes wmc-demo-pointer {
+    70%,
+    92% {
+      transform: translate(103px, 52px);
+      opacity: 0;
+    }
+    56% {
+      transform: translate(103px, 52px);
+      opacity: 1;
+    }
+    100%,
+    14%,
+    0% {
+      transform: translate(62px, 16px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes wmc-demo-picture {
+    50% {
+      transform: rotate(5deg) scale(1.04);
+    }
+    100%,
+    0% {
+      transform: rotate(-4deg) scale(.94);
+    }
+  }
+
+  @keyframes wmc-demo-stretch {
+    96%,
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+    56%,
+    86% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    14% {
+      transform: scale(.12);
+      opacity: 1;
+    }
+    10%,
+    0% {
+      transform: scale(.12);
+      opacity: 0;
+    }
+  }
+
+  @keyframes wmc-anchor-flash {
+    100% {
+      box-shadow:
+        0px 0px 0px 6px transparent,
+        0px 0px 0px 7px transparent;
+      background-color: transparent;
+    }
+    35%,
+    0% {
+      box-shadow:
+        0px 0px 0px 6px var(--astral-surface-hover),
+        0px 0px 0px 7px var(--astral-line-strong);
+      background-color: var(--astral-surface-hover);
+    }
+  }
+
+  @keyframes wmc-demo-erase {
+    64%,
+    84% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    97% {
+      opacity: 0;
+      stroke-dashoffset: 0;
+    }
+    98%,
+    100%,
+    12%,
+    0% {
+      opacity: 1;
+      stroke-dashoffset: 1;
+    }
+  }
+
+  @keyframes wmc-demo-hit-1 {
+    94%,
+    27% {
+      transform: scale(.9);
+      opacity: 0;
+    }
+    100%,
+    22%,
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes wmc-demo-drop {
+    88%,
+    100% {
+      transform: translateY(0px);
+      opacity: 0;
+    }
+    13%,
+    78% {
+      transform: translateY(0px);
+      opacity: 1;
+    }
+    9% {
+      transform: translateY(.8px);
+      opacity: 1;
+    }
+    0% {
+      transform: translateY(-7px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes wmc-demo-type {
+    58%,
+    100% {
+      transform: scaleX(1);
+    }
+    14%,
+    0% {
+      transform: scaleX(.28);
+    }
+  }
+
+  @keyframes wmc-demo-eraser {
+    92%,
+    76% {
+      opacity: 0;
+      transform: translate(var(--to-x), var(--to-y));
+    }
+    93% {
+      opacity: 0;
+      transform: translate(var(--from-x), var(--from-y));
+    }
+    64% {
+      opacity: 1;
+      transform: translate(var(--to-x), var(--to-y));
+    }
+    100%,
+    12%,
+    0% {
+      opacity: 1;
+      transform: translate(var(--from-x), var(--from-y));
+    }
+  }
+
+  @keyframes wmc-demo-hit-3 {
+    56%,
+    94% {
+      transform: scale(.6);
+      opacity: 0;
+    }
+    100%,
+    51%,
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes wmc-demo-click {
+    14%,
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+    0% {
+      transform: scale(.3);
+      opacity: .9;
+    }
+  }
+
+  @keyframes wmc-demo-hit-2 {
+    41%,
+    94% {
+      transform: scale(.6);
+      opacity: 0;
+    }
+    100%,
+    36%,
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* ── Наклон радара «как в машине» (21.11): три рамки с картинкой вида в перспективе под одним углом — примерный вид, не кадр игры.
+        Плоскость больше окна и камера смотрит чуть выше стрелки, как у штатного радара: край плоскости виден только при сильном наклоне. ── */
+
+  .wmc-tilt-preview {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .wmc-tilt-frames {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .wmc-tilt-frame {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .wmc-tilt-stage {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--wmc-line);
+    border-radius: var(--astral-radius-sm);
+    background: #0b0d10;
+    perspective: 90px;
+    perspective-origin: 50% 70%;
+  }
+
+  .wmc-tilt-plane {
+    position: absolute;
+    top: -100%;
+    left: -75%;
+    width: 250%;
+    height: 250%;
+    transform: rotateX(var(--wmc-tilt, 0deg));
+    transform-origin: 50% 80%;
+  }
+
+  .wmc-tilt-plane img,
+  .wmc-tilt-plane .wmc-style-swatch {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .wmc-tilt-frame > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

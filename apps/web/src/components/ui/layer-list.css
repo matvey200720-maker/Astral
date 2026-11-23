@@ -1,0 +1,220 @@
+/*
+* Список слоёв: строки с миниатюрой и подписью, значки справа по наведению и
+* подвал с «+ Слой». Лист подключается в слой components.
+* Порядок: переменные и движение, покой всех частей, затем наведение,
+* выбранная строка и значки справа.
+*/
+.ui-layer-list {
+  --ux-glide: var(--astral-duration-fast) var(--astral-ease);
+  --ux-ring: inset 0 0 0 1px var(--astral-line-strong);
+  --ux-ring-off: inset 0 0 0 1px transparent;
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+@keyframes ui-layer-in {
+  0% {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+}
+
+.ui-layer-rows {
+  background-color: var(--astral-surface-sunken);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding-inline: 4px;
+  padding-block: 4px;
+}
+
+.ui-layer-row {
+  align-items: center;
+  background-color: transparent;
+  border-radius: var(--astral-radius-sm);
+  box-shadow: var(--ux-ring-off);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-block-size: var(--astral-control-h);
+  position: relative;
+  transition:
+    background var(--ux-glide),
+    box-shadow var(--ux-glide);
+}
+
+.ui-layer-pick {
+  align-items: center;
+  background-image: none;
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 10px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  min-block-size: var(--astral-control-h);
+  min-inline-size: 0;
+  padding-inline: 6px 10px;
+  padding-block: 6px;
+  text-align: left;
+  /* Наведение, фокус внутри строки и выбранная строка */
+  &:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -2px;
+  }
+}
+
+.ui-layer-thumb {
+  background-color: var(--astral-void);
+  block-size: 32px;
+  border-radius: var(--astral-radius-sm);
+  display: grid;
+  inline-size: 32px;
+  overflow: hidden;
+  place-items: center;
+  position: relative;
+  & > .astral-glyph {
+    block-size: 100%;
+    inline-size: 100%;
+  }
+  & > img {
+    block-size: 100%;
+    display: block;
+    inline-size: 100%;
+    object-fit: cover;
+  }
+  &::after {
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--astral-line);
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+}
+
+.ui-layer-title {
+  color: var(--astral-ink-muted);
+  font-weight: 500;
+  font-size: var(--astral-text-body);
+  line-height: var(--astral-line-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--ux-glide);
+  white-space: nowrap;
+}
+
+.ui-layer-copy {
+  display: grid;
+  gap: 1px;
+  min-inline-size: 0;
+}
+
+.ui-layer-meta {
+  color: var(--astral-ink-faint);
+  font-weight: 400;
+  font-size: var(--astral-text-micro);
+  line-height: var(--astral-line-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Значки справа лежат поверх строки и скрыты, пока строка не выбрана и не под курсором */
+.ui-layer-tools {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  inset-block-start: 50%;
+  inset-inline-end: 6px;
+  opacity: 0;
+  position: absolute;
+  transform: translateY(-50%);
+  transition:
+    opacity var(--ux-glide),
+    visibility 0s linear var(--astral-duration-fast);
+  visibility: hidden;
+  & > .is-icon-only.ui-button {
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink-faint);
+    inline-size: var(--astral-control-h-xs);
+    min-block-size: var(--astral-control-h-xs);
+    min-inline-size: var(--astral-control-h-xs);
+  }
+  & > .is-icon-only.ui-button:disabled {
+    opacity: 0.35;
+  }
+}
+
+.ui-layer-foot {
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+.ui-layer-row:hover {
+  background-color: var(--astral-surface-raised);
+}
+
+.has-tools {
+  /* Когда справа показаны значки, конец подписи плавно уходит под них */
+  &.ui-layer-row:is(.is-active, :hover, :focus-within) .ui-layer-copy {
+    mask-image: linear-gradient(
+      90deg,
+      black calc(100% - var(--ui-layer-tools-w, 0px) - 28px),
+      transparent calc(100% - var(--ui-layer-tools-w, 0px) - 6px)
+    );
+  }
+  &.ui-layer-row:is(.is-active, :hover, :focus-within) > .ui-layer-tools {
+    opacity: 1;
+    transition:
+      opacity var(--ux-glide),
+      visibility 0s linear 0s;
+    visibility: visible;
+  }
+}
+
+.ui-layer-menu .ui-menu-item {
+  font-weight: 500;
+}
+
+.is-entering.ui-layer-row {
+  animation: ui-layer-in var(--astral-duration-slow) var(--astral-ease) both;
+}
+
+.ui-layer-row:is(:hover, .is-active) .ui-layer-title {
+  color: var(--astral-ink);
+}
+
+.is-active.ui-layer-row {
+  background-color: var(--astral-surface-hover);
+  box-shadow: var(--ux-ring);
+}
+
+.ui-layer-tools > .is-icon-only.ui-button:not(:disabled):hover {
+  color: var(--astral-ink);
+}
+
+.ui-layer-tools > .is-danger-tool.is-icon-only.ui-button:not(:disabled):hover {
+  background-color: var(--astral-danger-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-layer-row,
+  .ui-layer-title,
+  .ui-layer-tools {
+    transition: none;
+  }
+  .is-entering.ui-layer-row {
+    animation: none;
+  }
+}

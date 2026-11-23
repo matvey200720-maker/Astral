@@ -1,0 +1,5 @@
+# Rust на Windows-машине с игрой не стоит: бинарь собирается на Mac под
+# `x86_64-pc-windows-gnu` (`brew install mingw-w64`) и уезжает по scp.
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+rustflags = ["-C", "target-feature=+crt-static"]

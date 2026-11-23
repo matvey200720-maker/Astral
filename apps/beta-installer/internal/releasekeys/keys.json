@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kid": "astral-2026-10",
+      "publicKey": "m6dWi6srIi5YXd4eDStk53R9f4x7Lu0Ao/brXH7p0dI="
+    },
+    {
+      "kid": "astral-2026-11",
+      "publicKey": "BfMmu/ZBq5hJ5KcS6oJVehLa7foHgFdnXfWziqdjGfc="
+    }
+  ]
+}

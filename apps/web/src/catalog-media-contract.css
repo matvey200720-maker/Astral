@@ -1,0 +1,78 @@
+/* Catalog media contract: transparent weapon renders use the same matte stage
+   as contained map art, with the lighting painted behind the source image.
+   Clothing renders (16.10, `is-clothing-media`) are the same kind of picture —
+   a model on transparency — and stand on the same stage, whole, in the same
+   card as everything else in the catalog. */
+
+/* media-card.css sits later in the `overrides` layer than public-catalog.css
+   (which is `components`), so its shared `left: 16px` wins there regardless
+   of specificity. The public catalog's copy block wants to sit flush against
+   the plate instead, so the override has to live in this layer too. */
+
+.desktop-app .catalog-mod-card.is-weapon-media {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: var(--dragon-matte-base, #080808);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.035),
+    0 18px 42px rgba(0, 0, 0, 0.22);
+}
+
+.desktop-app .catalog-mod-card.is-weapon-media .desktop-catalog-cover {
+  background-color: #080808;
+  background-image:
+    radial-gradient(
+      ellipse 62% 56% at 50% 43%,
+      rgba(255, 255, 255, 0.055) 0%,
+      rgba(255, 255, 255, 0.018) 38%,
+      transparent 74%
+    ),
+    var(--dragon-matte-base) !important;
+  background-position: center, center;
+  background-repeat: no-repeat;
+  background-size:
+    100% 100%,
+    100% 100%;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.028),
+    inset 0 -36px 70px rgba(0, 0, 0, 0.16);
+}
+
+/* Weapon art is a separate, normalized layer. Source PNG exposure can no
+   longer change how much of the matte backdrop is visible around each gun. */
+.desktop-app .catalog-mod-card.is-weapon-media .desktop-catalog-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--catalog-card-art) center / contain no-repeat;
+  filter: brightness(1.06) contrast(0.94) saturate(0.86)
+    drop-shadow(0 7px 16px rgba(220, 220, 220, 0.14));
+  transform: translateZ(0);
+}
+
+.desktop-app .catalog-mod-card.is-weapon-media .catalog-card-shade {
+  z-index: 1;
+}
+
+.desktop-app .catalog-mod-card.is-weapon-media .catalog-card-copy,
+.desktop-app .catalog-mod-card.is-weapon-media .catalog-like {
+  z-index: 2;
+}
+
+/* Detail stages and recommendations use the same neutral photographic table.
+   Transparent PNGs stay crisp while the light remains behind the object. */
+.desktop-app .catalog-product-page.is-weapon-media .redux-product-stage {
+  background: var(--dragon-matte-stage) !important;
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.035),
+    inset 0 -44px 76px rgba(0, 0, 0, 0.18),
+    0 18px 42px rgba(0, 0, 0, 0.2);
+}
+
+.desktop-app .catalog-product-page.is-weapon-media .redux-product-media {
+  object-fit: contain;
+  filter: brightness(1.06) contrast(0.94) saturate(0.86)
+    drop-shadow(0 7px 16px rgba(220, 220, 220, 0.14));
+}

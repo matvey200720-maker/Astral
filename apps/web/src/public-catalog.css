@@ -1,0 +1,824 @@
+/* Catalog/workshop split and registration-matched desktop chrome. */
+
+.desktop-app {
+  background: #090909 !important;
+}
+
+#root[data-holds~="desktop-app"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+.desktop-titlebar {
+  height: 40px !important;
+  padding: 0 142px 0 12px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #0e0e0e !important;
+  box-shadow: none !important;
+}
+
+.desktop-titlebar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.desktop-titlebar-brand img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* Подпись знака — тонко, без разрядки (владелец 14.10.2026: «жирность —
+   дёшево смотрится»). */
+.desktop-titlebar-brand b {
+  color: #f7f8fa !important;
+  font-size: var(--astral-text-micro) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.04em !important;
+}
+
+/*
+ * Приглушение цвета сцены — не фильтр на корне, а переменная для листьев.
+ *
+ * Здесь стоял `filter: saturate(0.88)` на корне сцены. Класс этот носит не
+ * только сцена первого запуска, а сама сцена приложения (она одна на всё), и
+ * фильтр на корне, под которым что-то движется, — это ещё один проход во весь
+ * экран на каждом кадре, поверх самой сцены и её копии под стеклом.
+ *
+ * Приглушать есть что не везде. Звёздное поле, космос и матовые формы почти
+ * бесцветны: у их самых цветных точек (#0b101b неба, тёплой звезды 255/246/230)
+ * `saturate(0.88)` меняет канал меньше чем на одну ступень из 255 — фильтр
+ * работал вхолостую. Заметен он только на цветном: подсветке сетки из палитры,
+ * котах и героях. Там приглушение и стоит — на неподвижных листьях, которые
+ * растрируются один раз (подсветка сетки, картинка героя), или в цепочке
+ * фильтра, который у движущегося листа и так есть (кошки). Листья читают его
+ * отсюда, поэтому в плитках настроек, где этого корня нет, цвет прежний.
+ */
+
+.desktop-app::before,
+.desktop-app::after {
+  display: none !important;
+  content: none !important;
+}
+
+.public-catalog-page {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 18px;
+  min-height: calc(100vh - 118px);
+}
+
+.public-catalog-results {
+  display: grid;
+  gap: 16px;
+  padding-top: 5px;
+}
+
+/*
+ * Поиск как у Apple (29.10.2026): поле появляется из лёгкого размытия и подъёма, а результаты при входе в поиск и выходе
+ * из него проступают так же. Без стекла: размывается сам слой, `backdrop-filter` не нужен. «Меньше движения» — без анимации.
+ */
+@keyframes catalog-search-arrive {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+@keyframes catalog-search-results-a {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@keyframes catalog-search-results-b {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+.desktop-app[data-motion="full"] .public-catalog-page .catalog-search-field {
+  animation: catalog-search-arrive 0.32s cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+.desktop-app[data-motion="full"] .public-catalog-results[data-search-run="a"] {
+  transform-origin: 50% 0;
+  animation: catalog-search-results-a 0.36s cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+.desktop-app[data-motion="full"] .public-catalog-results[data-search-run="b"] {
+  transform-origin: 50% 0;
+  animation: catalog-search-results-b 0.36s cubic-bezier(0.32, 0.72, 0, 1) backwards;
+}
+
+.public-catalog-results > header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 4px;
+}
+
+.public-catalog-results > header > div {
+  display: grid;
+  gap: 5px;
+}
+
+.public-catalog-results > header span {
+  color: #8f8f8f;
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.public-catalog-results h2 {
+  margin: 0;
+  color: #f7f8fb;
+  font-size: 24px;
+}
+
+.public-catalog-results > header > b {
+  color: #808080;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.public-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/*
+ * Здесь стояли два правила для разметки, которой больше нет: значок в левом
+ * верхнем углу обложки (`> span`) и круглая кнопка в правом нижнем (`> button`).
+ * Карточку каталога давно рисует общий MediaCard, и `.public-mod-cover` у него
+ * — пустой <span> без единого ребёнка (`components/ui/MediaCard.jsx`, тот же
+ * класс у витрины сайта). Попадать этим правилам стало не во что.
+ *
+ * Не попадать — но одно место всё же нашлось. На главной лента собрана
+ * руками, и кнопка «открыть» лежит во всю карточку прямо в обложке
+ * (`AstralEditorialHome.jsx`). Мёртвое правило накрывало её плитой
+ * `rgba(10,10,10,.76)` с `backdrop-filter: blur(14px)` — и всё, кроме подписи,
+ * уходило под мутное стекло. На тёмной теме это читалось как «картинка
+ * притушена», на светлой лента превращалась в ряд серых пятен.
+ *
+ * Поэтому правила удалены, а не перекрыты: перекрывать пришлось бы из трёх
+ * листов сразу, а разметки, ради которой они писались, всё равно нет.
+ */
+
+/* Пустой каталог — карточка на стекле. Голым текстом на странице он был
+   верен, пока под страницей лежал ровный фон; на живой сцене заголовок и
+   пояснение ложились прямо на фигуры и звёзды и читались через раз. Декора
+   по-прежнему нет: заголовок, причина и одна кнопка — теперь на своей
+   подложке, а размытую сцену под ней кладёт зеркало стекла. */
+
+/* С карточками «собрать самому» блок — полка во всю ширину, а не записка. */
+
+/* Кнопка действия — общий орган (`Button`), своих правил у неё нет, кроме
+   отступа. Ниже — подложка карточек «собрать самому»: на ней они и стоят. */
+
+@media (max-width: 1180px) {
+
+  .public-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .public-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Catalog reference pass: immediate filters, lightweight flyouts and image-first cards. */
+.desktop-app .public-catalog-page {
+  align-content: start;
+  gap: 12px;
+  padding-top: 0;
+  background: transparent !important;
+}
+
+/* Сортировка — общий орган `MenuButton`: кнопка в нём — `ui-button`, значки в
+   своих обёртках. Размеры плитки и значков прежние (Т-136). */
+
+/* Шеврон встаёт рядом со значком, а не уезжает к краю плитки: общий
+   `.ui-button-trailing` прижат вправо (`margin-left: auto`), и в плитке на
+   52px значок оставался слева, а стрелка — у правой стенки. */
+
+/* Клавиатура видит, где она: выше этот орган гасит обводку целиком
+   (`outline: none !important`), и выбранный раздел с кнопками сортировки и
+   поиска оставались без фокуса. Кант — тот же, что у общих органов. */
+
+.desktop-app .public-catalog-results {
+  gap: 0;
+  padding-top: 0;
+}
+
+.desktop-app .public-catalog-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* Геометрия и поверхность приходят из styles/media-card.css — этот контрол
+   и есть общая кнопка карточки. Здесь не осталось ничего, кроме места. */
+.desktop-app .public-mod-like {
+  z-index: 5;
+}
+
+.desktop-app .public-mod-like:hover {
+  border-color: rgba(255, 255, 255, 0.32) !important;
+  color: #fff !important;
+}
+
+/* A liked card keeps a warm mark, but a calm one: no neon, no bloom. */
+.desktop-app .public-mod-like.is-liked {
+  border-color: color-mix(
+    in srgb,
+    var(--astral-danger) 46%,
+    transparent
+  ) !important;
+  color: var(--astral-danger) !important;
+}
+
+.desktop-app .public-mod-like:focus-visible {
+  outline: 2px solid var(--astral-line-focus) !important;
+  outline-offset: 2px;
+}
+
+.desktop-app .public-mod-like svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
+}
+
+.desktop-app .public-mod-like.is-liked svg {
+  fill: currentColor;
+}
+
+.desktop-app .public-mod-like span {
+  color: inherit !important;
+  font-size: var(--astral-text-micro) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+/*
+ * Подпись карточки: раздел, название и размер файла.
+ *
+ * Две колонки, а не одна. Размер стоял в углу абсолютно, а название под ним
+ * было полной ширины — и уезжало под плашку: «DRAGON Carbine Rifle» кончалось
+ * где-то под «10 МБ». Многоточие не помогало, потому что название не знало,
+ * что кусок его строки занят.
+ *
+ * Теперь название и размер стоят в одной строке соседями: место делится, и
+ * обрезается название ровно там, где начинается плашка.
+ */
+
+/* Phosphor draws filled paths, so the glyph takes its colour from `fill`. */
+
+/* Catalog detail: media-first layout with persistent product metadata. */
+.desktop-app .mod-detail-page {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-bottom: 52px;
+  background: transparent !important;
+}
+.desktop-app .cloud-rating {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  justify-content: start;
+  gap: 8px 12px;
+  margin-top: 18px;
+}
+.desktop-app .cloud-rating > span,
+.desktop-app .cloud-rating > b,
+.desktop-app .cloud-rating > small {
+  font-size: var(--astral-text-micro);
+}
+.desktop-app .cloud-rating > div {
+  display: flex;
+  gap: 3px;
+}
+.desktop-app .cloud-rating button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--surface-border, #343434);
+  background: transparent;
+  color: #7a7a7a;
+}
+.desktop-app .cloud-rating button.is-active {
+  border-color: #bababa;
+  color: #bababa;
+}
+.desktop-app .cloud-rating button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.desktop-app .cloud-rating button svg {
+  width: 14px;
+}
+.desktop-app .cloud-rating > small {
+  grid-column: 1 / -1;
+  color: #999999;
+}
+
+.desktop-app .mod-detail-recommended {
+  margin-top: 46px;
+}
+
+.desktop-app .mod-detail-recommended > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.desktop-app .mod-detail-recommended > header > span {
+  display: flex;
+  flex-direction: column;
+}
+
+.desktop-app .mod-detail-recommended header small {
+  color: #a7a7a7;
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.desktop-app .mod-detail-recommended h2 {
+  margin: 7px 0 0;
+  color: var(--astral-ink);
+  font-family: var(--astral-font);
+  font-size: var(--astral-text-section);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.desktop-app .mod-detail-recommended header > div {
+  display: flex;
+  gap: 7px;
+}
+
+.desktop-app .mod-detail-recommended header button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(145, 145, 145, 0.2);
+  border-radius: var(--astral-radius);
+  background: rgba(19, 19, 19, 0.62);
+  color: var(--astral-ink-muted);
+  transition:
+    transform 180ms ease,
+    background 180ms ease;
+}
+
+.desktop-app .mod-detail-recommended header button:hover {
+  background: rgba(38, 38, 38, 0.82);
+  transform: scale(1.08);
+}
+
+.desktop-app .mod-detail-recommended header svg {
+  width: 15px;
+}
+
+.desktop-app .mod-detail-recommended-track {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 860px) {
+  .desktop-app .mod-detail-recommended-track {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+
+  .desktop-app .public-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* A filter that is on reads like any other active control here: a light
+   surface and a filled glyph. The colour it used to shout in belonged to
+   nothing else on the screen. */
+
+.desktop-app .public-mod-like {
+  min-width: 34px;
+  width: 34px;
+  height: 32px;
+  padding: 0 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(13, 13, 13, 0.62) !important;
+  color: rgba(249, 250, 252, 0.9) !important;
+}
+
+.desktop-app .public-mod-like:hover {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(37, 37, 37, 0.78) !important;
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.24) !important;
+}
+
+.desktop-app .public-mod-like.is-liked,
+.desktop-app .public-mod-like.is-liked:hover {
+  border-color: rgba(var(--astral-danger-rgb), 0.4) !important;
+  background: rgba(72, 20, 32, 0.62) !important;
+  color: var(--astral-danger) !important;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.07),
+    0 0 22px rgba(var(--astral-danger-rgb), 0.16) !important;
+}
+
+/* Detail entrance and denser, easier-to-read metadata. */
+.desktop-app .mod-detail-page {
+  transform-origin: center 26%;
+  animation: mod-detail-page-enter 520ms cubic-bezier(0.2, 0.78, 0.24, 1)
+    backwards;
+}
+
+@keyframes mod-detail-page-enter {
+  from {
+    opacity: 0;
+    clip-path: inset(10% 8% 14% round 26px);
+    transform: translateY(12px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 round 0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Minimal media-first mod detail. */
+.desktop-app .mod-detail-page {
+  max-width: 1320px;
+  padding-top: 0;
+}
+
+/* Описание целиком — под кадром, когда анонс на кадре его обрезал. */
+.desktop-app .mod-detail-about {
+  max-width: 760px;
+  margin-top: 34px;
+  scroll-margin-top: 24px;
+}
+
+.desktop-app .mod-detail-about:focus {
+  outline: none;
+}
+
+.desktop-app .mod-detail-about h2 {
+  margin: 0 0 12px;
+  color: var(--astral-ink);
+  font-family: var(--astral-font);
+  font-size: var(--astral-text-section);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.desktop-app .mod-detail-about p {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.7;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.desktop-app .mod-detail-recommended {
+  margin-top: 34px;
+}
+
+.desktop-app .mod-detail-recommended-viewport {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+}
+
+.desktop-app .mod-detail-recommended-track.is-current.is-next,
+.desktop-app .mod-detail-recommended-track.is-current.is-previous,
+.desktop-app .mod-detail-recommended-track.is-leaving {
+  position: absolute;
+  inset: 0;
+}
+
+.desktop-app .mod-detail-recommended-track.is-current {
+  z-index: 2;
+}
+
+.desktop-app .mod-detail-recommended-track.is-leaving {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.desktop-app .mod-detail-recommended-track.is-current.is-next {
+  animation: detail-recommendation-enter-next 560ms
+    cubic-bezier(0.22, 0.76, 0.24, 1) both !important;
+}
+
+.desktop-app .mod-detail-recommended-track.is-leaving.is-next {
+  animation: detail-recommendation-leave-next 560ms cubic-bezier(0.4, 0, 0.2, 1)
+    both !important;
+}
+
+.desktop-app .mod-detail-recommended-track.is-current.is-previous {
+  animation: detail-recommendation-enter-previous 560ms
+    cubic-bezier(0.22, 0.76, 0.24, 1) both !important;
+}
+
+.desktop-app .mod-detail-recommended-track.is-leaving.is-previous {
+  animation: detail-recommendation-leave-previous 560ms
+    cubic-bezier(0.4, 0, 0.2, 1) both !important;
+}
+
+@keyframes detail-recommendation-enter-next {
+  from {
+    opacity: 0;
+    transform: translateX(5%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes detail-recommendation-leave-next {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-5%);
+  }
+}
+
+@keyframes detail-recommendation-enter-previous {
+  from {
+    opacity: 0;
+    transform: translateX(-5%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes detail-recommendation-leave-previous {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(5%);
+  }
+}
+
+@media (max-width: 900px) {
+  .desktop-app .mod-detail-recommended-viewport {
+    min-height: 560px;
+  }
+}
+
+.desktop-app .public-mod-like svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+/* Shared 828×400 covers and 16:9 detail previews. */
+
+.desktop-app .catalog-mod-card.is-contained-media .desktop-catalog-cover {
+  background-color: #090909;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* Shared 828×400 covers and 16:9 detail previews. */
+
+.desktop-app .catalog-mod-card.is-contained-media .desktop-catalog-cover {
+  background-color: #090909;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* Recommendations use edge navigation and end with the content itself. */
+/* Метку ставят страницы мода и автора (`useHolds.js`); `.mod-detail-page` больше не рисуется. */
+.desktop-content[data-holds~="catalog-product-page"] {
+  min-height: 0;
+  padding-bottom: 0 !important;
+}
+
+.desktop-app .mod-detail-page,
+.desktop-app .catalog-product-page {
+  padding-bottom: 0;
+}
+
+.desktop-app .mod-detail-recommended {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.desktop-app .mod-detail-recommended > header {
+  padding-inline: 0;
+}
+
+.desktop-app .mod-detail-recommended-viewport {
+  display: grid;
+  min-height: 0;
+  margin-top: -8px;
+  padding: 8px 0 28px;
+  overflow: hidden;
+}
+
+.desktop-app .mod-detail-recommended-viewport > .mod-detail-recommended-track {
+  position: relative !important;
+  inset: auto !important;
+  grid-area: 1 / 1;
+  min-width: 0;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.desktop-app
+  .mod-detail-recommended-track.is-current:is(.is-next, .is-previous)
+  .mod-detail-recommended-card {
+  animation: none !important;
+}
+
+.desktop-app .mod-detail-recommended-navigation {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  pointer-events: none;
+}
+
+.desktop-app .mod-detail-recommended-navigation button {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(190, 190, 190, 0.2);
+  border-radius: var(--astral-radius);
+  background: rgba(11, 11, 11, 0.72);
+  color: var(--astral-ink);
+  pointer-events: auto;
+  transform: translateY(-50%);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.desktop-app .mod-detail-recommended-navigation button:first-child {
+  left: 12px;
+}
+
+.desktop-app .mod-detail-recommended-navigation button:last-child {
+  right: 12px;
+}
+
+.desktop-app .mod-detail-recommended-navigation button:hover {
+  border-color: rgba(219, 219, 219, 0.34);
+  background: rgba(31, 31, 31, 0.9);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.desktop-app .mod-detail-recommended-navigation svg {
+  width: 16px;
+}
+
+@media (max-width: 900px) {
+
+  .desktop-app .mod-detail-recommended-viewport {
+    min-height: 0;
+  }
+}
+
+/* Пустой раздел с редактором в мастерской: карточки «собрать самому» стоят
+   там же, где стояли бы модификации. Подложка карточек выше написана с
+   !important — геометрия здесь перекрывается такой же силой. */
+
+.public-catalog-route-media {
+  display: block;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: var(--astral-radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+.public-catalog-route-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.public-catalog-route b {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+.public-catalog-route small {
+  color: #9b9b9b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.public-catalog-route em {
+  margin-top: 6px;
+  color: var(--astral-accent, #b9d7ff);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Фон Astral вместо кадра мода (`StockCoverNote`, правило CLAUDE.md):
+   коротко — на самой картинке, целиком — во всплывающей подсказке. */
+.catalog-stock-note {
+  position: absolute;
+  z-index: 5;
+  top: 11px;
+  left: 11px;
+  padding: 4px 8px;
+  border-radius: var(--astral-radius-xs);
+  color: var(--astral-ink);
+  background: rgba(8, 8, 8, 0.72);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+/* На главной под «Новое», а не поверх. */
+.editorial-fresh-badge + .catalog-stock-note {
+  top: 40px;
+}
+
+/* В строке витрины «Рекомендуемое» — рядом с подписью, а не поверх кадра. */
+.catalog-stock-note.is-inline {
+  position: static;
+}
+
+/* «Собрать в мастерской» внутри пустого раздела (`EmptyState`, 17.10.2026):
+   ряд карточек под фразой, как полка витрины — картинка, имя, что делает. */
+.desktop-app .ui-empty .public-catalog-routes {
+  display: grid;
+  /* Колонки по содержимому и ряд по центру (18.10.2026, «визуальный баг»):
+     одна карточка в сетке на всю ширину прижималась влево, а кнопка под ней
+     стояла посередине. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 240px));
+  justify-content: center;
+  gap: 14px;
+  width: min(760px, 100%);
+  margin-top: 18px;
+  text-align: left;
+}
+
+.desktop-app .ui-empty:has(.public-catalog-routes) {
+  max-width: 800px;
+}
+
+.desktop-app .ui-empty .public-catalog-route {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 8px 8px 12px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-lg);
+  color: var(--astral-ink);
+  background: var(--astral-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--astral-duration-fast) var(--astral-ease),
+    background var(--astral-duration-fast) var(--astral-ease);
+}
+
+.desktop-app .ui-empty .public-catalog-route:hover {
+  border-color: var(--astral-line-strong);
+  background: var(--astral-surface-raised);
+}

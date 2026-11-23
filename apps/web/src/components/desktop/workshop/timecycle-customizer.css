@@ -1,0 +1,759 @@
+/*
+ * Таймциклы.
+ *
+ * Вид — у мастерской эффектов (`effects-studio.css`): редактор носит её имя
+ * `fx-editor` рядом со своим, и разделы панели и сетка готовых видов у него
+ * те же, что у прицела, эффектов попадания и трейсеров. Раскладка — мастерская
+ * «как в Photoshop» (`styles/editor-shell.css`, владелец, 03.10.2026): кадр
+ * каркаса сам матовая рамка, небо лежит в нём целиком, лента суток — полосой
+ * органов поверх. Здесь — только своё: кадр неба, лента суток, образцы неба и
+ * облаков, строки погоды.
+ *
+ * Лист подключён раньше `effects-studio.css` в том же слое, поэтому общие
+ * правила переопределяются с именем редактора впереди.
+ */
+
+/* ── Сцена ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Небо — на весь кадр каркаса: без своей рамки, скругления и высоты — их даёт
+ * рамка `.ui-editor-canvas`. Органы и подпись кадра лежат поверх.
+ */
+.timecycle-editor .sky-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.sky-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--fx-plate);
+  cursor: grab;
+}
+
+.sky-frame.is-dragging {
+  cursor: grabbing;
+}
+
+/*
+ * Что меняет группа ползунков под курсором (редизайн 17.10.2026,
+ * `sky/sky-focus.js`): кадр приглушает остальное, а здесь — короткая
+ * подпись «что это в игре». Слева снизу, чтобы не спорить с подписью кадра
+ * справа; появляется без сдвига раскладки.
+ */
+.sky-focus-note {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  max-width: min(420px, calc(100% - 28px));
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--astral-radius-sm);
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow: 0 0 0 1px var(--astral-line);
+  color: var(--astral-ink);
+  pointer-events: none;
+  animation: sky-focus-in var(--astral-duration-fast) var(--astral-ease) both;
+}
+
+.sky-focus-note > b {
+  font-size: var(--astral-text-body);
+  font-weight: 650;
+}
+
+.sky-focus-note > span {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+}
+
+@keyframes sky-focus-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* Обёртка группы ползунков: только метка участка, в раскладке её нет. */
+.sky-focus-part {
+  display: contents;
+}
+
+.sky-frame > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* Прежний кадр поверх нового холста, пока квартал едет (П6.6): после готовности плавно уходит. */
+.sky-frame-hold {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  opacity: 1;
+  transition: opacity var(--astral-duration) var(--astral-ease);
+  pointer-events: none;
+}
+
+.sky-frame-hold[data-phase="out"] {
+  opacity: 0;
+}
+
+.sky-frame-hold > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Кадра нет (WebGL недоступен) — причина посередине, а не под лентой. */
+.sky-frame-failure {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 24px;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  text-align: center;
+}
+
+/* Что кадр делает, пока квартал не готов: по центру снизу, под строкой управления и подписью. */
+.sky-block-note {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 14px;
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink-muted);
+  background: rgba(10, 10, 11, 0.72);
+  font-size: var(--astral-text-small);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* ── Лента суток ───────────────────────────────────────────────────────── */
+
+/*
+ * Лента — полоса органов кадра во всю ширину верха (`StageBar wide`): часы
+ * слева, лента суток, «вид по умолчанию» справа. Полёта у неба нет, а ленте
+ * нужна ширина: на узком окне (1180) у соседних часов 16…22 и так по два
+ * десятка точек.
+ */
+.timecycle-editor .sky-stage-bar {
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 6px 0;
+}
+
+.sky-stage-bar > .ui-button {
+  flex: none;
+}
+
+/*
+ * Часы слева, лента справа. Лента — одна сплошная полоса суток: её цвета
+ * посчитаны тем же таймциклом, что и кадр. Бегунок идёт поверх неё, отметки
+ * опорных кадров — под ней.
+ */
+.sky-timebar {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Часы и «Сутки» — один ряд слева от ленты: кнопка прогона 12:00 → 12:00 (`sky/day-play.jsx`) стоит рядом с часами, которые она листает. */
+.sky-timebar-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sky-timebar-head .sky-day-play {
+  flex: none;
+}
+
+/* Часы — поле, которое можно набрать: в покое та же рамка, что у числа
+   ползунка, поле выдают курсор и рамка под мышью, в фокусе — акцент. */
+.sky-timebar-clock {
+  width: 62px;
+  height: var(--astral-control-h-xs);
+  padding: 0 6px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  background: var(--astral-surface-sunken);
+  font-family: inherit;
+  font-size: var(--astral-text-strong);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: center;
+  cursor: text;
+}
+
+.sky-timebar-clock:hover {
+  border-color: var(--astral-line-strong);
+}
+
+.sky-timebar-clock:focus-visible {
+  border-color: var(--astral-accent);
+  outline: none;
+}
+
+.sky-timebar-track {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-top: 7px;
+}
+
+.sky-timebar-band {
+  display: flex;
+  overflow: hidden;
+  height: 14px;
+  border: 1px solid var(--fx-scene-line);
+  border-radius: var(--astral-radius-xs);
+}
+
+.sky-timebar-band > i {
+  flex-basis: 0;
+  min-width: 0;
+}
+
+/* Бегунок лежит поверх ленты: его дорожку прячем, остаётся ручка. Поле
+   выше ручки — 28 px, мишень пальца: браться за ленту можно и чуть выше, и
+   чуть ниже нарисованного. */
+.sky-timebar-track > input[type="range"] {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+}
+
+.sky-timebar-track > input[type="range"]::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.sky-timebar-track > input[type="range"]::-webkit-slider-thumb {
+  width: 6px;
+  height: 22px;
+  margin-top: 3px;
+  border: 2px solid var(--astral-bg);
+  border-radius: var(--astral-radius-xs);
+  background: var(--astral-ink);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+  appearance: none;
+}
+
+.sky-timebar-track > input[type="range"]:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.sky-timebar-marks {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sky-timebar-marks > li {
+  flex-basis: 0;
+  min-width: 0;
+}
+
+/* Отметка опорного кадра: щелчок ставит время ровно на неё. Выбранные для
+   правки — светлее и с чертой, как выбранное в полосе режимов. */
+/* Отметка — во всю ширину своего отрезка (в неё легко попасть), а черта
+   выбора — только под цифрами: отрезок полудня тянется до 16:00, и черта во
+   всю его ширину обещала бы, что правятся все эти часы. */
+.sky-timebar-marks button {
+  display: block;
+  width: 100%;
+  min-height: 22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fx-faint);
+  font-family: inherit;
+  font-size: var(--astral-text-micro);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sky-timebar-marks button:hover {
+  color: var(--astral-ink);
+}
+
+.sky-timebar-marks button > span {
+  display: inline-block;
+  padding-top: 2px;
+  border-top: 2px solid transparent;
+}
+
+.sky-timebar-marks button.is-selected {
+  color: var(--astral-ink);
+  font-weight: 600;
+}
+
+.sky-timebar-marks button.is-selected > span {
+  border-top-color: var(--astral-ink);
+}
+
+/* Подпись, что не умещается по ширине ленты: прячется, кнопка во весь отрезок остаётся (`timebar-labels.js`). */
+.sky-timebar-marks button > span.is-thin {
+  visibility: hidden;
+}
+
+.sky-timebar-marks button:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+/* ── Готовые виды ──────────────────────────────────────────────────────── */
+
+/* Полка и сетка — общий орган (`PresetShelf`, стили в ui.css); в панели
+   «Шаблоны» сетка в два столбца — у каркаса. */
+
+.timecycle-editor .sky-preset {
+  background: var(--fx-matte);
+}
+
+.timecycle-editor .sky-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}
+
+.sky-preset .ui-choice-media {
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  background: var(--fx-plate);
+}
+
+/* Пока кадр снимается — ровная подложка неба, а не пустая дыра. */
+.sky-preset-pending {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--astral-ink) 10%, var(--fx-plate)) 0%,
+    var(--fx-plate) 100%
+  );
+}
+
+/* Плитка готовой атмосферы: пока кадр не пришёл (или WebGL нет вовсе) — градиент цвета самой атмосферы на всю плитку. Раньше у этого span не было размеров,
+   и плитка в настоящем приложении оставалась чёрной подложкой (22.11.2026, снимок владельца). */
+.sky-preset-fog {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Панель инструмента ────────────────────────────────────────────────── */
+
+/* Небо часа: образцы градиентом от зенита к горизонту. */
+.sky-swatches {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sky-swatch {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-height: var(--astral-control-h-xs);
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: var(--astral-radius-sm);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+}
+
+.sky-swatch.is-active {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 1px;
+}
+
+.sky-swatch:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 1px;
+}
+
+.sky-swatch > svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+/* «Как в игре» — не цвет, а отсутствие правки: штриховка, а не заливка.
+   На чёрном, без серой плитки под галочкой (владелец 17.10: «галочки — без
+   серой подложки»); край — волосок, чтобы образец не терялся на фоне. */
+.sky-swatch.is-auto {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--astral-bg) 0 4px,
+    color-mix(in srgb, var(--astral-ink) 9%, var(--astral-bg)) 4px 5px,
+    var(--astral-bg) 5px 8px
+  );
+  box-shadow: inset 0 0 0 1px var(--astral-line-strong);
+  color: var(--astral-ink);
+}
+
+/*
+ * «Свои цвета неба» — последняя плитка готовых небес. Пока небо не своё, на
+ * ней тот же знак «любой», что у своего цвета в рядах ниже
+ * (`.ui-color-swatch.is-custom`); своё небо заливает плитку им самим.
+ */
+.sky-swatch-custom {
+  background: var(--astral-any-colour);
+}
+
+/* Свои цвета неба: пять полей цвета одной колонкой под плитками. */
+.sky-parts {
+  display: grid;
+  gap: 6px;
+}
+
+/* Облака: какие бывают — плитками с листом плотности самой игры. */
+.sky-cloud-modes > .ui-segmented {
+  width: 100%;
+}
+
+.sky-cloud-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+/* Готовые облака — целое небо на плитке: кадры крупнее, имена полностью. */
+.sky-cloud-grid.is-ready {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sky-cloud {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--fx-card);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sky-cloud:hover:not(:disabled) {
+  border-color: var(--astral-line-strong);
+}
+
+/* Готовые облака, которым у игрока нет места, — гаснут, как любая
+   недоступная отметка дизайн-системы (`.ui-toggle:disabled`). */
+.sky-cloud:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.sky-cloud.is-active {
+  border-color: var(--astral-accent);
+  background: color-mix(in srgb, var(--astral-accent) 12%, var(--fx-card));
+}
+
+/* Своё облако, которое сейчас в кадре: к рамке отметки — второе, внутреннее
+   кольцо. Остальные отмеченные ждут щелчка, чтобы показаться. */
+.sky-cloud.is-active.is-shown {
+  box-shadow: inset 0 0 0 1px var(--astral-accent);
+}
+
+.sky-cloud:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.sky-cloud > b {
+  overflow: hidden;
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sky-cloud-art {
+  display: block;
+  aspect-ratio: 2 / 1;
+  border-radius: var(--astral-radius-xs);
+  background-color: #3f73b8;
+  background-position: center;
+  background-size: cover;
+}
+
+/* Пока листов игры нет — рисунок облака тем же небом: знак вида, а не
+   снимок, и подпись под кадром это называет. */
+.sky-cloud-art.is-drawn {
+  background-image:
+    radial-gradient(ellipse 32% 22% at 30% 60%, rgba(255, 255, 255, 0.92), transparent 70%),
+    radial-gradient(ellipse 26% 18% at 62% 48%, rgba(255, 255, 255, 0.85), transparent 70%),
+    linear-gradient(180deg, #2f6fc4 0%, #8fc1f0 100%);
+}
+
+/* Свои облака (10.11.2026): ряд «Мои» под готовыми и конструктор. */
+.sky-cloud-cell {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sky-cloud.is-add {
+  align-content: start;
+  border-style: dashed;
+}
+
+.sky-cloud-art.is-plus {
+  display: grid;
+  place-items: center;
+  background-image: linear-gradient(180deg, #2f6fc4 0%, #8fc1f0 100%);
+  color: #fff;
+}
+
+.sky-cloud-art.is-plus > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sky-own {
+  display: grid;
+  gap: 6px;
+}
+
+.sky-own-title,
+.sky-builder-title > h4,
+.sky-builder-block > h4,
+.sky-model-family > h5 {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.sky-builder {
+  display: grid;
+  gap: 10px;
+}
+
+.sky-builder-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sky-builder-head > h3 {
+  margin: 0;
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+}
+
+.sky-builder-block {
+  display: grid;
+  gap: 8px;
+}
+
+.sky-builder-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sky-builder-title > span {
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.sky-layers {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sky-layer {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border: 1px solid var(--fx-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--fx-card);
+}
+
+.sky-layer.is-missing {
+  border-color: var(--astral-warning, var(--fx-line));
+  opacity: 0.8;
+}
+
+.sky-layer-art {
+  width: 56px;
+}
+
+.sky-layer-name {
+  display: grid;
+  min-width: 0;
+}
+
+.sky-layer-name > b {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sky-layer-name > small {
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+}
+
+.sky-model-family {
+  display: grid;
+  gap: 6px;
+}
+
+/* Строка без значка: общая сетка `.sky-note` оставляет первую колонку под значок. */
+.sky-note.is-plain {
+  display: block;
+}
+
+.sky-note.is-warning {
+  color: var(--astral-warning, inherit);
+}
+
+.sky-builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Атмосфера подробно (`AtmosphereDetail.jsx`): группы из таблицы, ползунок и его «Как в игре» в одной строке. */
+.sky-detail,
+.sky-detail-group {
+  display: grid;
+  gap: 8px;
+}
+
+.sky-detail-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Погода: строка — значок, название с пояснением, выключатель. */
+.sky-weather {
+  display: grid;
+  gap: 2px;
+}
+
+.sky-weather-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.sky-weather-row > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--fx-muted);
+}
+
+.sky-weather-row > span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.sky-weather-row b {
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.sky-weather-row small {
+  overflow: hidden;
+  color: var(--fx-faint);
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Радуга ────────────────────────────────────────────────────────────── */
+
+.sky-note {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+}
+
+.sky-note > svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Какая погода в кадре — строка под выключателями погоды. */
+.sky-weather-shown {
+  margin-top: 12px;
+}
+
+.sky-weather-shown > svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Светила нет в выбранных часах — кнопка ставит ленту туда, где оно видно. */
+.sky-note-action {
+  justify-self: start;
+}
+
+/*
+ * Когда видна радуга: четыре плитки выбора (`ChoiceTile`) два на два — у
+ * каждой название и строка, что это значит. Сегментная полоса не вместила бы
+ * пояснений, а без них «весь день» и «круглосуточно» читаются одинаково.
+ */
+.sky-rainbow-modes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Сутки: три плитки столбцом — у каждой название и что оно значит. */
+.sky-cycle-modes {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Свои часы — набор отметок (`ToggleGrid`): сутки по шесть часов, четвертями. */
+.sky-rainbow-hours {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}

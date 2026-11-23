@@ -1,0 +1,579 @@
+/*
+  «Сборки» — открытая сборка (дизайн 15.11.2026, макет r3/builds/builds-B-open): кадр-обложка с названием, действиями и «билетом» кода, ниже вкладки и плитки состава.
+  Лист ленивый: едет в куске страницы сборок (`BuildOpenedPage.jsx`, `BuildOpenTicket.jsx`).
+*/
+@layer overrides {
+  /* Страница открытой сборки идёт от края до края: поля вокруг неё уходят. */
+  .desktop-app .desktop-content.has-bleed-page {
+    padding: 0;
+  }
+
+  /* И шире полосы окна в 1580 px: на 1920 страница не стоит колонкой с чёрными краями (владелец, 16.11.2026: пустого места не оставляем). */
+  .desktop-app .desktop-content.has-bleed-page.is-bleed-wide {
+    max-inline-size: none;
+  }
+
+  .desktop-app .builds-page.is-bleed {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .desktop-app .builds-open {
+    position: relative;
+    padding-bottom: 64px;
+  }
+
+  /* ---------- кадр ---------- */
+  .desktop-app .builds-open-hero {
+    position: relative;
+    height: 470px;
+    overflow: hidden;
+  }
+
+  .desktop-app .builds-open-cover {
+    position: absolute;
+    inset: 0;
+  }
+
+  .desktop-app .builds-open-cover > * {
+    width: 100%;
+    height: 100%;
+  }
+
+  .desktop-app .builds-open-cover .builds-cover-tile > img {
+    object-position: 50% 60%;
+  }
+
+  .desktop-app .builds-open-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.88),
+        rgba(0, 0, 0, 0.3) 60%,
+        rgba(0, 0, 0, 0.2)
+      ),
+      linear-gradient(0deg, var(--astral-bg) 2%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .desktop-app .builds-open-crumb {
+    position: absolute;
+    top: 24px;
+    left: 36px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 4px 6px 4px 0;
+    border: 0;
+    background: transparent;
+    color: #e4e4e7;
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-open-crumb svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .desktop-app .builds-open-crumb:hover {
+    color: #fff;
+  }
+
+  .desktop-app .builds-open-crumb:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .builds-open-copy {
+    position: absolute;
+    bottom: 112px;
+    left: 36px;
+    z-index: 3;
+    display: grid;
+    justify-items: start;
+    width: min(700px, calc(100% - 500px));
+  }
+
+  .desktop-app .builds-open-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--astral-radius-sm);
+    background: rgba(255, 255, 255, 0.14);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .desktop-app .builds-open-copy h1 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    margin: 14px 0 12px;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font: var(--astral-type-display-weight)
+      clamp(
+        var(--astral-text-hero),
+        3.4vw,
+        calc(var(--astral-text-display) * 1.2)
+      ) /
+      1 var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Состав цифрами: одной строкой под названием. */
+  .desktop-app .builds-open-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin: 0;
+    color: #d9d9dd;
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .builds-open-facts dt,
+  .desktop-app .builds-open-facts dd {
+    display: inline;
+    margin: 0;
+  }
+
+  .desktop-app .builds-open-facts dt {
+    margin-right: 6px;
+    color: #d9d9dd;
+    font-weight: 400;
+  }
+
+  .desktop-app .builds-open-facts dd {
+    color: #fff;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .desktop-app .builds-open-facts dd.is-caution {
+    color: var(--astral-warning);
+  }
+
+  .desktop-app .builds-open-facts dd > svg {
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    vertical-align: -2px;
+    color: var(--astral-warning);
+  }
+
+  .desktop-app .builds-open-actions {
+    position: absolute;
+    bottom: 42px;
+    left: 36px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .desktop-app .builds-open-menu.ui-button {
+    min-inline-size: 52px;
+    padding-inline: 0;
+  }
+
+  .desktop-app .builds-open-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+    color: #e5e5e8;
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .builds-open-state i,
+  .desktop-app .builds-ticket-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+  }
+
+  .desktop-app .builds-open-state i svg,
+  .desktop-app .builds-ticket-tick svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* ---------- «билет» с кодом ---------- */
+  .desktop-app .builds-ticket {
+    position: absolute;
+    top: 60px;
+    right: 36px;
+    z-index: 4;
+    width: 388px;
+    filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.7));
+  }
+
+  .desktop-app .builds-ticket-top,
+  .desktop-app .builds-ticket-bottom {
+    border: 1px solid var(--astral-line-strong);
+    background: #0f0f10;
+  }
+
+  .desktop-app .builds-ticket-top {
+    padding: 22px 24px 20px;
+    border-radius: var(--astral-radius-lg) var(--astral-radius-lg) 0 0;
+  }
+
+  .desktop-app .builds-ticket-bottom {
+    padding: 20px 24px 22px;
+    border-top: 0;
+    border-radius: 0 0 var(--astral-radius-lg) var(--astral-radius-lg);
+  }
+
+  .desktop-app .builds-ticket h2 {
+    margin: 0 0 12px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .desktop-app .builds-ticket-code {
+    padding: 18px 12px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: #000;
+    font: 600 var(--astral-text-hero) / 1
+      var(
+        --astral-font-mono,
+        "JetBrains Mono",
+        Consolas,
+        "Cascadia Mono",
+        monospace
+      );
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-ticket-perf {
+    position: relative;
+    height: 0;
+    margin: 0 14px;
+    border-top: 2px dashed rgba(255, 255, 255, 0.2);
+  }
+
+  .desktop-app .builds-ticket-perf::before,
+  .desktop-app .builds-ticket-perf::after {
+    content: "";
+    position: absolute;
+    top: -13px;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 50%;
+    background: var(--astral-bg);
+  }
+
+  .desktop-app .builds-ticket-perf::before {
+    left: -27px;
+  }
+
+  .desktop-app .builds-ticket-perf::after {
+    right: -27px;
+  }
+
+  .desktop-app .builds-ticket-copy {
+    justify-content: center;
+  }
+
+  .desktop-app .builds-ticket-copy .builds-ticket-tick {
+    background: #000;
+    color: #fff;
+  }
+
+  .desktop-app .builds-ticket-bottom p {
+    margin: 12px 0 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  .desktop-app .builds-ticket-paste {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .desktop-app .builds-ticket-field {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .builds-ticket-field:focus-within {
+    border-color: var(--astral-line-focus);
+  }
+
+  .desktop-app .builds-ticket-field svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  .desktop-app .builds-ticket-field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    outline: 0;
+  }
+
+  .desktop-app .builds-ticket-field input::placeholder {
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .builds-ticket-paste .ui-button {
+    min-block-size: 40px;
+  }
+
+  /* ---------- состав ---------- */
+  .desktop-app .builds-open-body {
+    padding: 10px 36px 0;
+  }
+
+  .desktop-app .builds-open-notes {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .desktop-app .builds-open-tabs-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--astral-line);
+  }
+
+  .desktop-app .builds-open-tabs {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 0 30px;
+    min-width: 0;
+  }
+
+  .desktop-app .builds-open-tabs button {
+    margin-bottom: -1px;
+    padding: 0 0 12px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .desktop-app .builds-open-tabs button em {
+    margin-left: 6px;
+    color: var(--astral-ink-faint);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .desktop-app .builds-open-tabs button:hover {
+    color: #fff;
+  }
+
+  .desktop-app .builds-open-tabs button.is-active {
+    border-bottom-color: #fff;
+    color: #fff;
+  }
+
+  .desktop-app .builds-open-tabs button:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .builds-open-status {
+    margin: 0 4px 12px auto;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    white-space: nowrap;
+  }
+
+  .desktop-app .builds-open-bulk {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 8px;
+  }
+
+  .desktop-app .builds-open-mods .builds-mod-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .desktop-app .builds-open-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .desktop-app .builds-open-mods .builds-dialog-hint {
+    margin: 14px 0 0;
+  }
+
+  .desktop-app .builds-open-section-head {
+    margin-bottom: 14px;
+  }
+
+  .desktop-app .builds-open-section-head h3 {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .desktop-app .builds-open-section-head h3 svg {
+    width: 16px;
+    height: 16px;
+    color: var(--astral-warning);
+  }
+
+  /* ---------- плитка состава: постер 170 px, отметка в углу, под названием «вид · размер» ---------- */
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster {
+    height: 170px;
+    min-height: 0;
+    aspect-ratio: auto;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-shade {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), transparent 55%);
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-copy {
+    right: 12px;
+    bottom: 10px;
+    left: 12px;
+    top: auto;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "title title"
+      "kicker meta";
+    align-items: baseline;
+    column-gap: 0;
+    row-gap: 2px;
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-copy > b {
+    grid-area: title;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-kicker {
+    grid-area: kicker;
+    color: #cfcfd3;
+    font-size: var(--astral-text-small);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-copy > small {
+    grid-area: meta;
+    color: #cfcfd3;
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app
+    .builds-open-mods
+    .ui-pick-tile.is-poster
+    .ui-pick-kicker:has(+ b + small)::after,
+  .desktop-app
+    .builds-open-mods
+    .ui-pick-tile.is-poster
+    .ui-pick-kicker:has(~ small)::after {
+    content: " · ";
+    white-space: pre;
+  }
+
+  .desktop-app
+    .builds-open-mods
+    .ui-pick-tile.is-poster.has-note
+    .ui-pick-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+  }
+
+  .desktop-app
+    .builds-open-mods
+    .ui-pick-tile.is-poster.has-note
+    .ui-pick-copy
+    > * {
+    grid-area: auto;
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-mark {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    left: auto;
+    bottom: auto;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid rgba(255, 255, 255, 0.42);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    color: #000;
+  }
+
+  .desktop-app
+    .builds-open-mods
+    .ui-pick-tile.is-poster.is-selected
+    .ui-pick-mark {
+    border-color: #fff;
+    background: #fff;
+  }
+
+  .desktop-app .builds-open-mods .ui-pick-tile.is-poster .ui-pick-mark svg {
+    width: 13px;
+    height: 13px;
+  }
+}

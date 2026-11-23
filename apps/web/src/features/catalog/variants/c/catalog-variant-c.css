@@ -1,0 +1,441 @@
+/*
+ * Каталог, вариант В — «Просмотр» (`CatalogVariantC.jsx`, ТЗ 29.10.2026-b): слева список модов, справа большая сцена выбранного. Тот же язык, что у окна «Компоненты»
+ * (`mod-card/components-split.css`): выбранная строка рамкой, кадры постерами общего органа, белая «Установить» одна на экран. Цвета, углы, кегли и длительности — токены;
+ * тёмная плашка под ▶ поверх кадра — та же, что у кнопки проигрывателя ролика (`clip-player.css`): стекла в приложении нет (`docs/3D.md`, п. 9).
+ * Шапка и навигатор — прежние (`catalog-browse.css`); новое — только раскладка под шапкой.
+ */
+@layer overrides {
+  .desktop-app .public-catalog-page.is-variant-c .cvc-split {
+    display: grid;
+    grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+    gap: 20px;
+    height: clamp(440px, calc(100vh - 168px), 900px);
+    min-height: 0;
+  }
+
+  @media (max-width: 1100px) {
+    .desktop-app .public-catalog-page.is-variant-c .cvc-split {
+      grid-template-columns: minmax(210px, 240px) minmax(0, 1fr);
+      gap: 14px;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .desktop-app .public-catalog-page.is-variant-c .cvc-split {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: 220px minmax(0, 1fr);
+      height: auto;
+    }
+  }
+
+  /* Список: листается сам (в документе только видимые строки), выбранный — рамкой. */
+  .desktop-app .cvc-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-right: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .desktop-app .cvc-rows {
+    width: 100%;
+  }
+
+  .desktop-app .cvc-cell {
+    box-sizing: border-box;
+    height: var(--ui-virtual-row);
+    padding: 1px 0;
+  }
+
+  .desktop-app .cvc-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 0 10px 0 6px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .cvc-row:hover {
+    background: var(--astral-surface-hover);
+  }
+
+  .desktop-app .cvc-row.is-selected {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .cvc-row:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 1px;
+  }
+
+  .desktop-app .cvc-row-art {
+    position: relative;
+    display: block;
+    height: 42px;
+    overflow: hidden;
+    border-radius: var(--astral-radius-xs);
+    background: var(--astral-surface);
+  }
+
+  .desktop-app .cvc-row-blank {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .cvc-row-blank svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .desktop-app .cvc-row-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .desktop-app .cvc-row-title {
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    line-height: var(--astral-line-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cvc-row-sub {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cvc-row-mark {
+    width: 14px;
+    height: 14px;
+    color: var(--astral-positive);
+  }
+
+  /* Кадры — плитка-постер общего органа без подписи: обложку, рендер на прозрачном и знак вида рисует она, имя стоит рядом словами. */
+  .desktop-app .cvc-row-art > .ui-pick-tile.is-poster,
+  .desktop-app .cvc-stage > .ui-pick-tile.is-poster,
+  .desktop-app .cvc-thumb > .ui-pick-tile.is-poster {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    border-radius: var(--astral-radius-xs);
+  }
+
+  .desktop-app .cvc-row-art .ui-pick-copy,
+  .desktop-app .cvc-row-art .ui-pick-shade,
+  .desktop-app .cvc-stage .ui-pick-copy,
+  .desktop-app .cvc-stage .ui-pick-shade,
+  .desktop-app .cvc-thumb .ui-pick-copy,
+  .desktop-app .cvc-thumb .ui-pick-shade {
+    display: none;
+  }
+
+  .desktop-app .cvc-row-art .ui-pick-photo.is-contain,
+  .desktop-app .cvc-thumb .ui-pick-photo.is-contain {
+    padding: 3px;
+  }
+
+  /* Сцена: кадр, слова, действия, лента кадров. */
+  .desktop-app .cvc-scene {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto auto auto;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .desktop-app .cvc-stage {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: radial-gradient(120% 120% at 50% 0%, var(--astral-surface-hover) 0%, var(--astral-surface) 72%);
+  }
+
+  .desktop-app .cvc-stage > .ui-pick-tile.is-poster {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  /* Рисунок на прозрачном (ствол, вещь) — целиком, с воздухом по краям. */
+  .desktop-app .cvc-stage .ui-pick-photo.is-contain {
+    padding: 24px 32px;
+  }
+
+  .desktop-app .cvc-stage-clip {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .desktop-app .cvc-stage-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 10px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .cvc-stage-empty svg {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* ▶ на обложке — слева внизу, словом: ролик встаёт на сцену и играет. */
+  .desktop-app .cvc-stage-play {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 2;
+    background: rgba(12, 12, 14, 0.78);
+  }
+
+  .desktop-app .cvc-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .desktop-app .cvc-kicker {
+    overflow: hidden;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cvc-title {
+    margin: 0;
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-section);
+    font-weight: 600;
+    line-height: var(--astral-line-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cvc-byline {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    min-width: 0;
+    margin-top: 4px;
+  }
+
+  /* Сердечко — у автора, справа: ряд действий остаётся одной строкой, и сцена не теряет высоту. */
+  .desktop-app .cvc-byline .cvc-like {
+    flex: none;
+  }
+
+  /* Автор — тихая плашка: аватар, «Автор» и ник, стрелка к его модам (на странице мода те же органы стоят строкой канала, `mod-card.css`). */
+  .desktop-app .cvc-byline .mod-author-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+    min-width: 0;
+    padding: 3px 12px 3px 3px;
+    border: 1px solid var(--astral-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--astral-ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .cvc-byline .mod-author-chip.is-static {
+    cursor: default;
+  }
+
+  .desktop-app .cvc-byline button.mod-author-chip:hover {
+    background: var(--astral-surface-hover);
+  }
+
+  .desktop-app .cvc-byline .mod-author-chip:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 1px;
+  }
+
+  .desktop-app .cvc-byline .author-avatar .account-mark {
+    --account-mark-size: 28px;
+  }
+
+  .desktop-app .cvc-byline .mod-author-copy {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    line-height: var(--astral-line-tight);
+  }
+
+  .desktop-app .cvc-byline .mod-author-copy small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-micro);
+    font-weight: 500;
+  }
+
+  .desktop-app .cvc-byline .mod-author-copy strong {
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cvc-byline .mod-author-go {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .cvc-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .desktop-app .cvc-facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .desktop-app .cvc-facts svg {
+    width: 14px;
+    height: 14px;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .cvc-note {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  .desktop-app .cvc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .desktop-app .cvc-action-note {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .cvc-action-note.is-failed {
+    color: var(--astral-danger);
+  }
+
+  /* Лента кадров мода — одна строка, листается вбок; выбранный — рамкой. */
+  .desktop-app .cvc-strip {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 0 0 2px;
+    overflow-x: auto;
+    list-style: none;
+  }
+
+  .desktop-app .cvc-thumb {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 88px;
+    height: 56px;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface);
+    cursor: pointer;
+  }
+
+  .desktop-app .cvc-thumb:hover {
+    border-color: var(--astral-line-strong);
+  }
+
+  .desktop-app .cvc-thumb.is-active {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .cvc-thumb:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 1px;
+  }
+
+  .desktop-app .cvc-thumb-badge {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: var(--astral-ink);
+    background: rgba(12, 12, 14, 0.78);
+  }
+
+  .desktop-app .cvc-thumb-badge svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .desktop-app .cvc-empty {
+    min-height: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .cvc-row,
+    .desktop-app .cvc-byline .mod-author-chip {
+      transition: none;
+    }
+  }
+}

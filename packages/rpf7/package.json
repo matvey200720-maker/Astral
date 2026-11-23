@@ -1,0 +1,16 @@
+{
+  "name": "@modovik/rpf7",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./node": "./node.js",
+    "./crypto": "./crypto.js",
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@modovik/native-rs": "*"
+  }
+}

@@ -1,0 +1,586 @@
+/*
+  «Оптимизация» мастерской — рама, сцена «кино» и панели (дизайн 15.11.2026, макеты r6/workshop/optimization-a, r6/opt2/opt2-a-*).
+  Лист ленивый (`OptimizerFrame.jsx`, `OptimizationHero.jsx` едут в куске оптимизации), поэтому всё лежит в одном слое.
+*/
+@layer overrides {
+  .opf {
+    --workshop-opt-green: #55d6a7;
+    --workshop-opt-yellow: #f3cf42;
+    --workshop-opt-red: #ff8a7a;
+    display: grid;
+    gap: 0;
+  }
+
+  /* ---------- свой заголовок (оптимизация открыта редактором, без шапки мастерской) ---------- */
+  .opf-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+  }
+
+  .opf-top h1 {
+    margin: 0;
+    font: var(--astral-type-display-weight) var(--astral-text-page) /
+      var(--astral-line-tight) var(--astral-font-display);
+  }
+
+  .opf-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink);
+    cursor: pointer;
+  }
+
+  /* ---------- ряд разделов и итог ---------- */
+  .opf-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin-top: 16px;
+  }
+
+  .opf-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+
+  .opf-tab {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    color: var(--astral-ink-muted);
+    font: 600 var(--astral-text-body) / 1.2 var(--astral-font);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background var(--astral-duration-fast) var(--astral-ease),
+      color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .opf-tab:hover {
+    color: var(--astral-ink);
+  }
+
+  .opf-tab.is-active {
+    background: var(--astral-surface-hover);
+    color: #fff;
+  }
+
+  .opf-tab:focus-visible,
+  .opf-icon:focus-visible,
+  .opf-back:focus-visible,
+  .opf-film-tile:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .opf-tab em {
+    margin-left: 6px;
+    color: var(--astral-ink-faint);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .opf-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .opf-history {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  .opf-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink);
+    cursor: pointer;
+  }
+
+  .opf-icon:disabled {
+    color: var(--astral-ink-faint);
+    cursor: default;
+    opacity: 0.55;
+  }
+
+  .opf-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--astral-control-h-sm);
+    padding: 0 13px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .opf-pill i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+  }
+
+  .opf-pill i svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  /* ---------- сцена «Карточек» ---------- */
+  .opf-hero {
+    position: relative;
+    height: 408px;
+    margin-top: 14px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-xl);
+    background: #050506;
+  }
+
+  .opf-hero-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.88) 0%,
+        rgba(0, 0, 0, 0.58) 36%,
+        rgba(0, 0, 0, 0) 64%
+      ),
+      linear-gradient(0deg, rgba(0, 0, 0, 0.5), transparent 44%);
+    pointer-events: none;
+  }
+
+  /* Линия «до/после» — белая, с ручкой «<>» посередине, поверх затемнения (макет r6/opt, сверка владельца 16.11.2026): без ручки линия терялась под затемнением. */
+  .opf-hero .optimization-shots-divider {
+    z-index: 3;
+    background: #fff;
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.55);
+  }
+
+  .opf-hero .optimization-shots-divider::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 46px;
+    height: 46px;
+    translate: -50% -50%;
+    border-radius: 999px;
+    background: #fff
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E")
+      center / 22px 22px no-repeat;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    content: "";
+  }
+
+  /* Текст лежит поверх ползунка «до/после»: сам не ловит нажатий, ловят только кнопки в нём. */
+  .opf-hero-copy {
+    position: absolute;
+    bottom: 30px;
+    left: 34px;
+    z-index: 3;
+    width: 520px;
+    max-width: calc(100% - 68px);
+    pointer-events: none;
+  }
+
+  .opf-hero-copy .ui-button {
+    pointer-events: auto;
+  }
+
+  .opf-kicker {
+    display: block;
+    margin-bottom: 10px;
+    color: #d6d6da;
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .opf-hero-copy h2 {
+    margin: 0;
+    font: var(--astral-type-display-weight) var(--astral-text-display) / 1.02
+      var(--astral-font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .opf-hero-copy > p {
+    margin: 12px 0 14px;
+    color: #dcdce0;
+    font-size: var(--astral-text-body);
+    line-height: 1.45;
+  }
+
+  .opf-hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .opf-fps {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--astral-radius-sm);
+    background: rgba(0, 0, 0, 0.5);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    font-weight: 700;
+  }
+
+  .opf-fps svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .opf-nofps {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .opf-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  .opf-status[data-tone="on"] {
+    color: #fff;
+  }
+
+  .opf-status[data-tone="error"] {
+    color: var(--workshop-opt-red);
+  }
+
+  .opf-hero-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .opf-hint {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 12px 0 0;
+    color: #cfcfd4;
+    font-size: var(--astral-text-small);
+  }
+
+  .opf-hint svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Плёнка: все карточки в ряд, выбранная в белой рамке. */
+  .opf-film {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    z-index: 3;
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--astral-radius-lg);
+    background: rgba(8, 8, 9, 0.88);
+  }
+
+  /* Ширина плитки — от самой подписи, но не меньше 94 px: длинное имя («Растительность») тянет плитку, а не обрезается многоточием. */
+  .opf-film-tile {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-width: 94px;
+    height: 62px;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--astral-radius-sm);
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+    transition: transform var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .opf-film-tile::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8), transparent 62%);
+    content: "";
+  }
+
+  .opf-film-tile img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .opf-film-tile:hover {
+    border-color: rgba(255, 255, 255, 0.65);
+    transform: translateY(-3px);
+  }
+
+  .opf-film-tile.is-on {
+    border: 2px solid #fff;
+  }
+
+  .opf-film-name {
+    position: relative;
+    z-index: 2;
+    margin: 0 6px 4px;
+    font-size: var(--astral-text-micro);
+    font-weight: 700;
+    text-shadow: 0 1px 4px #000;
+    white-space: nowrap;
+  }
+
+  .opf-film-mark {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .opf-film-mark.is-on {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+  }
+
+  .opf-film-mark.is-on svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .opf-film-mark.is-part {
+    width: 6px;
+    height: 6px;
+    margin: 3px 3px 0 0;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+  }
+
+  /* ---------- панели под сценой ---------- */
+  .opf-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  .opf-card {
+    padding: 16px 18px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .opf-card h3 {
+    margin: 0 0 4px;
+    font: var(--astral-type-display-weight) var(--astral-text-title) /
+      var(--astral-line-tight) var(--astral-font-display);
+  }
+
+  .opf-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .opf-card-head span {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .opf-card-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* «Включить всё» и «Выключить всё» выглядят одинаково (макет): кнопка без дела остаётся неактивной, но не тускнеет — сколько включено, сказано рядом. */
+  .desktop-app .opf-card-buttons .ui-button:disabled {
+    opacity: 1;
+    cursor: default;
+  }
+
+  .opf-parts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .opf-note {
+    margin: 12px 0 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  .opf-how-lead {
+    margin: 6px 0 12px;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  /* Карточки одного ряда — одной высоты (правило аудита row-height): «Как это ставится» короче «Что входит», поэтому её подсказки раздвинуты на всю высоту
+     строками с разделителями, а не оставляют пустую половину (владелец, 16.11.2026). */
+  .opf-how {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .opf-how-list {
+    display: grid;
+    flex: 1;
+    grid-auto-rows: minmax(0, 1fr);
+    gap: 0;
+    margin: 0;
+  }
+
+  .opf-how-list > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid var(--astral-line);
+    line-height: 1.45;
+  }
+
+  .opf-how-list dt {
+    flex: none;
+    min-width: 112px;
+    color: #fff;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .opf-how-list dd {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  .opf-caption {
+    margin: 8px 0 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+    text-align: right;
+  }
+
+  /* ---------- остальные разделы: сцена слева, панель справа, полоса под ними (дизайн 15.11.2026, `optimizer-film.css`) ---------- */
+  .opf-work {
+    display: grid;
+    grid-template-columns: minmax(0, 744px) minmax(380px, 1fr);
+    gap: 14px 16px;
+    align-items: start;
+    margin-top: 14px;
+  }
+
+  .opf-stage-host {
+    position: relative;
+    min-width: 0;
+  }
+
+  .opf-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    container: opf-panel / inline-size;
+    min-height: 424px;
+    padding: 18px 20px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .opf-panel > div:last-child,
+  .opf-panel .optimizer-slot {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Плашка «Текстуры мира собраны прежней версией» в панели раздела — без своего отступа. */
+  .opf-panel .texture-rebuild-note {
+    margin: 0 0 12px;
+  }
+
+  @media (max-width: 1300px) {
+    .opf-grid {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    .opf-film-tile {
+      min-width: 74px;
+      height: 50px;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .opf-film {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .opf-tab,
+    .opf-film-tile {
+      transition: none;
+    }
+
+    .opf-film-tile:hover {
+      transform: none;
+    }
+  }
+}

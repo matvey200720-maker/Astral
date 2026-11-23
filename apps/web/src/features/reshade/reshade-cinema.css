@@ -1,0 +1,728 @@
+/*
+  «ReShade и DLSS 5» — вариант «Кино» (дизайн 15.11.2026, макет r3/dlss/dlss-c): кадр «до/после» во всю ширину с крупным «DLSS 5» и
+  лентой крупных планов, под ним три карточки, ниже «как играть» и пресеты. Лист ленивый (`ReshadePage.jsx` едет в куске страницы),
+  поэтому всё лежит в одном слое. Прежняя двухколоночная раскладка (`reshade-page.css`) этой странице больше не служит.
+*/
+@layer overrides {
+  .desktop-app .reshade-page.is-cinema {
+    gap: 0;
+
+    /* Как в макете «Кино»: у страницы своего отступа нет — кадр идёт от края до края окна (контейнер окна без полей и без потолка в 1580 px,
+       `use-page-frame.js`), карточки и ряды под ним — в 34 px от края. На широком окне ряды стоят колонкой не шире 1648 px по центру, а
+       название, лента и подпись кадра выровнены по той же колонке (`--reshade-inset`). Раньше отступ страницы складывался с отступом
+       карточек (66 px вместо 34), а кадр на 1920 был полосой с чёрными краями. */
+    --reshade-edge: 34px;
+    --reshade-column: 1648px;
+    --reshade-inset: max(
+      var(--reshade-edge),
+      calc((100% - var(--reshade-column)) / 2 + var(--reshade-edge))
+    );
+  }
+
+  .desktop-app .desktop-content.has-bleed-page.is-bleed-wide {
+    max-inline-size: none;
+    padding: 0;
+  }
+
+  /* ---------- кадр во всю ширину ---------- */
+  .desktop-app .reshade-cinema-hero {
+    position: relative;
+    margin: 0;
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-gallery {
+    position: relative;
+    display: block;
+    height: auto;
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-shots-block {
+    display: block;
+  }
+
+  /* Высота кадра идёт за шириной кадра (на 1440 — 468 px, как в макете «Кино»): на широком окне он не вытягивается тонкой полосой, а остаётся
+     крупным; ширина кадра — окно без рейки, но не шире страницы (1580 px). Выше 80 % высоты окна не растёт. */
+  .desktop-app .reshade-cinema-hero .reshade-shots {
+    height: clamp(468px, calc((100vw - 64px) / 2.94), 78vh);
+    min-height: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--astral-line-strong);
+  }
+
+  /* Подпись кадра — тихой строкой под ним, справа, как в макете «Кино» (12 px, бледная, отступ от краю окна 34 px). Кадр во всю ширину, поэтому отступ — полный. */
+  .desktop-app .reshade-cinema-hero .reshade-shots-block > .fx-hint {
+    padding: 8px var(--reshade-inset) 0;
+    text-align: right;
+  }
+
+  /* Линия «до/после» — белая, с ручкой «<>» посередине и плашкой состояния сверху. Рисуются поверх тёмного низа кадра. */
+  .desktop-app .reshade-cinema-hero .optimization-shots-divider {
+    z-index: 3;
+    background: #fff;
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.55);
+  }
+
+  .desktop-app .reshade-cinema-hero .optimization-shots-divider::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 46px;
+    height: 46px;
+    translate: -50% -50%;
+    border-radius: 999px;
+    background: #fff
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E")
+      center / 22px 22px no-repeat;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    content: "";
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-shots-state {
+    position: absolute;
+    z-index: 3;
+    top: 14px;
+    left: clamp(110px, var(--optimization-split, 50%), calc(100% - 110px));
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    padding: 0 11px;
+    translate: -50% 0;
+    border-radius: var(--astral-radius-sm);
+    background: #fff;
+    color: #000;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-shots-state i {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid #000;
+    border-radius: 999px;
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-shots-state[data-on="true"] i {
+    background: #000;
+  }
+
+  /* Тёмный низ кадра: под названием и лентой текст читается на любом кадре. */
+  .desktop-app .reshade-cinema-hero .reshade-shots::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    height: 300px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.88));
+    content: "";
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-cinema-title {
+    position: absolute;
+    bottom: 58px;
+    left: var(--reshade-inset);
+    z-index: 3;
+    max-width: 560px;
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-cinema-title > span {
+    display: block;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  .desktop-app .reshade-cinema-title h1 {
+    margin: 6px 0 8px;
+    font: var(--astral-type-display-weight)
+      calc(var(--astral-text-display) * 1.98) / 1.1 var(--astral-font-display);
+    letter-spacing: 0.005em;
+  }
+
+  .desktop-app .reshade-cinema-title p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: var(--astral-text-body);
+    line-height: 1.45;
+  }
+
+  /* Лента крупных планов — тёмная плотная полка в правом нижнем углу кадра (стекла в окне нет, правило скорости). */
+  .desktop-app .reshade-cinema-hero .reshade-thumbs {
+    position: absolute;
+    right: var(--reshade-inset);
+    bottom: 58px;
+    z-index: 3;
+    grid-auto-columns: clamp(128px, calc((100vw - 64px) * 0.093), 190px);
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--astral-radius-lg);
+    background: rgba(8, 8, 9, 0.84);
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-thumb {
+    position: relative;
+    gap: 0;
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-thumb-frame {
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .desktop-app .reshade-cinema-hero .reshade-thumb-label {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 12px 6px 5px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+    color: #fff;
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    line-height: 1.2;
+    pointer-events: none;
+  }
+
+  /* ---------- три карточки ---------- */
+  .desktop-app .reshade-page.is-cinema .reshade-panel.is-band {
+    display: block;
+    width: auto;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .desktop-app
+    .reshade-page.is-cinema
+    .reshade-panel.is-band
+    .reshade-panel-scroll {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .desktop-app .reshade-band {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr 1fr;
+    gap: 16px;
+    box-sizing: border-box;
+    max-width: var(--reshade-column);
+    margin-inline: auto;
+    padding: 20px var(--reshade-edge) 0;
+  }
+
+  .desktop-app .reshade-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    min-height: 240px;
+    padding: 20px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface-strong);
+  }
+
+  .desktop-app .reshade-card-kicker {
+    margin: 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  .desktop-app .reshade-card .reshade-part {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .desktop-app .reshade-panel-title.is-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .desktop-app .reshade-card[data-card="state"] .reshade-panel-head {
+    display: block;
+  }
+
+  /* Карточка «Состояние» как в макете «Кино»: название состояния, строка под ним, внизу одна крупная главная кнопка и рядом вторичные
+     (все в одну линию, поровну); меню «По отдельности» — маленькой кнопкой справа. */
+  .desktop-app .reshade-card[data-card="state"] .reshade-state-body {
+    display: grid;
+    gap: 8px;
+  }
+
+  .desktop-app .reshade-card[data-card="state"] .reshade-state-body .fx-hint {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.5;
+  }
+
+  .desktop-app
+    .reshade-card[data-card="state"]
+    .reshade-state-body
+    .fx-hint.reshade-warning {
+    color: var(--astral-warning);
+  }
+
+  .desktop-app
+    .reshade-card[data-card="state"]
+    .reshade-state-body
+    .fx-hint.is-block {
+    color: var(--astral-danger);
+  }
+
+  .desktop-app .reshade-state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+
+  .desktop-app .reshade-state-actions > .ui-button {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .desktop-app .reshade-state-actions > .reshade-separately {
+    flex: none;
+  }
+
+  .desktop-app .reshade-state-actions > .reshade-separately .ui-button {
+    min-width: 0;
+  }
+
+  .desktop-app .reshade-card[data-card="state"] .reshade-state {
+    padding: 0;
+    border: 0;
+    color: var(--astral-ink);
+    font: 700 var(--astral-text-section) / 1.3 var(--astral-font);
+    letter-spacing: -0.01em;
+  }
+
+  .desktop-app .reshade-card .reshade-lock {
+    margin-top: auto;
+    color: var(--astral-ink-muted);
+  }
+
+  /* «Что нужно»: четыре строки — значок, подпись над значением, отметка справа. Подпись внизу — тихой строкой без черты. */
+  .desktop-app .reshade-needs {
+    gap: 0;
+  }
+
+  .desktop-app .reshade-needs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: -4px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .desktop-app .reshade-needs-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 38px;
+  }
+
+  .desktop-app .reshade-needs-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--astral-ink-faint);
+
+    /* Свой слой у каждого значка: без него четыре маленьких <svg> заставляли перерисовывать большой слой страницы, и первый кадр шёл на ~250 мс
+       дольше (замер 16.11: со слоями 347 мс, без них 544–630; `contain` у строки, списка и карточки не помог). Слой — на значок, не на строку. */
+    will-change: transform;
+  }
+
+  .desktop-app .reshade-needs-text {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .desktop-app .reshade-needs-text small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.25;
+  }
+
+  .desktop-app .reshade-needs-text b {
+    overflow: hidden;
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .reshade-needs-mark {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .reshade-needs-list li[data-tone="ok"] .reshade-needs-mark {
+    color: var(--astral-positive);
+  }
+
+  .desktop-app .reshade-needs-list li[data-tone="warn"] .reshade-needs-mark {
+    color: var(--astral-warning);
+  }
+
+  .desktop-app .reshade-needs-list li[data-tone="bad"] .reshade-needs-mark {
+    color: var(--astral-danger);
+  }
+
+  .desktop-app .reshade-card .reshade-panel-foot {
+    margin-top: auto;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  /* Третья карточка до установки: клавиша меню, ниже серые ползунки нейросети (как будут после установки) и строка с замком — карточка не пустая. */
+  .desktop-app .reshade-numbers.is-preview {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* Ползунки в этой карточке — плотные, как в макете (подпись и число 20 px, дорожка под ними), чтобы три карточки полосы вышли одной высоты
+     и соседние не стояли с пустым хвостом. */
+  .desktop-app .reshade-card[data-card="game"] .reshade-numbers {
+    gap: 4px;
+  }
+
+  .desktop-app .reshade-card[data-card="game"] .reshade-numbers .ui-slider {
+    row-gap: 0;
+  }
+
+  .desktop-app
+    .reshade-card[data-card="game"]
+    .reshade-numbers
+    .ui-slider
+    input[type="range"] {
+    block-size: 22px;
+  }
+
+  .desktop-app .reshade-card[data-card="game"] .reshade-lock {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 4px;
+    color: var(--astral-ink-muted);
+  }
+
+  .desktop-app .reshade-card[data-card="game"] .reshade-lock > svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .reshade-card[data-card="game"] .reshade-lock .fx-hint {
+    margin: 0;
+  }
+
+  /* ---------- под карточками ---------- */
+  .desktop-app .reshade-cinema-below {
+    display: grid;
+    gap: 32px;
+    box-sizing: border-box;
+    max-width: var(--reshade-column);
+    margin-inline: auto;
+    padding: 26px var(--reshade-edge) 64px;
+  }
+
+  /* ---------- готовые пресеты: плитки как в макете «Кино» ---------- */
+  /* Плитка 16 : 9 с подписью поверх кадра (имя, описание), у стоящего — белая рамка и значок «галка»; цена (лёгкий, со свечением) — меткой
+     в углу. «До/после» — по наведению: граница идёт за курсором (`ReshadePresets.jsx`), с клавиатуры — тот же ползунок, невидимый.
+     Нажатие по плитке применяет пресет (прозрачная кнопка поверх кадра, на наведении — «Применить»). */
+  .desktop-app .reshade-page .reshade-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .desktop-app .reshade-page .reshade-preset {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-thumb {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface-sunken);
+    transition: border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .reshade-page .reshade-preset:hover .reshade-preset-thumb {
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .desktop-app .reshade-page .reshade-preset.is-active .reshade-preset-thumb {
+    border-color: #fff;
+    box-shadow: 0 0 0 1px #fff;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-shot,
+  .desktop-app .reshade-page .reshade-shots-mini,
+  .desktop-app .reshade-page .reshade-shots-mini .optimization-shots-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .desktop-app .reshade-page .reshade-shots-mini {
+    --optimization-split: var(--reshade-hover-split, var(--shot-split, 0%));
+  }
+
+  .desktop-app .reshade-page .reshade-preset .optimization-shots-tag {
+    display: none;
+  }
+
+  .desktop-app .reshade-page .reshade-preset .optimization-shots-divider {
+    opacity: 0;
+    transition: opacity var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .reshade-page .reshade-preset:hover .optimization-shots-divider,
+  .desktop-app
+    .reshade-page
+    .reshade-preset:focus-within
+    .optimization-shots-divider {
+    opacity: 1;
+  }
+
+  .desktop-app .reshade-page .reshade-preset .optimization-shots-range {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-cost {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    left: 10px;
+    padding: 3px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(8, 8, 9, 0.72);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-badge {
+    position: absolute;
+    z-index: 3;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-badge svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-copy {
+    position: absolute;
+    z-index: 2;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    gap: 2px;
+    padding: 34px 14px 12px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+    pointer-events: none;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-copy b {
+    color: #fff;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-copy p {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--astral-text-small);
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-apply {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: 0 0 52px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-apply:disabled {
+    cursor: default;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-apply > span {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: #fff;
+    color: #000;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app
+    .reshade-page
+    .reshade-preset-apply:not(:disabled):is(:hover, :focus-visible)
+    > span {
+    opacity: 1;
+  }
+
+  .desktop-app .reshade-page .reshade-preset-apply:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: -2px;
+  }
+
+  .desktop-app
+    .reshade-page
+    .reshade-preset.is-loading
+    .reshade-preset-apply
+    > span {
+    opacity: 1;
+  }
+
+  /* «Что нужно знать про DLSS 5» — после пресетов, тихим рядом из трёх столбцов: цена, сборка, границы пресетов. */
+  .desktop-app .reshade-know {
+    display: grid;
+    gap: 14px;
+    padding: 6px 0 0;
+    border-top: 1px solid var(--astral-line);
+  }
+
+  .desktop-app .reshade-know h2 {
+    margin: 18px 0 0;
+    font-size: var(--astral-text-section);
+    font-weight: 700;
+  }
+
+  .desktop-app .reshade-know-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .desktop-app .reshade-know-grid article {
+    display: grid;
+    align-content: start;
+    gap: 6px;
+    padding: 16px 18px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--astral-surface);
+  }
+
+  .desktop-app .reshade-know h3 {
+    margin: 0;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .desktop-app .reshade-know p {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    line-height: 1.5;
+  }
+
+  .desktop-app .reshade-know .reshade-know-note {
+    color: var(--astral-warning);
+  }
+
+  @media (max-width: 1300px) {
+    .desktop-app .reshade-page .reshade-preset-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .desktop-app .reshade-know-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .desktop-app .reshade-page.is-cinema {
+      --reshade-edge: 24px;
+    }
+
+    .desktop-app .reshade-band {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .desktop-app .reshade-card[data-card="game"] {
+      grid-column: 1 / -1;
+    }
+
+    .desktop-app .reshade-cinema-hero .reshade-shots {
+      height: 380px;
+    }
+
+    .desktop-app .reshade-cinema-title h1 {
+      font-size: calc(var(--astral-text-display) * 1.57);
+    }
+
+    .desktop-app .reshade-cinema-hero .reshade-thumbs {
+      grid-auto-columns: 96px;
+    }
+  }
+}

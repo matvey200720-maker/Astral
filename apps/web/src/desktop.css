@@ -1,0 +1,907 @@
+/*
+ * Каркас настольного окна Astral: главная область со страницами, заголовок окна и левая колонка.
+ * Порядок объявлений в правиле: поведение (курсор, переходы, переполнение), текст, цвет, тень,
+ * обводка и углы, фон, поля и отступы, размеры, раскладка, положение. Размеры и вертикальные
+ * отступы записаны логическими свойствами, левый и правый края остаются физическими.
+ * Правила идут в том порядке, в каком одно перебивает другое: узкие окна и поздние правки стоят
+ * там, где их результат должен остаться последним.
+ */
+
+/* ---- Общие куски ---- */
+
+/* Шрифт заголовков и крупных подписей */
+.desktop-titlebar b,
+.catalog-card-copy h3,
+.game-path > i,
+.desktop-logo > span,
+.desktop-empty h2,
+.desktop-logo > b {
+  line-height: normal;
+  font-style: normal;
+  font-weight: 400;
+  font-family: var(--astral-font-display);
+}
+
+.desktop-logo > b,
+.catalog-card-copy h3,
+.desktop-logo > span {
+  font-size: var(--astral-text-title);
+}
+
+/* Мелкий жирный текст: бирки, подписи кнопок, названия в плашках */
+.game-path b,
+.library-tabs button,
+.desktop-catalog-cover > span,
+.installed-status b,
+.desktop-catalog-cover > button,
+.desktop-catalog-cover > b {
+  font-weight: 500;
+  font-size: var(--astral-text-micro);
+}
+
+/* Мелкий обычный текст */
+.catalog-card-copy small,
+.desktop-empty p,
+.desktop-titlebar small,
+.game-path small,
+.catalog-card-copy p,
+.installed-status small,
+.desktop-titlebar b,
+.catalog-card-copy > span,
+.game-path button,
+.desktop-sidebar button > i {
+  font-size: var(--astral-text-micro);
+}
+
+/* Бирки на обложке карточки */
+.desktop-catalog-cover > b,
+.desktop-catalog-cover > span {
+  color: #ffffff;
+  z-index: 2;
+  position: absolute;
+}
+
+/* Столбик из двух строк: заголовок и подпись */
+.game-path span,
+.installed-status span {
+  flex-direction: column;
+  row-gap: 4px;
+  column-gap: 4px;
+  display: flex;
+}
+
+/* Подпись, которая обрезается многоточием */
+.game-path small,
+.catalog-card-copy p {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Белый квадрат 38 на 38 со значком: логотип и иконка пути к игре */
+.game-path > i,
+.desktop-logo > span {
+  color: #0c0c0c;
+  border-radius: var(--astral-radius-sm);
+  background: #ffffff none;
+  block-size: 38px;
+  inline-size: 38px;
+  justify-items: center;
+  align-items: center;
+  display: grid;
+}
+
+/* Строка с выравниванием по центру */
+.game-path,
+.desktop-main > header,
+.installed-status,
+.desktop-logo,
+.desktop-catalog-cover > button,
+.desktop-titlebar,
+.desktop-main > header > div:first-child,
+.desktop-sidebar button {
+  align-items: center;
+  display: flex;
+}
+
+/* Рамка в один пиксель, цвет задаётся на месте */
+.game-path,
+.clean-settings > article,
+.desktop-settings > article,
+.library-tabs button,
+.desktop-catalog-grid > article,
+.desktop-catalog-cover > button,
+.game-path button,
+.installed-status,
+.desktop-catalog-grid > .catalog-mod-card,
+.desktop-main > header > button {
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* ---- Корень документа и каркас окна ---- */
+
+[data-holds~="product-onboarding"]#root,
+body[data-holds~="product-onboarding"],
+[data-holds~="desktop-app"]#root,
+body[data-holds~="desktop-app"] {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  block-size: 100%;
+  inline-size: 100%;
+}
+
+.desktop-app {
+  font-family: Inter, Arial, sans-serif;
+  color: #f5f6f8;
+  background: #0f0f0f none;
+  padding-block-start: 42px;
+  min-block-size: 0;
+  block-size: 100vh;
+  grid-template-columns: 230px 1fr;
+  display: grid;
+}
+
+@media (max-width: 1180px) {
+  .desktop-app {
+    grid-template-columns: 82px 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  [data-holds~="optimization-page"].desktop-app {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .desktop-app {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Главная область ---- */
+
+.desktop-main {
+  overflow-y: auto;
+  block-size: calc(100vh - 42px);
+  min-inline-size: 0;
+  grid-column-start: 2;
+  grid-column-end: auto;
+}
+
+@media (max-width: 1180px) {
+  .desktop-main {
+    grid-column-start: 2;
+    grid-column-end: auto;
+  }
+}
+
+@media (max-width: 780px) {
+  .desktop-main {
+    grid-column-start: 1;
+    grid-column-end: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  [data-holds~="optimization-page"].desktop-app .desktop-main {
+    inline-size: 100%;
+    grid-column-start: 1 !important;
+    grid-column-end: auto !important;
+  }
+}
+
+/* Шапка */
+@media (max-width: 780px) {
+  /* отступы перебиты базовым правилом ниже */
+  .desktop-main > header {
+    padding-block: 0;
+    padding-inline: 16px;
+  }
+}
+
+.desktop-main > header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #282828;
+  background: rgba(15, 15, 15, .92) none;
+  padding-block: 0;
+  padding-inline: 24px;
+  min-block-size: 70px;
+  block-size: 70px !important;
+  box-sizing: border-box;
+  justify-content: flex-end;
+  inset-block-start: 0;
+  z-index: 50;
+  position: sticky;
+}
+
+.desktop-main > header > button svg {
+  inline-size: 16px;
+}
+
+.desktop-main > header > button {
+  color: #909090;
+  border-color: #2e2e2e;
+  border-radius: 50%;
+  background: transparent none;
+  margin-left: 10px;
+  block-size: 36px;
+  inline-size: 36px;
+  justify-items: center;
+  align-items: center;
+  display: grid;
+}
+
+.desktop-main > header > div:first-child {
+  font-size: 11px;
+  color: #7d7d7d;
+  row-gap: 10px;
+  column-gap: 10px;
+}
+
+/* Содержимое страниц */
+.desktop-page {
+  padding-block-start: 4px;
+}
+
+.ui-page-heading:first-child {
+  margin-block-start: 5px;
+}
+
+.desktop-content {
+  margin-block: auto;
+  margin-inline: auto;
+  padding-inline: var(--astral-page-pad-x);
+  padding-block-end: var(--astral-page-pad-bottom);
+  min-block-size: calc(100vh - 112px);
+  max-inline-size: 1580px;
+}
+
+@media (max-width: 780px) {
+  .desktop-content {
+    padding-block: 20px 50px;
+    padding-inline: 16px;
+  }
+}
+
+.desktop-content {
+  padding-block-start: 22px;
+}
+
+.desktop-app [data-kept].desktop-content {
+  content-visibility: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  margin-block: 0 !important;
+  margin-inline: 0 !important;
+  padding-block: 0 !important;
+  padding-inline: 0 !important;
+  min-block-size: 0 !important;
+  block-size: 0 !important;
+  max-block-size: 0 !important;
+  inline-size: 0;
+  contain-intrinsic-width: 0;
+  contain-intrinsic-height: 0;
+  position: absolute;
+}
+
+/* ---- Каталог ---- */
+
+/* Карточка мода */
+.desktop-catalog-grid > article {
+  color: #131313;
+  border-color: #353535;
+  background: #f4f4f2 none;
+  min-inline-size: 0;
+}
+
+.catalog-mod-card {
+  cursor: pointer;
+  transition-property: transform, border-color;
+  transition-duration: var(--astral-duration), var(--astral-duration);
+  transition-timing-function: ease, ease;
+  transition-delay: 0s, 0s;
+  transition-behavior: normal, normal;
+}
+
+.catalog-mod-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--astral-accent);
+}
+
+.desktop-catalog-grid > .catalog-mod-card {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  color: #ffffff;
+  border-color: #333;
+  background: #141414 none;
+  inline-size: 100%;
+  justify-self: center;
+}
+
+/* Обложка */
+.desktop-catalog-cover {
+  background-size: cover;
+  background-position: center !important;
+  min-block-size: 0 !important;
+  block-size: auto;
+  aspect-ratio: 828 / 400;
+  position: relative;
+}
+
+[style*="/media/mod-"].installed-cover,
+[style*="/media/mod-"].desktop-catalog-cover {
+  background-color: #060606;
+  background-size: contain !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+@media (max-width: 1260px) {
+  .desktop-catalog-cover {
+    aspect-ratio: 828 / 400;
+  }
+}
+
+.desktop-catalog-cover::after {
+  content: "";
+  background: linear-gradient(0deg, rgba(6, 6, 6, .65), rgba(0, 0, 0, 0) 55%);
+  inset-inline: 0;
+  inset-block: 0;
+  position: absolute;
+}
+
+.desktop-catalog-cover > button svg {
+  inline-size: 11px;
+}
+
+.desktop-catalog-cover > button.catalog-like svg {
+  inline-size: 15px;
+}
+
+.desktop-catalog-cover > button {
+  white-space: nowrap;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, .35);
+  background: rgba(12, 12, 12, .82) none;
+  padding-block: 0;
+  padding-inline: 9px;
+  block-size: 30px;
+  max-inline-size: 106px;
+  row-gap: 5px;
+  column-gap: 5px;
+  inset-block: 10px auto;
+  right: 10px;
+  z-index: 3;
+  position: absolute;
+}
+
+.desktop-catalog-cover > button.installed {
+  color: #5e5e5e;
+  border-color: #e6e6e6;
+  background: #e6e6e6 none;
+}
+
+.desktop-catalog-cover > button.catalog-like {
+  border-radius: 50%;
+  background: rgba(10, 10, 10, .78) none;
+  padding-block: 0;
+  padding-inline: 0;
+  block-size: 34px;
+  inline-size: 34px;
+  max-inline-size: none;
+  justify-items: center;
+  align-items: center;
+  display: grid;
+  inset-block: 12px auto;
+  right: 14px;
+}
+
+.desktop-catalog-cover > button.liked.catalog-like {
+  color: var(--astral-danger);
+  border-color: #ffffff;
+  background: #ffffff none;
+}
+
+.library-tabs ~ .desktop-catalog-grid .desktop-catalog-cover > button {
+  display: none;
+}
+
+.desktop-catalog-cover > span {
+  left: 11px;
+  inset-block-end: 9px;
+}
+
+.desktop-catalog-cover > b {
+  border-radius: 999px;
+  background: var(--astral-accent) none;
+  padding-block: 5px;
+  padding-inline: 7px;
+  left: 10px;
+  right: auto;
+  inset-block-start: 10px;
+}
+
+/* Подписи на карточке */
+.catalog-card-shade {
+  background: linear-gradient(0deg, rgba(6, 6, 6, .95), rgba(6, 6, 6, .06) 70%);
+  inset-inline: 0;
+  inset-block: 0;
+  position: absolute;
+}
+
+.catalog-card-copy {
+  padding-right: 0;
+  align-items: flex-start;
+  flex-direction: column;
+  display: flex;
+  left: 15px;
+  right: 58px;
+  inset-block-end: 13px;
+  z-index: 2;
+  position: absolute;
+}
+
+@media (max-width: 1180px) {
+  .catalog-card-copy {
+    right: 54px;
+  }
+}
+
+.catalog-card-copy > span {
+  color: #a4a4a4;
+  margin-block-start: 7px;
+}
+
+.catalog-card-copy small {
+  letter-spacing: .1em;
+  color: #b9b9b9;
+}
+
+.catalog-card-copy h3 {
+  margin-block: 5px 4px;
+  margin-inline: 0;
+}
+
+.catalog-card-copy p {
+  line-height: 1.4;
+  color: #c1c5cb;
+  margin-block: 0;
+  margin-inline: 0;
+  max-inline-size: calc(100% - 12px);
+}
+
+/* Вкладки библиотеки */
+.library-tabs {
+  margin-block: 20px 0;
+  margin-inline: 0;
+  row-gap: 7px;
+  column-gap: 7px;
+  display: flex;
+}
+
+.library-tabs span {
+  opacity: .65;
+  margin-left: 6px;
+}
+
+.library-tabs button {
+  color: #8a8a8a;
+  border-color: #333;
+  background: #181818 none;
+  padding-block: 0;
+  padding-inline: 13px;
+  block-size: 38px;
+}
+
+.library-tabs button.active {
+  color: #0c0c0c;
+  border-color: #ffffff;
+  background: #ffffff none;
+}
+
+/* Сетка карточек. Колонки считаются в таком порядке: узкие окна, базовая сетка, затем 1260 и 920 */
+.desktop-catalog-grid {
+  justify-content: center;
+  align-items: start;
+  row-gap: 14px;
+  column-gap: 14px;
+  display: grid;
+}
+
+@media (max-width: 780px) {
+  .download-overview,
+  .desktop-profile-grid,
+  .desktop-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1180px) {
+  .desktop-catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .desktop-catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+}
+
+.desktop-catalog-grid {
+  grid-template-columns: repeat(auto-fit, minmax(350px, 380px));
+}
+
+@media (max-width: 1260px) {
+  .desktop-catalog-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .installed-manage-grid,
+  .desktop-catalog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Пустое состояние, настройки, путь к игре ---- */
+
+.desktop-empty {
+  color: #707070;
+  min-block-size: 380px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  display: flex;
+}
+
+.desktop-empty svg {
+  inline-size: 38px;
+}
+
+.desktop-empty h2 {
+  font-size: var(--astral-text-page);
+  margin-block: 18px 7px;
+  margin-inline: 0;
+}
+
+.desktop-settings {
+  margin-block-start: 25px;
+  row-gap: 10px;
+  column-gap: 10px;
+  display: grid;
+}
+
+.desktop-settings > article {
+  border-color: #2e2e2e;
+  background: #181818 none;
+  padding-block: 21px;
+  padding-inline: 21px;
+}
+
+.clean-settings {
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  row-gap: 14px !important;
+  column-gap: 14px !important;
+}
+
+.clean-settings > article {
+  border-color: #323232;
+  border-radius: var(--astral-radius-sm);
+  background: #171717 none;
+  padding-block: 25px !important;
+  padding-inline: 25px !important;
+  min-block-size: 210px !important;
+}
+
+@media (max-width: 1100px) {
+  .clean-settings {
+    grid-template-columns: 1fr;
+  }
+}
+
+.game-path {
+  border-color: #2c2c2c;
+  background: #111 none;
+  padding-block: 10px;
+  padding-inline: 13px;
+  min-block-size: 65px;
+  row-gap: 11px;
+  column-gap: 11px;
+}
+
+.game-path button {
+  color: #ffffff;
+  border-color: #353535;
+  background: #1f1f1f none;
+  margin-left: auto;
+  padding-block: 0;
+  padding-inline: 10px;
+  block-size: 32px;
+}
+
+.game-path small {
+  color: #7a7a7a;
+}
+
+.game-path span {
+  min-inline-size: 0;
+}
+
+.game-path > i {
+  font-size: var(--astral-text-body);
+}
+
+/* Плашка «установлено» */
+.installed-status {
+  color: var(--astral-positive);
+  border-color: #294136;
+  background: #111b17 none;
+  margin-block: 20px 11px;
+  margin-inline: 0;
+  padding-block: 12px;
+  padding-inline: 16px;
+  min-block-size: 61px;
+  row-gap: 11px;
+  column-gap: 11px;
+}
+
+.installed-status small {
+  color: #638d79;
+}
+
+.installed-status > svg {
+  inline-size: 19px;
+}
+
+.build-code {
+  margin-block-start: 20px !important;
+  block-size: 37px !important;
+}
+
+/* ---- Заголовок окна ---- */
+
+.desktop-titlebar {
+  -webkit-app-region: drag;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #292929;
+  background: #0a0a0a none;
+  block-size: 42px;
+  justify-content: center;
+  inset-inline: 0;
+  inset-block: 0 auto;
+  z-index: 100;
+  position: fixed;
+}
+
+.desktop-titlebar small {
+  color: #5a5a5a;
+  right: 84px;
+  position: absolute;
+}
+
+.desktop-titlebar > span {
+  background: radial-gradient(circle at 5px 5px, rgb(74, 74, 74) 4px, rgba(0, 0, 0, 0) 5px), radial-gradient(circle at 25px 5px, rgb(74, 74, 74) 4px, rgba(0, 0, 0, 0) 5px), radial-gradient(circle at 45px 5px, rgb(74, 74, 74) 4px, rgba(0, 0, 0, 0) 5px);
+  block-size: 10px;
+  inline-size: 54px;
+  display: none;
+  left: 18px;
+  position: absolute;
+}
+
+/* ---- Левая колонка ---- */
+
+.desktop-sidebar {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: #282828;
+  background: #0b0b0b none;
+  padding-block: 0 16px;
+  padding-inline: 16px;
+  inline-size: 230px;
+  box-sizing: border-box;
+  flex-direction: column;
+  display: flex;
+  inset-block: 42px 0;
+  left: 0;
+  z-index: 60;
+  position: fixed;
+}
+
+@media (max-width: 1180px) {
+  /* ниже базовое правило ставит top: 69px и перебивает это значение */
+  .desktop-sidebar::after {
+    inset-block-start: 70px;
+  }
+}
+
+.desktop-sidebar::after {
+  content: "";
+  background: #282828 none;
+  block-size: 1px;
+  inset-inline: 0;
+  inset-block-start: 69px;
+  position: absolute;
+}
+
+/* Логотип и меню */
+.desktop-logo {
+  border-width: 0;
+  border-style: none;
+  border-color: currentcolor;
+  padding-block: 0 !important;
+  padding-inline: 0 !important;
+  min-block-size: 70px;
+  block-size: 70px !important;
+  justify-content: center;
+  row-gap: 11px;
+  column-gap: 11px;
+}
+
+.desktop-logo > b {
+  letter-spacing: .08em;
+}
+
+.desktop-sidebar nav {
+  margin-block-start: 18px !important;
+  row-gap: 5px;
+  column-gap: 5px;
+  display: grid;
+}
+
+.desktop-sidebar button {
+  text-align: left;
+  font-weight: 500;
+  font-size: 12px;
+  color: #7a7a7a;
+  border-width: 0;
+  border-style: none;
+  border-color: currentcolor;
+  border-radius: var(--astral-radius-sm);
+  background: transparent none;
+  padding-block: 0;
+  padding-inline: 13px;
+  block-size: 48px;
+  row-gap: 12px;
+  column-gap: 12px;
+}
+
+.desktop-sidebar button svg {
+  inline-size: 18px;
+}
+
+.desktop-sidebar button:hover {
+  color: #ffffff;
+  background: #181818 none;
+}
+
+.desktop-sidebar-bottom > button.active:last-child,
+.desktop-sidebar button.active,
+.sidebar-account > button.active {
+  color: #0c0c0c;
+  background: #ffffff none;
+}
+
+.desktop-sidebar button > i {
+  font-style: normal;
+  color: #ffffff;
+  border-radius: 50%;
+  background: var(--astral-accent) none;
+  margin-left: auto;
+  block-size: 21px;
+  inline-size: 21px;
+  justify-items: center;
+  align-items: center;
+  display: grid;
+}
+
+.desktop-sidebar-bottom {
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: #2f2f2f;
+  margin-block-start: 0 !important;
+  margin-right: -16px !important;
+  margin-left: -16px !important;
+  padding-block: 14px 0 !important;
+  padding-inline: 16px !important;
+  min-block-size: 74px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  row-gap: 10px;
+  column-gap: 10px;
+  display: grid;
+}
+
+/* В узкой колонке остаются значки: подписи скрыты, отступы и колонки ужаты */
+@media (max-width: 1180px) {
+  .desktop-sidebar {
+    padding-right: 12px;
+    padding-left: 12px;
+    inline-size: 82px;
+  }
+
+  .desktop-sidebar-bottom {
+    margin-right: -12px !important;
+    margin-left: -12px !important;
+    padding-right: 12px !important;
+    padding-left: 12px !important;
+  }
+
+  .desktop-logo {
+    padding-block: 0;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .desktop-sidebar button {
+    padding-block: 0;
+    padding-inline: 0;
+    justify-content: center;
+  }
+
+  .desktop-sidebar button > i {
+    transform: translate(15px, -14px);
+    position: absolute;
+  }
+
+  .desktop-sidebar button span,
+  .desktop-logo > b,
+  .sidebar-account > button span {
+    display: none;
+  }
+}
+
+/* Блок аккаунта */
+.sidebar-account {
+  inline-size: 100%;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 6px;
+  column-gap: 6px;
+  display: grid;
+}
+
+.sidebar-account > button {
+  font-size: var(--astral-text-micro);
+  padding-block: 7px;
+  padding-inline: 4px;
+  block-size: 58px;
+  justify-content: center;
+  flex-direction: column;
+  row-gap: 4px;
+  column-gap: 4px;
+}
+
+.sidebar-account > button svg {
+  inline-size: 16px;
+}
+
+@media (max-width: 1180px) {
+  .sidebar-account {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-account > button {
+    block-size: 45px;
+  }
+}
+
+/* Окно без левой колонки */
+@media (max-width: 780px) {
+  .desktop-sidebar {
+    display: none;
+  }
+
+  .desktop-sidebar::after {
+    display: none;
+  }
+}

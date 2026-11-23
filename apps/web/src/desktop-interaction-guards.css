@@ -1,0 +1,33 @@
+/*
+ * Desktop interaction contract
+ * ----------------------------
+ * Astral is an application surface, so its controls and labels should not
+ * behave like selectable web copy. Long-form descriptions and native editing
+ * surfaces remain intentionally selectable through the shared opt-in below.
+ */
+:is(.desktop-app, .product-onboarding) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+:is(.desktop-app, .product-onboarding)
+  :is(
+    input,
+    textarea,
+    [contenteditable]:not([contenteditable="false"]),
+    [data-ui-selectable="true"],
+    .ui-selectable-text,
+    p,
+    pre,
+    code,
+    [class*="description"]
+  ) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+:is(.desktop-app, .product-onboarding) img {
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

@@ -1,0 +1,57 @@
+/* Полка библиотеки: промежутки между рядами и точка на вкладке. */
+
+/* в приложении ряды полки разделены отступом; после сетки редуксов он больше */
+.desktop-app {
+  & .redux-visual-grid {
+    & + .workshop-library-rows {
+      margin-block-start: 18px;
+    }
+  }
+
+  & .workshop-library-rows {
+    & + .workshop-library-rows {
+      margin-block-start: 10px;
+    }
+  }
+}
+
+.library-tab-name {
+  align-items: center;
+  display: inline-flex;
+  row-gap: 6px;
+  column-gap: 6px;
+}
+
+/* точка «есть новое» плавно появляется */
+.library-tab-dot {
+  animation-play-state: running;
+  animation-direction: normal;
+  animation-iteration-count: 1;
+  animation-delay: 0s;
+  animation-fill-mode: both;
+  animation-timing-function: var(--astral-ease);
+  animation-duration: var(--astral-duration);
+  animation-name: library-tab-dot-in;
+  border-radius: 50%;
+  background: var(--astral-accent);
+  height: 6px;
+  width: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-tab-dot {
+    animation: none;
+  }
+}
+
+@keyframes library-tab-dot-in {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "format": "astral-map-template",
+  "version": 1,
+  "assets": "iskra-majestic",
+  "pack": "Pack vector map for Majestic RP by adxnis",
+  "kind": "vector",
+  "author": "ИСКРА (adxnis)",
+  "grid": {
+    "columns": 2,
+    "rows": 3
+  },
+  "tileSide": 1024,
+  "tiles": [
+    {
+      "row": 0,
+      "column": 0,
+      "file": "tile-0-0.webp",
+      "side": 1024,
+      "bytes": 87060,
+      "sha256": "7f22c79e669b93ebe12de7273611161de98f228affc1a4e54ccbadf7de2803e2"
+    },
+    {
+      "row": 0,
+      "column": 1,
+      "file": "tile-0-1.webp",
+      "side": 1024,
+      "bytes": 89464,
+      "sha256": "f5c33af5d9b783930d555cc16a84b657189b51b19501bebb9531d703b8a6f8d6"
+    },
+    {
+      "row": 1,
+      "column": 0,
+      "file": "tile-1-0.webp",
+      "side": 1024,
+      "bytes": 92046,
+      "sha256": "6c125f2e51cdee040ca0c126eb028c2def9e1d3af7579c270fc7a664669ea0e5"
+    },
+    {
+      "row": 1,
+      "column": 1,
+      "file": "tile-1-1.webp",
+      "side": 1024,
+      "bytes": 97254,
+      "sha256": "e629763df895c1c1e3adfd313118a21f6e0c7af7f4d996e36aef6300e6860801"
+    },
+    {
+      "row": 2,
+      "column": 0,
+      "file": "tile-2-0.webp",
+      "side": 1024,
+      "bytes": 71606,
+      "sha256": "2400291861d4acf4b9a5808bc55281c28f4daae15cd7f9c56788cafd38bfe1af"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "file": "tile-2-1.webp",
+      "side": 1024,
+      "bytes": 72770,
+      "sha256": "3d6e147122865a2db1acf84c5e35fb6d072cd27851399a49a4dc1d300ab6297f"
+    }
+  ],
+  "map": {
+    "file": "map.webp",
+    "width": 2048,
+    "height": 3072,
+    "bytes": 443422,
+    "sha256": "9bfce20d508e8c46cb3fa1fefdffe0bef7b73a48d84a7562365a40e7890306fe"
+  },
+  "card": {
+    "file": "card.webp",
+    "width": 640,
+    "height": 400
+  },
+  "state": {
+    "file": "state.webp",
+    "width": 512,
+    "height": 768
+  },
+  "geometry": {
+    "file": "geometry.apgz",
+    "bytes": 925892,
+    "sha256": "1f7e7dbb716959b286ff28348f38646d096ea94f4c759b2b907b7c9659f2fd42",
+    "tiles": 51,
+    "triangles": 160990,
+    "groups": 41,
+    "below": 14
+  }
+}

@@ -1,0 +1,223 @@
+/*
+ * Оптимизация, ТЗ 17.10.2026 (задача 10): вкладка «Стиль мира»
+ * (`components/desktop/workshop/optimizer/WorldStyle.jsx`) и подсказка о
+ * нём в «ЧБ-мире». Строки, что уже есть у «ЧБ-мира» и «Ухудшения текстур»
+ * («Чёткость», «Как в игре», «Как это устроено», кадры и их подписи), берутся
+ * оттуда же.
+ * Русская строка → [uk, en, de, pl].
+ */
+
+export const zoneWorldStyle1710 = {
+  "Стиль мира": ["Стиль світу", "World style", "Weltstil", "Styl świata"],
+  "Стиль мира: {0}": ["Стиль світу: {0}", "World style: {0}", "Weltstil: {0}", "Styl świata: {0}"],
+  "Стиль мира: снятие": ["Стиль світу: зняття", "World style: removing", "Weltstil: wird entfernt", "Styl świata: usuwanie"],
+  "Без стиля": ["Без стилю", "No style", "Kein Stil", "Bez stylu"],
+  "Текстуры мира как в игре.": ["Текстури світу як у грі.", "World textures as in the game.", "Welttexturen wie im Spiel.", "Tekstury świata jak w grze."],
+  "Рисованный": ["Малювальний", "Hand-painted", "Gemalt", "Malowany"],
+  "Мягкие мазки, тонкий тёплый контур и бумажная фактура.": [
+    "М’які мазки, тонкий теплий контур і паперова фактура.",
+    "Soft brush strokes, a thin warm outline and a paper texture.",
+    "Weiche Pinselstriche, eine dünne warme Kontur und Papierstruktur.",
+    "Miękkie pociągnięcia pędzla, cienki ciepły kontur i papierowa faktura.",
+  ],
+  "Комикс": ["Комікс", "Comic", "Comic", "Komiks"],
+  "Как в Borderlands: плоские цвета, жирные тёмные контуры, штриховка в тенях.": [
+    "Як у Borderlands: пласкі кольори, жирні темні контури, штрихування в тінях.",
+    "Like Borderlands: flat colours, bold dark outlines, hatching in the shadows.",
+    "Wie in Borderlands: flache Farben, kräftige dunkle Konturen, Schraffur in den Schatten.",
+    "Jak w Borderlands: płaskie kolory, grube ciemne kontury, kreskowanie w cieniach.",
+  ],
+  "Мультяшный": ["Мультяшний", "Cartoon", "Cartoon", "Kreskówkowy"],
+  "Как в «Симпсонах»: яркие плоские цвета и мягкий контур.": [
+    "Як у «Сімпсонах»: яскраві пласкі кольори та м’який контур.",
+    "Like The Simpsons: bright flat colours and a soft outline.",
+    "Wie bei „Die Simpsons“: leuchtende flache Farben und eine weiche Kontur.",
+    "Jak w „Simpsonach”: jaskrawe płaskie kolory i miękki kontur.",
+  ],
+  "Акварель": ["Акварель", "Watercolour", "Aquarell", "Akwarela"],
+  "Размытые заливки, светлые бледные цвета, влажный край пигмента и зерно бумаги.": [
+    "Розмиті заливки, світлі бліді кольори, вологий край пігменту та зерно паперу.",
+    "Soft washes, light pale colours, a wet pigment edge and paper grain.",
+    "Weiche Lasuren, helle blasse Farben, nasser Pigmentrand und Papierkorn.",
+    "Rozmyte plamy, jasne blade kolory, mokry brzeg pigmentu i ziarno papieru.",
+  ],
+  "Ретро": ["Ретро", "Retro", "Retro", "Retro"],
+  "Крупные пиксели и ограниченная палитра, как в играх 90-х.": [
+    "Великі пікселі та обмежена палітра, як в іграх 90-х.",
+    "Large pixels and a limited palette, like 90s games.",
+    "Große Pixel und eine begrenzte Palette, wie in Spielen der 90er.",
+    "Duże piksele i ograniczona paleta, jak w grach z lat 90.",
+  ],
+  "Стиль «{0}» в игре. Перезапустите игру, чтобы увидеть изменения.": [
+    "Стиль «{0}» у грі. Перезапустіть гру, щоб побачити зміни.",
+    "The “{0}” style is in the game. Restart the game to see it.",
+    "Der Stil „{0}“ ist im Spiel. Starten Sie das Spiel neu, um ihn zu sehen.",
+    "Styl „{0}” jest w grze. Uruchom grę ponownie, aby zobaczyć zmiany.",
+  ],
+  "Стиль снят: текстуры мира снова как в игре.": [
+    "Стиль знято: текстури світу знову як у грі.",
+    "The style is removed: world textures are as in the game again.",
+    "Der Stil ist entfernt: die Welttexturen sind wieder wie im Spiel.",
+    "Styl usunięty: tekstury świata znów są jak w grze.",
+  ],
+  "Выбран стиль «{0}», в игре сейчас: {1}. Нажмите «Установить».": [
+    "Обрано стиль «{0}», у грі зараз: {1}. Натисніть «Встановити».",
+    "The “{0}” style is selected; in the game now: {1}. Press “Install”.",
+    "Stil „{0}“ ist gewählt, im Spiel jetzt: {1}. Klicken Sie auf „Installieren“.",
+    "Wybrano styl „{0}”, w grze teraz: {1}. Naciśnij „Zainstaluj”.",
+  ],
+  "В игре: стиль «{0}», чёткость {1}": [
+    "У грі: стиль «{0}», чіткість {1}",
+    "In the game: “{0}” style, sharpness {1}",
+    "Im Spiel: Stil „{0}“, Schärfe {1}",
+    "W grze: styl „{0}”, ostrość {1}",
+  ],
+  "В игре: мир без стиля": ["У грі: світ без стилю", "In the game: world without a style", "Im Spiel: Welt ohne Stil", "W grze: świat bez stylu"],
+  "Рисую кадр…": ["Малюю кадр…", "Painting the frame…", "Bild wird gemalt…", "Maluję klatkę…"],
+  "Кадр из игры в стиле «{1}»: {0}": [
+    "Кадр із гри в стилі «{1}»: {0}",
+    "Game frame in the “{1}” style: {0}",
+    "Spielbild im Stil „{1}“: {0}",
+    "Klatka z gry w stylu „{1}”: {0}",
+  ],
+  "Настоящие кадры из игры, обработанные приложением: стиль рисует то же правило, что красит текстуры, но на всём кадре целиком. В игре свет и небо останутся как есть, люди и машины — прежними, а контуры лягут по каждой текстуре. Кадра со стилем из самой игры пока нет.": [
+    "Справжні кадри з гри, оброблені застосунком: стиль малює те саме правило, що фарбує текстури, але на всьому кадрі. У грі світло й небо залишаться як є, люди й машини — колишніми, а контури ляжуть по кожній текстурі. Кадру зі стилем із самої гри поки немає.",
+    "Real game frames processed by the app: the style is drawn by the same rule that paints the textures, but on the whole frame. In the game the light and the sky stay as they are, people and cars stay unchanged, and the outlines follow each texture. There is no frame with the style from the game itself yet.",
+    "Echte Spielbilder, von der App bearbeitet: Den Stil zeichnet dieselbe Regel, die die Texturen färbt, aber auf dem ganzen Bild. Im Spiel bleiben Licht und Himmel, wie sie sind, Menschen und Autos unverändert, und die Konturen folgen jeder Textur. Ein Bild mit dem Stil aus dem Spiel selbst gibt es noch nicht.",
+    "Prawdziwe klatki z gry, przetworzone przez aplikację: styl rysuje ta sama reguła, która maluje tekstury, ale na całej klatce. W grze światło i niebo zostaną takie, jakie są, ludzie i samochody — bez zmian, a kontury ułożą się wzdłuż każdej tekstury. Klatki ze stylem z samej gry jeszcze nie ma.",
+  ],
+  "Текстуры всего мира перерисовываются в выбранном стиле — здания, дороги, земля, растения и предметы, вблизи и вдали. Люди, одежда и машины остаются как в игре.": [
+    "Текстури всього світу перемальовуються в обраному стилі — будівлі, дороги, земля, рослини й предмети, зблизька й удалині. Люди, одяг і машини залишаються як у грі.",
+    "The textures of the whole world are redrawn in the chosen style — buildings, roads, ground, plants and objects, near and far. People, clothes and cars stay as in the game.",
+    "Die Texturen der ganzen Welt werden im gewählten Stil neu gezeichnet — Gebäude, Straßen, Boden, Pflanzen und Objekte, nah und fern. Menschen, Kleidung und Autos bleiben wie im Spiel.",
+    "Tekstury całego świata są przerysowywane w wybranym stylu — budynki, drogi, ziemia, rośliny i przedmioty, z bliska i z daleka. Ludzie, ubrania i samochody zostają jak w grze.",
+  ],
+  "Перерисуется": ["Буде перемальовано", "Will be redrawn", "Wird neu gezeichnet", "Zostanie przerysowane"],
+  "Останется как есть": ["Залишиться як є", "Stays as it is", "Bleibt, wie es ist", "Zostaje bez zmian"],
+  "Люди и одежда, машины, небо, вода, огни, кровь и эффекты: их вид задают не текстуры мира. Нормали и блеск тоже не трогаются.": [
+    "Люди й одяг, машини, небо, вода, вогні, кров і ефекти: їхній вигляд задають не текстури світу. Нормалі й блиск теж не чіпаються.",
+    "People and clothes, cars, sky, water, lights, blood and effects: their look is not set by world textures. Normals and shine are left alone too.",
+    "Menschen und Kleidung, Autos, Himmel, Wasser, Lichter, Blut und Effekte: Ihr Aussehen bestimmen nicht die Welttexturen. Normalen und Glanz bleiben ebenfalls unberührt.",
+    "Ludzie i ubrania, samochody, niebo, woda, światła, krew i efekty: ich wygląd nie zależy od tekstur świata. Normalne i połysk też zostają bez zmian.",
+  ],
+  "Включён ЧБ-мир: стиль ставится серым. Выключить — во вкладке «ЧБ-мир».": [
+    "Увімкнено ЧБ-світ: стиль ставиться сірим. Вимкнути — у вкладці «ЧБ-світ».",
+    "The B&W world is on: the style is installed in grey. Turn it off in the “B&W world” tab.",
+    "Die Schwarzweiß-Welt ist an: Der Stil wird grau installiert. Ausschalten — im Tab „Schwarzweiß-Welt“.",
+    "Świat czarno-biały jest włączony: styl instaluje się w szarości. Wyłączysz go na karcie „Świat czarno-biały”.",
+  ],
+  "Включён стиль «{0}»: ЧБ-мир красит его в серый. Сменить стиль — во вкладке «Стиль мира».": [
+    "Увімкнено стиль «{0}»: ЧБ-світ фарбує його в сірий. Змінити стиль — у вкладці «Стиль світу».",
+    "The “{0}” style is on: the B&W world paints it grey. Change the style in the “World style” tab.",
+    "Der Stil „{0}“ ist an: Die Schwarzweiß-Welt färbt ihn grau. Stil ändern — im Tab „Weltstil“.",
+    "Styl „{0}” jest włączony: świat czarno-biały maluje go na szaro. Zmienisz styl na karcie „Styl świata”.",
+  ],
+  "Поставить выбранный стиль в игру": ["Поставити обраний стиль у гру", "Install the chosen style in the game", "Den gewählten Stil im Spiel installieren", "Zainstaluj wybrany styl w grze"],
+  "Этот стиль уже стоит или стоит в очереди": [
+    "Цей стиль уже стоїть або стоїть у черзі",
+    "This style is already installed or queued",
+    "Dieser Stil ist schon installiert oder in der Warteschlange",
+    "Ten styl już stoi albo jest w kolejce",
+  ],
+  "Снять стиль": ["Зняти стиль", "Remove style", "Stil entfernen", "Usuń styl"],
+  "Выбрать «Без стиля»: в игру уйдёт после «Установить»": [
+    "Обрати «Без стилю»: у гру піде після «Встановити»",
+    "Choose “No style”: it goes to the game after “Install”",
+    "„Kein Stil“ wählen: im Spiel erst nach „Installieren“",
+    "Wybierz „Bez stylu”: do gry trafi po „Zainstaluj”",
+  ],
+  "Стиль красит текстуры из файлов вашей игры: та же перепись карты, что у «Ухудшения текстур» и «ЧБ-мира», — около двадцати тысяч словарей и модели со своими текстурами, вблизи и вдали (LOD, SLOD).": [
+    "Стиль фарбує текстури з файлів вашої гри: той самий перелік карти, що в «Погіршення текстур» і «ЧБ-світу», — близько двадцяти тисяч словників і моделі зі своїми текстурами, зблизька й удалині (LOD, SLOD).",
+    "The style paints textures from your game files: the same map census as “Texture downgrade” and the “B&W world” — about twenty thousand dictionaries and models with their own textures, near and far (LOD, SLOD).",
+    "Der Stil färbt Texturen aus den Dateien Ihres Spiels: dieselbe Kartenerfassung wie bei „Texturen verschlechtern“ und „Schwarzweiß-Welt“ — rund zwanzigtausend Wörterbücher und Modelle mit eigenen Texturen, nah und fern (LOD, SLOD).",
+    "Styl maluje tekstury z plików Twojej gry: ten sam spis mapy co w „Pogorszeniu tekstur” i „Świecie czarno-białym” — około dwudziestu tysięcy słowników i modele z własnymi teksturami, z bliska i z daleka (LOD, SLOD).",
+  ],
+  "Красится самая крупная картинка текстуры, а уменьшенные копии для дали получаются из неё: вблизи и вдали одна и та же картинка, при беге ничего не мигает. Под прозрачной частью листьев цвет продолжает листву — без чёрной обводки.": [
+    "Фарбується найбільша картинка текстури, а зменшені копії для далечіні виходять з неї: зблизька й вдалині одна й та сама картинка, під час бігу нічого не блимає. Під прозорою частиною листя колір продовжує листя — без чорної обводки.",
+    "Only the largest image of each texture is painted; the smaller copies for distance are made from it, so close up and far away show the same picture and nothing flickers while running. Under the transparent part of leaves the colour continues the foliage — no black outline.",
+    "Gefärbt wird das größte Bild jeder Textur, die kleineren Kopien für die Ferne entstehen daraus: nah und fern dasselbe Bild, beim Laufen flackert nichts. Unter dem durchsichtigen Teil der Blätter setzt die Farbe das Laub fort — ohne schwarze Kontur.",
+    "Malowany jest największy obraz tekstury, a mniejsze kopie na odległość powstają z niego: z bliska i z daleka ten sam obraz, podczas biegu nic nie miga. Pod przezroczystą częścią liści kolor przedłuża listowie — bez czarnego obrysu.",
+  ],
+  "Нормали и блеск — данные освещения, а не цвет: они остаются как были, иначе свет на стенах и земле испортился бы. Палитры оттенков заборов и контейнеров стиль тоже не трогает.": [
+    "Нормалі й блиск — дані освітлення, а не колір: вони залишаються як були, інакше світло на стінах і землі зіпсувалося б. Палітри відтінків парканів і контейнерів стиль теж не чіпає.",
+    "Normals and shine are lighting data, not colour: they stay as they were, otherwise the light on walls and ground would be spoiled. The style does not touch the tint palettes of fences and containers either.",
+    "Normalen und Glanz sind Beleuchtungsdaten, keine Farbe: Sie bleiben, wie sie waren, sonst würde das Licht auf Wänden und Boden verdorben. Die Farbpaletten von Zäunen und Containern fasst der Stil ebenfalls nicht an.",
+    "Normalne i połysk to dane oświetlenia, a nie kolor: zostają bez zmian, inaczej światło na ścianach i ziemi byłoby zepsute. Palet odcieni płotów i kontenerów styl też nie rusza.",
+  ],
+  "Первый раз Astral читает всю карту (около 33 ГБ) — несколько минут, на 256 px дольше (десятки минут, если свободной памяти мало); дальше собранный стиль берётся из памяти, а новый стиль собирается отдельным проходом.": [
+    "Перший раз Astral читає всю карту (близько 33 ГБ) — кілька хвилин, на 256 px довше (десятки хвилин, якщо вільної пам’яті мало); далі зібраний стиль береться з пам’яті, а новий стиль збирається окремим проходом.",
+    "The first time Astral reads the whole map (about 33 GB) — a few minutes, longer at 256 px (tens of minutes if free memory is low); after that a built style is taken from memory, and a new style is built in a separate pass.",
+    "Beim ersten Mal liest Astral die ganze Karte (rund 33 GB) — einige Minuten, bei 256 px länger (zig Minuten bei wenig freiem Speicher); danach wird ein gebauter Stil aus dem Speicher genommen, ein neuer Stil in einem eigenen Durchlauf gebaut.",
+    "Za pierwszym razem Astral czyta całą mapę (około 33 GB) — kilka minut, przy 256 px dłużej (dziesiątki minut, gdy mało wolnej pamięci); potem zbudowany styl jest brany z pamięci, a nowy styl budowany osobnym przebiegiem.",
+  ],
+  "Чёткость мира": ["Чіткість світу", "World sharpness", "Weltschärfe", "Ostrość świata"],
+  "128 px — легко": ["128 px — легко", "128 px — light", "128 px — leicht", "128 px — lekko"],
+  "256 px — детальнее": ["256 px — детальніше", "256 px — more detail", "256 px — detaillierter", "256 px — bardziej szczegółowo"],
+  "Чёткость мира: {0}": ["Чіткість світу: {0}", "World sharpness: {0}", "Weltschärfe: {0}", "Ostrość świata: {0}"],
+  "Чёткость мира {0} px в игре. Перезапустите игру, чтобы увидеть изменения.": [
+    "Чіткість світу {0} px у грі. Перезапустіть гру, щоб побачити зміни.",
+    "World sharpness {0} px is in the game. Restart the game to see it.",
+    "Weltschärfe {0} px ist im Spiel. Starten Sie das Spiel neu, um sie zu sehen.",
+    "Ostrość świata {0} px jest w grze. Uruchom grę ponownie, aby zobaczyć zmiany.",
+  ],
+  "Чёткость задаёт «Ухудшение текстур» ({0}): пока оно включено, 128 и 256 px не действуют.": [
+    "Чіткість задає «Погіршення текстур» ({0}): поки воно ввімкнене, 128 і 256 px не діють.",
+    "Sharpness is set by “Texture downgrade” ({0}): while it is on, 128 and 256 px have no effect.",
+    "Die Schärfe legt „Texturen verschlechtern“ fest ({0}): solange es an ist, gelten 128 und 256 px nicht.",
+    "Ostrość ustala „Pogorszenie tekstur” ({0}): gdy jest włączone, 128 i 256 px nie działają.",
+  ],
+  "Формат текстур тот же, размер — как у ступени «Ухудшения» (без неё — {0} px). Сам стиль игру не нагружает; тяжелее делает только чёткость: 256 px занимает в видеопамяти вчетверо больше, чем 128 px.": [
+    "Формат текстур той самий, розмір — як у ступеня «Погіршення» (без нього — {0} px). Сам стиль гру не навантажує; важчим робить лише чіткість: 256 px займає у відеопам’яті вчетверо більше, ніж 128 px.",
+    "The texture format is the same, the size is that of the “Downgrade” step (without it — {0} px). The style itself does not load the game; only sharpness makes it heavier: 256 px takes four times more video memory than 128 px.",
+    "Das Texturformat bleibt gleich, die Größe ist die der Stufe von „Verschlechtern“ (ohne sie — {0} px). Der Stil selbst belastet das Spiel nicht; schwerer macht nur die Schärfe: 256 px belegen im Videospeicher viermal mehr als 128 px.",
+    "Format tekstur jest ten sam, rozmiar — jak przy stopniu „Pogorszenia” (bez niego — {0} px). Sam styl nie obciąża gry; cięższą robi tylko ostrość: 256 px zajmuje w pamięci wideo cztery razy więcej niż 128 px.",
+  ],
+  "Формат текстур тот же, размер — как у ступени «Ухудшения» (без неё — {0} px). Сам серый цвет игру не нагружает; тяжелее делает только чёткость: 256 px занимает в видеопамяти вчетверо больше, чем 128 px.": [
+    "Формат текстур той самий, розмір — як у ступеня «Погіршення» (без нього — {0} px). Сам сірий колір гру не навантажує; важчим робить лише чіткість: 256 px займає у відеопам’яті вчетверо більше, ніж 128 px.",
+    "The texture format is the same, the size is that of the “Downgrade” step (without it — {0} px). The grey itself does not load the game; only sharpness makes it heavier: 256 px takes four times more video memory than 128 px.",
+    "Das Texturformat bleibt gleich, die Größe ist die der Stufe von „Verschlechtern“ (ohne sie — {0} px). Das Grau selbst belastet das Spiel nicht; schwerer macht nur die Schärfe: 256 px belegen im Videospeicher viermal mehr als 128 px.",
+    "Format tekstur jest ten sam, rozmiar — jak przy stopniu „Pogorszenia” (bez niego — {0} px). Sam szary kolor nie obciąża gry; cięższą robi tylko ostrość: 256 px zajmuje w pamięci wideo cztery razy więcej niż 128 px.",
+  ],
+  "Стиль, ЧБ-мир и «Ухудшение текстур» — одна установка пакетов astral_textures: пока включены стиль и ЧБ-мир, текстуры станут стилизованными и серыми. Стиль без «Ухудшения текстур» ставится с выбранной чёткостью: 128 px (два пакета) или 256 px (три пакета).": [
+    "Стиль, ЧБ-світ і «Погіршення текстур» — одне встановлення пакетів astral_textures: поки ввімкнені стиль і ЧБ-світ, текстури стануть стилізованими й сірими. Стиль без «Погіршення текстур» ставиться з обраною чіткістю: 128 px (два пакети) або 256 px (три пакети).",
+    "The style, the B&W world and “Texture downgrade” are one installation of the astral_textures packs: while the style and the B&W world are both on, textures become stylised and grey. A style without “Texture downgrade” is installed at the chosen sharpness: 128 px (two packs) or 256 px (three packs).",
+    "Stil, Schwarzweiß-Welt und „Texturen verschlechtern“ sind eine Installation der astral_textures-Pakete: Sind Stil und Schwarzweiß-Welt zugleich an, werden die Texturen stilisiert und grau. Ein Stil ohne „Texturen verschlechtern“ wird mit der gewählten Schärfe installiert: 128 px (zwei Pakete) oder 256 px (drei Pakete).",
+    "Styl, świat czarno-biały i „Pogorszenie tekstur” to jedna instalacja pakietów astral_textures: gdy włączone są styl i świat czarno-biały, tekstury staną się stylizowane i szare. Styl bez „Pogorszenia tekstur” instaluje się z wybraną ostrością: 128 px (dwa pakiety) lub 256 px (trzy pakiety).",
+  ],
+  "256 px — детальнее: три пакета, {0} на диске; текстуры мира в видеопамяти вчетверо больше, чем при 128 px, но не больше, чем в самой игре.": [
+    "256 px — детальніше: три пакети, {0} на диску; текстури світу у відеопам’яті вчетверо більші, ніж при 128 px, але не більші, ніж у самій грі.",
+    "256 px — more detail: three packs, {0} on disk; world textures take four times more video memory than at 128 px, but no more than in the game itself.",
+    "256 px — detaillierter: drei Pakete, {0} auf der Festplatte; Welttexturen brauchen im Videospeicher viermal mehr als bei 128 px, aber nicht mehr als im Spiel selbst.",
+    "256 px — bardziej szczegółowo: trzy pakiety, {0} na dysku; tekstury świata zajmują w pamięci wideo cztery razy więcej niż przy 128 px, ale nie więcej niż w samej grze.",
+  ],
+  "128 px — легко: два пакета, {0} на диске; щадит диск и видеопамять.": [
+    "128 px — легко: два пакети, {0} на диску; щадить диск і відеопам’ять.",
+    "128 px — light: two packs, {0} on disk; easy on disk and video memory.",
+    "128 px — leicht: zwei Pakete, {0} auf der Festplatte; schont Festplatte und Videospeicher.",
+    "128 px — lekko: dwa pakiety, {0} na dysku; oszczędza dysk i pamięć wideo.",
+  ],
+  "{0}: видеокарте слабой ступени 256 px, скорее всего, дадут подгрузки и фризы — лучше 128 px.": [
+    "{0}: відеокарті слабкого рівня 256 px, найімовірніше, дадуть підвантаження й фризи — краще 128 px.",
+    "{0}: on a low-end graphics card 256 px will most likely cause texture pop-in and stutter — 128 px is better.",
+    "{0}: bei einer schwachen Grafikkarte führen 256 px sehr wahrscheinlich zu Nachladen und Rucklern — besser 128 px.",
+    "{0}: na słabej karcie graficznej 256 px najpewniej da doładowania i przycięcia — lepiej 128 px.",
+  ],
+  "{0}: на видеокартах среднего класса (особенно с 4 ГБ памяти) 256 px могут дать подгрузки; заметите фризы — вернитесь на 128 px.": [
+    "{0}: на відеокартах середнього класу (особливо з 4 ГБ пам’яті) 256 px можуть дати підвантаження; помітите фризи — поверніться на 128 px.",
+    "{0}: on mid-range graphics cards (especially with 4 GB of memory) 256 px may cause pop-in; if you notice stutter, go back to 128 px.",
+    "{0}: bei Grafikkarten der Mittelklasse (vor allem mit 4 GB Speicher) kann 256 px Nachladen verursachen; bei Rucklern wechseln Sie zurück auf 128 px.",
+    "{0}: na kartach graficznych średniej klasy (zwłaszcza z 4 GB pamięci) 256 px może dać doładowania; jeśli zauważysz przycięcia, wróć do 128 px.",
+  ],
+  "Не поместилось в пакеты и осталось как в игре: словарей — {0}, моделей — {1}.": [
+    "Не вмістилося в пакети й залишилося як у грі: словників — {0}, моделей — {1}.",
+    "Did not fit into the packs and stays as in the game: dictionaries — {0}, models — {1}.",
+    "Passte nicht in die Pakete und bleibt wie im Spiel: Wörterbücher — {0}, Modelle — {1}.",
+    "Nie zmieściło się w paczkach i zostaje jak w grze: słowników — {0}, modeli — {1}.",
+  ],
+  "{0}: запаса видеокарты должно хватить на 256 px.": [
+    "{0}: запасу відеокарти має вистачити на 256 px.",
+    "{0}: the graphics card should have enough headroom for 256 px.",
+    "{0}: die Reserve der Grafikkarte sollte für 256 px reichen.",
+    "{0}: zapasu karty graficznej powinno wystarczyć na 256 px.",
+  ],
+};

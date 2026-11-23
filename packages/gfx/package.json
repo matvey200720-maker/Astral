@@ -1,0 +1,22 @@
+{
+  "name": "@modovik/gfx",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./png": "./png.js",
+    "./fonts": "./fonts/index.js",
+    "./workshop-matte": "./workshop-matte.js",
+    "./package.json": "./package.json",
+    "./cover-frame": "./cover-frame.js",
+    "./frame-fill": "./frame-fill.js",
+    "./map-card": "./map-card.js",
+    "./webm": "./webm.js",
+    "./blank-frame": "./blank-frame.cjs"
+  },
+  "dependencies": {
+    "fflate": "0.8.3"
+  }
+}

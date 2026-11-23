@@ -1,0 +1,616 @@
+/*
+ * Звуки: выстрелы и попадания.
+ *
+ * Вид — у мастерской эффектов (`effects-studio.css`): редактор носит её имя
+ * `fx-editor`, и матовая пластина сцены, колонка правок, разделы и сетка
+ * готовых звуков у него те же, что у таймциклов, прицела и эффектов
+ * попадания. Здесь — только своё: стрельбище, фигура-мишень, приёмник файла
+ * и строки состояния «в игре».
+ *
+ * Лист подключён после `effects-studio.css` в том же слое: общие правила
+ * уточняются именем редактора впереди.
+ */
+
+.snd-kit {
+  /* Обрезка по волне и плеер — органы прежней студии: их линии и
+     приглушённый текст берутся из её переменных. */
+  --snd-line: var(--fx-line);
+  --snd-muted: var(--fx-muted);
+}
+
+/* ── Кадр ──────────────────────────────────────────────────────────────── */
+
+/*
+ * Кадр каркаса (`.ui-editor-canvas`, мастерская «как в Photoshop») — сам
+ * матовая плашка с рамкой: сцена занимает его целиком, без своей рамки,
+ * высоты и подложки. Органы кадра — в правом верхнем углу (`StageBar`):
+ * карточка ствола, «Огонь», «Выстрел» или части тела и «Серия»; честная
+ * подпись — в правом нижнем. Готовые звуки — в панели
+ * инструмента «Шаблоны».
+ */
+.snd-kit-stage {
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * Строка посреди кадра: почему стрелять нельзя или что звук ещё готовится.
+ * Посередине, а не в углу: углы заняты органами, подписью и подсказками
+ * управления, а эта строка и есть то, на что смотреть.
+ */
+.snd-stage-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  max-width: min(46ch, calc(100% - 48px));
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--astral-radius);
+  background: rgba(12, 12, 14, 0.72);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* «Готовим звук…» — короткая плашка, а не объяснение. */
+.snd-stage-hint.is-busy {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: var(--astral-text-micro);
+}
+
+/* Карточка ствола и полка стволов — общий орган (`weapon-picker.css`). */
+
+/* Стрельбище: холст на весь кадр и честная строка, если ствола нет. */
+.snd-range-frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.snd-range-frame > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.snd-range-empty {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  max-width: 34ch;
+  margin: 0;
+  padding: 16px;
+  color: var(--fx-scene-ink);
+  font-size: var(--astral-text-small);
+  text-align: center;
+}
+
+/* Фигура-мишень: слои — на весь кадр, с воздухом сверху под органы кадра и
+   снизу под подсказки и подпись, чтобы голова и ноги не уходили под них. */
+.snd-hit-stage {
+  position: absolute;
+  inset: 0;
+  grid-template-rows: minmax(0, 1fr);
+  padding: 56px 16px 48px;
+}
+
+/* Подложку и скругление даёт рамка кадра каркаса. */
+.snd-hit-stage > .fx-body-layers {
+  border-radius: 0;
+  background: transparent;
+}
+
+/*
+ * Подсветка части — по самому человеку (маска — альфа рендера). Выбранная
+ * часть — акцентом, часть под курсором — едва заметно: щелчок по ней
+ * выберет её и прозвучит.
+ */
+.snd-hit-tint {
+  fill: transparent;
+  transition: fill var(--astral-duration-fast) var(--astral-ease);
+}
+
+.snd-hit-tint.is-hovered {
+  fill: color-mix(in srgb, var(--astral-ink) 14%, transparent);
+}
+
+.snd-hit-tint.is-selected {
+  fill: color-mix(in srgb, var(--astral-accent) 34%, transparent);
+}
+
+.snd-kit .fx-zone-dot {
+  background: var(--astral-accent);
+}
+
+/* ── Готовые звуки (инструмент «Шаблоны») ──────────────────────────────── */
+
+/* Знак звука в гнезде картинки плитки: у восьми вариантов одного выстрела
+   нет своих кадров, а знак читается быстрее названия. */
+.snd-preset .ui-choice-media {
+  justify-content: start;
+}
+
+.snd-preset-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-accent) 14%, transparent);
+  color: var(--astral-accent);
+  font-size: var(--astral-text-title);
+}
+
+.snd-preset.is-selected .snd-preset-icon {
+  background: var(--astral-accent);
+  color: var(--astral-accent-ink);
+}
+
+/* ── Панели инструментов ───────────────────────────────────────────────── */
+
+/*
+ * Раздел в панели инструмента — без коробки в коробке: заголовок панели
+ * рисует каркас, а прямых детей панели он расправляет сам
+ * (`.ui-editor-panel-content > .ui-panel`). Здесь разделы лежат во
+ * вкладыше студии, поэтому то же правило — по её имени.
+ */
+.snd-kit-inspector > .ui-panel {
+  padding: 4px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Приёмник своего файла: щелчок — выбор файла, файл можно бросить прямо
+   на него. Пунктир говорит «сюда кладут», а не «это кнопка действия». */
+.snd-drop {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px dashed var(--astral-line-strong);
+  border-radius: var(--astral-radius);
+  background: var(--fx-card);
+  color: var(--astral-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--astral-duration-fast) var(--astral-ease),
+    background-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.snd-drop:hover:not(:disabled),
+.snd-drop.is-armed {
+  border-color: var(--astral-accent);
+  background: color-mix(in srgb, var(--astral-accent) 10%, var(--fx-card));
+}
+
+.snd-drop:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: 2px;
+}
+
+.snd-drop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.snd-drop > svg {
+  width: 22px;
+  height: 22px;
+  color: var(--astral-accent);
+}
+
+.snd-drop > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.snd-drop b {
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.snd-drop small {
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+}
+
+/* Чем звучит сейчас — под приёмником. Длинное название ствола или файла
+   переносится, а не обрезается многоточием: это ответ на вопрос «что
+   звучит», и половина ответа ничего не отвечает. */
+.snd-kit-now {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+  overflow-wrap: anywhere;
+}
+
+.snd-kit-now > b {
+  color: var(--astral-ink);
+  font-weight: 600;
+}
+
+.snd-kit-hint {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.4;
+}
+
+.snd-kit-hint.is-warning {
+  color: var(--astral-warning);
+}
+
+/* Возврат к звуку игры и «Без обработки» — под тем, что они возвращают. */
+.snd-kit-revert.ui-button {
+  justify-self: start;
+}
+
+/* Состояние в игре — первой строкой панели «В игре», меткой цветом по
+   смыслу. */
+.snd-kit-state-line {
+  margin: 0;
+}
+
+/* Длинная подпись на немецком («In dem Spiel steht ein eigener …») переносится, а не вылезает за ячейку. */
+.snd-kit-state {
+  display: inline-block;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-wash);
+  color: var(--fx-muted);
+  font-size: var(--astral-text-micro);
+  overflow-wrap: anywhere;
+}
+
+.snd-kit-state.is-installed {
+  background: var(--astral-positive-soft);
+  color: var(--astral-positive);
+}
+
+.snd-kit-state.is-pending,
+.snd-kit-state.is-queued {
+  background: var(--astral-accent-wash);
+  color: var(--astral-accent);
+}
+
+.snd-kit-state.is-leaving,
+.snd-kit-state.is-foreign {
+  background: var(--astral-warning-soft);
+  color: var(--astral-warning);
+}
+
+.snd-kit-game > .ui-button {
+  justify-self: start;
+}
+
+/*
+ * «Звучание» группами (задача 3 ТЗ 07.10.2026): громкость, тембр,
+ * пространство, время. У каждой ручки — сброс справа от неё.
+ */
+.snd-kit-group {
+  display: grid;
+  gap: 6px;
+}
+
+.snd-kit-group + .snd-kit-group {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--astral-glass-border);
+}
+
+.snd-kit-group > h4 {
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 600;
+}
+
+.snd-knob {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 6px;
+}
+
+.snd-knob-reset {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: var(--astral-ink-muted);
+  cursor: pointer;
+}
+
+.snd-knob-reset:hover:not(:disabled) {
+  border-color: var(--astral-glass-border);
+  color: var(--astral-ink);
+}
+
+.snd-knob-reset:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.snd-knob-reset svg {
+  width: 14px;
+  height: 14px;
+}
+
+.snd-kit-switch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.snd-kit-switch > span {
+  display: grid;
+  gap: 2px;
+}
+
+.snd-kit-switch b {
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.snd-kit-switch small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+/* «Без своих выстрелов» (30.10.2026): переключатель на ствол, строка «всем» под ним. */
+.snd-kit-mute {
+  display: grid;
+  gap: 10px;
+}
+
+.snd-kit-mute-all {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.snd-kit-mute-all small {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+}
+
+/* ── Окружение: пульт громкости (ТЗ 17.10.2026, задача 5) ─────────────── */
+
+/*
+ * Кадр вкладки — сам пульт: группы каналов карточками, по ползунку на
+ * канал. Прокрутка — между органами кадра сверху и подписью с подсказками
+ * снизу: ползунок, уехавший под них, нельзя было бы взять.
+ */
+.snd-mix-stage {
+  position: absolute;
+  inset: 60px 0 44px;
+  overflow: auto;
+  padding: 0 16px 8px;
+}
+
+/* Карточки ряда — одной высоты: каналов в группах разное число. */
+.snd-mix-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.snd-mix-group {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 10px 10px 8px;
+  border: 1px solid var(--astral-glass-border);
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-wash);
+}
+
+.snd-mix-group > h3 {
+  margin: 0 0 4px 6px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+/* Канал: выбранный — акцентной рамкой, сдвинутый — акцентным знаком. */
+.snd-mix-channel {
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--astral-radius-sm);
+}
+
+.snd-mix-channel:hover {
+  border-color: var(--astral-line);
+}
+
+.snd-mix-channel.is-selected {
+  border-color: var(--astral-accent);
+}
+
+/*
+ * Канал — в две строки: подпись и значение сверху, дорожка во всю ширину
+ * карточки снизу. У ползунка 37 шагов, и каждому нужен ход; а длинная
+ * подпись («Flugzeuge und Hubschrauber») не съедает дорожку и не делает
+ * соседние каналы разной высоты.
+ */
+.snd-mix-channel .ui-slider:not(.is-stacked) {
+  --ui-field-value: 64px;
+  grid-template-columns: minmax(0, 1fr) var(--ui-field-value);
+  grid-template-areas:
+    "copy output"
+    "track track";
+  row-gap: 2px;
+}
+
+.snd-mix-channel .ui-slider > .ui-slider-copy {
+  grid-area: copy;
+  justify-content: center;
+}
+
+.snd-mix-channel .ui-slider > .ui-slider-value {
+  grid-area: output;
+}
+
+.snd-mix-channel .ui-slider > input[type="range"] {
+  grid-area: track;
+  width: 100%;
+}
+
+.snd-mix-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+}
+
+.snd-mix-label > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.snd-mix-label > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--astral-ink-muted);
+}
+
+.snd-mix-channel.is-moved .snd-mix-label > svg {
+  color: var(--astral-accent);
+}
+
+.snd-mix-channel.is-off .snd-mix-label {
+  color: var(--astral-ink-muted);
+}
+
+/*
+ * Кнопка «выключить / включить» (10.11.2026): знак канала слева — кнопка, нажатая, пока канал звучит. Выключенный знак перечёркнут, подпись и ползунок гаснут;
+ * значение вместо числа — «Выкл.». Фокус с клавиатуры виден рамкой акцента.
+ */
+.snd-mix-toggle {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--astral-control-h-xs);
+  height: var(--astral-control-h-xs);
+  padding: 0;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: var(--astral-ink-muted);
+  cursor: pointer;
+}
+
+.snd-mix-toggle > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.snd-mix-toggle:hover {
+  background: var(--astral-surface-wash);
+  color: var(--astral-ink);
+}
+
+.snd-mix-toggle:focus-visible {
+  outline: 2px solid var(--astral-accent);
+  outline-offset: 1px;
+}
+
+.snd-mix-channel.is-moved .snd-mix-toggle {
+  color: var(--astral-accent);
+}
+
+.snd-mix-toggle[aria-pressed="false"]::after {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  left: 3px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  content: "";
+  transform: rotate(-45deg);
+}
+
+.snd-mix-channel.is-off .snd-mix-toggle {
+  color: var(--astral-ink-muted);
+}
+
+.snd-mix-channel.is-off .ui-slider > input[type="range"] {
+  opacity: 0.35;
+}
+
+.snd-mix-group > h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Общая кнопка словаря; у заголовка группы — по мишени словаря (28 px, `hit-target`), а не в 34 px: заголовок не пухнет. */
+.snd-mix-group > h3 > .snd-mix-group-toggle.ui-button.is-sm {
+  flex: none;
+  min-height: var(--astral-control-h-xs);
+  padding: 0 10px;
+}
+
+/* Панель канала: ползунок крупно, «Выключить» и «Как в игре» под ним. */
+.snd-mix-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.snd-mix-detail > .snd-kit-revert {
+  margin-top: 4px;
+}
+
+/* «В игре»: каналы со сдвигом — строками «канал · значение». */
+.snd-mix-moved {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.snd-mix-moved > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.snd-mix-moved b {
+  color: var(--astral-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

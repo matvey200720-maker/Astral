@@ -1,0 +1,814 @@
+/* Workshop library: catalog-first layout with real media and manual 3D previews. */
+.desktop-app .workshop-topline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 14px;
+  justify-content: stretch;
+}
+
+.desktop-app .workshop-tabs {
+  grid-column: 2;
+}
+
+.desktop-app .workshop-toolbar {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.desktop-app .workshop-toolbar-icon {
+  border: 0;
+  color: var(--v5-muted);
+  background: transparent;
+}
+
+.desktop-app .weapon-slot-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px !important;
+  align-items: stretch;
+}
+
+.desktop-app .weapon-slot-grid > .weapon-slot-card,
+.desktop-app .weapon-slot-grid > .weapon-slot-card:hover {
+  min-width: 0 !important;
+  min-height: 202px !important;
+  aspect-ratio: 1.03 / 1 !important;
+  display: block !important;
+  position: relative;
+  overflow: hidden;
+  padding: 0 !important;
+  border: 1px solid rgba(186, 186, 186, 0.18) !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: var(--astral-surface-strong) !important;
+  box-shadow: none !important;
+}
+
+.desktop-app .weapon-slot-grid > .weapon-slot-card:hover {
+  border-color: rgba(173, 173, 173, 0.34) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.19) !important;
+}
+
+.desktop-app .weapon-slot-grid > .weapon-slot-card .weapon-slot-image {
+  position: absolute !important;
+  inset: 8px 10px 45px !important;
+  width: calc(100% - 20px) !important;
+  height: calc(100% - 53px) !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  object-fit: contain !important;
+  opacity: 1 !important;
+  filter: brightness(0.54) contrast(1.16) saturate(0.82)
+    drop-shadow(0 12px 16px rgba(0, 0, 0, 0.48)) !important;
+  transform: scale(1.12) !important;
+  transition: transform var(--astral-duration-slow)
+    cubic-bezier(0.16, 0.88, 0.24, 1) !important;
+}
+
+.desktop-app .weapon-slot-grid > .weapon-slot-card:hover .weapon-slot-image {
+  transform: scale(1.16) !important;
+}
+
+.desktop-app .weapon-slot-copy {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  left: 12px;
+  min-width: 0;
+  text-align: left;
+}
+
+/*
+ * Имя ствола переносится, а не режется.
+ *
+ * Карточка шириной 143 px держала одну строку с многоточием, и
+ * отрезалось ровно то, что различает стволы: «Карабинная винтовка» и
+ * «Карабинная винтовка MK2» стояли рядом и обе читались как
+ * «Карабинная винт…». То же у тяжёлой снайперской. Ряд выравнивает
+ * карточки по высоте сам, так что вторая строка ничего не ломает.
+ */
+.desktop-app .weapon-slot-card .weapon-slot-copy h3 {
+  margin: 0 !important;
+  color: #f7f8fb !important;
+  font-size: var(--astral-text-strong) !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Подпись под именем — до двух строк.
+ *
+ * У ствола она короткая и повторяет класс («Штурмовая винтовка») — там
+ * вторая строка не понадобится. Но та же карточка служит одежде, где подпись
+ * несёт смысл: «Тактические и повседневные модели» обрывалось на
+ * «Тактические и повседнев…», а «Форма государственных служб» — на «сл…».
+ */
+.desktop-app .weapon-slot-card .weapon-slot-copy span {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 3px;
+  color: rgba(220, 225, 235, 0.52) !important;
+  font-size: var(--astral-text-micro) !important;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-media {
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 38%,
+      rgba(115, 115, 115, 0.1),
+      transparent 52%
+    ),
+    #0d0d0d !important;
+}
+
+.desktop-app .weapon-viewer-embedded,
+.desktop-app .weapon-viewer-embedded .weapon-viewer-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+}
+
+.desktop-app .weapon-viewer-embedded canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.desktop-app .weapon-viewer-embedded canvas:active {
+  cursor: grabbing;
+}
+
+.desktop-app .weapon-viewer-embedded-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(235, 239, 247, 0.68);
+  pointer-events: none;
+}
+
+.desktop-app .weapon-viewer-embedded-controls span,
+.desktop-app .weapon-viewer-embedded-controls button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  color: inherit;
+  border: 1px solid rgba(202, 202, 202, 0.14);
+  border-radius: var(--astral-radius);
+  background: rgba(12, 12, 12, 0.72);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.desktop-app .weapon-viewer-embedded-controls button {
+  width: 34px;
+  justify-content: center;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.desktop-app .weapon-viewer-embedded-controls svg {
+  width: 14px;
+  height: 14px;
+}
+
+.desktop-app .weapon-viewer-embedded .weapon-viewer-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  text-align: center;
+  background: rgba(10, 10, 10, 0.28);
+}
+
+.desktop-app .weapon-viewer-embedded .weapon-viewer-state > img {
+  position: absolute;
+  inset: 7% 8% 22%;
+  width: 84%;
+  height: 71%;
+  object-fit: contain;
+  opacity: 0.32;
+}
+
+.desktop-app
+  .workshop-library-catalog[data-workshop-section="gunpacks"]
+  .workshop-local-hero-header,
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-local-hero-header {
+  pointer-events: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-local-hero-actions,
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-local-hero-copy {
+  pointer-events: auto;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="gunpacks"]
+  .workshop-local-grid
+  img {
+  padding: 12px 10px 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.5));
+}
+
+@media (max-width: 1180px) {
+  .desktop-app .workshop-topline {
+    grid-template-columns: 1fr auto;
+  }
+
+  .desktop-app .workshop-tabs {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .desktop-app .workshop-toolbar {
+    grid-column: 2;
+  }
+
+  .desktop-app .weapon-slot-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .desktop-app .workshop-topline {
+    grid-template-columns: 1fr;
+  }
+
+  .desktop-app .workshop-tabs,
+  .desktop-app .workshop-toolbar {
+    grid-column: 1;
+    justify-self: center;
+  }
+
+  .desktop-app .weapon-slot-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .desktop-app .weapon-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .desktop-app .weapon-viewer-embedded-controls span {
+    display: none;
+  }
+}
+
+/* The rail is glass only: the scene remains visible in both appearances. */
+.desktop-app[data-holds~="workshop-section"][data-holds~="workshop-section"]
+  .desktop-sidebar.compact-sidebar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app[data-holds~="workshop-section"][data-holds~="workshop-section"]
+  .desktop-sidebar.compact-sidebar::after {
+  background: transparent !important;
+}
+
+.desktop-app .workshop-slot-title {
+  color: #f5f8fc;
+  font-size: 15px;
+  font-weight: 830;
+  letter-spacing: -0.015em;
+}
+
+.desktop-app .catalog-v3.workshop-local-catalog-active,
+.desktop-app .workshop-local-catalog.workshop-library-catalog {
+  background: transparent !important;
+}
+
+.desktop-app .workshop-local-catalog.workshop-library-catalog {
+  min-height: calc(100vh + 440px);
+  margin: 0 !important;
+  padding: 0 28px 36px;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 6;
+  height: min(740px, calc(100vh - 40px)) !important;
+  min-height: 580px !important;
+  grid-template-rows: minmax(440px, 1fr) auto;
+  overflow: hidden;
+  background: #0d0d0d !important;
+  transition:
+    height 340ms cubic-bezier(0.16, 0.86, 0.24, 1),
+    min-height 340ms cubic-bezier(0.16, 0.86, 0.24, 1);
+}
+
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero {
+  height: 310px !important;
+  min-height: 310px !important;
+  grid-template-rows: minmax(205px, 1fr) auto;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.24) !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-media,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-media {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--astral-radius-xl) !important;
+  background: #0d0d0d !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-media img {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: var(--astral-radius-xl) !important;
+  object-fit: contain;
+  filter: var(--workshop-variant-filter, none)
+    drop-shadow(0 28px 36px rgba(0, 0, 0, 0.3)) !important;
+  transition: transform 340ms cubic-bezier(0.16, 0.86, 0.24, 1);
+}
+
+.desktop-app
+  .workshop-library-catalog.is-map-media
+  .workshop-local-hero-media
+  img {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: var(--astral-radius-xl) !important;
+  transform: scale(1.28);
+}
+
+.desktop-app
+  .workshop-library-catalog.is-map-media.is-compact
+  .workshop-local-hero-media
+  img {
+  transform: scale(1.05);
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-header,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-header {
+  min-height: 126px;
+  align-items: end !important;
+  gap: 24px;
+  padding: 20px 12px 24px !important;
+  border: 0 !important;
+  background: transparent !important;
+  transition:
+    min-height 340ms cubic-bezier(0.16, 0.86, 0.24, 1),
+    padding 340ms cubic-bezier(0.16, 0.86, 0.24, 1);
+}
+
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-header {
+  min-height: 94px;
+  padding: 12px 12px 16px !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-copy {
+  max-width: min(68vw, 900px);
+  background: transparent !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-copy h1 {
+  margin-top: 4px;
+  font-size: clamp(34px, 3.7vw, 58px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-copy h1 {
+  font-size: clamp(25px, 2.5vw, 36px);
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.desktop-app .workshop-local-downloads {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: rgba(222, 222, 222, 0.56);
+  font-size: 12px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.desktop-app .workshop-local-downloads svg,
+.desktop-app .workshop-local-like svg,
+.desktop-app .workshop-local-install svg {
+  width: 18px;
+  height: 18px;
+}
+
+.desktop-app .workshop-local-like {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  flex: 0 0 50px;
+  place-items: center;
+  padding: 0;
+  color: rgba(227, 227, 227, 0.72);
+  border: 1px solid rgba(177, 177, 177, 0.2);
+  border-radius: var(--astral-radius-lg);
+  background: rgba(26, 26, 26, 0.72);
+}
+
+.desktop-app .workshop-local-like:hover,
+.desktop-app .workshop-local-like.is-active {
+  color: var(--astral-ink);
+  border-color: var(--astral-line-strong);
+  background: var(--astral-surface-raised);
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-grid {
+  z-index: 2;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  padding: 22px 0 0 !important;
+  border: 0 !important;
+  background: #0d0d0d !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-grid > button,
+.desktop-app
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button.is-selected,
+.desktop-app .workshop-library-catalog .workshop-local-grid > button:hover {
+  min-height: 206px;
+  overflow: hidden;
+  border: 1px solid transparent !important;
+  border-radius: var(--astral-radius-lg) !important;
+  background: #181818 !important;
+}
+
+.desktop-app
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button.is-selected {
+  border-color: rgba(198, 198, 198, 0.42) !important;
+}
+
+.desktop-app
+  .workshop-library-catalog
+  .workshop-local-grid
+  .workshop-local-card-media {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-grid img {
+  inset: 8px 8px 36px;
+  width: calc(100% - 16px);
+  height: calc(100% - 44px);
+  padding: 0 !important;
+  border-radius: var(--astral-radius-lg);
+  object-fit: contain;
+  filter: var(--workshop-variant-filter, none)
+    drop-shadow(0 12px 16px rgba(0, 0, 0, 0.34)) !important;
+}
+
+.desktop-app .workshop-library-catalog.is-map-media .workshop-local-grid img {
+  transform: scale(1.18);
+}
+
+.desktop-app .weapon-slot-card img {
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.38)) !important;
+}
+
+@media (max-width: 980px) {
+  .desktop-app .workshop-library-catalog .workshop-local-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .desktop-app .workshop-library-catalog .workshop-local-hero-actions {
+    gap: 6px;
+  }
+
+  .desktop-app .workshop-local-downloads {
+    display: none;
+  }
+
+  .desktop-app
+    .workshop-library-catalog
+    .workshop-local-hero-header
+    .workshop-local-install {
+    min-width: 150px;
+  }
+
+  .desktop-app .workshop-library-catalog .workshop-local-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Workshop V2: one catalog toolbar and one continuous detail surface. */
+.desktop-app .workshop-topline {
+  min-height: 52px;
+  align-items: start;
+}
+
+.desktop-app .workshop-tabs {
+  min-height: 46px;
+  margin: 0 auto 12px;
+  background: rgba(15, 15, 15, 0.56);
+}
+
+.desktop-app .workshop-toolbar-icon {
+  background: rgba(15, 15, 15, 0.58);
+}
+
+.desktop-app .redux-visual-grid .redux-visual-card,
+.desktop-app .redux-visual-grid .redux-visual-image,
+.desktop-app .redux-visual-grid .redux-visual-shade {
+  border-radius: var(--astral-radius-lg) !important;
+}
+
+.desktop-app .redux-visual-grid .redux-visual-card {
+  overflow: hidden !important;
+}
+
+.desktop-app .catalog-v3.workshop-local-catalog-active {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100vh - 40px);
+  padding: 0 0 34px !important;
+  background: transparent !important;
+}
+
+.desktop-app .workshop-local-catalog.workshop-library-catalog {
+  width: 100% !important;
+  min-height: calc(100vh - 40px);
+  gap: 0;
+  margin: 62px 0 0 !important;
+  padding: 0 24px 28px;
+  background: transparent;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero {
+  position: relative !important;
+  top: auto !important;
+  z-index: 2;
+  height: auto !important;
+  min-height: clamp(510px, 68vh, 680px);
+  grid-template-rows: minmax(390px, 1fr) auto;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #0d0d0d !important;
+  box-shadow: none !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-media,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-media {
+  position: relative !important;
+  inset: auto !important;
+  min-height: 390px;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #0d0d0d !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-header,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-header {
+  position: relative !important;
+  inset: auto !important;
+  min-height: 112px;
+  align-items: end !important;
+  padding: 20px 18px 22px !important;
+  border-top: 1px solid rgba(176, 176, 176, 0.09) !important;
+  background: #0d0d0d !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-copy small {
+  color: rgba(222, 222, 222, 0.44) !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-copy h1 {
+  max-width: min(72vw, 880px) !important;
+  color: #f4f7fb !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-copy p {
+  color: rgba(222, 222, 222, 0.58) !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-grid {
+  position: relative;
+  z-index: 2;
+  padding: 18px 0 0 !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(176, 176, 176, 0.09) !important;
+  border-radius: 0 !important;
+  background: #0d0d0d !important;
+  box-shadow: none !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-grid > button,
+.desktop-app
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button.is-selected,
+.desktop-app .workshop-library-catalog .workshop-local-grid > button:hover {
+  overflow: hidden;
+  border-radius: var(--astral-radius-lg) !important;
+  background: #181818 !important;
+}
+
+.desktop-app
+  .workshop-library-catalog.is-map-media
+  .workshop-local-hero-media
+  img {
+  width: min(72%, 920px) !important;
+  height: min(76%, 620px) !important;
+  border-radius: var(--astral-radius-xl) !important;
+}
+
+.desktop-app .workshop-slot-title {
+  overflow: hidden;
+  color: #f0f4fa;
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-app[data-holds~="workshop-section"][data-holds~="workshop-section"]
+  .desktop-sidebar.compact-sidebar {
+  background: rgba(13, 13, 13, 0.5) !important;
+}
+
+.desktop-app[data-holds~="workshop-section"][data-holds~="workshop-section"]
+  .desktop-sidebar.compact-sidebar
+  :is(nav > button, .desktop-sidebar-bottom button) {
+  background-color: rgba(19, 19, 19, 0.34);
+}
+
+.desktop-app[data-holds~="workshop-section"][data-holds~="workshop-section"]
+  .desktop-sidebar.compact-sidebar
+  :is(nav > button, .desktop-sidebar-bottom button).active {
+  background: rgba(247, 249, 252, 0.94);
+}
+
+@media (max-width: 1180px) {
+  .desktop-app .workshop-topline {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .desktop-app .workshop-tabs {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+  }
+
+  .desktop-app .workshop-toolbar {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 920px) {
+  .desktop-app .workshop-topline {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .desktop-app .workshop-tabs,
+  .desktop-app .workshop-toolbar {
+    grid-row: 1;
+  }
+
+  .desktop-app .workshop-tabs {
+    grid-column: 2;
+  }
+
+  .desktop-app .workshop-toolbar {
+    grid-column: 3;
+  }
+
+  .desktop-app .workshop-tabs > button {
+    min-width: 42px;
+    padding-inline: 12px;
+    font-size: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .desktop-app .workshop-local-catalog.workshop-library-catalog {
+    padding-inline: 14px;
+  }
+
+  .desktop-app .workshop-library-catalog .workshop-local-hero-header {
+    align-items: stretch !important;
+  }
+}
+
+/* Workshop V3 cascade lock. */
+.desktop-app[data-holds~="workshop-section"][data-holds~="workshop-section"]
+  .desktop-sidebar.compact-sidebar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app .workshop-local-catalog.workshop-library-catalog {
+  min-height: calc(100vh + 440px) !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 28px 36px !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero {
+  position: sticky !important;
+  top: 0 !important;
+  height: calc(100vh - 40px) !important;
+  min-height: 580px !important;
+  grid-template-rows: minmax(420px, 1fr) auto !important;
+}
+
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero {
+  height: 310px !important;
+  min-height: 310px !important;
+  grid-template-rows: minmax(205px, 1fr) auto !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-media,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-media {
+  position: relative !important;
+  inset: auto !important;
+  grid-row: 1 !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-header,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-header {
+  position: relative !important;
+  inset: auto !important;
+  grid-row: 2 !important;
+  min-height: 126px !important;
+  padding: 20px 12px 24px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-header {
+  min-height: 94px !important;
+  padding: 12px 12px 16px !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-grid {
+  padding: 22px 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.desktop-app .weapon-slot-card img {
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.38)) !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero {
+  align-items: stretch !important;
+  justify-items: stretch !important;
+}
+
+.desktop-app .workshop-library-catalog .workshop-local-hero-media,
+.desktop-app .workshop-library-catalog.is-compact .workshop-local-hero-media {
+  align-self: stretch !important;
+  justify-self: stretch !important;
+}
+
+.desktop-app .workshop-local-catalog.workshop-library-catalog {
+  display: block !important;
+}

@@ -1,0 +1,258 @@
+/*
+ * Вид общего двумерного окна предпросмотра.
+ *
+ * Подключается из `styles/index.css`, слой `overrides`, — как и остальные листы
+ * мастерской: в приложении один вход для стилей и явный порядок слоёв, и два
+ * пути до одних и тех же правил означали бы два места, где спорят приоритеты.
+ *
+ * Под слоем здесь кадр игры, а не страница лаунчера. Поэтому рамка, затемнение
+ * по краям и плашки поверх кадра остаются тёмными в обеих темах: светлая тема
+ * лаунчера не превращает ночную улицу в белый лист. Всё, что снаружи кадра,
+ * берёт цвета из палитры, как везде.
+ */
+
+.hud-preview {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+
+/*
+ * Пропорцию кадра задаёт потребитель — через `design`, в коде. Здесь её нет
+ * намеренно: стоит написать сюда `aspect-ratio`, и разметка прицела начнёт
+ * зависеть от листа стилей, а не от системы координат, в которой её считают.
+ * Именно так «1:1» однажды и держалось.
+ */
+.hud-preview-frame {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: #05070a;
+}
+
+/*
+ * Кадр и слой поверх него — одна коробка, повторяющая кадр.
+ *
+ * Она нужна ради толчка: отдача трясёт картинку вместе с тем, что к ней
+ * приклеено, а рамка окна, затемнение и плашки остаются на месте. Своего
+ * положения у неё нет — сдвиг ставит код окна, и только он.
+ */
+.hud-preview-scene {
+  position: absolute;
+  inset: 0;
+}
+
+/* Кадр обрезается, а не вписывается: чёрных полей по краям в игре не бывает. */
+.hud-preview-shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/*
+ * Подложка вместо кадра. Она нарочно не похожа на игру: ровный градиент с
+ * сеткой читается как «здесь должна быть картинка», а не как «вот так это и
+ * будет выглядеть».
+ */
+.hud-preview-void {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0 12px,
+      transparent 12px 24px
+    ),
+    linear-gradient(180deg, #1a2029, #0a0d12);
+}
+
+/*
+ * Матовая сцена: студийная подложка вместо кадра игры.
+ *
+ * Материал берётся у продукта (`--dragon-matte-stage` из
+ * `matte-surface-contract.css`) — тот же, на котором в каталоге стоят
+ * прозрачные рендеры оружия. Своя серая заливка здесь означала бы третий
+ * оттенок «нейтрального» в одном приложении; этот же меняется вместе с темой,
+ * потому что смотрят на нём не кадр игры, а слой лаунчера.
+ */
+.hud-preview-matte {
+  position: absolute;
+  inset: 0;
+  background: var(--dragon-matte-stage, #0b0b0b);
+}
+
+/* Затемнение по краям: тем же приёмом кадр отделён от страницы в редакторе
+   прицела с самого начала, и слой поверх него читается лучше. */
+.hud-preview-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.5);
+}
+/* На студийной подложке виньетка не глубина, а грязь в углах: затемнять нечего
+   — под слоем ровный материал, а не кадр с небом и кустами. */
+.hud-preview-frame[data-matte="true"]::after {
+  box-shadow: none;
+}
+
+.hud-preview-safe {
+  position: absolute;
+  pointer-events: none;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  border-radius: var(--astral-radius-xs);
+}
+
+/*
+ * Прямоугольник слоя считает код окна и ставит сюда в пикселях: положение и
+ * размер здесь — это положение и размер разметки на экране игры, и отдавать их
+ * листу стилей нельзя. Ни отступа, ни рамки: любое смещение здесь — смещение
+ * прицела относительно центра экрана, то есть ровно та ложь, ради устранения
+ * которой окно и заведено.
+ */
+.hud-preview-layer {
+  position: absolute;
+}
+.hud-preview-layer > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hud-preview-missing {
+  position: absolute;
+  inset: auto 0 0 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.88);
+  background: linear-gradient(180deg, rgba(6, 8, 11, 0), rgba(6, 8, 11, 0.88));
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+.hud-preview-missing span {
+  font-size: 11px;
+  opacity: 0.66;
+}
+
+/* Выбор сцены стоит в углу кадра, а не над ним: полоса над кадром — место
+   редактора, и окно на него не претендует. */
+.hud-preview-scenes {
+  position: absolute;
+  inset: 10px 10px auto auto;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--astral-radius-sm);
+  background: rgba(11, 11, 12, 0.74);
+}
+.hud-preview-scenes button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: none;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  cursor: pointer;
+}
+.hud-preview-scenes button:hover {
+  color: #fff;
+}
+.hud-preview-scenes button.is-active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/*
+ * Экран игрока (ТЗ H1, 14.11.2026): кадр монитора и картинка игры внутри него.
+ *
+ * Игра раскладывает HUD под форму экрана (4:3), а монитор другой формы (16:9) — картинка растягивается. Окно показывает
+ * кадр МОНИТОРА (`gs-monitor`, его пропорция — `--gs-monitor-aspect`), а внутри — холст формы игры, растянутый по ширине
+ * (`gs-canvas`, `GameScreenFrame`). Во сколько раз — решает одно место контракта (`stretchContentScale`); без растяжения
+ * обёртка ничего не меняет: кадр монитора совпадает с холстом.
+ */
+.gs-monitor {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: var(--gs-monitor-aspect, 1.7778);
+}
+.gs-canvas {
+  min-width: 0;
+  transform-origin: 0 0;
+}
+/* Растянутое — «в раме»: человек видит, что кадр шире формы, под которую игра раскладывает HUD. */
+.gs-monitor[data-stretched="true"] {
+  outline: 1px dashed var(--astral-line);
+  outline-offset: 3px;
+}
+/* Плашка выбора сцены внутри растянутого холста — свои буквы, не растянутые: компенсируем растяжение. */
+.hud-preview[data-stretch="true"] .hud-preview-scenes {
+  transform: scaleX(calc(1 / var(--hud-stretch, 1)));
+  transform-origin: top right;
+}
+
+/* Строка экрана игры (`GameScreenLine`): текст, «изменить» и выбор формы. */
+.gs-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  line-height: 1.45;
+}
+.gs-line-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.gs-line.is-warning .gs-line-text {
+  color: var(--astral-warning);
+}
+.gs-line-basis {
+  flex: 1 0 100%;
+  margin: 0;
+  color: var(--astral-ink-faint);
+}
+.gs-line-pick {
+  flex: 1 0 100%;
+  min-width: 0;
+}
+/* Угол кадра (`StageCorner`): левый верхний, как «Обновляю…»; полоса органов уступает ему 300 px (`editor-shell.css`). */
+.gs-stage-line {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  left: 12px;
+  width: min(288px, calc(100% - 24px));
+  padding: 6px 8px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  background: rgba(10, 10, 11, 0.72);
+}
+/* «Только в предпросмотре» (`PreviewOnlyMark`): тихая метка рядом с тем, чего в игре не будет. */
+.gs-preview-only {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-xs);
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  white-space: nowrap;
+}

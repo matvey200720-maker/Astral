@@ -1,0 +1,73 @@
+/*
+ * Словарь лаунчера.
+ *
+ * Сама палитра — общая, она в packages/astral-design/tokens.css и делится с
+ * сайтом. Здесь только имена, которыми её называют старые листы этого
+ * продукта: четыре словаря выросли на одни и те же шесть понятий, и указать
+ * их сюда дешевле, чем гонять один и тот же серый по шестидесяти файлам.
+ */
+
+@import "@astral/design/tokens.css";
+
+/* Legacy vocabularies -------------------------------------------------------
+   Four stylesheets grew their own names for the same six ideas. Pointing them
+   at the tokens above is what makes one edit here reach every screen; the
+   alternative is chasing the same grey through sixty files. */
+
+.desktop-app {
+  --v5-bg: var(--astral-bg);
+  --v5-panel: var(--astral-surface);
+  --v5-panel-solid: var(--astral-surface-strong);
+  --v5-panel-soft: var(--astral-surface);
+  --v5-line: var(--astral-line);
+  --v5-line-strong: var(--astral-line-strong);
+  --v5-text: var(--astral-ink);
+  --v5-muted: var(--astral-ink-muted);
+  --v5-subtle: var(--astral-ink-faint);
+  --v5-active-bg: var(--astral-accent);
+  --v5-active-text: var(--astral-accent-ink);
+  --v5-shadow: var(--astral-shadow);
+
+  --text: var(--astral-ink);
+  --muted: var(--astral-ink-muted);
+  --line: var(--astral-line);
+  --panel: var(--astral-surface);
+  --panel-strong: var(--astral-surface-strong);
+}
+
+.desktop-app .astral-editorial-home,
+.desktop-app .redux-product-page,
+.desktop-app .builds-page,
+.desktop-app .desktop-settings {
+  --text: var(--astral-ink);
+  --muted: var(--astral-ink-muted);
+  --line: var(--astral-line);
+  --panel: var(--astral-surface);
+  --panel-strong: var(--astral-surface-strong);
+
+  --redux-ink: var(--astral-ink);
+  --redux-muted: var(--astral-ink-muted);
+  --redux-soft: var(--astral-surface);
+  --redux-line: var(--astral-line);
+  --redux-panel: var(--astral-surface);
+  --redux-panel-strong: var(--astral-surface-strong);
+}
+
+/* Кегли лаунчера, шаг вниз (владелец, 16.11.2026: «слишком большие шрифты в каталоге, в оптимизации, в мастерской»).
+   Общая палитра (`packages/astral-design/tokens.css`) делится с сайтом и установщиком и остаётся прежней: 11 · 12 · 13 · 15 · 17 · 20 · 24 · 28 · 34.
+   Лаунчер переопределяет только кегли, одним шагом для всех экранов, потому что почти весь текст берёт их по имени (`var(--astral-text-*)`):
+     micro 11 → 11   (нижняя граница читаемости: `TYPE_MIN` в `conformance.js`, ниже — ошибка аудита)
+     small 12 → 11   body 13 → 12   strong 15 → 14   title 17 → 16
+     section 20 → 18   page 24 → 22   hero 28 → 26   display 34 → 30
+   Шкала для аудита и `verify-design-tokens.js` — те же числа плюс прежние (13, 15, 17, 20, 24, 28, 34): они остаются допустимыми, пока зоны не переведут свои
+   литералы `font-size: 13px` на токены. Экраны со своими кеглями (`--lib-big-size`, `--home-title-size`, `--dl-fs-hero`) — каждая зона держит их сама. */
+:root {
+  --astral-text-small: 11px;
+  --astral-text-body: 12px;
+  --astral-text-strong: 14px;
+  --astral-text-title: 16px;
+  --astral-text-section: 18px;
+  --astral-text-page: 22px;
+  --astral-text-hero: 26px;
+  --astral-text-display: 30px;
+}

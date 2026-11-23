@@ -1,0 +1,47 @@
+/*
+ * Français pour la zone `card` du portage du design (15.11.2026) : fiche « Pupitre », mode catalogue « par le crayon », parcours de remplacement des vêtements « Vitrine »
+ * (`../zone-port-card-1511.js`). Chaîne russe → française. Avant les signes doubles l'espace insécable s'écrit en escape (code 00a0), jamais en symbole.
+ */
+
+export const frZonePortCard1511 = {
+  сутки: "journée",
+  ролик: "clip",
+  "Штатный звук": "Son d'origine",
+  "Звук мода": "Son du mod",
+  "Звуки мода": "Sons du mod",
+  "Выбранный ствол": "Arme sélectionnée",
+  "Крутить в 3D": "Faire pivoter en 3D",
+  "Часть на кадре": "Partie à l'image",
+  "Откроется студия звука на этом оружии":
+    "Ouvre le studio de son sur cette arme",
+  "Что изменится в игре": "Ce qui change dans le jeu",
+  Станет: "Deviendra",
+  Установок: "Installations",
+  Обновлён: "Mis à jour",
+  "Работает на": "Fonctionne sur",
+  "Что изменится": "Ce qui change",
+  Раскраска: "Coloris",
+  "Ещё в разделе": "Autres dans cette section",
+  "О моде": "À propos du mod",
+  "Выбрать другой в каталоге": "Choisir un autre dans le catalogue",
+  "Откроется раздел": "Ouvre la section",
+  "Создать свой в мастерской": "Créer le vôtre dans l'atelier",
+  "Откроется редактор этой части": "Ouvre l'éditeur de cette partie",
+  "Поставить вместо части": "Utiliser à la place de la partie",
+  "идут сутки": "la journée défile",
+  Ночь: "Nuit",
+  Рассвет: "Aube",
+  Утро: "Matin",
+  День: "Jour",
+  Закат: "Coucher du soleil",
+  Сумерки: "Crépuscule",
+  "Вид вещи": "Aperçu du vêtement",
+  "На человеке · 3D": "Sur un personnage · 3D",
+  "Откат в один клик": "Restauration en un clic",
+  "Встанет на": "Se mettra sur",
+  "К вещам": "Retour aux articles",
+  "Крутить мышью": "Tourner à la souris",
+  "Открыть живой предпросмотр": "Ouvrir l'aperçu en direct",
+  "Загружаем живой предпросмотр": "Chargement de l'aperçu en direct",
+  "в руках": "en main",
+};

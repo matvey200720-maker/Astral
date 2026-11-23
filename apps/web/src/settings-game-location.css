@@ -1,0 +1,449 @@
+/* Настройки, раздел «Игра»: копии игры, способы доставки, сброс до стандартной.
+   Лист подключается в слое components общего листа окна. */
+
+/* Короткие имена палитры: объявлены на корне каждого блока, который их читает
+   (потомки наследуют, правило без предка видит имя на самом элементе).
+   Значения те же, что в других листах настроек. */
+.settings-shell,
+.settings-copy,
+.settings-copy-badge,
+.settings-copy-main,
+.settings-copy-status,
+.settings-delivery-methods,
+.settings-rockstar-how-list,
+.settings-rockstar-image,
+.settings-delivery-mode,
+.settings-delivery-other,
+.settings-delivery-copies,
+.settings-delivery-details,
+.settings-delivery-log-list,
+.stock-reset-step,
+.stock-reset-choices,
+.stock-reset-list {
+  --prefs-fg: var(--astral-ink);
+  --prefs-fg-dim: var(--astral-ink-muted);
+  --prefs-fs-s: var(--astral-text-small);
+  --prefs-edge: var(--astral-line);
+  --prefs-warn: var(--astral-warning);
+  --prefs-ok: var(--astral-positive);
+}
+
+.settings-game {
+  min-inline-size: 0;
+  gap: 18px;
+  display: grid;
+}
+
+/* ===== Копии игры ===== */
+
+.settings-copy-badge {
+  color: var(--prefs-fg-dim);
+  background-color: var(--astral-surface-raised);
+  border: solid 1px var(--prefs-edge);
+  border-radius: var(--astral-radius);
+  inline-size: 40px;
+  block-size: 40px;
+  align-items: center;
+  justify-items: center;
+  display: grid;
+}
+
+.settings-copy-badge img,
+.settings-copy-badge svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.settings-copy-badge img {
+  opacity: 0.7;
+  filter: brightness(0) invert(1);
+}
+
+/* Не сжимаются в строке: значок, точка статуса и иконка строки восстановления */
+.settings-restore-line > svg,
+.settings-copy-status i,
+.settings-copy-badge {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.settings-shell .settings-copy-path {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.settings-copy-status {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  white-space: nowrap;
+  gap: 7px;
+  align-items: center;
+  display: inline-flex;
+}
+
+.settings-copy-status i {
+  background-color: var(--prefs-warn);
+  border-radius: 999px;
+  inline-size: 6px;
+  block-size: 6px;
+}
+
+.settings-copy-status.is-ready i,
+.settings-copy[data-state="ready"] .settings-copy-status i {
+  background-color: var(--prefs-ok);
+}
+
+.settings-copy-main {
+  font-weight: 500;
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg);
+  border-radius: 999px;
+  border: solid 1px var(--astral-line-strong);
+  padding-block: 3px;
+  padding-inline: 10px;
+}
+
+/* Цвет подписи по тону: в настройках и в шагах сброса */
+[data-tone="attention"].stock-reset-step,
+.settings-shell small[data-tone="attention"] {
+  color: var(--prefs-warn);
+}
+
+[data-tone="positive"].stock-reset-step,
+.settings-shell small[data-tone="positive"] {
+  color: var(--prefs-ok);
+}
+
+.game-location-spinner {
+  animation-name: game-location-spin;
+  animation-duration: 900ms;
+  animation-timing-function: linear;
+  animation-delay: 0s;
+  animation-iteration-count: infinite;
+}
+
+.settings-restore-line {
+  gap: 6px;
+  align-items: flex-start;
+  display: inline-flex;
+}
+
+.settings-restore-line > svg {
+  inline-size: 13px;
+  block-size: 13px;
+  margin-block-start: 0.2em;
+}
+
+@keyframes game-location-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Опасная зона ===== */
+
+.settings-shell .settings-danger .settings-group-title {
+  color: var(--astral-danger);
+}
+
+.settings-shell .settings-danger .settings-card {
+  border-color: rgba(var(--astral-danger-rgb), 0.32);
+}
+
+.settings-shell .settings-danger .is-armed.settings-row,
+.settings-shell .settings-delivery-copies .is-armed.settings-row {
+  background: var(--astral-danger-soft);
+}
+
+.settings-shell .settings-danger .is-armed.settings-row {
+  border-radius: inherit;
+}
+
+/* ===== Способы доставки ===== */
+
+.settings-delivery-methods {
+  padding-block: 4px 12px;
+  padding-inline: 16px;
+}
+
+.settings-delivery-methods .ui-choice-grid {
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0px, 1fr));
+}
+
+.settings-delivery-methods .ui-choice-media svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.settings-delivery-methods .ui-choice-copy > em {
+  font-style: normal;
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+}
+
+.settings-delivery-mode,
+.settings-delivery-other,
+.settings-delivery-copies,
+.settings-delivery-details {
+  border-block-start: 1px solid var(--prefs-edge);
+}
+
+.settings-delivery-other > summary {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  cursor: pointer;
+  padding-block: 12px;
+  padding-inline: 16px;
+}
+
+/* ===== Вкладка «Rockstar Games» (14.11.2026) ===== */
+
+.settings-rockstar {
+  min-inline-size: 0;
+  gap: 22px;
+  display: grid;
+}
+
+/* Два способа вместо четырёх плиток — на всю ширину карточки. */
+.settings-rockstar-methods .ui-choice-grid {
+  grid-template-columns: repeat(2, minmax(0px, 1fr));
+}
+
+/* Раскрытое по умолчанию «Как это работает»: фразы читаются, а не шепчут. */
+.settings-card > .settings-delivery-other:first-child {
+  border-block-start: 0;
+}
+
+.settings-rockstar-how-list {
+  font-size: var(--prefs-fs-s);
+  line-height: var(--astral-line-normal);
+  color: var(--prefs-fg);
+  list-style: decimal;
+  overflow-wrap: anywhere;
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 4px 12px;
+  padding-inline: 36px 16px;
+  gap: 8px;
+  display: grid;
+}
+
+.settings-rockstar-how-list li {
+  font-size: inherit;
+}
+
+.settings-rockstar-how-list b {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.settings-rockstar-image {
+  color: var(--prefs-fg-dim);
+}
+
+/* Журнал доставки */
+.settings-delivery-log-list {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+  list-style: none;
+  overflow-wrap: anywhere;
+  margin-block: 0;
+  margin-inline: 0;
+  max-block-size: 260px;
+  padding-block: 4px 8px;
+  padding-inline: 16px;
+  overflow-y: auto;
+  gap: 4px;
+  display: grid;
+}
+
+.settings-delivery-log-list li {
+  font-size: inherit;
+}
+
+.settings-delivery-log-list time {
+  font-variant-numeric: tabular-nums;
+  font-size: inherit;
+}
+
+.settings-delivery-log-list b {
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--prefs-fg);
+}
+
+/* ===== Сброс до стандартной игры ===== */
+
+.stock-reset-body {
+  min-inline-size: 0;
+  gap: 10px;
+  display: grid;
+}
+
+.stock-reset-step {
+  font-size: var(--prefs-fs-s);
+  line-height: var(--astral-line-normal);
+  color: var(--prefs-fg);
+  margin-block: 0;
+  margin-inline: 0;
+  gap: 3px;
+  display: grid;
+}
+
+.stock-reset-step small,
+.stock-reset-choices small,
+.stock-reset-list {
+  font-size: var(--prefs-fs-s);
+  color: var(--prefs-fg-dim);
+}
+
+.settings-restore-line.stock-reset-step {
+  display: inline-flex;
+}
+
+.stock-reset-choices {
+  min-inline-size: 0;
+  gap: 6px;
+  display: grid;
+}
+
+.stock-reset-list {
+  list-style: none;
+  margin-block: 0;
+  margin-inline: 0;
+  padding-block: 0;
+  padding-inline: 0;
+  gap: 3px;
+  display: grid;
+}
+
+.stock-reset-list li {
+  overflow-wrap: anywhere;
+}
+
+/* ===== Узкие окна ===== */
+
+@media (max-width: 760px) {
+  .settings-delivery-methods .ui-choice-grid {
+    grid-template-columns: repeat(2, minmax(0px, 1fr));
+  }
+}
+
+/* ===== Папка игры не выбрана («Пульт», 15.11.2026) ===== */
+
+/* Вердикт сверху раздела: красная рамка, значок, слова и одна кнопка. */
+.settings-shell .settings-notice {
+  padding-block: 18px;
+  padding-inline: 20px;
+  gap: 14px;
+  align-items: center;
+  display: flex;
+  border-radius: var(--astral-radius-lg);
+  border: 1px solid var(--astral-line-strong);
+  background: var(--astral-surface-raised);
+}
+
+.settings-shell .settings-notice.is-bad {
+  border-color: rgba(217, 123, 117, 0.42);
+  background: rgba(217, 123, 117, 0.07);
+}
+
+.settings-notice-icon {
+  flex: none;
+  display: grid;
+  color: var(--astral-danger);
+}
+
+.settings-notice-icon svg {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.settings-notice-copy {
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  display: grid;
+}
+
+.settings-notice-copy b {
+  font-weight: 600;
+  font-size: var(--astral-text-strong);
+}
+
+.settings-notice-copy small {
+  font-size: var(--astral-text-body);
+  color: #d4d4d8;
+}
+
+/* «Найденные копии» без копий: значок, слова по центру. */
+.settings-empty {
+  padding-block: 30px;
+  padding-inline: 20px;
+  justify-items: center;
+  text-align: center;
+  display: grid;
+}
+
+.settings-empty-icon {
+  inline-size: 48px;
+  block-size: 48px;
+  margin-block-end: 12px;
+  place-items: center;
+  display: grid;
+  color: #d4d4d8;
+  border-radius: var(--astral-radius-lg);
+  background: var(--astral-surface-hover);
+}
+
+.settings-empty-icon svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.settings-empty b {
+  font-weight: 600;
+  font-size: var(--astral-text-strong);
+}
+
+.settings-empty small {
+  margin-block-start: 5px;
+  font-size: var(--astral-text-body);
+  color: var(--astral-ink-muted);
+}
+
+.settings-empty + .settings-row {
+  border-block-start: 1px solid var(--astral-line);
+}
+
+/* «Что нужно для модов» без игры: карточка притушена, значений нет. */
+.settings-shell .settings-group.is-idle > .settings-card {
+  opacity: 0.5;
+}
+
+.settings-idle-dash {
+  color: var(--astral-ink-muted);
+}
+
+/* «Вернуть моды»: пропали после проверки файлов — строка подсвечена янтарём (владелец, 16.11.2026). */
+.settings-row.is-alert {
+  position: relative;
+  background: color-mix(in srgb, var(--astral-warning) 9%, transparent);
+  box-shadow: inset 3px 0 0 var(--astral-warning);
+}
+
+.settings-card:has(.settings-row.is-alert) {
+  border-color: color-mix(in srgb, var(--astral-warning) 42%, transparent);
+}
+
+.settings-row-alert-glyph {
+  display: inline-flex;
+  width: 1.05em;
+  height: 1.05em;
+  margin-inline-end: 8px;
+  color: var(--astral-warning);
+  vertical-align: -0.15em;
+}

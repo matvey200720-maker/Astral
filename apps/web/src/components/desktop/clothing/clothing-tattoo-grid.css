@@ -1,0 +1,48 @@
+/*
+ * Тату игры (`ClothingTattooPicker.jsx`): подпись части тела в сетке — как полка магазина у вещей. Сама плитка — `.wear-tile.is-tattoo` в `wear-studio.css`.
+ */
+
+/* Часть тела: подпись на всю строку сетки. */
+.clothing-tattoo-zone {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 6px 2px 2px;
+  border-bottom: 1px solid var(--astral-line);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+}
+
+.clothing-tattoo-zone small {
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* «Показать ещё» группы блэкворка: на всю строку сетки, под основными плитками. */
+.clothing-tattoo-more {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 4px;
+}
+
+/* Предупреждение у нижней кнопки окна: второй строкой статуса, со знаком, без красного. */
+.clothing-target-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--astral-ink);
+  font-weight: 600;
+}
+
+.clothing-target-warning svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--astral-ink-muted);
+}

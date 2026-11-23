@@ -1,0 +1,328 @@
+/* Final workshop surface layer.
+   This file intentionally owns only workshop-specific theme tokens and
+   shared states. Layout stays in workshop-library.css and toolbar behavior
+   stays in workshop-toolbar.css. */
+.desktop-app .catalog-v3[data-workshop-section] {
+  --workshop-card-bg: var(--astral-surface-strong);
+  --workshop-card-bg-hover: var(--astral-surface-strong);
+  --workshop-card-border: var(--astral-line);
+  --workshop-card-border-hover: var(--astral-line-strong);
+  --workshop-media-bg:
+    radial-gradient(
+      circle at 55% 38%,
+      rgba(105, 105, 105, 0.11),
+      transparent 52%
+    ),
+    linear-gradient(145deg, rgba(27, 27, 27, 0.82), rgba(11, 11, 11, 0.92));
+  --workshop-title: #f3f6fb;
+  --workshop-copy: rgba(218, 218, 218, 0.58);
+  --workshop-muted: rgba(192, 192, 192, 0.45);
+  --workshop-panel: rgba(14, 14, 14, 0.76);
+  --workshop-panel-solid: #0f0f0f;
+  --workshop-divider: rgba(173, 173, 173, 0.12);
+  --workshop-shadow: none;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button,
+    .weapon-slot-grid > .weapon-slot-card
+  ) {
+  border-color: var(--workshop-card-border) !important;
+  background: var(--workshop-card-bg) !important;
+  box-shadow: var(--workshop-shadow) !important;
+  /* `scale` — нажатие (product-v5.css): список здесь важный и перебивает
+     общий список кнопок, и без него карточка сжималась бы рывком. */
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    scale 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease !important;
+}
+
+/* Внутрь нажатие идёт быстро, наружу — пружиной из списка выше. */
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button,
+    .weapon-slot-grid > .weapon-slot-card
+  ):active {
+  transition-duration: 220ms, 100ms, 220ms, 220ms, 220ms !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button,
+    .weapon-slot-grid > .weapon-slot-card
+  ):hover {
+  border-color: var(--workshop-card-border-hover) !important;
+  background: var(--workshop-card-bg-hover) !important;
+  box-shadow:
+    var(--workshop-shadow),
+    0 0 0 1px var(--workshop-card-border-hover) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button,
+    .weapon-slot-grid > .weapon-slot-card
+  )
+  :is(h3, b) {
+  color: #fff !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button,
+    .weapon-slot-grid > .weapon-slot-card
+  )
+  :is(p, span:not(.workshop-remove-selector)) {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  :is(
+    .redux-visual-grid > .redux-visual-card,
+    .catalog-v3-landing-grid > button,
+    .weapon-slot-grid > .weapon-slot-card
+  )
+  > :is(.workshop-empty-mark, .redux-visual-image, img) {
+  background-color: transparent;
+  background-image: var(--workshop-media-bg);
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-empty-mark {
+  color: var(--workshop-muted) !important;
+}
+
+/* Detail pages sit directly on the application scene. Only the media itself
+   and the selectable cards keep local surfaces for contrast. */
+.desktop-app .catalog-v3[data-workshop-section].workshop-local-catalog-active,
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-local-catalog.workshop-library-catalog,
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  :is(.workshop-local-hero, .workshop-local-hero-media, .workshop-local-grid) {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+.desktop-app .catalog-v3[data-workshop-section].workshop-local-catalog-active {
+  overflow: visible !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero {
+  position: relative !important;
+  top: auto !important;
+  height: clamp(520px, calc(100vh - 180px), 680px) !important;
+  min-height: 520px !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(390px, 1fr) auto !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  :is(.workshop-local-hero-media, .workshop-local-hero-header) {
+  grid-column: 1 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-header {
+  border-color: var(--workshop-divider) !important;
+  background: transparent !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: end !important;
+  gap: 24px !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-copy {
+  width: min(100%, 820px) !important;
+  max-width: none !important;
+  justify-self: start;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-actions {
+  width: auto !important;
+  max-width: 100%;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  justify-self: end;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-local-downloads {
+  color: var(--workshop-copy) !important;
+}
+
+.desktop-app .catalog-v3[data-workshop-section] .workshop-local-like {
+  color: var(--workshop-title);
+  border-color: var(--workshop-card-border);
+  background: var(--workshop-card-bg);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .weapon-slot-copy
+  h3 {
+  color: #f7f9fc !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .weapon-slot-card
+  .weapon-slot-copy
+  span {
+  color: rgba(230, 230, 230, 0.72) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-copy
+  :is(h1) {
+  color: var(--workshop-title) !important;
+  font-size: clamp(34px, 3.7vw, 58px) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-hero-copy
+  :is(small, p) {
+  color: var(--workshop-copy) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button {
+  border: 1px solid var(--workshop-card-border) !important;
+  background: var(--workshop-card-bg) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button:hover,
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-grid
+  > button.is-selected {
+  border-color: var(--workshop-card-border-hover) !important;
+  background: var(--workshop-card-bg-hover) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-card-media
+  > .workshop-local-card-copy {
+  visibility: visible !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section]
+  .workshop-library-catalog
+  .workshop-local-card-copy
+  b {
+  color: #f5f7fb !important;
+}
+
+@media (max-width: 920px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    :is(
+      .redux-visual-grid > .redux-visual-card,
+      .catalog-v3-landing-grid > button,
+      .weapon-slot-grid > .weapon-slot-card
+    ) {
+    box-shadow: 0 12px 28px rgba(19, 19, 19, 0.12) !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-hero-header {
+    gap: 16px !important;
+    padding-inline: 18px !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-hero-actions {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 720px) {
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-hero-header {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-hero-actions {
+    width: 100% !important;
+    justify-self: stretch;
+  }
+
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    .workshop-library-catalog
+    .workshop-local-install {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app
+    .catalog-v3[data-workshop-section]
+    :is(
+      .redux-visual-grid > .redux-visual-card,
+      .catalog-v3-landing-grid > button,
+      .weapon-slot-grid > .weapon-slot-card
+    ) {
+    transition: none !important;
+  }
+}

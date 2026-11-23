@@ -1,0 +1,61 @@
+.restore-point-dialog {
+  width: min(440px, 100%);
+  padding: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--astral-radius-xl);
+  background: #1a1a1a;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+}
+
+.restore-point-dialog > span {
+  color: #a4a4a4;
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.restore-point-dialog h3 {
+  margin: 7px 0 7px;
+  font-size: 20px;
+}
+
+.restore-point-dialog p {
+  margin: 0;
+  color: rgba(225, 229, 238, 0.52);
+  font-size: var(--astral-text-micro);
+  line-height: 1.55;
+}
+
+.restore-point-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.restore-point-dialog footer button {
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--astral-radius);
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.restore-point-dialog footer button.confirm {
+  border-color: transparent;
+  background: #737373;
+}
+
+.restore-point-dialog footer button svg {
+  width: 13px;
+  height: 13px;
+}

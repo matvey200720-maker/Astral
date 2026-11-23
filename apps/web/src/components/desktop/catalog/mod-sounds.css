@@ -1,0 +1,346 @@
+/* Звуки мода: полный список с волной и компактные «таблетки» под обложкой.
+   Корень вложенности — .desktop-app. Внутри .mod-sound два локальных псевдонима
+   для цветов, которые повторяются в строке, значке и подчёркивании. */
+
+.desktop-app {
+  --sounds-text: var(--astral-ink);
+  --sounds-text-dim: var(--astral-ink-muted);
+  --sounds-edge: var(--astral-line);
+  --sounds-fill-raised: var(--astral-surface-raised);
+  --sounds-scrim: var(--astral-scrim);
+  --sounds-size-small: var(--astral-text-small);
+  --sounds-size-micro: var(--astral-text-micro);
+  --sounds-quick: var(--astral-duration-fast);
+  --sounds-curve: var(--astral-ease);
+
+  /* ---------- блок «Звуки» на странице мода ---------- */
+  & .mod-detail-sounds {
+    scroll-margin-top: 24px;
+    margin-top: 34px;
+    max-width: 760px;
+
+    &:focus {
+      outline: none;
+    }
+
+    & h2 {
+      letter-spacing: -.02em;
+      font-weight: 750;
+      font-size: var(--astral-text-section);
+      font-family: var(--astral-font);
+      color: var(--sounds-text);
+      margin-inline: 0;
+      margin-block: 0 12px;
+    }
+
+    & > small {
+      font-size: var(--sounds-size-micro);
+      color: var(--sounds-text-dim);
+      margin-inline: 0;
+      margin-block: 10px 0;
+      display: block;
+    }
+  }
+
+  /* ---------- список звуков ---------- */
+  & .mod-sounds {
+    list-style: none;
+    background: var(--astral-surface);
+    border-radius: var(--astral-radius-lg);
+    border-color: var(--sounds-edge);
+    border-style: solid;
+    border-width: 1px;
+    margin: 0;
+    padding: 4px;
+    gap: 2px;
+    display: grid;
+
+    /* компактная лента: без подложки, обрезается маской справа */
+    &.is-compact {
+      overflow: hidden;
+      background: none;
+      border-radius: 0;
+      border: 0;
+      padding: 0;
+      min-width: 0;
+      gap: 6px;
+      flex-basis: auto;
+      flex-shrink: 1;
+      flex-grow: 0;
+      display: flex;
+
+      &[data-overflow] {
+        mask-image: linear-gradient(90deg, #000000 calc(100% - 48px), transparent);
+      }
+
+      & li {
+        flex: none;
+      }
+    }
+  }
+
+  /* ---------- строка со звуком ---------- */
+  & .mod-sound {
+    --sound-edge: var(--astral-line-strong);
+    --sound-accent: var(--astral-accent);
+    --sound-control: var(--astral-control-h-sm);
+
+    color: var(--sounds-text);
+    border-radius: var(--astral-radius);
+    border: 0;
+    padding-right: 16px;
+    padding-left: 11px;
+    padding-block: 0;
+    min-height: 56px;
+    width: 100%;
+    gap: 14px;
+    justify-content: flex-start;
+
+    &:has(.ui-button-label small) {
+      padding-block: 0;
+      min-height: 56px;
+    }
+
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+
+    &:not(:disabled):hover[aria-pressed=true],
+    &[aria-pressed=true] {
+      background: var(--sounds-fill-raised);
+      box-shadow: inset 0 0 0 1px var(--sound-edge);
+    }
+
+    & .ui-button-icon {
+      transition-delay: 0s, 0s, 0s;
+      transition-timing-function: var(--sounds-curve), var(--sounds-curve), var(--sounds-curve);
+      transition-duration: var(--sounds-quick), var(--sounds-quick), var(--sounds-quick);
+      transition-property: background, border-color, color;
+      background: var(--sounds-fill-raised);
+      color: var(--sounds-text);
+      border-radius: 50%;
+      border-color: var(--sound-edge);
+      border-style: solid;
+      border-width: 1px;
+      height: var(--sound-control);
+      width: var(--sound-control);
+
+      & svg {
+        height: 14px;
+        width: 14px;
+      }
+    }
+
+    &[aria-pressed=true] .ui-button-icon,
+    &:not(:disabled):hover .ui-button-icon {
+      background: var(--sound-accent);
+      color: var(--astral-accent-ink);
+      border-color: var(--sound-accent);
+    }
+
+    & .ui-button-label {
+      text-align: left;
+      gap: 3px;
+      flex-basis: 36%;
+      flex-shrink: 0;
+      flex-grow: 0;
+
+      & > span {
+        white-space: nowrap;
+        letter-spacing: -.01em;
+        font-weight: 600;
+        font-size: var(--astral-text-strong);
+      }
+
+      & small {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: var(--sounds-size-small);
+        color: var(--sounds-text-dim);
+      }
+    }
+
+    & .ui-button-trailing {
+      min-width: 0;
+      gap: 18px;
+      align-items: center;
+      flex-basis: auto;
+      flex-shrink: 1;
+      flex-grow: 1;
+      display: flex;
+    }
+
+    &:hover {
+      & .mod-sound-wave {
+        & svg {
+          fill: var(--sounds-text-dim);
+        }
+      }
+    }
+
+    & .mod-sound-wave {
+      & .mod-sound-wave-played {
+        clip-path: inset(0 100% 0 0);
+        fill: var(--sounds-text);
+      }
+    }
+
+    &[aria-pressed=true] {
+      & .mod-sound-wave {
+        & .mod-sound-wave-played {
+          clip-path: inset(0 calc(100% - var(--mod-sound-progress, 0) * 100%) 0 0);
+        }
+      }
+    }
+
+    /* компактная «таблетка»; вариант с :has нужен, чтобы перебить :has выше */
+    &:has(.ui-button-label small).is-compact,
+    &.is-compact {
+      text-shadow: none;
+      background: var(--sounds-scrim);
+      border-radius: 999px;
+      border-color: var(--sounds-edge);
+      border-style: solid;
+      border-width: 1px;
+      padding-right: 13px;
+      padding-left: 4px;
+      padding-block: 0;
+      min-height: var(--sound-control);
+      max-width: 250px;
+      width: auto;
+      gap: 8px;
+    }
+
+    &:not(:disabled):hover[aria-pressed=true].is-compact,
+    &[aria-pressed=true].is-compact,
+    &:not(:disabled):hover.is-compact {
+      background: var(--sounds-scrim);
+      box-shadow: none;
+      border-color: var(--sound-edge);
+    }
+
+    &.is-compact {
+      & .ui-button-icon {
+        height: 24px;
+        width: 24px;
+
+        & svg {
+          height: 11px;
+          width: 11px;
+        }
+      }
+
+      & .ui-button-label {
+        gap: 6px;
+        align-items: baseline;
+        flex-basis: auto;
+        flex-shrink: 1;
+        flex-grow: 0;
+        display: flex;
+
+        & > span {
+          font-size: var(--sounds-size-small);
+        }
+
+        & small {
+          font-size: var(--sounds-size-micro);
+        }
+      }
+
+      & .ui-button-trailing {
+        flex: none;
+      }
+
+      & .mod-sound-length {
+        font-size: var(--sounds-size-micro);
+        min-width: 0;
+
+        &:empty {
+          display: none;
+        }
+      }
+
+      /* полоска прогресса под таблеткой */
+      &::after {
+        transform-origin: left;
+        transform: scaleX(0);
+        background: var(--sound-accent);
+        height: 2px;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        position: absolute;
+        content: "";
+      }
+
+      &[aria-pressed=true]::after {
+        transform: scaleX(var(--mod-sound-progress, 0));
+      }
+    }
+  }
+
+  & .mod-sound-wave {
+    height: 24px;
+    min-width: 0;
+    flex-basis: auto;
+    flex-shrink: 1;
+    flex-grow: 1;
+    display: grid;
+
+    & svg {
+      transition-delay: 0s;
+      transition-timing-function: var(--sounds-curve);
+      transition-duration: var(--sounds-quick);
+      transition-property: fill;
+      fill: var(--astral-ink-faint);
+      height: 100%;
+      width: 100%;
+      grid-area: 1 / 1;
+    }
+
+    &[data-empty] {
+      & svg {
+        opacity: .5;
+      }
+    }
+  }
+
+  & .mod-sound-length {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: var(--sounds-size-small);
+    color: var(--sounds-text-dim);
+    min-width: 6ch;
+  }
+
+  /* ---------- звуки в подписи к витрине редукса ---------- */
+  & .redux-product-stage-caption {
+    & .redux-product-sounds {
+      margin-inline: 0;
+      margin-block: 12px 0;
+      gap: 6px;
+      display: grid;
+
+      & > small {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: var(--sounds-size-micro);
+        color: var(--sounds-text-dim);
+      }
+    }
+
+    & .redux-product-sounds-row {
+      min-width: 0;
+      gap: 6px;
+      align-items: center;
+      display: flex;
+    }
+
+    & .redux-product-sounds-all {
+      margin-right: 0;
+      flex: none;
+    }
+  }
+}

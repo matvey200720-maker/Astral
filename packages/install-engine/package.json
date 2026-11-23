@@ -1,0 +1,13 @@
+{
+  "name": "@modovik/install-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@modovik/tracer-contract": "*",
+    "@modovik/native-rs": "*",
+    "saxes": "^6.0.0",
+    "@modovik/rpf-inspector": "*"
+  }
+}

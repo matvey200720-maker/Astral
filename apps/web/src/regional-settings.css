@@ -1,0 +1,29 @@
+/* Фоновое свечение окна в режиме «поток»: закреплённый слой за интерфейсом, медленно сдвигается и растёт. */
+
+@keyframes ambient-flow {
+  to {
+    transform: translate3d(2%, -2%, 0px) scale(1.04);
+  }
+}
+
+[data-ambient="flow"].desktop-app::before {
+  content: "";
+  /* два пятна света: верхнее левое и нижнее правое */
+  --ambient-glow-upper: rgba(134, 134, 134, .07);
+  --ambient-glow-lower: rgba(160, 160, 160, .045);
+  pointer-events: none;
+  position: fixed;
+  top: 38px;
+  right: 0px;
+  bottom: 0px;
+  left: 82px;
+  z-index: -1;
+  background-image:
+    radial-gradient(circle at 18% 15%, var(--ambient-glow-upper), transparent 28%),
+    radial-gradient(circle at 78% 73%, var(--ambient-glow-lower), transparent 30%);
+  animation-name: ambient-flow;
+  animation-duration: 16s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}

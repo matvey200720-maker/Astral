@@ -1,0 +1,141 @@
+/*
+ * Раздел «Инструменты».
+ *
+ * Список файлов, а не карточки: у набора шесть позиций, и человек читает его
+ * сверху вниз одним взглядом — «что есть, чего нет». Размер стоит отдельной
+ * колонкой, потому что единственный вопрос к незнакомому файлу на пятьдесят
+ * мегабайт — сколько ждать.
+ *
+ * Цвета берутся у раздела хранилища: это соседние вкладки одних настроек, и
+ * своя палитра здесь означала бы, что они из разных приложений.
+ */
+
+.settings-tools {
+  display: grid;
+  gap: 14px;
+  --tools-line: rgba(226, 232, 242, 0.09);
+  --tools-muted: rgba(195, 195, 195, 0.7);
+  --tools-ready: rgba(126, 200, 148, 0.9);
+  --tools-attention: #d9ab63;
+}
+
+.settings-tools-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.settings-tools-head h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: rgba(240, 244, 250, 0.94);
+}
+.settings-tools-head p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tools-muted);
+}
+
+.settings-tools-state,
+.settings-tools-notice {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--tools-line);
+  border-radius: var(--astral-radius);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tools-muted);
+}
+.settings-tools-state svg,
+.settings-tools-notice svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--tools-attention);
+}
+.settings-tools-state.is-ready svg {
+  color: var(--tools-ready);
+}
+
+.settings-tools-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--tools-line);
+  border-radius: var(--astral-radius);
+  overflow: hidden;
+}
+.settings-tools-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+/* Линия принадлежит строке, а не промежутку между строками. Раньше её рисовал
+   фон списка сквозь `gap: 1px` — и на месте строки, которая ещё не проявилась,
+   светился этот фон: он ярче самой строки. Строка приезжает вместе со своей
+   линией, и за ней не остаётся ничего. */
+.settings-tools-list li + li {
+  border-top: 1px solid var(--tools-line);
+}
+.settings-tools-list b {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(240, 244, 250, 0.92);
+}
+.settings-tools-list small {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+  color: var(--tools-muted);
+}
+.settings-tools-size {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--tools-muted);
+}
+/* Состояние — слово, а не точка: «не сходится» и «нет» — разные беды, и
+   кружком их не различить. */
+.settings-tools-list em {
+  min-width: 9ch;
+  text-align: right;
+  font-style: normal;
+  font-size: var(--astral-text-small);
+  color: var(--tools-attention);
+}
+.settings-tools-list li.is-ready em {
+  color: var(--tools-ready);
+}
+
+.settings-tools-path {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px dashed var(--tools-line);
+  border-radius: var(--astral-radius);
+}
+.settings-tools-path code {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  color: var(--tools-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-tools-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--astral-danger);
+}

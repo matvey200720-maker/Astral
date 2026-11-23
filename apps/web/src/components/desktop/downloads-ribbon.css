@@ -1,0 +1,1423 @@
+/*
+ * «Загрузки» — «Лента» (v2-A, владелец 15.11.2026). Макет: `.local/design-1511/r6/settings-downloads/downloads-v2-a*.html`,
+ * числа и цвета — из его `v2.css`. Лист ленивый: едет вместе со страницей (`DownloadsPanel.jsx`) по `import()` и внесён в список
+ * `lazyStyleSheets` в `scripts/verify-web-architecture.js`; в стартовом `main.css` его нет.
+ *
+ * Страница лежит поверх рабочей области справа от рельса. Входит и уходит `transform` и `opacity`; полосы этапов — `scaleX`,
+ * бег по идущему этапу — `translateX`. Длительность ухода знает оболочка (`DOWNLOADS_CLOSE_MS` в `DesktopShell.jsx`) —
+ * она обязана совпадать с `dl-page-out`. Выключатель движения (`motion-switch.css`) и пауза в фоне (`attention-pause.css`)
+ * гасят те же анимации, что и здесь.
+ *
+ * Числа макета, которых нет в шкале, прижаты к ближайшей ступени (14 → 15, 13.5 → 13, 12.5 и 11.5 → 12, 18 → 16 px, 38 → 34 px);
+ * мимо шкалы остались только крупные цифры героя — 52 и 68 px (`--dl-fs-hero`, `--dl-fs-pc`).
+ */
+
+@layer overrides {
+  .dl-page {
+    --dl-ink: var(--astral-ink);
+    --dl-muted: var(--astral-ink-muted);
+    --dl-faint: var(--astral-ink-faint);
+    --dl-s1: var(--astral-surface);
+    --dl-s2: var(--astral-surface-raised);
+    --dl-s3: var(--astral-surface-hover);
+    --dl-s4: rgba(255, 255, 255, 0.1);
+    --dl-line: var(--astral-line);
+    --dl-line2: var(--astral-line-strong);
+    --dl-line3: rgba(255, 255, 255, 0.26);
+    --dl-bad: var(--astral-danger);
+    --dl-warn: var(--astral-warning);
+    --dl-fs-hero: 52px;
+    --dl-fs-pc: 68px;
+    --dl-fs-quiet: 36px;
+    --dl-left: 72px;
+
+    position: fixed;
+    z-index: 74;
+    inset: 40px 0 0 var(--dl-left);
+    overflow: hidden;
+    background: #000;
+    color: var(--dl-ink);
+    font-family: var(--astral-font);
+    -webkit-font-smoothing: antialiased;
+
+    & *,
+    & *::before,
+    & *::after {
+      box-sizing: border-box;
+    }
+
+    & h1,
+    & h2,
+    & h3,
+    & p {
+      margin: 0;
+    }
+
+    &.is-open {
+      animation: dl-page-in 220ms var(--astral-ease) backwards;
+    }
+
+    &.is-closing {
+      pointer-events: none;
+      animation: dl-page-out 160ms var(--astral-ease) forwards;
+    }
+  }
+
+  @keyframes dl-page-in {
+    from {
+      opacity: 0;
+      transform: translate3d(-24px, 0, 0);
+    }
+
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes dl-page-out {
+    from {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+
+    to {
+      opacity: 0;
+      transform: translate3d(-24px, 0, 0);
+    }
+  }
+
+  .dl-page .dl-sheet {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 26px 32px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+    outline: 0;
+  }
+
+  /* ---------- шапка ---------- */
+
+  .dl-page .dl-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 26px;
+    height: 48px;
+  }
+
+  .dl-page .dl-head h1 {
+    color: #fff;
+    font-family: var(--astral-font-display);
+    font-size: var(--astral-text-display);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .dl-page .dl-tabs {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+  }
+
+  .dl-page .dl-tabs span {
+    padding-bottom: 4px;
+    color: var(--dl-faint);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .dl-page .dl-tabs span.is-on {
+    border-bottom: 2px solid #fff;
+    color: #fff;
+  }
+
+  .dl-page .dl-head-r {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-inline-start: auto;
+  }
+
+  .dl-page .dl-toggle-wrap {
+    position: relative;
+  }
+
+  .dl-page .dl-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #d4d4d8;
+    font-family: inherit;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+
+    & > svg {
+      flex: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+  }
+
+  .dl-page .dl-sw {
+    position: relative;
+    flex: none;
+    width: 42px;
+    height: 24px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.16);
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #d4d4d8;
+      transition: transform var(--astral-duration-fast) var(--astral-ease);
+    }
+  }
+
+  .dl-page .dl-toggle.is-on .dl-sw {
+    background: #fff;
+
+    &::after {
+      background: #000;
+      transform: translate3d(18px, 0, 0);
+    }
+  }
+
+  /* Пояснение к выключателю: по наведению и фокусу, после выключения «Ускоренной загрузки» — несколько секунд само. */
+  .dl-page .dl-tip {
+    position: absolute;
+    z-index: 6;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 360px;
+    max-width: 60vw;
+    padding: 10px 12px;
+    border: 1px solid var(--dl-line2);
+    border-radius: var(--astral-radius);
+    background: #0f0f10;
+    box-shadow: var(--astral-shadow-float);
+    color: var(--dl-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(0, -4px, 0);
+    transition:
+      opacity var(--astral-duration-fast) var(--astral-ease),
+      transform var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .dl-page .dl-toggle-wrap:hover .dl-tip,
+  .dl-page .dl-toggle-wrap:focus-within .dl-tip,
+  .dl-page .dl-toggle-wrap.is-shown .dl-tip {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---------- герой ---------- */
+
+  .dl-page .dl-hero {
+    position: relative;
+    isolation: isolate;
+    flex: 0 1 320px;
+    min-height: 272px;
+    margin-top: 18px;
+    overflow: hidden;
+    border: 1px solid var(--dl-line2);
+    border-radius: var(--astral-radius-xl);
+    background: #080809;
+
+    &.is-bare {
+      background:
+        radial-gradient(
+          120% 140% at 86% 18%,
+          rgba(255, 255, 255, 0.07),
+          transparent 58%
+        ),
+        #080809;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 0.93) 0%,
+          rgba(0, 0, 0, 0.62) 52%,
+          rgba(0, 0, 0, 0.14) 100%
+        ),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, transparent 62%);
+      pointer-events: none;
+    }
+
+    /* Отказу нужно место: карточка со словами и кнопками растёт вместе с текстом, герой тянется за ней, а страница прокручивается. */
+    &.is-fail {
+      flex: 0 0 auto;
+      min-height: 320px;
+    }
+
+    &.is-fail .dl-hero-in {
+      position: relative;
+      inset: auto;
+      min-height: 318px;
+      overflow: visible;
+    }
+
+    &.is-wait .dl-hero-bg,
+    &.is-done .dl-hero-bg,
+    &.is-empty .dl-hero-bg {
+      opacity: 0.55;
+    }
+
+    /* Итог и пустая страница: слов немного, прокручивать нечего — всё, что есть, лежит внутри баннера, ничего не торчит за край. */
+    &.is-done .dl-hero-in,
+    &.is-empty .dl-hero-in {
+      overflow: hidden;
+    }
+  }
+
+  .dl-page .dl-hero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+
+  .dl-page .dl-hero-in {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 28px 24px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .dl-page .dl-hero-top {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+  }
+
+  .dl-page .dl-hero-cancel {
+    margin-inline-start: auto;
+  }
+
+  .dl-page .dl-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.62);
+    color: #fff;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    white-space: nowrap;
+
+    & > i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    &.is-solid {
+      border-color: #fff;
+      background: #fff;
+      color: #000;
+
+      & > i {
+        background: #000;
+      }
+    }
+
+    &.is-bad {
+      border-color: rgba(217, 123, 117, 0.55);
+      color: #f2bdb9;
+
+      & > i {
+        background: var(--dl-bad);
+      }
+    }
+
+    &.is-soft {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .dl-page .dl-hero-title {
+    flex: none;
+    max-width: min(820px, 100%);
+    margin: 14px 0 6px;
+    overflow: hidden;
+    color: #fff;
+    font-family: var(--astral-font-display);
+    font-size: var(--dl-fs-hero);
+    font-weight: 400;
+    line-height: 54px;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dl-page .dl-hero-sub {
+    flex: none;
+    color: #d9d9dd;
+    font-size: var(--astral-text-strong);
+  }
+
+  .dl-page .dl-hero-note {
+    flex: none;
+    margin-top: 6px;
+    color: #d4d4d8;
+    font-size: var(--astral-text-body);
+  }
+
+  .dl-page .dl-hero-word {
+    flex: none;
+    margin-top: 6px;
+    color: #d4d4d8;
+    font-size: var(--astral-text-small);
+  }
+
+  /* «Нет движения N с» — янтарная строка под процентом и словом шага (раньше жила в правом блоке). */
+  .dl-page .dl-hero-warn {
+    flex: none;
+    margin-top: 6px;
+    color: var(--dl-warn);
+    font-size: var(--astral-text-body);
+  }
+
+  .dl-page .dl-hero-bottom {
+    display: flex;
+    flex: none;
+    align-items: flex-end;
+    gap: 40px;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  /* ---------- этапы ---------- */
+
+  .dl-page .dl-stages {
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .dl-page .dl-stage {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .dl-page .dl-bar {
+    position: relative;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.18);
+
+    & > b {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 100%;
+      border-radius: 3px;
+      background: #fff;
+      transform: scaleX(var(--v, 0));
+      transform-origin: 0 50%;
+      transition: transform var(--astral-duration-slow) linear;
+    }
+
+    & > b.is-after {
+      inset-inline-start: var(--l);
+      width: calc(100% - var(--l));
+    }
+
+    & > b.dl-bar-pre {
+      border-radius: 0;
+      background: repeating-linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.74) 0 5px,
+        rgba(255, 255, 255, 0.28) 5px 10px
+      );
+      transform: none;
+      transition: none;
+    }
+  }
+
+  .dl-page .dl-stage.is-active .dl-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 34%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.7),
+      transparent
+    );
+    animation: dl-sweep 1.7s linear infinite;
+  }
+
+  @keyframes dl-sweep {
+    from {
+      transform: translate3d(-110%, 0, 0);
+    }
+
+    to {
+      transform: translate3d(320%, 0, 0);
+    }
+  }
+
+  .dl-page .dl-stage-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 9px;
+    color: #9a9aa1;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+
+    /* Подпись этапа переносится на вторую строку, а не обрезается на полуслове («Делаем точку возвр…»). */
+    & > span:nth-child(2) {
+      min-width: 0;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .dl-page .dl-stage-icon {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid #66666c;
+    border-radius: 50%;
+  }
+
+  .dl-page .dl-stage-sub {
+    margin-top: 3px;
+    padding-inline-start: 25px;
+    overflow: hidden;
+    color: #a9a9b0;
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dl-page .dl-stage.is-done {
+    & .dl-stage-label {
+      color: #e8e8ea;
+    }
+
+    & .dl-stage-icon {
+      border-color: #fff;
+      background: #fff;
+      color: #000;
+    }
+  }
+
+  .dl-page .dl-stage.is-active {
+    & .dl-stage-label {
+      color: #fff;
+    }
+
+    & .dl-stage-icon {
+      border-color: #fff;
+    }
+
+    & .dl-stage-icon > i {
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+    }
+  }
+
+  .dl-page .dl-stage.is-bad {
+    & .dl-bar {
+      background: rgba(217, 123, 117, 0.85);
+    }
+
+    & .dl-stage-label {
+      color: #f0b9b5;
+    }
+
+    & .dl-stage-icon {
+      border-color: var(--dl-bad);
+      background: var(--dl-bad);
+      color: #000;
+    }
+  }
+
+  .dl-page .dl-stage.is-skip .dl-stage-label {
+    color: #66666c;
+  }
+
+  /* ---------- процент под названием ---------- */
+
+  /* Один процент на любой вид установки (владелец 18.11.2026): строка под названием героя, без второй подписи и без текста справа. */
+  .dl-page .dl-hero-pc {
+    flex: none;
+    margin-top: 2px;
+    color: #fff;
+    font-size: var(--astral-text-page);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+  }
+
+  .dl-page .dl-hero-pc > span {
+    margin-left: 12px;
+    color: #d4d4d8;
+    font-size: var(--astral-text-body);
+    font-weight: 400;
+  }
+
+  /* И строка очереди: «0 %» с постановки, под названием, тем же тихим цветом, что подпись. */
+  .dl-page .dl-row-name > small.dl-row-pc {
+    color: #d4d4d8;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- отказ ---------- */
+
+  .dl-page .dl-fcard {
+    flex: none;
+    width: 470px;
+    max-width: 52%;
+    padding: 15px 17px;
+    border: 1px solid rgba(217, 123, 117, 0.46);
+    border-radius: var(--astral-radius-lg);
+    background: rgba(10, 10, 12, 0.9);
+  }
+
+  .dl-page .dl-fcard-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--astral-text-title);
+    font-weight: 700;
+
+    & > svg {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      color: var(--dl-bad);
+    }
+  }
+
+  .dl-page .dl-fcard p {
+    margin: 7px 0 12px;
+    color: #d4d4d8;
+    font-size: var(--astral-text-body);
+    line-height: 19px;
+  }
+
+  .dl-page .dl-fcard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+
+    & .failure-details {
+      margin: 0;
+      color: #c9c9ce;
+      font-size: var(--astral-text-small);
+      font-weight: 600;
+    }
+
+    & .failure-details summary {
+      min-height: 0;
+      padding: 0;
+    }
+
+    & .failure-details .ui-button,
+    & .failure-details .ui-button span {
+      min-height: 0;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba(255, 255, 255, 0.3);
+      text-underline-offset: 3px;
+    }
+
+    & .failure-details .ui-button {
+      margin: 0;
+    }
+  }
+
+  /* ---------- итог и пустая страница ---------- */
+
+  .dl-page .dl-hero-actions {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding-bottom: 6px;
+  }
+
+  .dl-page .dl-hero-last {
+    margin-inline-start: 10px;
+    overflow: hidden;
+    color: var(--dl-muted);
+    font-size: var(--astral-text-body);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dl-page .dl-hero-thumbs {
+    display: flex;
+    flex: none;
+    gap: 8px;
+    padding-bottom: 6px;
+
+    /* Кадры мода — в пропорции обложки (16:9), а высота зажата так, чтобы ряд помещался в баннер даже на его минимальной высоте: прежние квадраты 92 px при 272 px героя вылезали за нижний край (16.11.2026). */
+    & > span {
+      display: block;
+      aspect-ratio: 16 / 9;
+      height: clamp(52px, 8.5vh, 68px);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--astral-radius);
+    }
+
+    & img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .dl-page .dl-hero.is-empty .dl-hero-title {
+    margin-top: auto;
+  }
+
+  /* ---------- кнопки ---------- */
+
+  /* Кнопки — общий орган `Button`; здесь только размеры макета (34 и 52 px, 13 и 15 px) и подложка на обложке. */
+  .dl-page .ui-button {
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+
+    & svg {
+      flex: none;
+      width: 16px;
+      height: 16px;
+    }
+
+    &.is-lg {
+      min-block-size: 52px;
+      padding-inline: 26px;
+      border-radius: var(--astral-radius);
+      font-size: var(--astral-text-strong);
+    }
+
+    &.is-secondary {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    &.is-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+  }
+
+  /* Кнопка героя лежит на обложке: тёмная подложка, как у плашек, чтобы подпись читалась на любой картинке. */
+  .dl-page .ui-button.dl-hero-btn {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.62);
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    &.is-locked {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  .dl-page .ui-button.dl-link,
+  .dl-page .ui-button.dl-link span {
+    color: #c9c9ce;
+    font-size: var(--astral-text-small);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.3);
+    text-underline-offset: 3px;
+  }
+
+  .dl-page .ui-button.dl-link {
+    min-block-size: 28px;
+    margin-inline: 0;
+    padding-inline: 4px;
+
+    &:hover:not(:disabled),
+    &:hover:not(:disabled) span {
+      color: #fff;
+    }
+  }
+
+  /* ---------- два списка ---------- */
+
+  .dl-page .dl-grid {
+    display: grid;
+    flex: 1 1 0;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 14px;
+    min-height: 190px;
+    margin-top: 12px;
+  }
+
+  .dl-page .dl-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--dl-line);
+    border-radius: var(--astral-radius-lg);
+    background: var(--dl-s1);
+  }
+
+  /* Очередь по содержимому (17.11.2026, владелец против пустот внутри карточек): пока в ней есть строки, карточка кончается под последней, а библиотека справа остаётся во всю высоту. Не влезло — карточка упирается в высоту ряда и прокручивается, внизу затухание. Пустая очередь (`.dl-queue` без `is-fit`, в том числе когда ничего не качается) тянется во всю высоту с пустым состоянием по центру. */
+  .dl-page .dl-card.dl-queue.is-fit {
+    align-self: start;
+    max-height: 100%;
+
+    & > .dl-card-body {
+      flex: 0 1 auto;
+    }
+  }
+
+  .dl-page .dl-card-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 16px;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .dl-page .dl-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--dl-s4);
+    font-size: var(--astral-text-small);
+    font-style: normal;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dl-page .dl-card-aside {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-inline-start: auto;
+    color: var(--dl-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+  }
+
+  .dl-page .dl-card-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .dl-page .dl-card-fade {
+    position: absolute;
+    inset: auto 0 0;
+    height: 46px;
+    background: linear-gradient(0deg, #0a0a0b, rgba(10, 10, 11, 0));
+    pointer-events: none;
+  }
+
+  .dl-page .dl-card-note {
+    padding: 18px 16px;
+    color: var(--dl-muted);
+    font-size: var(--astral-text-body);
+  }
+
+  /* ---------- строки ---------- */
+
+  .dl-page .dl-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 12px;
+    min-height: 60px;
+    padding: 8px 14px 8px 12px;
+    border-top: 1px solid var(--dl-line);
+    transition: background-color var(--astral-duration-fast) var(--astral-ease);
+
+    &:hover {
+      background: var(--dl-s3);
+    }
+  }
+
+  .dl-page .dl-no {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-hover);
+    color: #d4d4d8;
+    font-size: var(--astral-text-small);
+    font-weight: 700;
+
+    &.is-bad {
+      background: rgba(217, 123, 117, 0.16);
+      color: #f0b9b5;
+    }
+
+    & > svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .dl-page .dl-check {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+
+    & > svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+
+  .dl-page .download-thumb {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 76px;
+    height: 44px;
+    min-height: 0;
+    aspect-ratio: auto;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background-color: #101012;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .dl-page .download-thumb-work {
+    display: grid;
+    place-items: center;
+  }
+
+  .dl-page .download-thumb-glyph {
+    display: grid;
+    place-items: center;
+    color: rgba(227, 227, 227, 0.5);
+    font-size: var(--astral-text-page);
+  }
+
+  .dl-page .download-thumb-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .dl-page .download-thumb > .workshop-cover {
+    width: 100%;
+    height: 100%;
+  }
+
+  .dl-page .dl-row-name {
+    flex: 1;
+    min-width: 0;
+
+    & > h3 {
+      overflow: hidden;
+      font-size: var(--astral-text-strong);
+      font-weight: 600;
+      line-height: 1.3;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & > small {
+      display: block;
+      margin-top: 1px;
+      overflow: hidden;
+      color: var(--dl-muted);
+      font-size: var(--astral-text-small);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    & > small.is-bad {
+      color: #f0b9b5;
+    }
+  }
+
+  .dl-page .dl-row-eta {
+    max-width: 44%;
+    overflow: hidden;
+    color: var(--dl-muted);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dl-page .dl-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .dl-page .dl-row .download-actions {
+    display: flex;
+    flex: none;
+    gap: 4px;
+
+    & > button:not(.ui-button) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--dl-muted);
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+      }
+
+      &[aria-disabled="true"] {
+        cursor: not-allowed;
+        opacity: 0.4;
+      }
+
+      & > svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--astral-line-focus);
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  .dl-page .dl-row-more {
+    flex: 1 1 100%;
+    min-width: 0;
+    padding: 4px 0 6px 34px;
+
+    & > p {
+      color: var(--dl-muted);
+      font-size: var(--astral-text-small);
+      line-height: 1.45;
+    }
+
+    & .failure-details {
+      margin-top: 4px;
+    }
+  }
+
+  /* ---------- пустая очередь, «После установки» ---------- */
+
+  .dl-page .dl-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 100%;
+    padding: 0 20px;
+    color: var(--dl-muted);
+    font-size: var(--astral-text-body);
+    text-align: center;
+
+    & > b {
+      color: #fff;
+      font-size: var(--astral-text-strong);
+      font-weight: 600;
+    }
+
+    & > .dl-btn {
+      margin-top: 10px;
+    }
+  }
+
+  .dl-page .dl-empty-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 6px;
+    border-radius: var(--astral-radius-lg);
+    background: var(--dl-s3);
+    color: #d4d4d8;
+
+    & > svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  /* ---------- спокойно без движения ---------- */
+
+  [data-motion="off"] .dl-page *,
+  [data-motion="off"] .dl-page *::before,
+  [data-motion="off"] .dl-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dl-page,
+    .dl-page *,
+    .dl-page *::before,
+    .dl-page *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Невысокое окно (минимум приложения — 1180×720): отступы и герой ужимаются, чтобы спискам досталось место, а «После установки» теряет пояснение. */
+  @media (max-height: 800px) {
+    .dl-page .dl-sheet {
+      padding-top: 16px;
+      padding-bottom: 16px;
+    }
+
+    .dl-page .dl-head {
+      height: 44px;
+    }
+
+    .dl-page .dl-hero {
+      flex-basis: 288px;
+      min-height: 264px;
+      margin-top: 14px;
+    }
+
+    .dl-page .dl-hero-in {
+      padding: 18px 24px 16px;
+    }
+
+    .dl-page .dl-hero-title {
+      margin: 8px 0 4px;
+    }
+
+    .dl-page .dl-grid {
+      margin-top: 10px;
+    }
+  }
+
+  /* Узкое окно: правая колонка и карточка отказа сжимаются, герой не растёт. */
+  @media (max-width: 1280px) {
+    .dl-page .dl-hero-bottom {
+      gap: 24px;
+    }
+
+    .dl-page .dl-fcard {
+      width: 420px;
+    }
+  }
+
+  /* ---------- очередь с ручкой и библиотека справа (макет v2, 16.11.2026) ---------- */
+
+  /* Строка очереди и строка библиотеки одной высоты: превью 16:9, название жирным, под ним «тип · размер». */
+  .dl-page .dl-row .download-thumb {
+    width: 80px;
+    height: 45px;
+  }
+
+  .dl-page .dl-row-name > h3 {
+    font-weight: 700;
+  }
+
+  .dl-page .dl-row {
+    min-height: 64px;
+    padding-block: 9px;
+  }
+
+  /* Ручка: шесть точек, фокусируется и двигается стрелками; рядом с ней миниатюра встаёт на своё место. */
+  .dl-page .dl-grip,
+  .dl-page .dl-grip-slot {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 30px;
+    margin-inline: -3px -9px;
+  }
+
+  .dl-page .dl-grip {
+    padding: 0;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: transparent;
+    color: var(--dl-faint);
+    cursor: grab;
+    touch-action: none;
+
+    &:hover,
+    &:focus-visible {
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--astral-line-focus);
+      outline-offset: 1px;
+    }
+  }
+
+  /* Строка в руке: приподнята, непрозрачна, едет за указателем; остальные строки уже расступились. */
+  .dl-page .dl-row.is-lifted {
+    position: relative;
+    z-index: 3;
+    border: 1px solid var(--dl-line3);
+    border-radius: 12px;
+    background: #161618;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.62);
+    transition: none;
+
+    & .dl-grip {
+      color: #fff;
+      cursor: grabbing;
+      background: rgba(255, 255, 255, 0.12);
+    }
+  }
+
+  .dl-page .dl-sortable {
+    position: relative;
+  }
+
+  /* Свой слой у строки под указателем заранее: подъём за ручку не собирает слой и тень на первом кадре (Electron 144 Гц, 17.11.2026: худший кадр подъёма 63 → 28 мс; тень на псевдоэлементе давала 55, will-change только на поднятой строке — 35). Слой не у каждой строки очереди навсегда, а у той, над которой указатель или фокус: сорок постоянных слоёв при быстрой прокрутке оставляют подписи без отрисовки (22.11.2026). */
+  .dl-page .dl-sortable .dl-row:is(:hover, :focus-within) {
+    will-change: transform;
+  }
+
+  /* Библиотека: превью — ужатая плитка карточки, закрытая от щелчков; правее название и карандаш с корзиной. */
+  .dl-page .dl-lib-thumb {
+    position: relative;
+    pointer-events: none;
+
+    & > * {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      margin: 0;
+    }
+
+    /* Подписи плитки в миниатюре не нужны: название и «тип» строки читаются из неё (`LibraryRows.jsx`). */
+    & .ui-media-card-copy,
+    & .ui-media-card-shade,
+    & .ui-shelf-card-go,
+    & :is(h2, h3, h4, p) {
+      display: none;
+    }
+  }
+
+  /* Подпись ряда библиотеки переносится по « · », а не режется многоточием в одну строку (до четырёх строк). */
+  .dl-page .dl-row-name > small.dl-lib-sub {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .dl-page .dl-lib-row[data-removing] {
+    opacity: 0.5;
+  }
+
+  /* Ганпак или сборка на «Загрузках» (22.11.2026): заголовок над строками, которые она поставила; строки под ним сдвинуты, чтобы читались его частями. */
+  .dl-page .dl-lib-group {
+    min-height: 48px;
+    padding-block: 6px;
+    background: var(--dl-s3);
+  }
+
+  .dl-page .dl-lib-row[data-grouped] {
+    padding-inline-start: 28px;
+  }
+
+  .dl-page .dl-lib-actions {
+    gap: 2px;
+
+    & > .dl-action-slot {
+      width: 30px;
+      height: 30px;
+    }
+
+    & > button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--dl-muted);
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.07);
+        color: #fff;
+      }
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.4;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--astral-line-focus);
+        outline-offset: 1px;
+      }
+
+      & > svg {
+        width: 15px;
+        height: 15px;
+      }
+    }
+
+    & > .dl-pencil {
+      color: var(--dl-ink);
+    }
+  }
+
+  .dl-page .dl-lib-empty {
+    min-height: 220px;
+  }
+
+  /* Итог и пустая страница тоньше: колонкам нужна высота (макет v2). */
+  .dl-page .dl-hero.is-empty,
+  .dl-page .dl-hero.is-done {
+    flex: none;
+    min-height: 0;
+    height: 140px;
+
+    & .dl-hero-in {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "top actions"
+        "title actions"
+        "sub actions";
+      align-content: center;
+      align-items: center;
+      column-gap: 28px;
+      padding: 0 28px;
+      overflow: hidden;
+    }
+
+    & .dl-hero-top {
+      grid-area: top;
+    }
+
+    & .dl-hero-title {
+      grid-area: title;
+      margin: 8px 0 3px;
+      font-size: var(--dl-fs-quiet);
+      line-height: 1.1;
+    }
+
+    & .dl-hero-sub {
+      grid-area: sub;
+    }
+
+    & .dl-hero-bottom {
+      grid-area: actions;
+      margin: 0;
+      padding: 0;
+    }
+
+    & .dl-hero-actions {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 0;
+    }
+
+    & .dl-hero-last {
+      margin: 0;
+    }
+  }
+}

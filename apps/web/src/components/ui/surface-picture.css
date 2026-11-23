@@ -1,0 +1,211 @@
+.ui-surface-picture-cue > span {
+  text-overflow: ellipsis;
+}
+
+.ui-surface-picture-image.is-contain {
+  object-fit: contain;
+}
+
+.ui-surface-picture[data-file-drop]::after,
+.ui-surface-picture-tile,
+.ui-surface-picture-text,
+.ui-surface-picture,
+.ui-editor-inspector[data-file-drop]::after {
+  display: grid;
+}
+
+/* ---- Покой: общие приметы частей ---- */
+.ui-surface-picture-tile,
+.ui-surface-picture-face,
+.ui-surface-picture,
+.ui-editor-inspector[data-file-drop] {
+  position: relative;
+}
+
+/* Плитка-кнопка: рамка с картинкой, поверх неё плашка-подсказка */
+.ui-surface-picture-tile {
+  background: var(--astral-surface-raised);
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius);
+  color: var(--astral-ink-muted);
+  cursor: pointer;
+  inline-size: 100%;
+  margin-inline: 0;
+  margin-block: 0;
+  padding-inline: 0;
+  padding-block: 0;
+  transition:
+    border-color var(--ux-sfp-fade),
+    background var(--ux-sfp-fade);
+  &:disabled {
+    cursor: default;
+  }
+  &:hover:not(:disabled) {
+    border-color: var(--astral-line-strong);
+  }
+  /* ---- Наведение, фокус, занято ---- */
+  &:focus-visible {
+    outline: var(--ux-sfp-ring);
+    outline-offset: 2px;
+  }
+}
+
+.ui-surface-picture {
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Цвет, градиент или слова вместо картинки */
+.ui-surface-picture-text {
+  font-size: var(--astral-text-body);
+  font-weight: 600;
+  inset: 0;
+  line-height: var(--astral-line-tight);
+  overflow-wrap: anywhere;
+  padding: 0 8px;
+}
+
+.ui-surface-picture-face {
+  border-radius: var(--astral-radius-sm);
+  display: block;
+  max-height: 100%;
+  max-width: 100%;
+}
+
+/* Картинка: общий размер на рамку, способ подгонки — по варианту */
+.ui-surface-picture-image {
+  display: block;
+  height: 100%;
+  width: 100%;
+  /* Кадрирование: размер и сдвиг приходят из style, рамка обрезает лишнее */
+  &.is-crop {
+    max-height: none;
+    max-width: none;
+  }
+  &.is-cover {
+    object-fit: cover;
+  }
+  &.is-stretch {
+    object-fit: fill;
+  }
+}
+
+.ui-surface-picture[data-file-drop]::after,
+.ui-surface-picture-text,
+.ui-surface-picture-image.is-crop,
+.ui-surface-picture-cue,
+.ui-editor-inspector[data-file-drop]::after,
+.ui-button.ui-surface-picture-clear {
+  position: absolute;
+}
+
+.ui-surface-picture-cue > .astral-glyph {
+  flex: none;
+  height: 18px;
+  width: 18px;
+}
+
+.ui-surface-picture-tile,
+.ui-surface-picture-text,
+.ui-surface-picture-face,
+.ui-surface-picture-cue > span,
+.ui-surface-picture-caption {
+  overflow: hidden;
+}
+
+/* Своя картинка поверхности в колонке редактора и рамка брошенного файла.
+Локальные --ux-sfp-* лежат на корне картинки, на подписи (в SurfaceFit она стоит вне картинки)
+и на колонке инспектора, пока над ней держат файл. */
+.ui-surface-picture-caption,
+.ui-surface-picture,
+.ui-editor-inspector[data-file-drop] {
+  --ux-sfp-fade: var(--astral-duration-snap) var(--astral-ease);
+  --ux-sfp-ring: 2px solid var(--astral-line-focus);
+}
+
+.ui-surface-picture[data-file-drop]::after,
+.ui-surface-picture-tile,
+.ui-surface-picture-text,
+.ui-editor-inspector[data-file-drop]::after {
+  justify-items: center;
+}
+
+/* Плашка «Заменить»: у листа игры видна всегда, у своей картинки только на наведении, фокусе и при чтении файла */
+.ui-surface-picture-cue {
+  background: var(--astral-surface-strong);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  display: inline-flex;
+  font-size: var(--astral-text-small);
+  font-weight: 600;
+  gap: 8px;
+  inset: auto 8px 8px auto;
+  max-width: calc(100% - 24px);
+  opacity: 0;
+  padding: 6px 10px;
+  pointer-events: none;
+  transition: opacity var(--ux-sfp-fade);
+  white-space: nowrap;
+}
+
+/* «×» в правом верхнем углу рамки; размеры физические: ширину и мин-ширину перекрывает лист кнопок */
+.ui-button.ui-surface-picture-clear {
+  background: var(--astral-surface-strong);
+  color: var(--astral-ink);
+  height: var(--astral-control-h-xs);
+  min-height: var(--astral-control-h-xs);
+  min-width: var(--astral-control-h-xs);
+  padding: 0;
+  top: 8px;
+  right: 8px;
+  width: var(--astral-control-h-xs);
+  z-index: 1;
+}
+
+.ui-surface-picture-caption {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-surface-picture-cue.is-current,
+.ui-surface-picture-tile:is(:hover, :focus-visible) .ui-surface-picture-cue,
+.ui-surface-picture-tile[aria-busy="true"] .ui-surface-picture-cue {
+  opacity: 1;
+}
+
+.ui-surface-picture[data-file-drop]::after,
+.ui-surface-picture-tile,
+.ui-surface-picture-text,
+.ui-surface-picture-cue,
+.ui-editor-inspector[data-file-drop]::after {
+  align-items: center;
+}
+
+.ui-surface-picture[data-file-drop]::after,
+.ui-surface-picture-text,
+.ui-editor-inspector[data-file-drop]::after {
+  text-align: center;
+}
+
+.ui-surface-picture-tile:hover:not(:disabled),
+.ui-button.ui-surface-picture-clear:hover:not(:disabled) {
+  background: var(--astral-surface-hover);
+}
+
+/* ---- Рамка брошенного файла: на колонке инспектора или на самой картинке ---- */
+.ui-editor-inspector[data-file-drop]::after,
+.ui-surface-picture[data-file-drop]::after {
+  background: color-mix(in srgb, var(--astral-surface-strong) 94%, transparent);
+  border: 2px dashed var(--astral-ink-muted);
+  border-radius: var(--astral-radius);
+  color: var(--astral-ink);
+  content: attr(data-file-drop-label);
+  font-size: var(--astral-text-body);
+  font-weight: 500;
+  inset: 8px;
+  padding: 24px;
+  pointer-events: none;
+  z-index: 5;
+}

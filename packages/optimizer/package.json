@@ -1,0 +1,32 @@
+{
+  "name": "@modovik/optimizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./bundle-domain.js": "./bundle-domain.js",
+    "./cards.js": "./cards.js",
+    "./compile.js": "./compile.js",
+    "./draw-distance.js": "./draw-distance.js",
+    "./graphics.js": "./graphics.js",
+    "./layer-ids.js": "./layer-ids.js",
+    "./layer-patches.js": "./layer-patches.js",
+    "./layers.js": "./layers.js",
+    "./mouse.js": "./mouse.js",
+    "./package.json": "./package.json",
+    "./procedural.js": "./procedural.js",
+    "./pso.js": "./pso.js",
+    "./recommend-preset.js": "./recommend-preset.js",
+    "./reshade.js": "./reshade.js",
+    "./reshade-emulation.js": "./reshade-emulation.js",
+    "./texture-levels.js": "./texture-levels.js",
+    "./texture-stages.js": "./texture-stages.js",
+    "./texture-style-ids.js": "./texture-style-ids.js",
+    "./texture-styles.js": "./texture-styles.js"
+  },
+  "dependencies": {
+    "saxes": "^6.0.0"
+  }
+}

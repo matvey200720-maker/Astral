@@ -1,0 +1,52 @@
+/*
+ * Кадр мини-карты (`RadarFrame.jsx`) — общий для «Большой карты» и «Групповых меток». Правила переехали сюда из
+ * `world-map-customizer.css` (17.10 — кадр «Большой карты на мини-карте», 19.10 — зоны и надписи на нём), чтобы второй
+ * редактор не тянул за кадром весь лист карты. Слой тот же, `overrides`: лист приходит после `main.css`.
+ */
+@layer overrides {
+  /* Рамка радара 191×136 с куском карты и точкой игрока посередине. */
+  .wmc-radar-preview {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+  }
+  .wmc-radar-screen {
+    position: relative;
+    overflow: hidden;
+    width: min(100%, 240px);
+    aspect-ratio: 191 / 136;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface);
+  }
+  /* Кадр «Большой карты на мини-карте» с картинкой: она растянута на рамку и не ловит мышь. */
+  .wmc-radar-screen > img {
+    position: absolute;
+    max-width: none;
+    object-fit: fill;
+    pointer-events: none;
+    user-select: none;
+  }
+  /* Кадр мини-карты с зонами (задача 28): канва во весь кадр, точка игрока — поверх. */
+  .wmc-radar-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .wmc-radar-places {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wmc-radar-player {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--astral-ink);
+    border-radius: 50%;
+    background: var(--astral-accent);
+    transform: translate(-50%, -50%);
+  }
+}

@@ -1,0 +1,12 @@
+/* Плитки частей оптимизации, взятые из мода, выделяются акцентом: рамка у плитки, цвет у её картинки. */
+@layer overrides {
+  .desktop-app {
+    & .optimization-parts-grid > .optimization-part-tile.is-from-mod {
+      border-color: var(--astral-accent);
+    }
+
+    & .optimization-part-tile.is-from-mod > .ui-pick-media {
+      color: var(--astral-accent);
+    }
+  }
+}

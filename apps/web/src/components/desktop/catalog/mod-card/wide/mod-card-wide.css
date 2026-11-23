@@ -1,0 +1,462 @@
+/*
+ * Строки и панель «Состав» страницы мода (WideCard.jsx, 21.11.2026; до этого — правая панель карточки «Пульт», чистовой набор 2, 15.11.2026). Здесь остались правила, которые нужны
+ * строкам компонентов (ганпак, редукс, пак звуков) внутри панели справа, суткам таймцикла внутри предпросмотра и строкам статуса под шапкой. Раскладка страницы — `card-gallery.css`.
+ * Правила — целиком в слое `overrides`. Цвета, углы, кегли и длительности — токены.
+ */
+
+@layer overrides {
+  /* Сутки таймцикла: время крупно, слово момента, шкала 00–24 с ручкой поверх ролика (`WideDay.jsx`); органы самого проигрывателя остаются под ней. */
+
+  .desktop-app .xw-player .xw-day {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 64px;
+    z-index: 2;
+    display: grid;
+    gap: 10px;
+    padding: 0 24px;
+    pointer-events: none;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+  }
+
+  .desktop-app .xw-player .xw-day-clock {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+  }
+
+  .desktop-app .xw-player .xw-day-clock b {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .desktop-app .xw-player .xw-day-clock small {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .desktop-app .xw-player .xw-day-bar {
+    display: grid;
+    gap: 5px;
+  }
+
+  .desktop-app .xw-player .xw-day-names,
+  .desktop-app .xw-player .xw-day-marks {
+    position: relative;
+    display: block;
+    height: 14px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    text-shadow: none;
+  }
+
+  .desktop-app .xw-player .xw-day-names > span,
+  .desktop-app .xw-player .xw-day-marks > span {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: calc(var(--xw-at) * 100%);
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .desktop-app .xw-player .xw-day-names > span:first-child,
+  .desktop-app .xw-player .xw-day-marks > span:first-child {
+    transform: none;
+  }
+
+  .desktop-app .xw-player .xw-day-marks > span:last-child {
+    transform: translateX(-100%);
+  }
+
+  .desktop-app .xw-player .xw-day-track {
+    position: relative;
+    display: block;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      #0b1020 0%,
+      #3a3f6b 20%,
+      #e0a878 30%,
+      #8fb4e0 44%,
+      #bcd7f5 60%,
+      #e8a46a 76%,
+      #7a4a7a 88%,
+      #0b1020 100%
+    );
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+
+  .desktop-app .xw-player .xw-day-handle {
+    position: absolute;
+    inset-block-start: -8px;
+    inset-inline-start: calc(var(--xw-at) * 100%);
+    width: 26px;
+    height: 26px;
+    margin-inline-start: -13px;
+    border: 4px solid #000;
+    border-radius: 999px;
+    background: var(--astral-ink);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.4),
+      0 4px 14px rgba(0, 0, 0, 0.6);
+  }
+
+  .desktop-app .xw-drawer .xw-components.is-loading {
+    padding: 0;
+  }
+
+  .desktop-app .xw-drawer .xw-components-skeleton {
+    flex: 1 1 auto;
+    min-height: 96px;
+    border-radius: var(--astral-radius-lg);
+  }
+
+  .desktop-app .xw-drawer .xw-tool-failure {
+    color: var(--astral-danger);
+    font-size: var(--astral-text-small);
+  }
+
+  /* Список листается внутри панели; затухания маской или плашкой у края нет: маска заставляла Chromium растрировать весь список отдельным слоем при каждой прокрутке (мусор поверх карточки, 14.11.2026). Колесо у края списка отдаёт странице (владелец, 16.11.2026): `contain` его глотал. */
+  .desktop-app .xw-drawer .xw-rows {
+    flex: 1 1 0;
+    min-height: 0;
+    margin: 0;
+    padding: 4px 22px 12px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .desktop-app .xw-drawer .xw-rows::-webkit-scrollbar {
+    display: none;
+  }
+
+  .desktop-app .xw-drawer .xw-rows > li {
+    flex: none;
+  }
+
+  /* Строка панели «Состав» (макет владельца 21.11.2026): флажок, картинка 64×36, название с видом под ним, справа кнопка «Изменить»; строка ≈ 52 px. Выбранная и с раскрытым
+     «Изменить» — ярче; выключенная — пунктиром. */
+  .desktop-app .xw-drawer .xw-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 52px;
+    padding: 8px 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+
+  .desktop-app .xw-drawer .xw-row.is-selected,
+  .desktop-app .xw-drawer .xw-row:has(.xw-comp-tray) {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .xw-drawer .xw-row.is-off {
+    border-style: dashed;
+    border-color: var(--astral-line-strong);
+    background: transparent;
+  }
+
+  .desktop-app .xw-drawer .xw-row.is-off .xw-row-art {
+    opacity: 0.45;
+  }
+
+  .desktop-app .xw-drawer .xw-row.is-off .xw-row-name b {
+    color: var(--astral-ink-muted);
+  }
+
+  .desktop-app .xw-drawer .xw-comp-check {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+  }
+
+  .desktop-app .xw-drawer .xw-comp-check.is-fixed {
+    color: var(--astral-ink-faint);
+  }
+
+  /* Картинка строки — прямоугольник с малым углом, не овал и не плашка (владелец, 22.11.2026: «Не надо закруглять их»). Вырезанный ствол — на прозрачном фоне, как он стоит;
+     у части без картинки — тот же прямоугольник со значком внутри. */
+  .desktop-app .xw-drawer .xw-row-art {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 64px;
+    height: 36px;
+    overflow: hidden;
+    border-radius: var(--astral-radius-xs);
+    background: var(--astral-surface-strong);
+    color: var(--astral-ink-muted);
+  }
+
+  /* Картинка лежит поверх значка-заглушки и невидима, пока не загрузилась (`.is-shown` ставит `RowArt`). */
+  .desktop-app .xw-drawer .xw-row-art > img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    object-fit: cover;
+    opacity: 0;
+  }
+
+  .desktop-app .xw-drawer .xw-row-art.is-shown > img {
+    opacity: 1;
+  }
+
+  .desktop-app .xw-drawer .xw-row-art.is-contain {
+    background: transparent;
+  }
+
+  /* Обложки стволов пака — непрозрачные PNG с тёмным фоном (альфа везде 255): «модель без фона» из них делает смешивание с подложкой строки — тёмный фон гаснет, остаётся сам ствол (22.11.2026). */
+  .desktop-app .xw-drawer .xw-row-art.is-contain > img {
+    object-fit: contain;
+    mix-blend-mode: lighten;
+  }
+
+  .desktop-app .xw-drawer .xw-row-art > svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .desktop-app .xw-drawer .xw-row-name {
+    display: grid;
+    flex: 1 1 0;
+    gap: 1px;
+    align-content: center;
+    min-width: 0;
+    text-align: start;
+  }
+
+  .desktop-app .xw-drawer button.xw-row-name {
+    align-self: stretch;
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .desktop-app .xw-drawer button.xw-row-name:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .desktop-app .xw-drawer .xw-row-name b {
+    overflow: hidden;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Название без второй строки (ствол, звук): в две строки с переносом по словам, обрезка только на третьей (ведущая, 22.11.2026: «Тяжёлая снайперская в…» и её МК2 были неразличимы).
+     Две строки по 12 px помещаются в строку панели 52 px — высота не растёт; флажок и кнопка стоят по центру. У названия с видом под ним — одна строка, как прежде. */
+  .desktop-app .xw-drawer .xw-row-name:not(:has(small)) b {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .desktop-app .xw-drawer .xw-row-name small {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Слова «Выключено, останется как в игре» в строку не лезут — идут в две, а не режутся многоточием. */
+  .desktop-app .xw-drawer .xw-row.is-off .xw-row-name small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .desktop-app .xw-drawer .xw-row-mark {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--astral-positive);
+  }
+
+  /* Кнопка в строке — «Изменить» (владелец, 22.11.2026), 34 px; раскрытая залита. */
+  .desktop-app .xw-drawer .xw-comp-btn {
+    flex: none;
+    min-width: 0;
+    height: var(--astral-control-h-sm);
+    min-height: var(--astral-control-h-sm);
+    padding: 0 14px;
+    border-radius: var(--astral-radius-sm);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  /* Под строкой — три пути на всю ширину: «Из каталога», «Из мастерской», «В редактор» (какого пути нет, того и кнопки нет). */
+  .desktop-app .xw-drawer .xw-comp-tray {
+    display: grid;
+    flex: 0 0 100%;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .desktop-app .xw-drawer .xw-comp-tray .ui-button {
+    min-width: 0;
+    padding-inline: 8px;
+    border-radius: var(--astral-radius-sm);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .desktop-app .xw-drawer .xw-comp-tray .xw-comp-restore {
+    grid-column: 1 / -1;
+    color: var(--astral-ink-muted);
+  }
+
+  .desktop-app .xw-drawer .xw-comp-failure {
+    grid-column: 1 / -1;
+    flex: 0 0 100%;
+    color: var(--astral-danger);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .xw-drawer .xw-row-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--astral-control-h-sm);
+    height: var(--astral-control-h-sm);
+    padding: 0;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 999px;
+    background: var(--astral-surface-raised);
+    color: var(--astral-ink);
+    cursor: pointer;
+  }
+
+  .desktop-app .xw-drawer .xw-row-play svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .desktop-app .xw-drawer .xw-row-play:hover,
+  .desktop-app .xw-drawer .xw-row-play.is-on {
+    border-color: var(--astral-line-focus);
+    background: var(--astral-surface-hover);
+  }
+
+  .desktop-app .xw-drawer .xw-row-play:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .xw-drawer .xw-components-note {
+    flex: none;
+    margin: 6px 20px 4px;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .desktop-app .mod-wide .mod-card-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .mod-wide .mod-card-status > i {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .desktop-app .mod-wide .mod-card-status.is-installed {
+    color: var(--astral-positive);
+  }
+
+  .desktop-app .mod-wide .mod-card-status.is-failed {
+    color: var(--astral-danger);
+  }
+
+  /* «Стоит в игре»: на какой вещи и на каком проекте мод уже стоит. */
+
+  .desktop-app .mod-wide .mod-card-placed {
+    display: grid;
+    gap: 10px;
+  }
+
+  .desktop-app .mod-wide .mod-card-placed-entry {
+    display: grid;
+    gap: 8px;
+  }
+
+  .desktop-app .mod-wide .mod-card-after {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .mod-wide .xw-note {
+    flex: none;
+    margin: 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .desktop-app .mod-wide .xw-note.is-failed {
+    color: var(--astral-danger);
+  }
+
+  /* «Статус · Сборка стоит целиком» над рядом действий. */
+
+  .desktop-app .mod-wide .xw-status {
+    display: flex;
+    flex: none;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .mod-wide .xw-status small {
+    color: var(--astral-ink-faint);
+    font-size: inherit;
+  }
+
+  .desktop-app .mod-wide .xw-status strong {
+    color: var(--astral-ink);
+    font-weight: 600;
+    text-align: end;
+  }
+}

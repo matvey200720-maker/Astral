@@ -1,0 +1,24 @@
+/*
+ * Панель цвета на виду (`ColourPanel.jsx`): та же палитра, что всплывает у поля цвета, но вложена в панель редактора — без своей
+ * плашки, тени, рамки и появления, во всю ширину колонки.
+ */
+@layer overrides {
+  .ui-colour-panel {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ui-color-picker.is-inline {
+    position: static;
+    z-index: auto;
+    width: auto;
+    max-height: none;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    animation: none;
+  }
+}

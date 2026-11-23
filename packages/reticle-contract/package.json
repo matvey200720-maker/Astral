@@ -1,0 +1,11 @@
+{
+  "name": "@modovik/reticle-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./index.js",
+    "./server-damage": "./server-damage.js"
+  }
+}

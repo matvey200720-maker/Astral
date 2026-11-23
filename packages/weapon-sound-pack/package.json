@@ -1,0 +1,19 @@
+{
+  "name": "@modovik/weapon-sound-pack",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./groups.js": "./groups.js",
+    "./package.json": "./package.json",
+    "./pack-weapon-links.js": "./pack-weapon-links.js"
+  },
+  "dependencies": {
+    "@modovik/awc": "*",
+    "@modovik/gfx": "*",
+    "@modovik/gunpack": "*",
+    "@modovik/sound-studio": "*"
+  }
+}

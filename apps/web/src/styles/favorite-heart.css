@@ -1,0 +1,125 @@
+/*
+ * Сердечко избранного (ТЗ 29.10.2026, п. c; знак — `components/ui/FavoriteHeart.jsx`).
+ *
+ * Раньше у кнопки «Избранное» в шапке каталога включённое состояние было белой плитой (общий `is-active` кнопки), а у карточки —
+ * «опасным» оттенком в такой же рамке: два сердца в двух стилях. Теперь одно: выключено — контур, включено — красное сердце
+ * (`--astral-heart`) на спокойной подложке и в рамке своего оттенка. Тот же вид — у кнопки в шапке, у сердца на карточке (сетка,
+ * полки страницы мода, страница автора) и в видах вкладки «Каталог» (строка вида Б, кнопка вида В, отметка в списке вида В).
+ *
+ * Щелчок — «биение» знака и заливка: знак сжимается и раздувается (только он сам, рамка и размер кнопки стоят), заливка
+ * проявляется за время отклика. Длительности — шкала продукта: при выключенных анимациях она ноль (`[data-motion="off"]`), и
+ * биения нет вовсе (`FavoriteHeart` класс не ставит).
+ */
+
+.ui-heart {
+  display: inline-grid;
+  place-items: center;
+  line-height: 0;
+  transform-origin: 50% 56%;
+}
+
+/* Заливка — свойством, а не сменой рисунка: так она проявляется, а не щёлкает. Контур — тот же знак набора, обводка не меняется. */
+.ui-heart > svg {
+  fill: rgba(var(--astral-heart-rgb), 0);
+  transition: fill var(--astral-duration) var(--astral-ease);
+  /* Рисунок лежит внутри своей клетки с запасом на обводку, обрезать нечего; а обрезка по границе знака — отдельный узел свойств отрисовки на
+     каждое сердце в окне каталога (сорок на экране). */
+  overflow: visible;
+}
+
+.ui-heart.is-on > svg {
+  fill: currentColor;
+}
+
+.ui-heart.is-beat {
+  animation: ui-heart-beat calc(var(--astral-duration-slow) * 2) var(--astral-ease);
+}
+
+@keyframes ui-heart-beat {
+  0% {
+    transform: scale(1);
+  }
+  26% {
+    transform: scale(0.78);
+  }
+  62% {
+    transform: scale(1.26);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Включено: красное сердце на спокойной подложке, рамка своего оттенка — без свечения и неона. ------------------------------- */
+
+/* Кнопка шапки и кнопки видов: общий `is-active` кнопки (белая плита) здесь не нужен. */
+.desktop-app .ui-button.catalog-favorites-toggle[aria-pressed="true"],
+.desktop-app .ui-button.cvc-like[aria-pressed="true"] {
+  border-color: rgba(var(--astral-heart-rgb), 0.46);
+  color: var(--astral-heart);
+  background: var(--astral-heart-soft);
+}
+
+.desktop-app .ui-button.catalog-favorites-toggle[aria-pressed="true"]:hover:not(:disabled),
+.desktop-app .ui-button.cvc-like[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: rgba(var(--astral-heart-rgb), 0.66);
+  color: var(--astral-heart);
+  background: rgba(var(--astral-heart-rgb), 0.2);
+}
+
+/* Вид Б: кнопка без рамки, в строке — только цвет и подложка. */
+.desktop-app .ui-button.cv-b-like[aria-pressed="true"] {
+  color: var(--astral-heart);
+  background: var(--astral-heart-soft);
+}
+
+.desktop-app .ui-button.cv-b-like[aria-pressed="true"]:hover:not(:disabled) {
+  color: var(--astral-heart);
+  background: rgba(var(--astral-heart-rgb), 0.2);
+}
+
+.desktop-app .ui-button.catalog-favorites-toggle,
+.desktop-app .ui-button.cvc-like,
+.desktop-app .ui-button.cv-b-like {
+  transition:
+    color var(--astral-duration) var(--astral-ease),
+    background-color var(--astral-duration) var(--astral-ease),
+    border-color var(--astral-duration) var(--astral-ease);
+}
+
+/* Сердце на карточке: подложка непрозрачная (под ней — чужой кадр), рамка и цвет те же, что у кнопки. */
+.ui-media-card-like.is-liked,
+.ui-media-card.is-store > .ui-media-card-like.is-liked {
+  border-color: rgba(var(--astral-heart-rgb), 0.5);
+  color: var(--astral-heart);
+  background: color-mix(in srgb, var(--astral-heart) 20%, rgb(13, 13, 13));
+}
+
+.ui-media-card-like.is-liked:hover {
+  border-color: rgba(var(--astral-heart-rgb), 0.72);
+  color: var(--astral-heart);
+}
+
+.ui-media-card-like,
+.ui-media-card.is-store > .ui-media-card-like {
+  transition:
+    opacity var(--astral-duration-fast) var(--astral-ease),
+    color var(--astral-duration) var(--astral-ease),
+    background-color var(--astral-duration) var(--astral-ease),
+    border-color var(--astral-duration) var(--astral-ease);
+}
+
+/* Отметка «в избранном» в списке вида В: тот же цвет, что у кнопки. */
+.desktop-app .cvc-row-mark.is-liked {
+  color: var(--astral-heart);
+}
+
+/*
+ * Нажатие на сердце — не нажатие на карточку (ТЗ 29.10.2026-e, скрин 77: карточка «проваливалась» под пальцем). Сердце лежит внутри кнопки-карточки,
+ * и браузер считает `:active` и у неё; общее сжатие кнопок (`product-v5.css`, `scale: 0.96`) тянуло карточку вниз. Пока зажато сердце, карточка стоит.
+ * Зажатое сердце отмечает карточку само (`data-like-press`, MediaCard.jsx), а не `:has(.ui-media-card-like:active)` — `:has()` на каждой карточке стоил 46 мкс
+ * на её въезд в окно при ×4 (30.10.2026, прокрутка каталога).
+ */
+.desktop-app .ui-media-card[data-like-press] {
+  scale: 1;
+}

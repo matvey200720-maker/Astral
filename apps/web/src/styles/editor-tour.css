@@ -1,0 +1,373 @@
+/* Обучающий тур редактора: затемнение с «окном», карточка шага, стрелка и подсказка у кнопки справки. */
+
+.ui-editor-help-hint {
+  transform: translateX(-50%);
+  background: var(--astral-surface-strong);
+  box-shadow: var(--astral-shadow);
+  white-space: nowrap;
+  border: var(--astral-line-strong) solid 1px;
+  pointer-events: none;
+  font-size: var(--astral-text-small);
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-ink);
+  animation: both var(--astral-ease) ui-help-hint 3200ms;
+  left: 50%;
+  padding: 6px 10px;
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 8px);
+}
+
+/* Кнопка справки в верхней панели редактора */
+.ui-editor-topbar {
+  & > .ui-editor-help {
+    flex: none;
+  }
+}
+
+.ui-tour-text {
+  line-height: var(--astral-line-normal);
+  font-size: var(--astral-text-body);
+  color: var(--astral-ink-muted);
+  margin: 0;
+}
+
+@keyframes ui-help-hint {
+
+  10%,
+  85% {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+
+  0% {
+    transform: translate(-50%, -4px);
+    opacity: 0;
+  }
+}
+
+.ui-editor-help-wrap {
+
+  font-size: var(--astral-text-small);
+  display: inline-flex;
+  position: relative;
+}
+
+.ui-tour-keys {
+  gap: 3px;
+  display: inline-flex;
+}
+
+@keyframes ui-help-catch {
+  to {
+    transform: scale(1);
+  }
+
+  0% {
+    transform: scale(1);
+  }
+
+  65% {
+    transform: scale(.92) rotate(4deg);
+  }
+
+  35% {
+    transform: scale(1.28) rotate(-8deg);
+  }
+}
+
+@keyframes ui-tour-crease {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Якорь: невидимый носитель, к которому двигается карточка */
+.ui-tour-anchor {
+  max-width: calc(100vw - 24px);
+  left: 0;
+  width: 304px;
+  top: 0;
+  will-change: transform;
+  position: fixed;
+}
+
+/* Кнопка «подмигивает», пока тур не пройден */
+.ui-editor-help.is-hinting {
+  color: var(--astral-ink);
+  animation: both var(--astral-ease) ui-help-catch 520ms;
+
+  &::after {
+    border: var(--astral-accent) solid 2px;
+    pointer-events: none;
+    border-radius: inherit;
+    animation: both 2 ease-out ui-help-ring 900ms;
+    inset: -2px;
+    content: "";
+    position: absolute;
+  }
+}
+.ui-tour {
+
+  pointer-events: none;
+  inset: 0;
+  z-index: 90;
+  position: fixed;
+}
+
+/* Слой тура поверх редактора, сам кликов не ловит.
+   Короткие имена цветов и времени раздаются всем частям тура; у каждой части запасное значение на случай,
+   если она окажется вне слоя. */
+
+@keyframes ui-tour-pulse {
+  to {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+
+  0% {
+    transform: scale(1);
+    opacity: .55;
+  }
+}
+
+/* Карточка шага */
+.ui-tour-card {
+
+  box-shadow: var(--astral-shadow);
+  background: var(--astral-surface-strong);
+  gap: 8px;
+  border: var(--astral-line-strong) solid 1px;
+  pointer-events: auto;
+  border-radius: var(--astral-radius-lg);
+  color: var(--astral-ink);
+  animation: both var(--astral-ease) ui-tour-card-in var(--astral-duration-slow);
+  display: grid;
+  padding: 16px;
+  position: relative;
+
+  /* Стрелка смотрит в сторону области; --ui-tour-nudge задаёт качание */
+  &[data-side=right] {
+    & > .ui-tour-arrow {
+      border-right-color: transparent;
+      border-top-color: transparent;
+      border-bottom-left-radius: var(--astral-radius-xs);
+      left: 0;
+      --ui-tour-nudge: -3px 0;
+      top: var(--ui-tour-arrow);
+    }
+  }
+
+  &[data-side=left] {
+    & > .ui-tour-arrow {
+      border-left-color: transparent;
+      border-top-right-radius: var(--astral-radius-xs);
+      border-bottom-color: transparent;
+      left: 100%;
+      --ui-tour-nudge: 3px 0;
+      top: var(--ui-tour-arrow);
+    }
+  }
+
+  &[data-side=bottom] {
+    & > .ui-tour-arrow {
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      border-top-left-radius: var(--astral-radius-xs);
+      left: var(--ui-tour-arrow);
+      --ui-tour-nudge: 0 -3px;
+      top: 0;
+    }
+  }
+
+  &[data-side=top] {
+    & > .ui-tour-arrow {
+      border-left-color: transparent;
+      border-top-color: transparent;
+      border-bottom-right-radius: var(--astral-radius-xs);
+      left: var(--ui-tour-arrow);
+      --ui-tour-nudge: 0 3px;
+      top: 100%;
+    }
+  }
+
+  /* Карточка прямо на подсвеченной области: стрелки нет, высота ограничена */
+  &[data-side=inside] {
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+
+    & > .ui-tour-arrow {
+      display: none;
+    }
+  }
+
+  /* «Смятие» карточки при закрытии тура */
+  &.is-crumpling {
+    overflow: hidden;
+    pointer-events: none;
+
+    &::after {
+      background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .14) 40%, transparent 44%), linear-gradient(35deg, transparent 52%, rgba(0, 0, 0, .28) 55%, transparent 59%), linear-gradient(160deg, transparent 22%, rgba(0, 0, 0, .22) 25%, transparent 29%), radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .16), transparent 55%), radial-gradient(circle at 70% 75%, rgba(0, 0, 0, .35), transparent 60%);
+      opacity: 0;
+      border-radius: inherit;
+      animation: forwards var(--astral-ease) ui-tour-crease var(--astral-duration-slow);
+      inset: 0;
+      content: "";
+      position: absolute;
+    }
+
+    & > * {
+      opacity: 0;
+      transition: var(--astral-ease) opacity var(--astral-duration-fast);
+    }
+  }
+}
+
+.ui-tour-buttons {
+  gap: 6px;
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+
+  & > .ui-button:not(:last-child):first-child {
+    margin-right: auto;
+  }
+}
+
+@keyframes ui-help-ring {
+  to {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+
+  0% {
+    transform: scale(1);
+    opacity: .9;
+  }
+}
+
+/* Список клавиш-подсказок */
+.ui-tour-controls {
+  gap: 4px;
+  list-style: none;
+  display: grid;
+  padding: 0;
+  margin: 0;
+
+  & > li {
+    gap: 8px;
+    align-items: center;
+    display: flex;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+  }
+}
+
+/* Стрелка-указатель: повёрнутый квадрат, качается вдоль --ui-tour-nudge */
+.ui-tour-arrow {
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--astral-surface-strong);
+  animation: infinite var(--astral-ease) ui-tour-nudge alternate 1100ms;
+  border: var(--astral-line-strong) solid 1px;
+  height: 12px;
+  position: absolute;
+  width: 12px;
+}
+
+/* Точки прогресса */
+.ui-tour-dots {
+  gap: 5px;
+  list-style: none;
+  display: flex;
+  padding: 0;
+  margin: 0;
+
+  & > li {
+    background: var(--astral-line-strong);
+    border-radius: 999px;
+    width: 6px;
+    height: 6px;
+
+    &[data-state=done] {
+      background: var(--astral-ink-muted);
+    }
+
+    &[data-state=current] {
+      transform: scale(1.35);
+      background: var(--astral-accent);
+    }
+  }
+}
+
+/* Подсвеченная область: рамка и огромная тень вокруг неё */
+.ui-tour-spot {
+  box-shadow: rgba(0, 0, 0, .5) 0 0 0 100vmax;
+  border: var(--astral-accent) solid 2px;
+  pointer-events: none;
+  border-radius: var(--astral-radius);
+  animation: both var(--astral-ease) ui-tour-spot-in var(--astral-duration-slow);
+  position: fixed;
+
+  /* Пульсирующее кольцо вокруг области */
+  &::after {
+    border: var(--astral-accent) solid 2px;
+    opacity: 0;
+    border-radius: inherit;
+    animation: 4 var(--astral-ease) ui-tour-pulse 1800ms 360ms;
+    inset: -2px;
+    content: "";
+    position: absolute;
+    will-change: transform, opacity;
+  }
+}
+
+.ui-tour-foot {
+  gap: 10px;
+  display: grid;
+  margin-top: 4px;
+}
+
+@keyframes ui-tour-card-in {
+  0% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+
+@keyframes ui-tour-nudge {
+  to {
+    translate: var(--ui-tour-nudge, 0 0);
+  }
+}
+
+/* Без анимации: кнопка справки и подсказка не двигаются */
+@media (prefers-reduced-motion: reduce) {
+  .ui-editor-help.is-hinting {
+    animation: none;
+
+    &::after {
+      animation: none;
+    }
+  }
+
+  .ui-editor-help-hint {
+    animation: none;
+  }
+}
+
+.ui-tour-title {
+  line-height: var(--astral-line-tight);
+  font-weight: 650;
+  font-size: var(--astral-text-strong);
+}
+
+@keyframes ui-tour-spot-in {
+  0% {
+    transform: scale(.985);
+    opacity: 0;
+  }
+}

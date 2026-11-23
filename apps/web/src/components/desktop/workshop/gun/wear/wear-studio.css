@@ -1,0 +1,563 @@
+/*
+ * Мастерская одежды (ТЗ 29.10.2026-d): органы кадра — масштаб, подпись «Сохранено», причёска и лицо. Плашки над кадром — того же
+ * вида, что органы показа справа (`.ui-stage-bar`); тёмная подложка без размытия: над живым холстом стекла нет (`docs/3D.md`,
+ * правило 9). Цвета, радиусы и кегли — из токенов.
+ */
+@layer overrides {
+  /*
+   * Причёска и лицо персонажа — левый нижний угол над подсказками управления, только когда персонаж на кадре.
+   * Два счётчика друг над другом, а не в ряд (17.11.2026): «весь рост» ставит фигуру по центру кадра и ступнями почти на нижнюю кромку, а ряд в 350–380 px
+   * на окнах 1280×720 и 1366×768 доходил до середины кадра и накрывал левую ступню. Колонка в ~190 px остаётся в пустом поле слева от фигуры на любом окне от
+   * 1180 px; стенд — `scripts/wear-hint/overlap.mjs` (панель против экранной рамки фигуры, три размера, шесть языков).
+   */
+  .wear-look {
+    position: absolute;
+    z-index: 5;
+    left: 12px;
+    bottom: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 4px 6px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(10, 10, 11, 0.72);
+  }
+  .wear-stepper {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .wear-stepper-text {
+    display: grid;
+    flex: 1;
+    min-width: 92px;
+    justify-items: center;
+    line-height: 1.2;
+  }
+  .wear-stepper-name {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+  .wear-stepper-value {
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* «Мужской | Женский» — левый верхний угол кадра с фигурой, всегда на виду (14.11.2026, слово владельца). Поверх живого холста, как остальные органы кадра. */
+  .wear-figure-gender {
+    position: absolute;
+    z-index: 5;
+    left: 12px;
+    top: 12px;
+    background: rgba(10, 10, 11, 0.72);
+  }
+
+  /* Масштаб — правый нижний угол: левый нижний у подсказок управления. */
+  .wear-zoom {
+    position: absolute;
+    z-index: 5;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(10, 10, 11, 0.72);
+  }
+  .wear-zoom-value {
+    min-width: 56px;
+    text-align: center;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * «Одеть»: колонка слева — слоты костюма (голова, торс, ноги, тело; `wear-rail.jsx`, 31.10.2026, слово владельца), раскладка студии обычная, как у оружия: колонка, кадр, панель справа.
+   * До 31.10 колонку в «одеть» убирали, а слот выбирали дугой круглых кнопок у края кадра — дуги больше нет.
+   */
+  /* Заголовок группы слотов и его пояснение — подпись колонки; у списка слота своя шапка («Обувь 15»), лишнего текста над ним нет. */
+  .ui-editor-shell.is-dress .ui-editor-panel-head {
+    display: none;
+  }
+
+  /* --- Панель слота справа --- */
+  .wear-slot {
+    gap: 10px;
+  }
+  .wear-slot-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wear-slot-head h2 {
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--astral-text-title);
+  }
+  .wear-slot-count {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .wear-slot-head .ui-button {
+    margin-left: auto;
+  }
+  /* Надето — без карточки и подложек (владелец, 30.10.2026): картинка, название с номером, справа от названия значки «Редактировать» и «Снять», ниже расцветки. */
+  .wear-worn {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .wear-worn-pic {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .wear-worn-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .wear-worn-body {
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .wear-worn-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .wear-worn-copy {
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  /* Название надетой вещи не обрезается (ТЗ 30.10.2026): длинное переносится, значки стоят справа и не сжимаются. */
+  .wear-worn-copy b {
+    overflow-wrap: anywhere;
+    font-size: var(--astral-text-body);
+  }
+  .wear-worn-copy small {
+    overflow-wrap: anywhere;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+  .wear-worn-actions {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: -4px -6px 0 0;
+  }
+  .wear-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  /*
+   * Колонка справа не оставляет пустого низа (владелец, 16.11.2026: «пустое пространство никогда не оставляем»). Панель «Модели»
+   * тянется на всю высоту колонки, «Вернуть к заводскому виду» стоит у её нижнего края (`.wear-slot-foot`, `margin-top: auto`),
+   * промежутки между блоками — обычный ритм панели. Свободную высоту забирают плитки, а не зазоры: мало плиток в разделе (до четырёх:
+   * причёска, борода, ногти) — в окне повыше сетка растёт и плитки растут вместе с ней (по две в ряд, единственная вещь — на всю
+   * ширину колонки; в окне от 1000 px две вещи — по одной в ряд); подписи у таких плиток видны сразу, не только под мышью.
+   * В студии оружия (`.gun-panel` без `.wear-slot`) раскладка прежняя.
+   */
+  .ui-editor-panel:has(> .ui-editor-panel-content > .wear-slot) {
+    display: flex;
+    flex-direction: column;
+  }
+  .ui-editor-panel-content:has(> .wear-slot) {
+    flex: 1 0 auto;
+  }
+  .wear-slot {
+    flex: 1 0 auto;
+  }
+  @media (min-height: 800px) {
+    .wear-grid[data-few] {
+      flex: 1 1 auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      gap: 8px;
+    }
+    .wear-grid[data-few="1"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .wear-grid[data-few] .wear-tile {
+      aspect-ratio: auto;
+      min-height: 120px;
+    }
+    /* Размер плитки задаёт сетка, а не собственный размер снимка (иначе два квадратных снимка в одной колонке выталкивают панель за колонку). */
+    .wear-grid[data-few] .wear-tile > img {
+      position: absolute;
+      inset: 0;
+    }
+    .wear-grid[data-few] .wear-tile-name {
+      opacity: 1;
+    }
+  }
+  @media (min-height: 1000px) {
+    .wear-grid[data-few="2"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .wear-tile {
+    position: relative;
+    aspect-ratio: 1;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-sunken);
+    color: var(--astral-ink-muted);
+    cursor: pointer;
+    transition: border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+  .wear-tile:hover,
+  .wear-tile:focus-visible {
+    border-color: var(--astral-line-strong);
+  }
+  .wear-tile.is-selected {
+    border-color: transparent;
+    outline: 1.5px solid var(--astral-accent);
+    outline-offset: -2px;
+  }
+  .wear-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .wear-tile-blank {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: 28px;
+  }
+  .wear-tile-blank.is-failed {
+    color: var(--astral-ink-faint);
+  }
+  /* Тату игры (`ClothingTattooPicker`): тушь бывает и тёмной, и белой, всегда на прозрачном — подложка серая, середина шкалы. */
+  .wear-tattoos {
+    display: grid;
+    gap: 8px;
+  }
+  .wear-tile.is-tattoo {
+    background: color-mix(in srgb, var(--astral-ink) 52%, var(--astral-surface));
+  }
+  .wear-tile.is-tattoo:disabled {
+    cursor: progress;
+  }
+  .wear-tile.is-tattoo .wear-tattoo-pic img {
+    box-sizing: border-box;
+    padding: 6px;
+  }
+  /* Снимок настоящей части тела на плитке блэкворка: имя стоит снизу и его не заслоняет. */
+  .wear-tile.is-tattoo .wear-tattoo-pic .wear-black-shot {
+    width: 100%;
+    height: 100%;
+    padding: 6px 6px 26px;
+    object-fit: contain;
+  }
+  /* Значок блэкворка: тело светлым, чернила тёмными поверх него. */
+  .wear-black-figure {
+    width: 100%;
+    height: 100%;
+    padding: 6px 6px 22px;
+    box-sizing: border-box;
+    color: var(--astral-void, #0a0a0b);
+  }
+  .wear-black-body {
+    fill: color-mix(in srgb, var(--astral-ink) 42%, transparent);
+  }
+  /* Плитка блэкворка: чернила частей похожи, имя стоит всегда, а не только под мышью. */
+  .wear-tile.is-named .wear-tile-name {
+    opacity: 1;
+    white-space: normal;
+  }
+  /* Части тела в окне комплекта — под строками вещей. */
+  .wear-outfit-tattoos {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .wear-outfit-tattoos h3 {
+    margin: 0;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+  /* Имя вещи — полосой снизу плитки, под мышью и по фокусу; щелчок надевает. */
+  .wear-tile-name {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 4px 6px;
+    background: rgba(10, 10, 11, 0.86);
+    color: var(--astral-ink);
+    font-size: var(--astral-text-micro);
+    line-height: var(--astral-line-tight);
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--astral-duration-fast) var(--astral-ease);
+  }
+  .wear-tile:hover .wear-tile-name,
+  .wear-tile:focus-visible .wear-tile-name {
+    opacity: 1;
+  }
+  .wear-slot-foot {
+    display: grid;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--astral-line);
+  }
+  .wear-foot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: var(--astral-text-body);
+  }
+
+  /* --- «Свои цвета»: детали с покраской и «Вернуть как было» по каждой. --- */
+  .wear-own {
+    display: grid;
+    gap: 6px;
+    padding: 10px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+  .wear-own h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--astral-text-body);
+  }
+  .wear-own h3 span {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .wear-own-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .wear-own-name {
+    min-width: 0;
+    display: grid;
+  }
+  .wear-own-name b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--astral-text-body);
+  }
+  .wear-own-name small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  /* --- «Основа из каталога»: сетка карточек поверх кадра. Подложка плотная — под ней живой холст, и сквозь неё он мешал бы. --- */
+  .wear-base {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    background: var(--astral-surface-strong);
+  }
+  .wear-base-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .wear-base-title {
+    display: grid;
+    gap: 2px;
+  }
+  .wear-base-title h2 {
+    margin: 0;
+    font-size: var(--astral-text-title);
+  }
+  .wear-base-title small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+  .wear-base-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .wear-base-search {
+    flex: 1 1 220px;
+    max-width: 320px;
+  }
+  .wear-base-count {
+    margin-left: auto;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+  .wear-base-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 10px;
+  }
+  .wear-base-card {
+    display: grid;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+  .wear-base-card.is-selected {
+    border-color: transparent;
+    outline: 1.5px solid var(--astral-accent);
+    outline-offset: -2px;
+  }
+  .wear-base-pic {
+    aspect-ratio: 1;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-sunken);
+    color: var(--astral-ink-muted);
+    cursor: pointer;
+  }
+  .wear-base-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .wear-base-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--astral-text-body);
+  }
+  .wear-base-foot {
+    display: grid;
+    gap: 6px;
+  }
+  .wear-base-foot .ui-button {
+    width: 100%;
+  }
+  .wear-base-foot small {
+    min-width: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+  }
+  .wear-base-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* --- Расцветки надетой вещи под названием в панели слота: «Цвет N из M» и кружки цветов, без подложки (владелец, 30.10.2026). --- */
+  .wear-colours {
+    display: grid;
+    gap: 6px;
+  }
+  .wear-colours-title {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+  .wear-colours-list {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  /* Мишень — 28 px (правило hit-target), сам кружок — 22: кнопка прозрачна, подложки нет. */
+  .wear-colour {
+    flex: none;
+    width: var(--astral-control-h-xs);
+    height: var(--astral-control-h-xs);
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .wear-colour-dot {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--astral-line-strong);
+    border-radius: 50%;
+    background: var(--wear-swatch, var(--astral-surface-raised));
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+    line-height: 1;
+    transition: border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+  /* Вещь игры: вместо кружка — снимок вещи в расцветке, без плашки под ним; пока снимка нет, на его месте кружок того же размера. */
+  .wear-colours.has-tiles .wear-colour {
+    width: 40px;
+    height: 40px;
+  }
+  .wear-colours.has-tiles .wear-colour-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--astral-radius-sm);
+  }
+  .wear-colour-dot.is-image {
+    border-color: transparent;
+    background: none;
+  }
+  .wear-colour-dot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .wear-colour:hover .wear-colour-dot,
+  .wear-colour:focus-visible .wear-colour-dot {
+    border-color: var(--astral-ink);
+  }
+  .wear-colour.is-selected .wear-colour-dot {
+    outline: 1.5px solid var(--astral-accent);
+    outline-offset: 2px;
+  }
+
+  /* Подпись «Сохранено» в строке состояния шапки: тише названия вещи. */
+  .wear-saved {
+    color: var(--astral-ink-muted);
+  }
+  .wear-saved::before {
+    content: " · ";
+  }
+}

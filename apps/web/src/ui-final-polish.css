@@ -1,0 +1,79 @@
+/* Final viewport, contrast and catalog polish for the component layer. */
+
+/* Redux cards follow the catalog treatment: one uninterrupted image with copy
+   sitting directly on a gradual readability veil. */
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  #redux-catalog-grid
+  > button.redux-visual-card {
+  isolation: isolate;
+  background: #090909 !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  #redux-catalog-grid
+  > button.redux-visual-card
+  > img.redux-visual-image {
+  position: absolute !important;
+  z-index: 0;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  object-fit: cover !important;
+  filter: saturate(0.9) contrast(0.96);
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  #redux-catalog-grid
+  > button.redux-visual-card
+  > .redux-visual-shade {
+  position: absolute !important;
+  z-index: 1;
+  inset: 0 !important;
+  display: block !important;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 7, 7, 0.02) 34%,
+    rgba(7, 7, 7, 0.12) 57%,
+    rgba(7, 7, 7, 0.76) 100%
+  ) !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  #redux-catalog-grid
+  > button.redux-visual-card
+  > .workshop-card-copy {
+  position: absolute !important;
+  z-index: 3;
+  bottom: 7px !important;
+  left: 16px !important;
+  right: 54px !important;
+  display: grid !important;
+  height: auto !important;
+  gap: 3px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  #redux-catalog-grid
+  > button.redux-visual-card
+  > .workshop-card-copy
+  h3,
+.desktop-app
+  .catalog-v3[data-workshop-section="redux"]
+  #redux-catalog-grid
+  > button.redux-visual-card
+  > .workshop-card-copy
+  p {
+  color: #f7f9fc !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.92) !important;
+}

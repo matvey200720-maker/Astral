@@ -1,0 +1,382 @@
+/*
+ * Вид Б вкладки «Каталог» — плотный список и таблица (ТЗ 29.10.2026-б, только флаг песочницы `qa-catalog-variant=b`): шапка с поиском и
+ * переключателем «список / сетка», подразделы чипами, строка на мод. Колонка навигации и сетка карточек — прежние.
+ */
+@layer overrides {
+  .desktop-app .cv-b-main {
+    gap: 14px;
+  }
+
+  /* ---------- Шапка ---------- */
+
+  .desktop-app .cv-b-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px 24px;
+  }
+
+  .desktop-app .cv-b-top .catalog-main-heading {
+    flex: 1 1 280px;
+  }
+
+  .desktop-app .cv-b-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .desktop-app .cv-b-bar .catalog-search-field {
+    flex: 0 1 280px;
+    width: 280px;
+  }
+
+  .desktop-app .cv-b-tools {
+    flex-wrap: nowrap;
+  }
+
+  .desktop-app .cv-b-view {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+  }
+
+  .desktop-app .cv-b-view .ui-button {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .desktop-app .cv-b-view .ui-button[aria-pressed="true"] {
+    background: var(--astral-surface-hover);
+    color: var(--astral-ink);
+  }
+
+  /* ---------- Подразделы чипами ---------- */
+
+  .desktop-app .cv-b-tabs {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .desktop-app .cv-b-tabs:not(:has(.cv-b-chip)) {
+    display: none;
+  }
+
+  .desktop-app .cv-b-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .desktop-app .cv-b-chips + .cv-b-chips .cv-b-chip {
+    min-height: 24px;
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .cv-b-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--astral-control-h-xs);
+    padding: 0 12px;
+    border: 1px solid var(--astral-line);
+    border-radius: 999px;
+    background: var(--astral-surface);
+    color: var(--astral-ink-muted);
+    font: inherit;
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--astral-duration-fast) var(--astral-ease),
+      border-color var(--astral-duration-fast) var(--astral-ease),
+      color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .cv-b-chip small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .desktop-app .cv-b-chip:hover {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-hover);
+    color: var(--astral-ink);
+  }
+
+  .desktop-app .cv-b-chip:focus-visible {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .cv-b-chip.is-empty:not(.is-selected) {
+    opacity: 0.55;
+  }
+
+  .desktop-app .cv-b-chip.is-selected {
+    border-color: var(--astral-ink);
+    background: var(--astral-ink);
+    color: var(--astral-accent-ink);
+  }
+
+  .desktop-app .cv-b-chip.is-selected small {
+    color: var(--astral-accent-ink);
+    opacity: 0.62;
+  }
+
+  .desktop-app .cv-b-chip.is-more {
+    border-style: dashed;
+  }
+
+  /* ---------- Таблица ---------- */
+
+  /* Мерка ширины — обёртка результатов: контейнер не может сам менять правила внутри своего запроса. */
+  .desktop-app .cv-b-results {
+    container-type: inline-size;
+  }
+
+  .desktop-app .cv-b-table {
+    --cv-b-cols: 72px minmax(0, 1fr) 80px 184px;
+    min-width: 0;
+  }
+
+  .desktop-app .cv-b-cols,
+  .desktop-app .cv-b-row {
+    display: grid;
+    grid-template-columns: var(--cv-b-cols);
+    align-items: center;
+    column-gap: 14px;
+  }
+
+  .desktop-app .cv-b-cols {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    min-height: 34px;
+    padding: 0 12px 0 8px;
+    border-bottom: 1px solid var(--astral-line);
+    background: var(--astral-bg);
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .desktop-app .cv-b-col-size,
+  .desktop-app .cv-b-size {
+    text-align: right;
+  }
+
+  .desktop-app .cv-b-cols > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cv-b-col-author,
+  .desktop-app .cv-b-col-projects,
+  .desktop-app .cv-b-col-downloads,
+  .desktop-app .cv-b-author,
+  .desktop-app .cv-b-projects,
+  .desktop-app .cv-b-downloads {
+    display: none;
+  }
+
+  .desktop-app .cv-b-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding-top: 8px;
+  }
+
+  .desktop-app .cv-b-row {
+    position: relative;
+    min-height: 60px;
+    padding: 8px 12px 8px 8px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface);
+    transition:
+      background var(--astral-duration-fast) var(--astral-ease),
+      border-color var(--astral-duration-fast) var(--astral-ease);
+  }
+
+  .desktop-app .cv-b-row:hover {
+    border-color: var(--astral-line-strong);
+    background: var(--astral-surface-hover);
+  }
+
+  .desktop-app .cv-b-row:has(.cv-b-open:focus-visible) {
+    outline: 2px solid var(--astral-line-focus);
+    outline-offset: 2px;
+  }
+
+  .desktop-app .cv-b-thumb {
+    display: block;
+    width: 72px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-strong);
+  }
+
+  .desktop-app .cv-b-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .desktop-app .cv-b-thumb.is-contain img {
+    padding: 3px;
+    object-fit: contain;
+  }
+
+  .desktop-app .cv-b-name {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .desktop-app .cv-b-open {
+    max-width: 100%;
+    min-height: 32px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: none;
+    color: var(--astral-ink);
+    font: inherit;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .desktop-app .cv-b-open:focus-visible {
+    outline: none;
+  }
+
+  /* Кнопка имени растянута на всю строку: строка открывает страницу мода, а сердечко и «Установить» лежат над ней. */
+  .desktop-app .cv-b-open::after {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--astral-radius);
+    content: "";
+  }
+
+  .desktop-app .cv-b-by {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cv-b-cell {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-body);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cv-b-projects {
+    gap: 6px;
+  }
+
+  .desktop-app .cv-b-project {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--astral-radius-xs);
+    object-fit: cover;
+  }
+
+  .desktop-app .cv-b-project.is-contain {
+    padding: 2px;
+    background: var(--astral-surface-strong);
+    object-fit: contain;
+  }
+
+  .desktop-app .cv-b-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .desktop-app .cv-b-actions .ui-button.is-icon-only {
+    width: 34px;
+    padding: 0;
+  }
+
+  .desktop-app .cv-b-row.is-installed .cv-b-open {
+    color: var(--astral-ink-muted);
+  }
+
+  /* Колонки по ширине самой таблицы, а не окна: колонка навигации открыта или свёрнута — таблица шире или уже. */
+  @container (min-width: 720px) {
+    .desktop-app .cv-b-table {
+      --cv-b-cols: 72px minmax(0, 1fr) 112px 80px 184px;
+    }
+
+    .desktop-app .cv-b-col-projects,
+    .desktop-app .cv-b-projects {
+      display: flex;
+    }
+  }
+
+  @container (min-width: 940px) {
+    .desktop-app .cv-b-table {
+      --cv-b-cols: 72px minmax(220px, 1.4fr) minmax(0, 1fr) 112px 80px 184px;
+    }
+
+    .desktop-app .cv-b-table.has-downloads {
+      --cv-b-cols: 72px minmax(220px, 1.4fr) minmax(0, 1fr) 112px 80px 88px 184px;
+    }
+
+    .desktop-app .cv-b-col-author,
+    .desktop-app .cv-b-author,
+    .desktop-app .cv-b-table.has-downloads .cv-b-col-downloads,
+    .desktop-app .cv-b-table.has-downloads .cv-b-downloads {
+      display: block;
+    }
+
+    .desktop-app .cv-b-by {
+      display: none;
+    }
+  }
+
+  /* Узкая таблица: размер — под именем, проектов нет, «Установить» — значком. */
+  @container (max-width: 560px) {
+    .desktop-app .cv-b-table {
+      --cv-b-cols: 72px minmax(0, 1fr) auto;
+    }
+
+    .desktop-app .cv-b-col-size,
+    .desktop-app .cv-b-size {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .cv-b-chip,
+    .desktop-app .cv-b-row {
+      transition: none;
+    }
+  }
+}

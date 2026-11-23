@@ -1,0 +1,32 @@
+{
+  "name": "@modovik/sound-studio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./rel-edit": "./rel-edit.js",
+    "./sound-header": "./sound-header.js",
+    "./sound-categories": "./sound-categories.js",
+    "./category-patch": "./category-patch.js",
+    "./sound-mix": "./sound-mix.js",
+    "./hit-voice-plan": "./hit-voice-plan.js",
+    "./hit-sound-sources": "./hit-sound-sources.js",
+    "./weapon-bank-spare": "./weapon-bank-spare.js",
+    "./audio-config-slots": "./audio-config-slots.js",
+    "./slot-fit": "./slot-fit.js",
+    "./hit-masking": "./hit-masking.js",
+    "./weapon-voice-plan": "./weapon-voice-plan.js",
+    "./weapon-mute-plan": "./weapon-mute-plan.js",
+    "./silencer-link": "./silencer-link.js",
+    "./shot-program": "./shot-program.js",
+    "./shot-voices": "./shot-voices.js",
+    "./shot-mix": "./shot-mix.js",
+    "./weapon-shot-sources": "./weapon-shot-sources.js",
+    "./weapon-voice-sources": "./weapon-voice-sources.js",
+    "./pack-voice": "./pack-voice.js",
+    "./sound-knobs": "./sound-knobs.js",
+    "./package.json": "./package.json"
+  }
+}

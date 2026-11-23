@@ -1,0 +1,855 @@
+/*
+ * Редактор интерьеров.
+ *
+ * Рамку, шапку и колонку органов управления даёт общая оболочка редактора
+ * (`styles/editor-shell.css`), кадр — общее окно предпросмотра со своей рамкой,
+ * своей ручкой высоты и своей цветной шкалой суток под кадром. Здесь остаётся
+ * то, что принадлежит интерьерам: полоса выбора отделки над кадром, строка
+ * проверки под ним и органы управления макетом справа.
+ *
+ * Цвета — из палитры Astral. Своих пятидесяти пяти шестнадцатеричных было
+ * ровно столько, чтобы редактор выглядел чужим в собственной мастерской:
+ * собственный фон #131314 мимо `--astral-bg`, собственные панели #1b1b1c и
+ * #242425 мимо поверхностей, собственные зелёный и красный мимо
+ * `--astral-positive` и `--astral-danger`. В светлой теме всё это оставалось
+ * тёмным пятном посреди светлой страницы.
+ *
+ * Исключение одно, и оно то же, что в арене и у фонарей: тёмное стекло плашки
+ * поверх трёхмерной сцены. Под ней зал, а не страница Astral, и светлая панель
+ * на нём в светлой теме читается как дырка в картинке.
+ *
+ * Лист подключён из общего `styles/index.css` слоем `overrides` — там у
+ * приложения один вход для стилей и явный порядок слоёв; импорт из .jsx положил
+ * бы те же правила мимо этого порядка и вдобавок вторым экземпляром.
+ */
+
+/* Комната редактора не сжимается ниже той высоты, на которой кадр ещё кадр: в
+   общей рамке сцена занимает всё, что осталось, и без нижней границы зал в
+   короткой странице схлопывается до полоски. */
+/* Метку ставит оболочка редактора (`EditorShell`, `useHolds.js`), а не `:has()`: его браузер перепроверял на каждую правку в редакторе. */
+.desktop-app .workshop-studio[data-holds~="interior-editor"] {
+  min-height: 560px;
+  box-sizing: border-box;
+}
+
+.interior-editor {
+  --interior-line: var(--astral-line);
+  --interior-sunken: var(--astral-surface-sunken);
+  --interior-muted: var(--astral-ink-muted);
+  --interior-faint: var(--astral-ink-faint);
+  /* Тёмное стекло поверх сцены — единственные цвета мимо палитры, см. шапку. */
+  --interior-glass: rgba(9, 11, 16, 0.74);
+  --interior-glass-line: rgba(255, 255, 255, 0.13);
+  --interior-glass-ink: rgba(255, 255, 255, 0.9);
+  color: var(--astral-ink);
+}
+
+/* --- Предпросмотр --- */
+
+.interior-preview {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/*
+ * Полоса выбора отделки стоит НАД кадром, а не поверх него: своя шкала времени
+ * у окна уже есть — цветная, под кадром, — и плашка, положенная сверху, накрыла
+ * бы её ровно там, где человек будет её искать.
+ */
+.interior-view-bar {
+  display: grid;
+  /* Колонка шире кнопочного ряда самой длинной группы: девять номеров, ушедшие
+     в третью строку, читаются как второй, отдельный набор вариантов. */
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px 16px;
+  padding: 8px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-raised);
+}
+.interior-variant-group {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.interior-variant-group > span {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+}
+
+/* Ряд переносится, а не прокручивается: групп четыре, и четыре собственные
+   полосы прокрутки в одной полосе — четыре места, где вариант можно не
+   заметить. В самой длинной группе девять кнопок, они помещаются. */
+.interior-variant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.interior-variant-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 26px;
+  padding: 5px 8px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--interior-sunken);
+  color: var(--interior-muted);
+  font-size: var(--astral-text-small);
+  /* Цифры одной ширины: иначе ряд дёргается при смене выбранного. */
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.interior-variant-chips button svg {
+  width: 13px;
+  height: 13px;
+}
+.interior-variant-chips button:hover {
+  border-color: var(--astral-accent);
+  color: var(--astral-ink);
+}
+.interior-variant-chips button:focus-visible {
+  outline: none;
+  border-color: var(--astral-accent);
+}
+/* Нажатое обведено и подписано акцентом — тем же способом, что ряд категорий
+   в каталоге ниже: одна и та же мысль «выбрано из ряда» в одном редакторе
+   должна выглядеть одинаково. */
+.interior-variant-chips button.is-active {
+  border-color: var(--astral-accent);
+  color: var(--astral-accent);
+}
+/* Пока вариант едет из игры, кнопка дышит — но остаётся нажатой и читаемой:
+   это ответ на нажатие, а не сообщение о неудаче. */
+.interior-variant-chips button.is-busy {
+  animation: interior-variant-busy 1.1s var(--astral-ease) infinite;
+}
+@keyframes interior-variant-busy {
+  50% {
+    border-color: var(--interior-line);
+    color: var(--interior-muted);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Без дыхания пометку несёт пунктир: молчащая кнопка означала бы, что
+     нажатие не приняли, и человек нажал бы ещё раз. */
+  .interior-variant-chips button.is-busy {
+    animation: none;
+    border-style: dashed;
+  }
+}
+
+.interior-preview-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Окно приносит внутрь свой кадр и свою шкалу: рамка и фон под ним — здесь,
+   чтобы до первого кадра на месте сцены не было белого прямоугольника. */
+.interior-preview-window {
+  height: 100%;
+  border-radius: var(--astral-radius-lg);
+  background: var(--astral-void);
+}
+
+/*
+ * Плашки макета поверх кадра.
+ *
+ * Лежат внутри накладки окна (`preview-window-hud`), а не под кадром: и
+ * «щёлкните по полу», и ответ проверки говорят про то место, куда человек
+ * сейчас смотрит. Стекло тёмное — то же исключение из палитры, что у заслонки
+ * загрузки: под плашкой зал, а не страница Astral.
+ */
+.interior-hint {
+  position: absolute;
+  inset: auto auto 14px 14px;
+  display: grid;
+  gap: 3px;
+  max-width: min(340px, calc(100% - 28px));
+  padding: 9px 12px;
+  border: 1px solid var(--interior-glass-line);
+  border-radius: var(--astral-radius);
+  background: var(--interior-glass);
+  color: var(--interior-glass-ink);
+}
+.interior-hint b {
+  font-size: 12px;
+  font-weight: 600;
+}
+.interior-hint span {
+  opacity: 0.66;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.interior-hint-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+/* Ответ проверки стоит НАД подсказкой постановки: обе бывают одновременно, и
+   спор за один и тот же угол кадра кончился бы тем, что одна закрыла бы
+   другую. */
+.interior-hint-issue {
+  inset: auto auto auto 14px;
+  top: 14px;
+  padding: 7px 11px;
+  font-size: var(--astral-text-small);
+  line-height: 1.4;
+}
+.interior-hint-issue.is-error {
+  border-color: var(--astral-danger);
+  color: var(--astral-danger);
+}
+.interior-hint-issue.is-warn {
+  border-color: var(--astral-warning);
+  color: var(--astral-warning);
+}
+
+.interior-preview-note {
+  margin: 0;
+  color: var(--interior-faint);
+  font-size: var(--astral-text-small);
+  line-height: 1.5;
+}
+
+/* --- Строка проверки под кадром --- */
+
+.interior-validation-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius);
+  background: var(--astral-positive-soft);
+}
+.interior-validation-bar.has-errors {
+  background: var(--astral-danger-soft);
+}
+.interior-validation-bar > svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: var(--astral-positive);
+}
+.interior-validation-bar.has-errors > svg {
+  color: var(--astral-danger);
+}
+.interior-validation-bar > span {
+  display: grid;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+}
+.interior-validation-bar b {
+  font-size: 12px;
+  font-weight: 500;
+}
+.interior-validation-bar small {
+  color: var(--interior-muted);
+  font-size: 11px;
+}
+
+/* --- Правая колонка --- */
+
+/* Колонка длинная и прокручивается сама: локация, пресеты, список объектов,
+   выбранный объект и каталог — один разговор про макет, и разложенный по
+   вкладкам он заставляет щёлкать туда-сюда ради каждого добавленного стеллажа. */
+.interior-controls {
+  overflow: auto;
+}
+.interior-controls .interior-note {
+  margin: 0;
+}
+
+.interior-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 10px 0 0;
+  color: var(--interior-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+}
+/* Заметка про то, чего сделать нельзя. Цветом рамки и значка, а не
+   восклицательным знаком в тексте: текст и так объясняет причину. */
+.interior-note.is-blocked {
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--astral-warning) 40%, transparent);
+  border-radius: var(--astral-radius-sm);
+  background: color-mix(in srgb, var(--astral-warning) 8%, transparent);
+  color: var(--astral-ink);
+}
+.interior-note.is-blocked svg {
+  color: var(--astral-warning);
+}
+
+/* Строка про модели предметов идёт под подписью помещения и тише её: это
+   ответ на вопрос «почему предметы такие», а не заголовок кадра. */
+.interior-preview-note.is-props {
+  margin-top: 2px;
+  opacity: 0.82;
+}
+
+.interior-note svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--interior-faint);
+}
+
+.interior-field {
+  display: grid;
+  gap: 6px;
+  color: var(--interior-muted);
+  font-size: var(--astral-text-small);
+}
+.interior-field + .interior-field {
+  margin-top: 10px;
+}
+.interior-field select,
+.interior-field input,
+.interior-search input {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}
+.interior-field select:focus-visible,
+.interior-field input:focus-visible,
+.interior-search input:focus-visible {
+  outline: none;
+  border-color: var(--astral-accent);
+}
+
+/* Три роли над списком: подпись слева, пипетка и возврат справа — строка
+   читается как «пол — такой», а не как форма из трёх полей. */
+.interior-role-rows {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+.interior-role-row {
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+.interior-role-row + .interior-role-row {
+  margin-top: 0;
+}
+.interior-role-row span {
+  display: grid;
+  min-width: 0;
+}
+.interior-role-row span small {
+  color: var(--interior-faint);
+}
+
+.interior-presets {
+  display: grid;
+  gap: 7px;
+}
+.interior-presets button {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.interior-presets button:hover {
+  border-color: var(--astral-accent);
+}
+.interior-presets svg {
+  width: 16px;
+  height: 16px;
+  color: var(--interior-muted);
+}
+.interior-presets span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.interior-presets b {
+  font-size: 12px;
+  font-weight: 500;
+}
+.interior-presets small {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+  line-height: 1.35;
+}
+
+/* --- Объекты --- */
+
+.interior-scene-list {
+  display: grid;
+  gap: 6px;
+}
+.interior-scene-list > button {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.interior-scene-list > button:hover {
+  border-color: var(--astral-accent);
+}
+.interior-scene-list > button.is-active {
+  border-color: var(--astral-accent);
+  background: var(--astral-surface-raised);
+}
+.interior-scene-list > button > i {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--astral-radius-sm);
+}
+.interior-scene-list > button > svg {
+  width: 13px;
+  height: 13px;
+  color: var(--interior-faint);
+}
+.interior-scene-list span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.interior-scene-list b {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.interior-scene-list small {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+}
+
+.interior-selected > header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.interior-selected > header > i {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--astral-radius-sm);
+}
+.interior-selected > header span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.interior-selected > header small {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+}
+.interior-selected > header b {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.interior-vector-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.interior-vector-fields label {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+}
+.interior-vector-fields span {
+  text-align: center;
+}
+.interior-vector-fields input {
+  min-width: 0;
+  padding: 7px 8px 7px 0;
+  border: 0;
+  background: none;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+}
+.interior-vector-fields input:focus-visible {
+  outline: none;
+}
+
+.interior-object-actions {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+.interior-object-actions .ui-button {
+  justify-content: flex-start;
+}
+
+.interior-issue {
+  display: flex;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-danger-soft);
+  color: var(--astral-danger);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.interior-issue svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* --- Каталог --- */
+
+.interior-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+}
+.interior-search svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--interior-faint);
+}
+.interior-search input {
+  border: 0;
+  padding-left: 0;
+  background: none;
+}
+
+.interior-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0;
+}
+.interior-category-list button {
+  padding: 5px 9px;
+  border: 1px solid var(--interior-line);
+  border-radius: 999px;
+  background: none;
+  color: var(--interior-muted);
+  font-size: var(--astral-text-micro);
+  cursor: pointer;
+}
+.interior-category-list button:hover {
+  color: var(--astral-ink);
+}
+.interior-category-list button.is-active {
+  border-color: var(--astral-accent);
+  color: var(--astral-accent);
+}
+
+.interior-prop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.interior-prop-grid > button {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.interior-prop-grid > button:hover {
+  border-color: var(--astral-accent);
+}
+/* Объект в руке: карточка остаётся нажатой, пока человек не щёлкнет по полу
+   или не передумает. Без этого нажатие каталога выглядит как промах — объект
+   ведь никуда не встал. */
+.interior-prop-grid > button.is-armed {
+  border-color: var(--astral-accent);
+  background: var(--astral-surface-raised);
+}
+.interior-prop-grid > button.is-armed small {
+  color: var(--astral-accent);
+}
+.interior-prop-grid i {
+  position: relative;
+  display: block;
+  height: 42px;
+  margin-bottom: 7px;
+  border-radius: var(--astral-radius-sm);
+  opacity: 0.86;
+}
+.interior-prop-grid i svg {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 15px;
+  height: 15px;
+  padding: 2px;
+  border-radius: 50%;
+  background: var(--astral-scrim);
+  color: var(--astral-ink);
+}
+.interior-prop-grid span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.interior-prop-grid b {
+  overflow: hidden;
+  font-size: var(--astral-text-small);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.interior-prop-grid small {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+}
+
+/* --- Проверка и план --- */
+
+.interior-plan .interior-plan-facts {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-line);
+}
+.interior-plan-facts > div {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 11px;
+  background: var(--astral-surface-strong);
+  font-size: 12px;
+}
+.interior-plan-facts dt {
+  color: var(--astral-ink-muted);
+}
+.interior-plan-facts dd {
+  margin: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+.interior-plan-facts code {
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+
+.interior-plan-block {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+}
+.interior-plan-block.is-danger {
+  background: var(--astral-danger-soft);
+}
+/* Отказ в разделе набора: тот же тон, что у предупреждений плана. */
+.interior-note.is-warning {
+  color: var(--astral-warning);
+}
+
+.interior-plan-block.is-warning {
+  background: var(--astral-warning-soft);
+}
+.interior-plan-block.is-positive {
+  background: var(--astral-positive-soft);
+}
+.interior-plan-block b {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.interior-plan-block b svg {
+  width: 15px;
+  height: 15px;
+}
+.interior-plan-block p {
+  margin: 6px 0 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  line-height: 1.45;
+}
+
+/* ---------- отделка ---------- */
+
+/* Список поверхностей устроен как список объектов: та же строка с цветным
+   квадратом слева, потому что это тот же разговор — «вот это в зале, вот его
+   выбрали». Отличие одно: поверхности сгруппированы по деталям помещения, и
+   заголовок группы держит имя детали из игры. */
+.interior-surface-list {
+  display: grid;
+  gap: 10px;
+  max-height: 268px;
+  overflow-y: auto;
+}
+.interior-surface-group {
+  display: grid;
+  gap: 5px;
+}
+.interior-surface-group > b {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+.interior-surface-group > button {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 6px 9px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  color: var(--astral-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.interior-surface-group > button:hover {
+  border-color: var(--astral-accent);
+}
+.interior-surface-group > button.is-active {
+  border-color: var(--astral-accent);
+  background: var(--astral-surface-raised);
+}
+.interior-surface-group > button > i {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+}
+.interior-surface-group span {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.interior-surface-group b {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.interior-surface-group small {
+  overflow: hidden;
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interior-surface-edit {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+}
+.interior-surface-edit > header {
+  display: grid;
+  gap: 2px;
+}
+.interior-surface-edit > header b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.interior-surface-edit > header small {
+  color: var(--interior-faint);
+  font-size: var(--astral-text-micro);
+}
+/* Пипетка ростом со строку: цвет выбирают одним нажатием, и поле на всю ширину
+   означало бы, что здесь вводят число. */
+.interior-surface-edit .interior-field {
+  grid-template-columns: minmax(0, 1fr) 54px;
+  align-items: center;
+}
+
+.interior-finish-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Текстуры образцами, а не списком имён: `gz_v_247_fruitcrate` ничего не
+   говорит про то, как оно выглядит, а квадрат сорок восемь на сорок восемь —
+   говорит всё. Имя остаётся подсказкой при наведении. */
+.interior-texture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 6px;
+  max-height: 184px;
+  overflow-y: auto;
+}
+.interior-texture-grid button {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid var(--interior-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface-raised);
+  color: var(--interior-faint);
+  cursor: pointer;
+}
+.interior-texture-grid button:hover {
+  border-color: var(--astral-accent);
+}
+.interior-texture-grid button.is-active {
+  border-color: var(--astral-accent);
+  outline: 1px solid var(--astral-accent);
+}
+.interior-texture-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.interior-texture-grid span {
+  overflow: hidden;
+  padding: 3px;
+  font-size: var(--astral-text-micro);
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-all;
+}

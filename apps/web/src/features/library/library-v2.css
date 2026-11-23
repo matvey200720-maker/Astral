@@ -1,0 +1,174 @@
+/* Библиотека v2 (14.11.2026): корзина в шапке (15.11.2026) и карточка ганпака; шапка, сводка, фильтры и сетка — `library-state.css` (Библиотека Б, 15.11.2026). Красное на странице — только «Удалить выделенное» в режиме выделения и «Удалить» в окне подтверждения. */
+
+@layer overrides {
+  .desktop-app {
+    /* Корзина шапки и кнопки режима выделения (`LibraryTrashBar.jsx`): справа на строке заголовка, на узком окне переносятся строкой целиком. */
+    & .lib-trash-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-inline-start: auto;
+      align-self: center;
+    }
+
+    & .lib-trash-hint {
+      margin: 0;
+      margin-inline-end: 8px;
+      color: var(--astral-text-secondary);
+      font-size: var(--astral-text-body);
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 760px) {
+      & .lib-trash-bar {
+        inline-size: 100%;
+        justify-content: stretch;
+
+        & > .ui-button {
+          flex: 1 1 auto;
+        }
+      }
+
+      & .lib-trash-hint {
+        flex: 1 0 100%;
+      }
+    }
+
+    /* Корзина строки ствола в карточке ганпака — рядом с именем, всегда видна. */
+    & .lib-trash.is-gun {
+      display: grid;
+      place-items: center;
+      inline-size: 36px;
+      block-size: 36px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.72);
+      color: var(--astral-text-primary, inherit);
+      cursor: pointer;
+      transition:
+        background var(--astral-duration) var(--astral-ease),
+        border-color var(--astral-duration) var(--astral-ease);
+
+      & svg {
+        inline-size: 16px;
+        block-size: 16px;
+      }
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--astral-accent);
+        background: color-mix(
+          in srgb,
+          var(--astral-accent) 28%,
+          rgba(0, 0, 0, 0.72)
+        );
+      }
+    }
+  }
+
+  /* Карточка ганпака: слева кадр и размер модели, справа название и стволы в игре. */
+  .desktop-app {
+    & .lib-pack {
+      display: grid;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    & .lib-pack-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+    }
+
+    & .lib-pack-left,
+    & .lib-pack-right {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+      align-content: start;
+    }
+
+    & .lib-pack-frame {
+      margin: 0;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid var(--astral-line);
+      border-radius: var(--astral-radius-lg);
+      background: var(--astral-surface);
+
+      & img {
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: contain;
+      }
+    }
+
+    & .lib-size {
+      display: grid;
+      gap: 8px;
+    }
+
+    & .lib-size-label {
+      display: grid;
+      gap: 6px;
+      font-size: var(--astral-text-body);
+      font-weight: 600;
+    }
+
+    & .lib-size-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    & .lib-size-hint {
+      margin: 0;
+      color: var(--astral-text-secondary);
+      font-size: var(--astral-text-body);
+    }
+
+    & .lib-pack-right h1,
+    & .lib-pack-right h2 {
+      margin: 0;
+    }
+
+    & .lib-pack-author {
+      margin: 0;
+      color: var(--astral-text-secondary);
+    }
+
+    & .lib-guns {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    & .lib-gun {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr) 40px;
+      align-items: center;
+      gap: 12px;
+
+      & img,
+      & .lib-gun-blank {
+        inline-size: 56px;
+        block-size: 40px;
+        object-fit: contain;
+        border-radius: var(--astral-radius-sm);
+        background: var(--astral-surface);
+      }
+    }
+
+    & .lib-gun-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

@@ -1,0 +1,47 @@
+[package]
+name = "astral-engine"
+description = "Нативный движок Astral: команды над архивами и ресурсами GTA V, один JSON в stdout"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[lib]
+name = "astral_engine"
+path = "src/lib.rs"
+
+[[bin]]
+name = "astral-engine"
+path = "src/main.rs"
+
+[dependencies]
+serde_json.workspace = true
+rage-rpf = { path = "../rage-rpf" }
+sha2 = "0.10"
+miniz_oxide = "0.8"
+roxmltree = "0.20"
+rage-res = { path = "../rage-res" }
+astral-codec = { path = "../astral-codec" }
+# Сборка наборов перекраски (команда roads-build).
+astral-recolor = { path = "../astral-recolor" }
+
+# Свободное место на томе (archives/space.rs): statvfs и GetDiskFreeSpaceExW.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Storage_FileSystem"] }
+
+[dev-dependencies]
+tempfile = "3"
+# Тесты обрыва включают точки обрыва у собственной библиотеки; сборка
+# поставки (`cargo build -p astral-engine`) этих зависимостей не берёт.
+astral-engine = { path = ".", features = ["failpoints"] }
+
+[features]
+# Стенды: убить процесс в названной точке (см. src/failpoint.rs). В поставку не входит.
+failpoints = []
+
+[lints]
+workspace = true

@@ -1,0 +1,272 @@
+/*
+  «Контур и свет» — куски ожидания (`LightContour.jsx`, дизайн 15.11.2026, r8/loaders/ld.css).
+  Лист ленивый (его берут экраны ожидания по `import()`), поэтому всё лежит в одном слое. Движение — только transform и opacity.
+*/
+@layer overrides {
+  /* ---------- свето-полоса: идёт по месту слева направо ---------- */
+  .light-sweep {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .light-sweep > i {
+    position: absolute;
+    top: -12%;
+    bottom: -12%;
+    left: 0;
+    width: 44%;
+    background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.14) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-140%) skewX(-16deg);
+    animation: light-sweep-x var(--light-period, 2.4s)
+      cubic-bezier(0.4, 0.1, 0.3, 1) 12;
+    animation-delay: calc(var(--light-delay, 0s) - var(--light-period, 2.4s));
+    will-change: transform;
+  }
+
+  .light-sweep.is-strong > i {
+    background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.28) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .light-sweep.is-vertical > i {
+    top: 0;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 44%;
+    background: linear-gradient(
+      190deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.14) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateY(-140%);
+    animation-name: light-sweep-y;
+  }
+
+  @keyframes light-sweep-x {
+    0% {
+      transform: translateX(-140%) skewX(-16deg);
+    }
+    58%,
+    100% {
+      transform: translateX(340%) skewX(-16deg);
+    }
+  }
+
+  @keyframes light-sweep-y {
+    0% {
+      transform: translateY(-140%);
+    }
+    58%,
+    100% {
+      transform: translateY(340%);
+    }
+  }
+
+  /* ---------- серое место ---------- */
+  .light-plate {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    overflow: hidden;
+    border-radius: inherit;
+    background: #16161a;
+    pointer-events: none;
+  }
+
+  .light-plate::before {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        95% 130% at 18% 0,
+        rgba(255, 255, 255, 0.06),
+        rgba(255, 255, 255, 0) 64%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.022),
+        rgba(255, 255, 255, 0)
+      );
+    content: "";
+  }
+
+  /* ---------- пол под вещью ---------- */
+  .light-floor {
+    position: absolute;
+    bottom: 16%;
+    left: 50%;
+    width: 62%;
+    height: 11%;
+    margin-left: -31%;
+    border-radius: 50%;
+    background: radial-gradient(
+      50% 50% at 50% 50%,
+      rgba(255, 255, 255, 0.085),
+      rgba(255, 255, 255, 0) 72%
+    );
+    pointer-events: none;
+  }
+
+  /* ---------- поворотный круг ---------- */
+  .light-ring {
+    position: absolute;
+    top: 91%;
+    left: 50%;
+    width: 360px;
+    height: 360px;
+    margin: -180px 0 0 -180px;
+    transform: perspective(760px) rotateX(78deg);
+    pointer-events: none;
+  }
+
+  .light-ring-line {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+  }
+
+  .light-ring-line.is-inner {
+    inset: 34px;
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+
+  .light-ring-spin {
+    position: absolute;
+    inset: 0;
+    animation: light-ring-turn 6s linear 20;
+    will-change: transform;
+  }
+
+  /* Искра на круге: яркая точка и короткий хвост за ней. */
+  .light-ring-spin > i {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.5);
+  }
+
+  @keyframes light-ring-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* ---------- видоискатель ---------- */
+  .light-finder {
+    position: absolute;
+    inset: 7% 5.5%;
+    pointer-events: none;
+  }
+
+  .light-finder > i {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.88);
+  }
+
+  .light-finder > i:nth-child(1) {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: var(--astral-radius-xs) 0 0 0;
+  }
+
+  .light-finder > i:nth-child(2) {
+    top: 0;
+    right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 0 var(--astral-radius-xs) 0 0;
+  }
+
+  .light-finder > i:nth-child(3) {
+    bottom: 0;
+    left: 0;
+    border-top: 0;
+    border-right: 0;
+    border-radius: 0 0 0 var(--astral-radius-xs);
+  }
+
+  .light-finder > i:nth-child(4) {
+    right: 0;
+    bottom: 0;
+    border-top: 0;
+    border-left: 0;
+    border-radius: 0 0 var(--astral-radius-xs) 0;
+  }
+
+  .light-finder > b {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    opacity: 0.9;
+  }
+
+  .light-finder > b::before,
+  .light-finder > b::after {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    content: "";
+  }
+
+  .light-finder > b::before {
+    top: 0;
+    left: 12px;
+    width: 2px;
+    height: 26px;
+  }
+
+  .light-finder > b::after {
+    top: 12px;
+    left: 0;
+    width: 26px;
+    height: 2px;
+  }
+
+  /* ---------- «меньше движения»: те же рисунки без движения ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .light-sweep > i,
+    .light-ring-spin {
+      animation: none;
+    }
+
+    .light-sweep {
+      display: none;
+    }
+  }
+
+  [data-motion="off"] .light-sweep > i,
+  [data-motion="off"] .light-ring-spin {
+    animation: none;
+  }
+
+  [data-motion="off"] .light-sweep {
+    display: none;
+  }
+}

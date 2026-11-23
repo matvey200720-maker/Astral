@@ -1,0 +1,33 @@
+/*
+ * Французский к `zone-arena-item-page-2910.js`: страница выбранной вещи «Мастерской арены» (29.10.2026, вечер).
+ */
+export const frZoneArenaItemPage2910 = {
+  "Убран": "Retiré",
+  "Весь предмет": "Objet entier",
+  "{0} шт. в этой комнате": "{0} dans cette pièce",
+  "Действия с предметом": "Actions sur l’objet",
+  "Где ещё править": "Où modifier aussi",
+  "Нарисовать в студии": "Dessiner dans le studio",
+  "Кисть, слои, текст": "Pinceau, calques, texte",
+  "Отпустите — встанет на {0}": "Relâchez pour l’appliquer sur {0}",
+  "Это фрагмент игры: у него меняется только цвет.": "C’est un fragment du jeu\u00a0: seule sa couleur change.",
+  "Одну часть оболочки не красят.": "On ne peint pas une seule partie de l’enveloppe.",
+  "Картинка встанет на предмет формой: плашка, объём, куб, шар или цилиндр. Модель вписывается в место прежней: её наклон и высота — те же.": "L’image se pose sur l’objet sous une forme\u00a0: plaque, volume, cube, sphère ou cylindre. Le modèle prend la place de l’ancien\u00a0: même inclinaison et même hauteur.",
+  "Часть {0} из {1}": "Partie {0} sur {1}",
+  "Частей: {0}": "Parties\u00a0: {0}",
+  "Предыдущая часть": "Partie précédente",
+  "Следующая часть": "Partie suivante",
+  "Вернуть в зал": "Remettre dans la salle",
+  "Вернуть на место": "Remettre en place",
+  "Удалить из зала": "Retirer de la salle",
+  "Рекомендуемый размер картинки: {0} — пропорция стороны {1}. Картинка другого размера подгонится сама.": "Taille d’image recommandée\u00a0: {0} — proportion du côté {1}. Une image d’une autre taille s’ajustera d’elle-même.",
+  "Рекомендуемый размер фото: {0} — пропорция щита {1}. Фото другого размера подгонится само.": "Taille de photo recommandée\u00a0: {0} — proportion du panneau {1}. Une photo d’une autre taille s’ajustera d’elle-même.",
+  "На углу крыши высокого корпуса стоят двусторонние щиты {0} × {1}: в игре на них пустые панели. Своё фото встаёт плашкой прямо на щит — вблизи и издалека; кадр показывает выбранную сторону крупно.": "À l’angle du toit du bâtiment haut se dressent des panneaux double face {0} × {1}\u00a0: dans le jeu, ils sont vides. Votre photo se pose sur le panneau comme une plaque — de près comme de loin\u00a0; la vue montre le côté choisi en gros plan.",
+  "Как в игре: «{0}».": "Comme dans le jeu\u00a0: «\u00a0{0}\u00a0».",
+  "{0}. Буквы — объёмные модели: свой текст их заменяет — буквы игры уходят с фасада, на их месте встают ваши (фон — «Только буквы» или плашка цветом). Издалека дальние планы здания показывают то же.": "{0}. Les lettres sont des modèles 3D\u00a0: votre texte les remplace — les lettres du jeu quittent la façade et les vôtres prennent leur place (fond\u00a0: «\u00a0Lettres seules\u00a0» ou plaque colorée). De loin, les vues lointaines du bâtiment montrent la même chose.",
+  "Буквы {0} — объёмные модели. Своё название встаёт плашкой цветом поверх них, во всех местах сразу: {1}. «Убрать» закрывает буквы плашкой цвета фона. Издалека дальние планы получают ту же картинку.": "Les lettres {0} sont des modèles 3D. Votre nom se pose dessus comme une plaque colorée, à tous les endroits à la fois\u00a0: {1}. «\u00a0Retirer\u00a0» couvre les lettres d’une plaque couleur de fond. De loin, les vues lointaines reçoivent la même image.",
+  "Мест: {0}. Раскройте — и дайте любому месту свой текст; остальные — как табличка.": "Emplacements\u00a0: {0}. Dépliez-les et donnez à n’importe lequel son propre texte\u00a0; les autres restent comme le panneau.",
+  "Мест: {0}, со своей надписью — {1}. Раскройте — и дайте любому месту свой текст; остальные — как табличка.": "Emplacements\u00a0: {0}, avec leur propre texte\u00a0: {1}. Dépliez-les et donnez à n’importe lequel son propre texte\u00a0; les autres restent comme le panneau.",
+  "Убрать эту часть": "Retirer cette partie",
+  "Часть убрана": "Partie retirée",
+};

@@ -1,0 +1,119 @@
+{
+  "format": "astral-map-template",
+  "version": 1,
+  "assets": "akio-satellite",
+  "pack": "Satellite_Without_Grid_Akio_Mods",
+  "kind": "raster",
+  "author": "akiooo",
+  "grid": {
+    "columns": 2,
+    "rows": 3
+  },
+  "tileSide": 4096,
+  "tiles": [
+    {
+      "row": 0,
+      "column": 0,
+      "file": "tile-0-0.webp",
+      "side": 4096,
+      "bytes": 1873458,
+      "sha256": "3628de24df8ff3858f011e58b4178a5f43b94d4e350f23a051795541516d0927"
+    },
+    {
+      "row": 0,
+      "column": 1,
+      "file": "tile-0-1.webp",
+      "side": 4096,
+      "bytes": 2834642,
+      "sha256": "049e3b45f087d74bee8af2be410941b1a9d02c582255a5af48b7744fa0a3034f"
+    },
+    {
+      "row": 1,
+      "column": 0,
+      "file": "tile-1-0.webp",
+      "side": 4096,
+      "bytes": 4505164,
+      "sha256": "34126c4f14c7f5d5839e5a176a75380d17f4a4ba78f2b1bc02b854b7b32856c2"
+    },
+    {
+      "row": 1,
+      "column": 1,
+      "file": "tile-1-1.webp",
+      "side": 4096,
+      "bytes": 4444880,
+      "sha256": "a3860ac18c10b642a2307488f8a94c5bbf94192c90ffffde0388533820827de1"
+    },
+    {
+      "row": 2,
+      "column": 0,
+      "file": "tile-2-0.webp",
+      "side": 4096,
+      "bytes": 1955634,
+      "sha256": "4f36f39460f4ea2f5628e6094ba3bdd498fa13efc0c27a3a394d8283fa3d84f1"
+    },
+    {
+      "row": 2,
+      "column": 1,
+      "file": "tile-2-1.webp",
+      "side": 4096,
+      "bytes": 2022556,
+      "sha256": "aa8eb0d9709dd69e9da330775c64085717d3da85003e8f2d60c480d6b9013d69"
+    }
+  ],
+  "map": {
+    "file": "map.webp",
+    "width": 4096,
+    "height": 6144,
+    "bytes": 4774702,
+    "sha256": "0ac6d1076a837410ead08f4b733ac7fa917e62363a09657e2f1f352eb48ffbaa"
+  },
+  "card": {
+    "file": "card.webp",
+    "width": 640,
+    "height": 400
+  },
+  "state": {
+    "file": "state.webp",
+    "width": 512,
+    "height": 768
+  },
+  "seaColor": "",
+  "vectorTiles": 0,
+  "zoom": [
+    {
+      "scale": 3.75,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 3.8,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 9,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 11,
+      "tiles": [
+        0,
+        0
+      ]
+    },
+    {
+      "scale": 83,
+      "tiles": [
+        0,
+        0
+      ]
+    }
+  ]
+}

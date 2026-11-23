@@ -1,0 +1,96 @@
+/*
+ * «Дым из-под колёс» (ТЗ 11.10.2026, вечер).
+ *
+ * Вид — у мастерской эффектов (`effects-studio.css`): редактор носит её имя
+ * `fx-editor` рядом со своим, и матовая пластина, колонка правок, разделы и
+ * плитки у него те же, что у фонарей и огня. Здесь — только своё: кадр
+ * машины на всю пластину, краска кузова в углу кадра, строки целей «Где».
+ */
+
+/* ── Кадр ──────────────────────────────────────────────────────────────── */
+
+/*
+ * Раскладка «как в Photoshop»: середина каркаса — сама матовая рамка, кадр
+ * занимает её целиком. Вид движения, краска и «вид по умолчанию» — органы
+ * поверх (`StageBar`), подпись правды — подпись кадра, отказ — плашкой
+ * сверху посередине. Лист подключён раньше `effects-studio.css` в том же
+ * слое — общие правила `.fx-stage` перебиваются именем каркаса впереди.
+ */
+.ui-editor-shell[data-layout="studio"] .wheel-smoke-stage {
+  position: absolute;
+  inset: 0;
+  display: block;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.wheel-smoke-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--fx-plate);
+}
+
+.wheel-smoke-frame > canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wheel-smoke-frame > canvas:focus-visible {
+  outline: 2px solid var(--astral-line-focus);
+  outline-offset: -2px;
+}
+
+.wheel-smoke-frame-failure {
+  margin: 0;
+  padding: 16px;
+  color: var(--fx-muted);
+  font-size: var(--astral-text-small);
+}
+
+.wheel-smoke-stage-warning {
+  position: absolute;
+  z-index: 4;
+  top: 12px;
+  left: 50%;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 5px 10px;
+  border-radius: var(--astral-radius-sm);
+  color: var(--astral-warning, var(--fx-muted));
+  background: rgba(10, 10, 11, 0.82);
+  font-size: var(--astral-text-small);
+  transform: translateX(-50%);
+}
+
+/* Органы кадра не сжимаются: обрезанное «Пробукс…» не говорит, что делает. */
+.wheel-smoke-stage-bar > *,
+.wheel-smoke-stage-bar .ui-segment {
+  flex: none;
+}
+
+.wheel-smoke-paints {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+
+.wheel-smoke-paints > .ui-color-swatch {
+  width: var(--astral-control-h-xs);
+}
+
+/* ── Панель ────────────────────────────────────────────────────────────── */
+
+/* Шаблоны: метки цвета вместо картинки — плитка ниже, чем у фонарей. */
+.wheel-smoke-editor .wheel-smoke-preset {
+  background: var(--fx-matte);
+}
+
+.wheel-smoke-editor .wheel-smoke-preset:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--astral-ink) 7%, var(--fx-matte));
+}

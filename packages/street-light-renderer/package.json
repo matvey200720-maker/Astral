@@ -1,0 +1,10 @@
+{
+  "name": "@modovik/street-light-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js",
+  "dependencies": {
+    "@modovik/street-light-contract": "*"
+  }
+}

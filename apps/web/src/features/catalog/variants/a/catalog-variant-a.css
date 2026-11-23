@@ -1,0 +1,238 @@
+/*
+ * Вид А вкладки «Каталог» — витрина (ТЗ 29.10.2026-б, только флаг песочницы `qa-catalog-variant=a`): баннер раздела и полки вбок.
+ * Колонка навигации, сетка и карточки — прежние (`catalog-browse.css`, `catalog-poster.css`); здесь только баннер и полки.
+ */
+@layer overrides {
+  .desktop-app .cv-a-main {
+    gap: 16px;
+  }
+
+  /* ---------- Баннер раздела ---------- */
+
+  .desktop-app .cv-a-banner {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    min-height: 236px;
+    padding: 28px 32px;
+    overflow: hidden;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-xl);
+    background: var(--astral-surface-strong);
+  }
+
+  .desktop-app .cv-a-banner.is-bare {
+    min-height: 148px;
+  }
+
+  /* Поиск и избранное — обычная шапка без картинки: человек уже выбрал, баннеру нечего подсказывать. */
+  .desktop-app .cv-a-compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px 24px;
+  }
+
+  .desktop-app .cv-a-compact .catalog-main-heading {
+    flex: 1 1 280px;
+  }
+
+  .desktop-app .cv-a-banner-art {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 38%;
+  }
+
+  /* Рендер ствола или вещи — целиком справа, не растянутый на весь баннер. */
+  .desktop-app .cv-a-banner-art.is-render {
+    inset: 14px 28px 14px auto;
+    width: 46%;
+    height: calc(100% - 28px);
+    object-fit: contain;
+    object-position: right center;
+  }
+
+  .desktop-app .cv-a-banner:not(.is-bare)::after {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    content: "";
+    background:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 36%, rgba(0, 0, 0, 0.12) 80%),
+      linear-gradient(0deg, rgba(0, 0, 0, 0.5), transparent 58%);
+  }
+
+  .desktop-app .cv-a-banner-copy {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+    max-width: min(560px, 100%);
+    min-width: 0;
+  }
+
+  .desktop-app .cv-a-kicker {
+    margin: 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+  }
+
+  .desktop-app .cv-a-banner .catalog-title {
+    font-size: var(--astral-text-display);
+  }
+
+  .desktop-app .cv-a-banner .catalog-main-heading {
+    flex: 0 1 auto;
+  }
+
+  .desktop-app .cv-a-banner .catalog-main-status {
+    margin-top: 8px;
+    color: var(--astral-ink-muted);
+  }
+
+  .desktop-app .cv-a-banner-open {
+    max-width: 100%;
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  .desktop-app .cv-a-banner-open > :last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .desktop-app .cv-a-tools {
+    justify-content: flex-end;
+  }
+
+  /* ---------- Полки ---------- */
+
+  .desktop-app .cv-a-shelves {
+    display: grid;
+    gap: 26px;
+    min-width: 0;
+  }
+
+  .desktop-app .cv-a-rail {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .desktop-app .cv-a-rail-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 34px;
+  }
+
+  .desktop-app .cv-a-rail-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-section);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: var(--astral-line-tight);
+  }
+
+  .desktop-app .cv-a-rail-title svg {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    color: var(--astral-ink-faint);
+  }
+
+  .desktop-app .cv-a-rail-title small {
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-body);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  .desktop-app .cv-a-rail-tools {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .desktop-app .cv-a-rail-tools .ui-button.is-icon-only {
+    width: 30px;
+    padding: 0;
+  }
+
+  /* Лента идёт вбок; следующая карточка выглядывает на треть — видно, что за краем есть ещё. */
+  .desktop-app .cv-a-rail-track {
+    display: grid;
+    grid-auto-columns: calc((100% - 14px * 3.3) / 4.3);
+    grid-auto-flow: column;
+    align-items: start;
+    gap: 14px;
+    margin: -4px -4px -8px;
+    padding: 4px 4px 8px;
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .desktop-app .cv-a-rail-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .desktop-app .cv-a-rail-track > * {
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .desktop-app .cv-a-rail[data-more] .cv-a-rail-track {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+  }
+
+  .desktop-app .cv-a-rail[data-scroll] .cv-a-rail-track {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px);
+    mask-image: linear-gradient(90deg, transparent, #000 40px);
+  }
+
+  .desktop-app .cv-a-rail[data-more][data-scroll] .cv-a-rail-track {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 64px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 64px), transparent);
+  }
+
+  @media (max-width: 1099px) {
+    .desktop-app .cv-a-rail-track {
+      grid-auto-columns: calc((100% - 14px * 2.3) / 3.3);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .desktop-app .cv-a-rail-track {
+      grid-auto-columns: calc((100% - 14px * 1.3) / 2.3);
+    }
+
+    .desktop-app .cv-a-banner {
+      min-height: 200px;
+      padding: 22px 20px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .desktop-app .cv-a-rail-track {
+      scroll-behavior: auto;
+    }
+  }
+}

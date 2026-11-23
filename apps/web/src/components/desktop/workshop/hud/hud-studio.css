@@ -1,0 +1,320 @@
+/*
+ * Редактор HUD.
+ *
+ * Кадр здесь чужой: его рисует общее двумерное окно, и у него своя рамка, своя
+ * заглушка и свой переключатель сцен в углу. Поэтому редактор ничего на кадр
+ * не кладёт и ничего в нём не переопределяет — он ставит полосу над кадром и
+ * подпись под ним.
+ *
+ * Пропорции кадра здесь нет и быть не может: её задаёт выбранное разрешение, в
+ * коде. Стоит написать сюда `aspect-ratio`, и разметка HUD начнёт зависеть от
+ * листа стилей, а не от экрана, под который её настраивают, — ровно так «1:1»
+ * однажды держалось у прицела.
+ *
+ * Цвета — только из палитры Astral. Единственное исключение — сам слой HUD:
+ * там цвета выбирает человек и они уезжают в мод, а не в лаунчер.
+ *
+ * Лист лежит в слое `overrides` и подключён из общего `styles/index.css`, а не
+ * из компонента: в приложении один вход для стилей и явный порядок слоёв.
+ */
+
+/*
+ * Ленивый лист (18.10): прежнюю студию окно не открывает — реестр
+ * (`features/workshop/useWorkshopEditors.jsx`) её не ведёт, — и в стартовом
+ * `main.css` лист лежал зря (потолок 190 KiB, `scripts/verify-web-
+ * architecture.js`). Импортирует его сама студия: вернут её в реестр — вид
+ * приедет вместе с ней. Слой тот же, `overrides`.
+ */
+@layer overrides {
+  .hud-studio {
+    --hud-line: var(--astral-line);
+    --hud-muted: var(--astral-ink-muted);
+    --hud-faint: var(--astral-ink-faint);
+    color: var(--astral-ink);
+  }
+
+  /* --- Левая колонка: элементы HUD --- */
+
+  .hud-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    overflow: auto;
+  }
+  .hud-rail-title {
+    padding: 0 2px 4px;
+    color: var(--hud-faint);
+    font-size: var(--astral-text-micro);
+    letter-spacing: 0.04em;
+  }
+  .hud-rail-row {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    border: 1px solid transparent;
+    border-radius: var(--astral-radius);
+  }
+  .hud-rail-row:hover {
+    border-color: var(--hud-line);
+  }
+  .hud-rail-row.is-active {
+    border-color: var(--astral-accent);
+    background: var(--astral-surface);
+  }
+  .hud-rail-pick {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 8px 4px 8px 9px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    color: var(--astral-ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  .hud-rail-pick svg {
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+    color: var(--hud-muted);
+  }
+  .hud-rail-row.is-active .hud-rail-pick svg {
+    color: var(--astral-accent);
+  }
+  .hud-rail-pick span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .hud-rail-pick b {
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+  }
+  .hud-rail-pick small {
+    overflow: hidden;
+    color: var(--hud-faint);
+    font-size: var(--astral-text-micro);
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hud-rail-eye {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    background: none;
+    color: var(--hud-faint);
+    cursor: pointer;
+  }
+  .hud-rail-eye:hover {
+    color: var(--astral-ink);
+  }
+  .hud-rail-eye[aria-pressed="true"] {
+    color: var(--hud-muted);
+  }
+  .hud-rail-eye svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  /* --- Полоса над кадром: под какой экран настраиваем --- */
+
+  .hud-view-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--hud-line);
+    border-radius: var(--astral-radius);
+    background: var(--astral-surface-raised);
+  }
+  .hud-view-label {
+    color: var(--hud-faint);
+    font-size: 11px;
+  }
+  .hud-view-field {
+    margin-left: auto;
+    color: var(--hud-faint);
+    font-size: 11px;
+  }
+  .hud-select {
+    padding: 5px 8px;
+    border: 1px solid var(--hud-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface);
+    color: var(--astral-ink);
+    font: inherit;
+    font-size: 12px;
+  }
+
+  /* Подпись под кадром: почему здесь нет «Применить». Не плашка поверх кадра —
+     кадр занят слоем, ради которого сюда и пришли. */
+  .hud-truth-bar {
+    display: grid;
+    gap: 3px;
+    margin: 0;
+    color: var(--hud-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .hud-truth-bar span {
+    color: var(--hud-faint);
+    font-size: 11px;
+  }
+
+  /* --- Правая колонка --- */
+
+  .hud-inspector-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow: auto;
+    /* Место под полосу прокрутки, чтобы ползунки не дёргались при её появлении. */
+    padding-right: 4px;
+  }
+
+  .hud-inspector-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hud-line);
+  }
+  .hud-inspector-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .hud-inspector-title span {
+    color: var(--hud-faint);
+    font-size: var(--astral-text-micro);
+    letter-spacing: 0.04em;
+  }
+  .hud-inspector-title b {
+    font-size: var(--astral-text-strong);
+    font-weight: 500;
+  }
+  .hud-inspector-title small {
+    color: var(--hud-faint);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .hud-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .hud-field-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+  }
+  .hud-field-copy small {
+    color: var(--hud-faint);
+    font-size: var(--astral-text-micro);
+    line-height: 1.4;
+  }
+
+  /* Девять углов сеткой три на три: угол выбирают, глядя на его место, а не
+     читая «справа снизу» в выпадающем списке. */
+  .hud-anchors {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: repeat(3, 1fr);
+    width: 108px;
+  }
+  .hud-anchors button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 1px solid var(--hud-line);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-surface-sunken);
+    cursor: pointer;
+  }
+  .hud-anchors button i {
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--hud-faint);
+  }
+  .hud-anchors button:hover {
+    border-color: var(--astral-line-strong);
+  }
+  .hud-anchors button.is-active {
+    border-color: var(--astral-accent);
+  }
+  .hud-anchors button.is-active i {
+    background: var(--astral-accent);
+  }
+
+  .hud-colour {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hud-colour b {
+    color: var(--hud-muted);
+    font-family: var(--astral-font-mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .hud-hint {
+    margin: 0;
+    color: var(--hud-faint);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .hud-warning {
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(var(--astral-warning-rgb), 0.4);
+    border-radius: var(--astral-radius-sm);
+    background: var(--astral-warning-soft);
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    line-height: 1.5;
+  }
+
+  /* Сам слой HUD цветов из палитры не берёт: там цвета выбирает человек. Здесь
+     только то, что слою нужно от вёрстки: без touch-action указатель на
+     сенсорном экране скроллит страницу вместо элемента, и протяжка обрывается
+     на первом же миллиметре. */
+  .hud-layer {
+    user-select: none;
+    touch-action: none;
+  }
+  .hud-layer.is-dragging {
+    cursor: grabbing;
+  }
+
+  /* Прицельная подсказка про живую дверь у соседа — тише плашки внизу: это
+     справка при элементе, а не приговор всему редактору. */
+  .hud-neighbor-note {
+    margin: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--astral-line, rgba(148, 163, 184, 0.25));
+    border-radius: var(--astral-radius);
+    color: var(--astral-muted, rgba(148, 163, 184, 0.9));
+    font-size: 11px;
+    line-height: 1.5;
+  }
+}

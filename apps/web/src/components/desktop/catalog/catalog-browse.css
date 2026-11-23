@@ -1,0 +1,701 @@
+/* Каталог: страница с навигатором, шапка выдачи, дерево разделов и поиск.
+   Все селекторы начинаются с .desktop-app, поэтому он стоит корнем вложенности.
+   Порядок объявлений везде один: текст (шрифт ближе к концу группы), цвет, фон,
+   рамки, отступы, размеры (ширина раньше высоты), положение, раскладка
+   (display замыкает), поведение, переходы. */
+
+.desktop-app {
+  --catalog-track: minmax(0, 1fr);
+  --catalog-text: var(--astral-ink);
+  --catalog-text-dim: var(--astral-ink-muted);
+  --catalog-text-quiet: var(--astral-ink-faint);
+  --catalog-edge: var(--astral-line);
+  --catalog-edge-strong: var(--astral-line-strong);
+  --catalog-edge-focus: var(--astral-line-focus);
+  --catalog-fill-raised: var(--astral-surface-raised);
+  --catalog-fill-hover: var(--astral-surface-hover);
+  --catalog-size-small: var(--astral-text-small);
+  --catalog-size-body: var(--astral-text-body);
+  --catalog-corner: var(--astral-radius);
+  --catalog-quick: var(--astral-duration-fast);
+  --catalog-pace: var(--astral-duration);
+  --catalog-curve: var(--astral-ease);
+
+  /* ---------- страница и сетка выдачи ---------- */
+  & [data-holds~=catalog-wide][data-holds~=catalog-wide].desktop-content {
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 18px;
+    padding-left: 18px;
+    max-width: none;
+  }
+
+  & .is-navigator.public-catalog-page {
+    padding-top: 0;
+    column-gap: 28px;
+    row-gap: 0;
+    align-items: start;
+    grid-template-columns: max-content var(--catalog-track);
+    display: grid;
+
+    & .public-catalog-grid {
+      column-gap: 14px;
+      row-gap: 16px;
+      grid-template-columns: repeat(4, var(--catalog-track));
+    }
+
+    & .clothing-showcase {
+      padding-top: 0;
+    }
+  }
+
+  /* ---------- размеры значков: у разных элементов одинаковые ----------
+     Стоят до правил с тем же svg (поиск, миниатюры): при равной силе селекторов
+     их размеры должны перебить эти. */
+  & .catalog-tree-caret svg,
+  & .catalog-search-clear svg {
+    height: 14px;
+    width: 14px;
+  }
+
+  & .is-glyph.catalog-tree-thumb,
+  & .catalog-tree-icon svg,
+  & .catalog-navigator-toggle svg {
+    height: 18px;
+    width: 18px;
+  }
+
+  /* ---------- навигатор: рейка и раскрытая панель ---------- */
+  & .catalog-navigator {
+    --catalog-open: 268px;
+    --catalog-rail: 44px;
+    --catalog-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+    transition-delay: 0s;
+    transition-timing-function: var(--catalog-ease);
+    transition-duration: 220ms;
+    transition-property: width;
+    scrollbar-width: none;
+    /* Колесо над меню слева листает страницу, когда меню листать некуда (владелец, 16.11.2026: «везде колесиком вверх-вниз»); `contain` глотало его — аудит `scroll`. */
+    overscroll-behavior: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-inline: -4px;
+    margin-block: -4px;
+    padding-inline: 4px;
+    padding-block: 4px 28px;
+    box-sizing: border-box;
+    max-height: calc(100vh - 72px);
+    min-width: 0;
+    width: calc(var(--catalog-rail) + 8px);
+    z-index: 2;
+    top: 16px;
+    position: sticky;
+    gap: 8px;
+    flex-direction: column;
+    display: flex;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &[data-scroll~=bottom] {
+      --catalog-fade-bottom: 36px;
+    }
+
+    &[data-scroll~=top] {
+      --catalog-fade-top: 22px;
+    }
+
+    /* затухание краёв, когда есть что прокручивать */
+    &:is([data-scroll~=bottom], [data-scroll~=top]) {
+      --catalog-fade-mask: linear-gradient(to bottom, transparent 0, #000000 var(--catalog-fade-top, 0px), #000000 calc(100% - var(--catalog-fade-bottom, 0px)), transparent 100%);
+
+      -webkit-mask-image: var(--catalog-fade-mask);
+      mask-image: var(--catalog-fade-mask);
+    }
+
+    &[data-open] {
+      width: calc(var(--catalog-open) + 8px);
+
+      & .catalog-tree-count,
+      & .catalog-tree-label {
+        transition-delay: var(--astral-duration-snap);
+        transition-timing-function: var(--catalog-curve);
+        transition-duration: var(--catalog-pace);
+        transition-property: opacity;
+        opacity: 1;
+      }
+    }
+
+    /* рейка: подписи прячутся, остаются значки */
+    &:not([data-open]) {
+      & .catalog-navigator-heading,
+      & .catalog-tree-thumb,
+      & .catalog-tree-caret,
+      & .catalog-tree-count,
+      & .catalog-tree-label {
+        overflow: hidden;
+        clip-path: inset(50%);
+        opacity: 0;
+        white-space: nowrap;
+        height: 1px;
+        width: 1px;
+        position: absolute;
+      }
+
+      & .catalog-tree-collapse {
+        display: none;
+      }
+
+      & .catalog-navigator-bar {
+        padding: 0;
+        justify-content: center;
+      }
+
+      & :is(.is-part, .is-section).catalog-tree-item {
+        padding: 0;
+        min-height: var(--catalog-rail);
+        height: var(--catalog-rail);
+        width: var(--catalog-rail);
+        justify-content: center;
+      }
+
+      & :not(.is-current).is-trail.catalog-tree-item {
+        background: var(--catalog-fill-raised);
+        border-color: var(--catalog-edge-strong);
+      }
+    }
+  }
+
+  & .catalog-navigator-bar {
+    padding-right: 2px;
+    padding-left: 10px;
+    padding-block: 0;
+    min-height: 32px;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
+
+    &:has(.catalog-search-field) {
+      padding-inline: 0;
+      padding-block: 0;
+    }
+
+    & .catalog-search-field {
+      min-width: 0;
+      width: auto;
+      flex-basis: auto;
+      flex-shrink: 1;
+      flex-grow: 1;
+    }
+  }
+
+  & .catalog-navigator-heading {
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: var(--catalog-size-small);
+    color: var(--catalog-text-quiet);
+  }
+
+  & .catalog-tree-list {
+    & + .catalog-tree-list {
+      margin-top: 8px;
+    }
+  }
+
+  & .catalog-navigator-toggle {
+    transition-delay: 0s, 0s, 0s;
+    transition-timing-function: var(--catalog-curve), var(--catalog-curve), var(--catalog-curve);
+    transition-duration: var(--catalog-quick), var(--catalog-quick), var(--catalog-quick);
+    transition-property: color, background, border-color;
+    cursor: pointer;
+    background: transparent;
+    color: var(--catalog-text-quiet);
+    border-radius: var(--catalog-corner);
+    border-color: transparent;
+    border-style: solid;
+    border-width: 1px;
+    padding: 0;
+    height: 32px;
+    width: 32px;
+    place-items: center;
+    flex: none;
+    display: grid;
+
+    &:hover {
+      background: var(--catalog-fill-hover);
+      color: var(--catalog-text);
+    }
+
+    &:focus-visible {
+      outline-offset: -2px;
+      outline-color: var(--catalog-edge-focus);
+      outline-style: solid;
+      outline-width: 2px;
+    }
+  }
+
+  /* ---------- поиск по каталогу ---------- */
+  & .catalog-search-field {
+    transition-delay: 0s, 0s;
+    transition-timing-function: var(--catalog-curve), var(--catalog-curve);
+    transition-duration: var(--catalog-pace), var(--catalog-pace);
+    transition-property: border-color, background-color;
+    background: var(--astral-surface);
+    color: var(--catalog-text-dim);
+    border-radius: var(--catalog-corner);
+    border-color: var(--catalog-edge);
+    border-style: solid;
+    border-width: 1px;
+    height: 34px;
+    width: 240px;
+    position: relative;
+    align-items: center;
+    flex: none;
+    display: flex;
+
+    &:hover {
+      border-color: var(--catalog-edge-strong);
+    }
+
+    /* после :hover — в фокусе рамка остаётся фокусной */
+    &:focus-within {
+      background: var(--catalog-fill-raised);
+      border-color: var(--catalog-edge-focus);
+    }
+
+    & > svg {
+      pointer-events: none;
+      height: 16px;
+      width: 16px;
+      left: 12px;
+      position: absolute;
+    }
+
+    & input {
+      font: inherit;
+      font-size: var(--catalog-size-body);
+      background-color: transparent;
+      color: var(--catalog-text);
+      outline: 0;
+      border: 0;
+      padding-right: 38px;
+      padding-left: 36px;
+      padding-block: 0;
+      height: 100%;
+      min-width: 0;
+      width: 100%;
+
+      &::placeholder {
+        color: var(--catalog-text-dim);
+      }
+
+      &::-webkit-search-cancel-button {
+        display: none;
+      }
+    }
+  }
+
+  & .catalog-search-clear {
+    transition-delay: 0s;
+    transition-timing-function: ease;
+    transition-duration: var(--catalog-quick);
+    transition-property: opacity;
+    cursor: pointer;
+    visibility: hidden;
+    opacity: 0;
+    background: transparent;
+    color: var(--catalog-text-dim);
+    border-radius: var(--astral-radius-sm);
+    border: 0;
+    height: 28px;
+    width: 28px;
+    right: 6px;
+    position: absolute;
+    place-items: center;
+    display: grid;
+
+    &.is-visible {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    &:hover {
+      background: var(--catalog-fill-hover);
+      color: var(--catalog-text);
+    }
+  }
+
+  /* ---------- дерево разделов ---------- */
+  & .catalog-tree {
+    margin-top: 6px;
+    min-width: 0;
+    gap: 2px;
+    grid-template-columns: var(--catalog-track);
+    display: grid;
+
+    & ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      gap: 2px;
+      grid-template-columns: var(--catalog-track);
+      display: grid;
+    }
+
+    /* поля задаёт .catalog-tree, вложенные уровни ниже подправляют margin-left */
+    & .catalog-tree-children {
+      border-left-color: var(--catalog-edge);
+      border-left-style: solid;
+      border-left-width: 1px;
+      margin-right: 0;
+      margin-left: 18px;
+      margin-block: 2px 6px;
+      padding-left: 6px;
+    }
+  }
+
+  & .catalog-tree-children {
+    & .catalog-tree-item {
+      padding-inline: 8px;
+      padding-block: 0;
+      min-height: 32px;
+      gap: 9px;
+    }
+
+    & .catalog-tree-children {
+      margin-left: 14px;
+
+      & .catalog-tree-item {
+        font-size: var(--catalog-size-small);
+        min-height: 30px;
+        gap: 8px;
+      }
+
+      & .catalog-tree-thumb {
+        height: 18px;
+        width: 34px;
+      }
+    }
+  }
+
+  & .catalog-tree-node {
+    min-width: 0;
+  }
+
+  & .catalog-tree-item {
+    transition-delay: 0s, 0s, 0s;
+    transition-timing-function: var(--catalog-curve), var(--catalog-curve), var(--catalog-curve);
+    transition-duration: var(--catalog-quick), var(--catalog-quick), var(--catalog-quick);
+    transition-property: color, background, border-color;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-weight: 500;
+    font-size: var(--catalog-size-body);
+    background: transparent;
+    color: var(--catalog-text-dim);
+    border-radius: var(--catalog-corner);
+    border-color: transparent;
+    border-style: solid;
+    border-width: 1px;
+    padding-inline: 10px;
+    padding-block: 0;
+    min-height: 36px;
+    width: 100%;
+    gap: 10px;
+    align-items: center;
+    display: flex;
+
+    &:hover {
+      background: var(--catalog-fill-hover);
+      color: var(--catalog-text);
+    }
+
+    &:focus-visible {
+      outline-offset: -2px;
+      outline-color: var(--catalog-edge-focus);
+      outline-style: solid;
+      outline-width: 2px;
+    }
+
+    &.is-trail {
+      font-weight: 600;
+      color: var(--catalog-text);
+    }
+
+    &.is-current {
+      font-weight: 600;
+      background: var(--catalog-fill-raised);
+      color: var(--catalog-text);
+      border-color: var(--catalog-edge-strong);
+    }
+
+    &:not(.is-current).is-empty {
+      color: var(--catalog-text-quiet);
+    }
+
+    &[aria-expanded=true] {
+      & > .catalog-tree-caret {
+        transform: rotate(180deg);
+      }
+    }
+
+    &.is-current {
+      & .catalog-tree-count {
+        color: var(--catalog-text-dim);
+      }
+    }
+
+    &:is(.is-trail, .is-current, :hover) {
+      & .catalog-tree-thumb {
+        & img {
+          opacity: .92;
+        }
+      }
+    }
+
+    &:not(.is-current).is-empty {
+      & .catalog-tree-thumb {
+        & img {
+          opacity: .26;
+        }
+      }
+
+      & .catalog-tree-avatar {
+        opacity: .4;
+      }
+    }
+  }
+
+  & .catalog-tree-icon {
+    height: 18px;
+    width: 18px;
+    place-items: center;
+    flex: none;
+    display: grid;
+  }
+
+  & .catalog-tree-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  & .catalog-tree-caret {
+    transition-delay: 0s;
+    transition-timing-function: var(--catalog-curve);
+    transition-duration: var(--catalog-quick);
+    transition-property: transform;
+    color: var(--catalog-text-quiet);
+    place-items: center;
+    flex: none;
+    display: grid;
+  }
+
+  & .catalog-tree-count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-size: var(--catalog-size-small);
+    color: var(--catalog-text-quiet);
+    flex: none;
+  }
+
+  & .catalog-tree-collapse {
+    overflow: hidden;
+  }
+
+  & .catalog-tree-thumb {
+    height: 20px;
+    width: 40px;
+    place-items: center;
+    flex: none;
+    display: grid;
+
+    & img {
+      transition-delay: 0s;
+      transition-timing-function: var(--catalog-curve);
+      transition-duration: var(--catalog-quick);
+      transition-property: opacity;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      opacity: .6;
+      height: 100%;
+      width: 100%;
+    }
+
+    & svg {
+      height: 16px;
+      width: 16px;
+    }
+  }
+
+  & .catalog-tree-avatar {
+    place-items: center;
+    flex: none;
+    display: grid;
+
+    & .account-mark {
+      --account-mark-size: 22px;
+
+      font-size: var(--astral-text-micro);
+    }
+  }
+
+  /* ---------- правая колонка: заголовок, статус, инструменты ---------- */
+  & .catalog-main {
+    min-width: 0;
+    gap: 18px;
+    align-content: start;
+    display: grid;
+  }
+
+  & .catalog-main-head {
+    column-gap: 24px;
+    row-gap: 14px;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    display: flex;
+  }
+
+  & .catalog-main-heading {
+    min-width: 0;
+    flex: 1 1 320px;
+  }
+
+  & .catalog-title {
+    overflow-wrap: anywhere;
+    letter-spacing: -.02em;
+    line-height: var(--astral-line-tight);
+    font-weight: 700;
+    font-size: var(--astral-text-hero);
+    font-family: var(--astral-font);
+    color: var(--catalog-text);
+    margin: 0;
+  }
+
+  & .catalog-redux-title {
+    min-width: 0;
+    gap: 12px;
+    align-items: center;
+    display: flex;
+
+    & .account-mark {
+      --account-mark-size: 40px;
+    }
+  }
+
+  & .catalog-main-status {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--catalog-size-body);
+    color: var(--catalog-text-dim);
+    margin-inline: 0;
+    margin-block: 6px 0;
+
+    &.is-note {
+      color: var(--astral-warning);
+    }
+  }
+
+  & .catalog-main-tools {
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    display: flex;
+
+    & .is-sm.ui-button {
+      font-size: var(--catalog-size-small);
+      border-radius: var(--catalog-corner);
+      padding-inline: 12px;
+      padding-block: 0;
+      gap: 8px;
+    }
+
+    /* идёт после .is-sm: кнопка-значок должна остаться без полей */
+    & .is-icon-only.ui-button {
+      padding: 0;
+      width: 34px;
+    }
+  }
+
+  & .catalog-sort {
+    & .ui-button-trailing {
+      color: var(--catalog-text-quiet);
+      display: grid;
+
+      & svg {
+        height: 12px;
+        width: 12px;
+      }
+    }
+  }
+
+  & .catalog-filterbar {
+    height: 36px;
+    min-width: 0;
+    gap: 10px;
+    align-items: center;
+    display: flex;
+  }
+}
+
+/* ---------- узкие окна: идут после основных правил, перебивают их порядком ---------- */
+
+@media (max-width: 1100px) {
+  .desktop-app {
+    & .is-navigator.public-catalog-page {
+      column-gap: 20px;
+      row-gap: 0;
+    }
+  }
+}
+
+@media (max-width: 1099px) {
+  .desktop-app {
+    & .is-navigator.public-catalog-page {
+      & .public-catalog-grid {
+        grid-template-columns: repeat(3, var(--catalog-track));
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .desktop-app {
+    & .is-navigator.public-catalog-page {
+      & .public-catalog-grid {
+        grid-template-columns: repeat(2, var(--catalog-track));
+      }
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .desktop-app {
+    & .is-navigator.public-catalog-page {
+      & .public-catalog-grid {
+        grid-template-columns: var(--catalog-track);
+      }
+    }
+  }
+}
+
+/* без анимации: после основных правил, чтобы перебить их переходы */
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-app {
+    & [data-open].catalog-navigator .catalog-tree-count,
+    & [data-open].catalog-navigator .catalog-tree-label,
+    & .catalog-navigator-toggle,
+    & .catalog-navigator {
+      animation: none;
+      transition: none;
+    }
+  }
+}

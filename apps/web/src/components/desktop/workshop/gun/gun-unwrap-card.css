@@ -1,0 +1,36 @@
+/*
+ * Карточка «Развёртка» в углу кадра (`GunUnwrapCard.jsx`): над масштабом, справа внизу. Подложка — шахматка прозрачности: там,
+ * где в текстуре пусто, это видно, а не залито чёрным. Мышь не ловит; цвета, радиусы и кегли — из токенов.
+ */
+@layer overrides {
+  .gun-unwrap-card {
+    position: absolute;
+    z-index: 4;
+    right: 12px;
+    bottom: 64px;
+    display: grid;
+    gap: 6px;
+    max-width: 248px;
+    padding: 8px;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    background: rgba(10, 10, 11, 0.72);
+    pointer-events: none;
+  }
+
+  .gun-unwrap-card small {
+    overflow: hidden;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-micro);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gun-unwrap-card canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--astral-radius-xs);
+    background: repeating-conic-gradient(rgba(255, 255, 255, 0.14) 0 25%, rgba(255, 255, 255, 0.04) 0 50%) 0 0 / 12px 12px;
+  }
+}

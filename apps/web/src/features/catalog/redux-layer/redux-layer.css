@@ -1,0 +1,38 @@
+/*
+ * Установленный редукс на новом пути под кнопкой «Установлено» части (`ReduxLayerActions.jsx`): слово о состоянии, три действия,
+ * отказ словами. Блок занимает всю строку панели части, кнопки в ряд, слова переносятся. Подключён из `styles/index.css`
+ * в слое `overrides` (слой задаёт `@import`, внутри листа своего `@layer` нет).
+ */
+
+.desktop-app .mod-part-redux {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--astral-line);
+}
+
+.desktop-app .mod-part-redux-word {
+  flex: 1 1 100%;
+  min-width: 0;
+  color: var(--astral-ink-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.desktop-app .mod-part-redux-refusal {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--astral-warning);
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}

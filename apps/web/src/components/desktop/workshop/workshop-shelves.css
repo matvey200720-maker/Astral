@@ -1,0 +1,303 @@
+/*
+ * Полки мастерской и статус слота.
+ *
+ * Лист обёрнут в @layer overrides и подключён из styles/index.css рядом с
+ * workshop.css: он правит те же карточки каталога и обязан стоять после
+ * листов продукта, которые их рисуют.
+ */
+@layer overrides {
+  .desktop-app .workshop-library .workshop-library-group {
+    display: block;
+    margin: 0 0 26px;
+  }
+
+  .desktop-app .workshop-library .workshop-library-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .desktop-app .workshop-library-group-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 4px 12px;
+  }
+
+  .desktop-app .workshop-library-group-heading h2 {
+    margin: 0;
+    color: var(--workshop-ink, var(--v5-text, #f4f6fa));
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+  }
+
+  .desktop-app .workshop-library-group-heading p {
+    margin: 4px 0 0;
+    color: var(--workshop-ink-soft, rgba(255, 255, 255, 0.6));
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  /* Статус слота — чип в верхнем левом углу кадра. Кадр тёмный в обеих темах
+     (под ним фотография), поэтому и чип один на обе. */
+  .desktop-app .workshop-card-status {
+    position: absolute;
+    z-index: 3;
+    top: 12px;
+    left: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 22px;
+    padding: 0 9px 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    color: rgba(247, 250, 255, 0.82);
+    background: rgba(9, 9, 9, 0.62);
+    box-shadow: 0 8px 22px rgba(4, 4, 4, 0.16);
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .desktop-app .workshop-card-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.45;
+  }
+
+  /* «Установлено» — круглая галочка, а не плашка со словом: знак занимает
+     угол, а не пол-кадра, и обложка под ним видна целиком. Слово живёт в
+     `aria-label` и подсказке (`WorkshopCardStatus`); курсор знак ловит только
+     ради этой подсказки — нажатие всё равно уходит карточке под ним. */
+  .desktop-app .workshop-card-status[data-status="installed"] {
+    justify-content: center;
+    width: 24px;
+    min-height: 24px;
+    padding: 0;
+    color: #dbffe7;
+    border-color: rgba(84, 214, 132, 0.46);
+    background: rgba(14, 74, 40, 0.78);
+    pointer-events: auto;
+  }
+
+  .desktop-app .workshop-card-status[data-status="installed"]::before {
+    content: none;
+  }
+
+  /* «Не в игре» — полка после отката update.rpf лаунчером (Т-98); «Заменён» — место занял более новый слой (18.11.2026). */
+  .desktop-app .workshop-card-status[data-status="reverted"],
+  .desktop-app .workshop-card-status[data-status="covered"] {
+    color: var(--astral-warning);
+    border-color: color-mix(in srgb, var(--astral-warning) 45%, transparent);
+  }
+
+  .desktop-app .workshop-card-status[data-status="installed"] svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* Статус на карточке оружия и одежды в библиотеке: у неё корень — article,
+     а не кнопка словаря, поэтому чип стоит поверх кнопки и нажатий не ловит. */
+  .desktop-app .weapon-slot-card > .workshop-card-status {
+    z-index: 4;
+  }
+
+  /* Пустая библиотека: плашка словаря (`ui-panel`) и одна мысль посередине —
+     что здесь появится и куда за этим идти. Своего фона и рамки у неё нет:
+     их даёт `ui-panel`, лист задаёт только раскладку. */
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  /* Предупреждение библиотеки: архив игры не тот, что оставил Astral. Стоит
+     над полкой одной строкой — знак и объяснение; плашку даёт `ui-panel`,
+     цвет знака — палитровое предупреждение. */
+  .desktop-app .workshop-library-drift {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    margin: 0 0 18px;
+  }
+
+  /* «Вернуть» после отката лаунчером (Т-98) — справа, по центру строки. */
+  .desktop-app .workshop-library-drift > button {
+    align-self: center;
+  }
+
+  .desktop-app .workshop-library-drift > svg {
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    color: var(--astral-warning);
+  }
+
+  /* Моды ждут запуска игры (копия Rockstar, задача 7) — не поломка. */
+  .desktop-app .workshop-library-drift[data-drift="parked"] > svg {
+    color: var(--astral-positive);
+  }
+
+  .desktop-app .workshop-library-drift b {
+    display: block;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-weight: 650;
+    line-height: 1.25;
+  }
+
+  .desktop-app .workshop-library-drift p {
+    margin: 4px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.45;
+  }
+
+  /* Строки библиотеки — у того, что не картинка: настройка оптимизации,
+     готовый слой. Одна строка на вещь: знак, что это, статус и дорога туда,
+     где её меняют. Плашку даёт `ui-panel`. */
+  .desktop-app .workshop-library-rows {
+    display: grid;
+    gap: 10px;
+  }
+
+  .desktop-app .workshop-library-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* Оптимизация в библиотеке (ТЗ 10.10): заголовок и те же карточки, что в
+     мастерской (`OptimizationShelf`, без тумблеров). В режиме выбора корзины
+     галочка — у заголовка, а отмеченные карточки обведены цветом отметки. */
+  .desktop-app .library-optimization {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .desktop-app .library-optimization:first-child {
+    margin-top: 0;
+  }
+
+  .desktop-app .library-optimization-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .desktop-app .library-optimization-head h3 {
+    margin: 0;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .desktop-app .library-optimization-head p {
+    margin: 4px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  .desktop-app .library-optimization-status {
+    margin: 0;
+    color: var(--astral-ink-faint);
+    font-size: var(--astral-text-small);
+  }
+
+  .desktop-app .library-optimization[data-selected="true"] .optimization-card {
+    outline: 2px solid var(--astral-accent);
+    outline-offset: 2px;
+  }
+
+  /* Строка сборки (Т-81d): «Открыть» и «Снять сборку» — одной ячейкой. */
+  .desktop-app .workshop-library-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .desktop-app .workshop-library-row-mark {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius);
+    color: var(--astral-ink-muted);
+    background: var(--astral-surface-raised);
+  }
+
+  .desktop-app .workshop-library-row-mark svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .desktop-app .workshop-library-row h3 {
+    margin: 0;
+    color: var(--astral-ink);
+    font-size: var(--astral-text-strong);
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  .desktop-app .workshop-library-row p {
+    margin: 4px 0 0;
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+    line-height: 1.4;
+  }
+
+  /* Чип статуса в строке стоит в потоке, а не в углу кадра: кадра здесь нет. */
+  .desktop-app .workshop-library-row > .workshop-card-status {
+    position: static;
+    box-shadow: none;
+  }
+
+  @media (max-width: 720px) {
+    .desktop-app .workshop-library-row {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .desktop-app .workshop-library-row > .workshop-card-status,
+    .desktop-app .workshop-library-row > .ui-button {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+
+  /* Плитка редактора: карандаш в углу — знак, что за ней студия, а не список
+     чужих модов. */
+  .desktop-app
+    .redux-visual-card[data-workshop-kind="editor"]
+    > .workshop-card-arrow
+    svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  @media (max-width: 720px) {
+    .desktop-app .workshop-library-group-heading {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }
+}

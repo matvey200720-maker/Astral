@@ -1,0 +1,301 @@
+/*
+ * «Животные» мастерской (05.11.2026). Каркас `EditorShell` (`tools` слева, настройки и список справа, кадр посередине). Цвета,
+ * отступы и шрифты — токены словаря; панели плотные, без размытия (docs/3D.md, правило 9).
+ */
+
+/* Правая колонка шире общей: в ней настройки и список всех животных. */
+.animals-editor[data-layout="studio"] {
+  --editor-panel-w: clamp(300px, 26vw, 460px);
+}
+
+.animals-fieldset {
+  display: contents;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.animals-fieldset:disabled .ui-panel {
+  opacity: 0.55;
+}
+
+.animals-preview-only {
+  margin: 0 0 8px;
+  color: var(--astral-warning);
+}
+
+/* --- Кадр --- */
+
+.animals-stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--astral-radius);
+  background: var(--astral-surface-sunken);
+  touch-action: none;
+  cursor: grab;
+}
+
+.animals-stage:active {
+  cursor: grabbing;
+}
+
+.animals-view {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.animals-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity var(--astral-duration-fast) var(--astral-ease);
+}
+
+.animals-stage[data-ready] .animals-canvas {
+  opacity: 1;
+}
+
+.animals-stage-note {
+  position: absolute;
+  inset: 0 0 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+  text-align: center;
+  pointer-events: none;
+}
+
+.animals-stage-note.is-error {
+  color: var(--astral-warning);
+}
+
+.animals-stage-note small {
+  max-width: 60ch;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-small);
+}
+
+.animals-stage-note i {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--astral-line-strong);
+  border-top-color: var(--astral-accent);
+  border-radius: 50%;
+  animation: animals-spin 0.9s linear infinite;
+}
+
+@keyframes animals-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animals-stage-caption {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--astral-line);
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+  cursor: default;
+}
+
+.animals-clamp {
+  color: var(--astral-warning);
+  font-weight: inherit;
+}
+
+/* Постановочная схема: силуэт и метка над ним, без файлов игры. */
+.animals-staged {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.animals-staged-body {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  width: min(46%, 360px);
+  max-height: 46%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+.animals-staged-marker {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.animals-staged-marker img {
+  width: clamp(36px, 7vh, 64px);
+  height: clamp(36px, 7vh, 64px);
+}
+
+.animals-staged-marker i {
+  flex: 1 1 auto;
+  width: 3px;
+}
+
+/* --- Панель настроек --- */
+
+.animals-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 52px);
+  justify-content: start;
+  gap: 6px;
+}
+
+.animals-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 6px;
+  border: 1px solid var(--astral-line);
+  border-radius: var(--astral-radius-sm);
+  background: var(--astral-surface);
+  cursor: pointer;
+}
+
+.animals-icon:hover:not(:disabled) {
+  background: var(--astral-surface-hover);
+}
+
+.animals-icon.is-on {
+  border-color: var(--astral-accent);
+  background: var(--astral-surface-raised);
+}
+
+.animals-icon:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.animals-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.animals-pole {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Что не так с эмблемой метки: картинка не выбрана, нет на этом компьютере или файл не принят. */
+.animals-problem {
+  color: var(--astral-warning);
+}
+
+/* --- Список животных (внизу правой колонки) --- */
+
+.animals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: min(44vh, 420px);
+  min-height: 200px;
+  padding: 10px 12px 12px;
+}
+
+.animals-scroll {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.animals-group h4 {
+  margin: 6px 4px 4px;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+  font-weight: 500;
+}
+
+.animals-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--astral-radius-sm);
+  background: transparent;
+  color: var(--astral-ink);
+  font-size: var(--astral-text-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.animals-row:hover {
+  background: var(--astral-surface-hover);
+}
+
+.animals-row.is-on {
+  background: var(--astral-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--astral-line-strong);
+}
+
+.animals-row img {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.animals-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.animals-row-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--astral-accent);
+}
+
+.animals-row small {
+  flex: none;
+  color: var(--astral-ink-faint);
+  font-size: var(--astral-text-micro);
+}
+
+.animals-empty {
+  margin: 12px 4px;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-small);
+}
+

@@ -1,0 +1,703 @@
+@layer overrides {
+  /* Корень студии и сетка сцены */
+  .txs-root {
+    background: var(--astral-bg);
+    display: flex;
+    flex-direction: column;
+    inset: 40px 0 0;
+    position: fixed;
+    z-index: 60;
+
+    > .ui-editor-shell {
+      flex: auto;
+      min-height: 0;
+    }
+  }
+
+  .txs-stage {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+  }
+
+  /* Верхняя панель */
+  .txs-bar {
+    align-items: center;
+    background: var(--astral-surface);
+    border-bottom: 1px solid var(--astral-line);
+    container: txs-bar / inline-size;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    height: 46px;
+    overflow: hidden;
+    padding: 0 10px;
+  }
+
+  .txs-bar-group {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .txs-bar-params {
+    flex: auto;
+    gap: 16px;
+  }
+
+  .txs-bar-sep {
+    align-self: center;
+    background: var(--astral-line);
+    flex: 0 0 1px;
+    height: 24px;
+  }
+
+  .txs-loading,
+  .txs-bar-empty {
+    color: var(--astral-ink-muted);
+  }
+
+  .txs-bar-empty {
+    font-size: var(--astral-text-small);
+    white-space: nowrap;
+  }
+
+  .txs-bar-range {
+    flex: 1 1 220px;
+    max-width: 260px;
+    min-width: 200px;
+
+    @container txs-bar (max-width: 820px) {
+      & + .txs-bar-range {
+        display: none;
+      }
+    }
+  }
+
+  /* Переключатель области и кнопки панелей не сжимаются */
+  .txs-scope,
+  .txs-bar-tools .ui-button,
+  .txs-bar-actions .ui-button,
+  .txs-footer > .ui-button,
+  .txs-zoom .ui-button {
+    flex: none;
+  }
+
+  .txs-scope {
+    & .ui-segment {
+      flex: none;
+      max-width: none;
+    }
+
+    .ui-segment-label {
+      overflow: visible;
+      text-overflow: clip;
+    }
+  }
+
+  /* Холст и слои над ним */
+  .txs-canvas-area {
+    --txs-bg: #17181b;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .txs-viewport,
+  .txs-over-canvas,
+  .txs-view-canvas,
+  .txs-loading {
+    inset: 0;
+    position: absolute;
+  }
+
+  .txs-viewport {
+    background: var(--txs-bg);
+    outline: none;
+    overflow: hidden;
+  }
+
+  .txs-over-canvas,
+  .txs-view-canvas {
+    height: 100%;
+    touch-action: none;
+    width: 100%;
+  }
+
+  .txs-loading {
+    display: grid;
+    margin: 0;
+    place-items: center;
+  }
+
+  .txs-busy {
+    background: var(--astral-surface-strong);
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-lg);
+    box-shadow: var(--astral-shadow);
+    color: var(--astral-ink);
+    font-size: var(--astral-text-small);
+    left: 50%;
+    top: 12px;
+    padding: 6px 14px;
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  /* Нижняя строка: масштаб и подсказка */
+  .txs-footer {
+    align-items: center;
+    background: var(--astral-surface);
+    border-top: 1px solid var(--astral-line);
+    display: flex;
+    font-size: var(--astral-text-small);
+    gap: 12px;
+    min-height: 40px;
+    padding: 4px 12px;
+  }
+
+  .txs-zoom {
+    align-items: center;
+    display: inline-flex;
+    flex: none;
+    gap: 2px;
+
+    & > output {
+      font-variant-numeric: tabular-nums;
+      min-width: 52px;
+      text-align: center;
+    }
+  }
+
+  .txs-footer-info,
+  .txs-shell .ui-editor-panel-copy > small,
+  .txs-thumb-icon {
+    color: var(--astral-ink-muted);
+  }
+
+  .txs-footer-info {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Плавающее окно: корпус, шапка и состояния */
+  .txs-float {
+    max-height: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+    position: absolute;
+    width: 340px;
+    z-index: 30;
+
+    & > .txs-float-box > header {
+      align-items: center;
+      justify-content: space-between;
+      display: flex;
+      flex: none;
+      font-size: var(--astral-text-small);
+      font-weight: 600;
+      gap: 4px;
+      padding: 4px;
+    }
+  }
+
+  .txs-float-box {
+    background: var(--astral-surface-strong);
+    border: 1px solid var(--astral-line-strong);
+    border-radius: var(--astral-radius-lg);
+    box-shadow: var(--astral-shadow);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .txs-float-handle {
+    &.ui-button {
+      cursor: grab;
+      flex: auto;
+      font-weight: 600;
+      justify-content: flex-start;
+      min-width: 0;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .ui-button-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .txs-float-tools {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 2px;
+  }
+
+  .txs-float-sizes {
+    display: flex;
+    gap: 0;
+    margin-right: 2px;
+
+    & .ui-button {
+      min-width: 28px;
+      padding-inline: 6px;
+    }
+  }
+
+  /* Рамки и углы для изменения размера окна */
+  .txs-float-edge {
+    position: absolute;
+    touch-action: none;
+    z-index: 3;
+
+    &::after {
+      background: var(--astral-line-focus);
+      border-radius: 2px;
+      content: "";
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      transition: opacity var(--astral-duration-fast) var(--astral-ease);
+    }
+
+    &:hover::after {
+      opacity: 1;
+    }
+
+    &[data-edge="n"] {
+      cursor: ns-resize;
+      height: 8px;
+      left: 12px;
+      right: 12px;
+      top: -4px;
+    }
+
+    &[data-edge="s"] {
+      cursor: ns-resize;
+      height: 8px;
+      left: 12px;
+      right: 12px;
+      bottom: -4px;
+    }
+
+    &[data-edge="n"],
+    &[data-edge="s"] {
+      &::after {
+        inset: 3px 0;
+      }
+    }
+
+    &[data-edge="w"] {
+      cursor: ew-resize;
+      top: 12px;
+      bottom: 12px;
+      left: -4px;
+      width: 8px;
+    }
+
+    &[data-edge="e"] {
+      cursor: ew-resize;
+      top: 12px;
+      bottom: 12px;
+      right: -4px;
+      width: 8px;
+    }
+
+    &[data-edge="e"],
+    &[data-edge="w"] {
+      &::after {
+        inset: 0 3px;
+      }
+    }
+
+    &[data-edge="ne"],
+    &[data-edge="nw"],
+    &[data-edge="se"],
+    &[data-edge="sw"] {
+      height: 14px;
+      width: 14px;
+
+      &::after {
+        border-radius: 50%;
+        inset: 3px;
+      }
+    }
+
+    &[data-edge="nw"] {
+      cursor: nwse-resize;
+      top: -5px;
+      left: -5px;
+    }
+
+    &[data-edge="se"] {
+      bottom: -5px;
+      right: -5px;
+      cursor: nwse-resize;
+    }
+
+    &[data-edge="ne"] {
+      cursor: nesw-resize;
+      right: -5px;
+      top: -5px;
+    }
+
+    &[data-edge="sw"] {
+      cursor: nesw-resize;
+      left: -5px;
+      bottom: -5px;
+    }
+  }
+
+  /* Состояния плавающего окна: движение, размер, доводка, таблетка */
+  .txs-float {
+    &.is-moving,
+    &.is-resizing {
+      user-select: none;
+
+      & .txs-float-stage {
+        pointer-events: none;
+      }
+    }
+
+    &.is-resizing {
+      & .txs-float-edge:active::after {
+        opacity: 1;
+      }
+    }
+
+    &.is-moving {
+      cursor: grabbing;
+      will-change: transform;
+
+      & .txs-float-handle,
+      & .txs-float-pill {
+        cursor: grabbing;
+      }
+    }
+
+    &.is-settling {
+      transition: transform var(--astral-duration) var(--astral-ease);
+    }
+
+    &.is-pill {
+      width: auto;
+
+      & .txs-float-box {
+        border-radius: 999px;
+      }
+    }
+  }
+
+  .txs-float-pill.ui-button {
+    border-radius: 999px;
+    cursor: grab;
+    font-weight: 600;
+    touch-action: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .txs-float-restore {
+    position: absolute;
+    z-index: 30;
+  }
+
+  /* Сцена внутри плавающего окна */
+  .txs-float-stage {
+    border-top: 1px solid var(--astral-line);
+    flex: auto;
+    min-height: 120px;
+    position: relative;
+
+    .model-stage-frame {
+      border: 0;
+      border-radius: 0;
+      inset: 0;
+      position: absolute;
+    }
+
+    .model-stage-canvas {
+      height: 100%;
+      width: 100%;
+    }
+
+    &.is-editor {
+      > .fx-stage {
+        border: 0;
+        border-radius: 0;
+        height: auto;
+        inset: 0;
+        min-height: 0;
+        position: absolute;
+      }
+
+      & .ui-stage-bar {
+        display: none;
+      }
+    }
+  }
+
+  /* Оболочка редактора: правки базовых карточек */
+  .txs-shell {
+    & .ui-tool-card {
+      margin-bottom: 12px;
+    }
+
+    & .ui-tool-demo {
+      aspect-ratio: auto;
+      height: 84px;
+    }
+
+    & .ui-tool-card-hint {
+      display: none;
+    }
+  }
+
+  /* Секции параметров: цвета, баланс, кривые */
+  .txs-section {
+    display: grid;
+    gap: 12px;
+
+    > h3 {
+      margin-bottom: 0;
+    }
+  }
+
+  .txs-colours {
+    align-items: start;
+    display: grid;
+    gap: 8px 6px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .txs-swap {
+    align-self: center;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .txs-balance {
+    display: grid;
+    gap: 4px;
+    margin-top: 8px;
+
+    & > b {
+      font-size: var(--astral-text-small);
+    }
+  }
+
+  .txs-curves {
+    aspect-ratio: 1;
+    border: 1px solid var(--astral-line);
+    border-radius: var(--astral-radius-sm);
+    cursor: crosshair;
+    max-width: 256px;
+    touch-action: none;
+    width: 100%;
+  }
+
+  /* Нижний док с ручкой высоты */
+  .txs-dock {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+    padding: 8px 12px 10px;
+    position: relative;
+
+    &[data-resizing] {
+      user-select: none;
+
+      & > .txs-dock-grip::after {
+        background: var(--astral-line-focus);
+      }
+    }
+  }
+
+  .txs-dock-grip {
+    cursor: ns-resize;
+    height: 8px;
+    outline: none;
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    touch-action: none;
+    z-index: 1;
+
+    &::after {
+      background: transparent;
+      content: "";
+      height: 2px;
+      position: absolute;
+      top: 3px;
+      left: 0;
+      right: 0;
+      transition: background-color var(--astral-duration-fast)
+        var(--astral-ease);
+    }
+
+    &:is(:hover, :focus-visible)::after {
+      background: var(--astral-line-focus);
+    }
+  }
+
+  .txs-dock-body {
+    display: flex;
+    flex: auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Слои: свойства, список и кнопки действий */
+  .txs-layers {
+    display: flex;
+    flex: auto;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .txs-layer-props {
+    align-items: center;
+    display: grid;
+    flex: none;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+    .ui-select-copy,
+    .ui-slider-copy {
+      clip-path: inset(50%);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
+    .ui-field {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      margin: 0;
+      min-width: 0;
+
+      & > :is(.ui-select-control, input[type="range"]) {
+        flex: auto;
+        min-width: 0;
+      }
+    }
+  }
+
+  .txs-layer-list {
+    align-content: start;
+    flex: auto;
+    min-height: 56px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    & > .ui-layer-rows {
+      align-content: start;
+    }
+  }
+
+  .txs-layer-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    flex-wrap: nowrap;
+    gap: 2px;
+    min-width: 0;
+
+    & > .ui-button,
+    & > .ui-menu-button > .ui-button {
+      flex: none;
+      min-width: 32px;
+      padding: 0;
+      width: 32px;
+    }
+
+    & > .ui-menu-button {
+      flex: none;
+    }
+  }
+
+  /* Миниатюры слоёв */
+  .txs-thumb {
+    background: var(--astral-surface-sunken);
+    display: block;
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+  }
+
+  .txs-thumb-icon {
+    display: grid;
+    height: 100%;
+    place-items: center;
+    width: 100%;
+
+    > svg {
+      height: 18px;
+      width: 18px;
+    }
+  }
+
+  /* История правок */
+  .txs-history {
+    align-content: start;
+    display: grid;
+    flex: auto;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0;
+
+    > li {
+      & > button {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: var(--astral-radius-sm);
+        color: var(--astral-ink);
+        cursor: pointer;
+        display: flex;
+        font: inherit;
+        font-size: var(--astral-text-small);
+        min-height: 36px;
+        padding: 6px 10px;
+        text-align: left;
+        width: 100%;
+
+        &:hover {
+          background: var(--astral-surface-hover);
+        }
+      }
+
+      &.is-current > button {
+        background: var(--astral-surface-hover);
+        box-shadow: inset 0 0 0 1px var(--astral-accent);
+      }
+
+      &.is-undone > button {
+        color: var(--astral-ink-faint);
+      }
+    }
+  }
+}

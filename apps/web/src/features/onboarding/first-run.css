@@ -1,0 +1,1504 @@
+/* Первый вход и выбор GTA V (15.11.2026, макет r8/onboard/first-run): кадр игры «Рассвет над городом», заголовок Russo One,
+   стеклянная панель, один путь — через Discord. Лист ленивый: едет вместе со страницей входа (`pages/ProductOnboardingPage.jsx`).
+   Движение — только transform и opacity; выключатель движения (`motion-switch.css`) доводит анимации до конца за кадр. */
+
+@layer overrides {
+  .product-onboarding.first-run {
+    --fr-ease: cubic-bezier(0.22, 0.72, 0.24, 1);
+    --fr-line: rgba(255, 255, 255, 0.08);
+    --fr-line2: rgba(255, 255, 255, 0.14);
+    --fr-s1: rgba(255, 255, 255, 0.028);
+    --fr-s2: rgba(255, 255, 255, 0.045);
+    --fr-s3: rgba(255, 255, 255, 0.065);
+    /* Заголовок окна: те же числа, что у заголовка оболочки на макете «Главной» (поле слева 18, знак 24, зазор 10). */
+    --fr-tb-pad: 18px;
+    --fr-mark: 24px;
+    display: block;
+    background: #000;
+    color: var(--astral-ink);
+    font-family: var(--astral-font);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .first-run svg.fr-i {
+    display: block;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Заголовок окна */
+  .first-run .fr-tb {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 50;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 142px 0 var(--fr-tb-pad);
+    border-bottom: 1px solid var(--fr-line);
+    background: #000;
+    -webkit-app-region: drag;
+    app-region: drag;
+    user-select: none;
+  }
+
+  .first-run .fr-tb .desktop-titlebar-brand {
+    gap: 10px;
+  }
+
+  .first-run .fr-tb .desktop-titlebar-brand-mark,
+  .first-run .fr-tb .desktop-titlebar-brand img {
+    display: block;
+    width: var(--fr-mark);
+    height: var(--fr-mark);
+  }
+
+  /* Звезда в `astral-mark.png` занимает только ~54 % квадрата (поля вокруг), поэтому в 24 px видна лишь ≈13 px.
+     В макете (`astral-star-256.webp`) звезда во всю клетку, ≈22 px: растягиваем маску так, чтобы видимая звезда была ≈22 px. */
+  .first-run .fr-tb .desktop-titlebar-brand-mark {
+    -webkit-mask-size: 169%;
+    mask-size: 169%;
+  }
+
+  .first-run .fr-tb .desktop-titlebar-brand b {
+    font-size: var(--astral-text-body) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .first-run .fr-sp {
+    flex: 1;
+  }
+
+  .first-run .fr-lang {
+    position: relative;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  .first-run .fr-lang-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 170px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border-radius: var(--astral-radius);
+    background: rgba(14, 14, 16, 0.96);
+    box-shadow:
+      inset 0 0 0 1px var(--fr-line2),
+      0 24px 60px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Кадр игры под панелью */
+  .first-run .fr-bg {
+    position: absolute;
+    inset: 41px 0 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .first-run .fr-sky {
+    position: absolute;
+    inset: -3%;
+    background: url("/assets/first-run/sky-dawn.webp") 24% 48% / cover;
+    transform-origin: 60% 40%;
+    animation: fr-kb 26s ease-out;
+  }
+
+  .first-run .fr-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        640px 420px at 50% 60%,
+        rgba(0, 0, 0, 0.45),
+        rgba(0, 0, 0, 0) 80%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.74),
+        rgba(0, 0, 0, 0.4) 34%,
+        rgba(0, 0, 0, 0.52) 68%,
+        #000 100%
+      );
+  }
+
+  .first-run .fr-cap {
+    position: absolute;
+    left: 28px;
+    bottom: 22px;
+    z-index: 5;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-faint);
+  }
+
+  .first-run .fr-cap b {
+    height: 22px;
+    padding: 0 8px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--astral-radius-xs);
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+    color: #d6d6da;
+    font-size: var(--astral-text-micro);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Сцена */
+  .first-run .fr-stage {
+    position: absolute;
+    inset: 41px 0 0;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 24px;
+  }
+
+  /* Уход к Главной (макет first-run-transition): панель и подпись уходят вверх и гаснут, потом окно открывается Главной. */
+  .first-run .fr-stage,
+  .first-run .fr-cap {
+    transition:
+      opacity 0.4s var(--fr-ease),
+      transform 0.4s var(--fr-ease);
+  }
+
+  .first-run.is-leaving .fr-stage,
+  .first-run.is-leaving .fr-cap {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+
+  .first-run .fr-core {
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .first-run .fr-pill {
+    height: 30px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: var(--astral-radius-sm);
+    background: rgba(0, 0, 0, 0.55);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #e6e6e8;
+    white-space: nowrap;
+  }
+
+  .first-run .fr-pill i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .first-run .fr-h1 {
+    margin: clamp(12px, 2vh, 18px) 0 0;
+    font-family: var(--astral-font-display);
+    font-weight: 400;
+    font-size: clamp(32px, min(4.7vw, 7.3vh), 66px);
+    line-height: 1;
+    letter-spacing: -0.022em;
+    color: var(--astral-ink);
+    text-wrap: balance;
+    text-shadow: 0 4px 50px rgba(0, 0, 0, 0.7);
+  }
+
+  .first-run .fr-h1 em {
+    display: block;
+    font-style: normal;
+    color: #bdbdc3;
+  }
+
+  .first-run .fr-lead {
+    max-width: 540px;
+    margin: clamp(8px, 1.5vh, 14px) auto 0;
+    font-size: clamp(14.5px, 1.25vw, 17px);
+    line-height: 1.55;
+    color: #c9c9ce;
+    text-wrap: balance;
+    text-shadow: 0 2px 24px #000;
+  }
+
+  .first-run .fr-glass {
+    position: relative;
+    width: min(500px, 100%);
+    margin-top: clamp(14px, 2.8vh, 26px);
+    padding: 20px 24px 14px;
+    border-radius: var(--astral-radius-xl);
+    background: rgba(10, 10, 11, 0.78);
+    box-shadow:
+      inset 0 0 0 1px var(--fr-line2),
+      0 40px 100px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    text-align: left;
+  }
+
+  .first-run .fr-glass.is-wide {
+    width: min(560px, 100%);
+  }
+
+  .first-run .fr-rise {
+    animation: fr-rise 0.6s var(--fr-ease) both;
+    animation-delay: calc(var(--d, 0) * 70ms);
+  }
+
+  /* Главная кнопка Discord: белая, фирменного цвета нет (как на сайте) */
+  .first-run .fr-terms {
+    margin: 12px 0 0;
+    font-size: var(--astral-text-small);
+    line-height: 1.5;
+    color: var(--astral-ink-faint);
+  }
+
+  .first-run .fr-flow {
+    margin: 18px 0 4px;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 14px;
+  }
+
+  .first-run .fr-flow li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0 13px;
+    align-items: start;
+  }
+
+  .first-run .fr-flow .fr-n {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--astral-radius-sm);
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    color: #e6e6e8;
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+  }
+
+  .first-run .fr-flow b {
+    display: block;
+    padding-top: 3px;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+    line-height: 1.35;
+    color: #f2f2f3;
+  }
+
+  .first-run .fr-flow p {
+    margin: 3px 0 0;
+    font-size: var(--astral-text-body);
+    line-height: 1.5;
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-flow p i {
+    font-style: normal;
+    color: #d6d6da;
+  }
+
+  /* «Входим через Discord…» */
+  .first-run .fr-stat {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    align-items: center;
+    gap: 0 14px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: var(--astral-radius);
+    background: var(--fr-s2);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+  }
+
+  .first-run .fr-stat .fr-dcg {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .first-run .fr-stat b {
+    display: block;
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+  }
+
+  .first-run .fr-stat small {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--astral-text-body);
+    line-height: 1.4;
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-prog {
+    margin: 0 0 8px;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 14px;
+  }
+
+  .first-run .fr-prog li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0 13px;
+    align-items: center;
+    font-size: var(--astral-text-strong);
+    font-weight: 500;
+    color: #7c7c83;
+  }
+
+  .first-run .fr-prog .fr-m {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--astral-radius-sm);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+
+  .first-run .fr-prog .fr-m svg.fr-i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.4;
+  }
+
+  .first-run .fr-prog .fr-m u {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #5c5c62;
+  }
+
+  .first-run .fr-prog li.is-now {
+    color: #fff;
+  }
+
+  .first-run .fr-prog li.is-now .fr-m {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+  }
+
+  .first-run .fr-prog li.is-done {
+    color: #d6d6da;
+  }
+
+  .first-run .fr-prog li.is-done .fr-m {
+    background: #fff;
+    color: #0a0a0b;
+    box-shadow: none;
+    animation: fr-tick 0.4s var(--fr-ease) both;
+  }
+
+  .first-run .fr-prog em {
+    display: block;
+    margin-top: 2px;
+    font-style: normal;
+    font-size: var(--astral-text-small);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-spin {
+    animation: fr-spin 0.9s linear infinite;
+  }
+
+  /* «Браузер не открылся?»: подпись сверху, под ней две кнопки, каждая во всю ширину блока (слово владельца 16.11):
+     в строку они были узкие, и «Скопировать ссылку» обрезалось на длинных языках. */
+  .first-run .fr-linkrow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    margin: 2px 0 6px;
+    padding: 12px 14px 14px;
+    border-radius: var(--astral-radius);
+    background: var(--fr-s1);
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+    font-size: var(--astral-text-body);
+    color: #c8c8cc;
+  }
+
+  /* Только подпись: правило без `>` задевало и значки, и подписи внутри кнопок (они тоже span). */
+  .first-run .fr-linkrow > span {
+    min-width: 0;
+  }
+
+  /* Кнопка на всю строку; значок и подпись по центру, подпись целиком. */
+  .first-run .fr-linkrow .fr-sm {
+    width: 100%;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  /* Ошибки и подсказки */
+  .first-run .fr-al {
+    display: flex;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border-radius: var(--astral-radius);
+    background: var(--fr-s2);
+    font-size: var(--astral-text-body);
+    line-height: 1.5;
+    color: #f2f2f3;
+  }
+
+  .first-run .fr-al svg.fr-i {
+    margin-top: 2px;
+  }
+
+  .first-run .fr-al p {
+    margin: 0;
+  }
+
+  .first-run .fr-al p + p {
+    margin-top: 6px;
+    color: #b4b4ba;
+  }
+
+  .first-run .fr-al.is-err {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .first-run .fr-al.is-note {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    color: #e2e2e5;
+  }
+
+  .first-run .fr-need {
+    margin: 0 0 16px;
+  }
+
+  .first-run .fr-need h2 {
+    margin: 0 0 8px;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    color: #c8c8cc;
+  }
+
+  .first-run .fr-need ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+
+  .first-run .fr-need li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: var(--astral-radius);
+    background: var(--fr-s2);
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+    font-size: var(--astral-text-strong);
+    font-weight: 500;
+    color: #f2f2f3;
+  }
+
+  .first-run .fr-need li svg.fr-i {
+    width: 22px;
+    height: 22px;
+  }
+
+  .first-run .fr-need li small {
+    display: block;
+    font-size: var(--astral-text-small);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-quiet {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-quiet svg.fr-i {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* «Готово» */
+  .first-run .fr-ident {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 6px 4px 16px;
+  }
+
+  .first-run .fr-avatar {
+    --sz: 92px;
+    position: relative;
+    flex: none;
+    width: var(--sz);
+    height: var(--sz);
+    border-radius: 50%;
+  }
+
+  .first-run .fr-avatar svg.fr-ring {
+    position: absolute;
+    inset: -6px;
+    width: calc(var(--sz) + 12px);
+    height: calc(var(--sz) + 12px);
+    transform: rotate(-90deg);
+    overflow: visible;
+  }
+
+  .first-run .fr-ring circle {
+    fill: none;
+    stroke-width: 2.4;
+  }
+
+  .first-run .fr-ring .fr-t {
+    stroke: rgba(255, 255, 255, 0.16);
+  }
+
+  .first-run .fr-ring .fr-a {
+    stroke: #fff;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
+    animation: fr-appear 1.1s var(--fr-ease) both;
+  }
+
+  .first-run .fr-av-in {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 3px solid #000;
+    border-radius: 50%;
+    background: radial-gradient(
+      120% 120% at 30% 20%,
+      #34343a,
+      #111113 55%,
+      #08080a
+    );
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .first-run .fr-av-in::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.12),
+      transparent 40%
+    );
+  }
+
+  .first-run .fr-av-in img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .first-run .fr-av-in b {
+    position: relative;
+    z-index: 1;
+    font-family: var(--astral-font-display);
+    font-weight: 400;
+    font-size: calc(var(--sz) * 0.42);
+    color: var(--astral-ink);
+  }
+
+  .first-run .fr-who {
+    min-width: 0;
+  }
+
+  .first-run .fr-who b {
+    display: block;
+    overflow: hidden;
+    font-family: var(--astral-font-display);
+    font-weight: 400;
+    font-size: var(--astral-text-hero);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .first-run .fr-who small {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 6px;
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-who small svg.fr-i {
+    width: 15px;
+    height: 15px;
+  }
+
+  .first-run .fr-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--astral-radius);
+    background: var(--fr-s2);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+    animation: fr-rise 0.6s var(--fr-ease) 0.5s both;
+  }
+
+  .first-run .fr-chip .fr-ck {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--astral-radius-sm);
+    background: #fff;
+    color: #0a0a0b;
+    animation: fr-tick 0.4s var(--fr-ease) 0.75s both;
+  }
+
+  .first-run .fr-chip .fr-ck svg.fr-i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.6;
+  }
+
+  .first-run .fr-chip b {
+    display: block;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .first-run .fr-chip small {
+    display: block;
+    margin-top: 1px;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-scan {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 14px 2px 8px;
+    font-size: var(--astral-text-body);
+    color: #c8c8cc;
+  }
+
+  .first-run .fr-scan svg.fr-i {
+    width: 17px;
+    height: 17px;
+  }
+
+  .first-run .fr-sparks {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .first-run .fr-sparks svg {
+    position: absolute;
+    left: -7px;
+    top: -7px;
+    width: 14px;
+    height: 14px;
+    opacity: 0;
+    animation: fr-sp 1.1s var(--fr-ease) both;
+    animation-delay: calc(0.1s + var(--d) * 1s);
+  }
+
+  /* Поиск GTA V */
+  .first-run .fr-orbit {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 2px;
+  }
+
+  .first-run .fr-orbit svg.fr-o {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .first-run .fr-orbit svg.fr-o circle {
+    fill: none;
+    stroke-width: 2.2;
+  }
+
+  .first-run .fr-orbit .fr-t {
+    stroke: rgba(255, 255, 255, 0.16);
+  }
+
+  .first-run .fr-orbit .fr-a {
+    stroke: #fff;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  .first-run .fr-orbit .fr-a.is-done {
+    animation: fr-appear 0.9s var(--fr-ease) both;
+  }
+
+  .first-run .fr-orbit .fr-a.is-run {
+    stroke-dasharray: 72 217;
+    animation: fr-spin 1.1s linear infinite;
+    transform: none;
+  }
+
+  .first-run .fr-orbit .fr-a.is-miss {
+    stroke-dasharray: 3 9;
+    stroke: rgba(255, 255, 255, 0.5);
+    filter: none;
+    transform: none;
+  }
+
+  .first-run .fr-orbit .fr-st {
+    width: 44px;
+    height: 41px;
+    color: #fff;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.35));
+  }
+
+  .first-run .fr-orbit .fr-st.is-dim {
+    color: rgba(255, 255, 255, 0.45);
+    filter: none;
+  }
+
+  .first-run .fr-orbit .fr-st svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .first-run .fr-orbit .fr-bd {
+    position: absolute;
+    right: 6px;
+    bottom: 8px;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff;
+    color: #0a0a0b;
+    animation: fr-tick 0.45s var(--fr-ease) 0.75s both;
+  }
+
+  .first-run .fr-orbit .fr-bd svg.fr-i {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.8;
+  }
+
+  .first-run .fr-orbit .fr-bd.is-x {
+    background: #17171a;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  }
+
+  .first-run .fr-lbl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-lbl em {
+    font-style: normal;
+    color: var(--astral-ink);
+  }
+
+  .first-run .fr-copies {
+    display: grid;
+    gap: 8px;
+  }
+
+  .first-run .fr-tile {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 48px 1fr 24px;
+    align-items: center;
+    gap: 0 14px;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+    color: inherit;
+    text-align: left;
+    transition:
+      background var(--astral-duration),
+      box-shadow var(--astral-duration);
+  }
+
+  .first-run .fr-tile:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+  }
+
+  .first-run .fr-tile[aria-checked="true"] {
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+  }
+
+  .first-run .fr-tile .fr-lg {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+  }
+
+  .first-run .fr-tile .fr-lg img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .first-run .fr-tile .fr-lg svg.fr-i {
+    width: 24px;
+    height: 24px;
+  }
+
+  .first-run .fr-tile > div {
+    min-width: 0;
+  }
+
+  .first-run .fr-tile b {
+    display: block;
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+  }
+
+  .first-run .fr-tile .fr-fc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: center;
+    margin-top: 3px;
+    font-size: var(--astral-text-small);
+    color: var(--astral-ink-muted);
+  }
+
+  .first-run .fr-tile .fr-fc span + span::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: #5c5c62;
+    vertical-align: middle;
+  }
+
+  .first-run .fr-tile .fr-fc .is-ok {
+    color: #d6d6da;
+  }
+
+  .first-run .fr-path {
+    display: block;
+    overflow: hidden;
+    margin-top: 7px;
+    font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+    font-size: var(--astral-text-small);
+    font-weight: 500;
+    color: #8e8e95;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .first-run .fr-path i {
+    font-style: normal;
+    color: #d6d6da;
+  }
+
+  .first-run .fr-tile .fr-rd {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fff;
+    color: #0a0a0b;
+    opacity: 0;
+  }
+
+  .first-run .fr-tile[aria-checked="true"] .fr-rd {
+    opacity: 1;
+  }
+
+  .first-run .fr-tile .fr-rd svg.fr-i {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.8;
+  }
+
+  .first-run .fr-tile.is-sk {
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+    background: var(--fr-s1);
+  }
+
+  .first-run .fr-sk i {
+    display: block;
+    border-radius: var(--astral-radius-xs);
+    background: rgba(255, 255, 255, 0.12);
+    animation: fr-pulse 1.4s ease-in-out infinite;
+  }
+
+  .first-run .fr-places {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 8px;
+  }
+
+  .first-run .fr-places li {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+    gap: 0 12px;
+    padding: 10px 12px;
+    border-radius: var(--astral-radius);
+    background: var(--fr-s1);
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+  }
+
+  .first-run .fr-places .fr-lg {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--astral-radius);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .first-run .fr-places .fr-lg img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .first-run .fr-places li > div {
+    min-width: 0;
+  }
+
+  .first-run .fr-places b {
+    display: block;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+  }
+
+  .first-run .fr-places .fr-path {
+    margin-top: 2px;
+    font-size: var(--astral-text-micro);
+  }
+
+  .first-run .fr-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .first-run .fr-notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: min(560px, 100%);
+    margin-top: 16px;
+    text-align: left;
+  }
+
+  .first-run .fr-notes div {
+    display: flex;
+    gap: 10px;
+    font-size: var(--astral-text-small);
+    line-height: 1.5;
+    color: var(--astral-ink-muted);
+    text-shadow: 0 2px 16px #000;
+  }
+
+  .first-run .fr-notes svg.fr-i {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    color: #c8c8cc;
+  }
+
+  .first-run .fr-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 12px 2px 0;
+    font-size: var(--astral-text-body);
+    color: #c8c8cc;
+  }
+
+  .first-run .fr-status svg.fr-i {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Кнопки — общий орган `Button` (@astral/design): вид задают классы экрана, слой выше слоя пакета. */
+  .first-run .fr-dc,
+  .first-run .fr-acts .ui-button,
+  .first-run .fr-sm,
+  .first-run .fr-ghost,
+  .first-run .fr-lang-btn,
+  .first-run .fr-lang-item {
+    min-block-size: 0;
+    letter-spacing: 0;
+    overflow: visible;
+  }
+
+  .first-run .fr-dc {
+    width: 100%;
+    height: 58px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: var(--astral-radius);
+    gap: 13px;
+    justify-content: flex-start;
+    background: #fff;
+    color: #0a0a0b;
+    font-size: var(--astral-text-title);
+    font-weight: 600;
+    box-shadow: 0 8px 34px rgba(255, 255, 255, 0.14);
+    transition:
+      transform var(--astral-duration) var(--fr-ease),
+      box-shadow var(--astral-duration);
+  }
+
+  .first-run .fr-dc:hover:not(:disabled) {
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 44px rgba(255, 255, 255, 0.26);
+  }
+
+  .first-run .fr-dc .ui-button-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .first-run .fr-dc .ui-button-label {
+    flex: 1;
+    text-align: left;
+  }
+
+  .first-run .fr-dc .ui-button-trailing {
+    color: inherit;
+  }
+
+  .first-run .fr-dc .ui-button-trailing svg {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--astral-duration) var(--fr-ease);
+  }
+
+  .first-run .fr-dc:hover:not(:disabled) .ui-button-trailing svg {
+    transform: translateX(3px);
+  }
+
+  .first-run .fr-terms {
+    margin: 12px 0 0;
+    font-size: var(--astral-text-small);
+    line-height: 1.5;
+    color: var(--astral-ink-faint);
+  }
+
+  .first-run .fr-terms a {
+    color: #c8c8cc;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.3);
+    text-underline-offset: 2px;
+  }
+
+  .first-run .fr-terms a:hover {
+    color: #fff;
+  }
+
+  .first-run .fr-ghost {
+    display: flex;
+    width: fit-content;
+    height: 40px;
+    margin: 10px auto 6px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--astral-radius);
+    font-size: var(--astral-text-body);
+    font-weight: 500;
+    color: var(--astral-ink-muted);
+    background: transparent;
+  }
+
+  .first-run .fr-ghost:hover:not(:disabled) {
+    color: #fff;
+    background: var(--fr-s3);
+  }
+
+  .first-run .fr-sup {
+    display: block;
+    width: fit-content;
+    margin: 0 auto;
+    padding: 10px 12px;
+    font-size: var(--astral-text-body);
+    color: var(--astral-ink-muted);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.25);
+    text-underline-offset: 3px;
+  }
+
+  .first-run .fr-sup:hover {
+    color: #fff;
+  }
+
+  .first-run .fr-sm {
+    height: 34px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    gap: 7px;
+    font-size: var(--astral-text-body);
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+  }
+
+  .first-run .fr-sm:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .first-run .fr-sm .ui-button-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .first-run .fr-lang-btn {
+    height: 28px;
+    padding: 0 10px 0 9px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    gap: 7px;
+    font-size: var(--astral-text-small);
+    font-weight: 600;
+    color: #c8c8cc;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 0 1px var(--fr-line);
+  }
+
+  .first-run .fr-lang-btn .ui-button-icon svg,
+  .first-run .fr-lang-btn .ui-button-trailing svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .first-run .fr-lang-btn .ui-button-trailing {
+    color: inherit;
+  }
+
+  .first-run .fr-lang-btn:hover:not(:disabled),
+  .first-run .fr-lang-btn[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+
+  .first-run .fr-lang-item {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    justify-content: flex-start;
+    gap: 12px;
+    font-size: var(--astral-text-body);
+    font-weight: 400;
+    color: #d6d6da;
+    background: transparent;
+  }
+
+  .first-run .fr-lang-item .ui-button-trailing {
+    font-size: var(--astral-text-micro);
+    color: var(--astral-ink-faint);
+  }
+
+  .first-run .fr-lang-item:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .first-run .fr-lang-item[aria-checked="true"] {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .first-run .fr-acts .ui-button {
+    min-inline-size: max-content;
+    height: 52px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: var(--astral-radius);
+    gap: 10px;
+    font-size: var(--astral-text-strong);
+    font-weight: 600;
+  }
+
+  .first-run .fr-acts .ui-button:disabled {
+    opacity: 0.45;
+  }
+
+  /* Подпись кнопки целиком: в общем органе она обрезается многоточием, а здесь ряд сам переносится на вторую строку. */
+  .first-run .fr-acts .ui-button-label {
+    min-inline-size: auto;
+  }
+
+  .first-run .fr-acts .ui-button-label > span {
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .first-run .fr-acts .fr-sec {
+    flex: 1;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px var(--fr-line2);
+  }
+
+  .first-run .fr-acts .fr-sec:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .first-run .fr-acts .fr-pri {
+    flex: 1.25;
+    color: #0a0a0b;
+    background: #fff;
+    box-shadow: 0 8px 34px rgba(255, 255, 255, 0.14);
+    transition:
+      transform var(--astral-duration) var(--fr-ease),
+      box-shadow var(--astral-duration);
+  }
+
+  .first-run .fr-acts .fr-pri:hover:not(:disabled) {
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 44px rgba(255, 255, 255, 0.26);
+  }
+
+  .first-run .fr-acts .ui-button-icon svg,
+  .first-run .fr-acts .ui-button-trailing svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .first-run .fr-acts .ui-button-trailing {
+    color: inherit;
+    margin-inline-start: 0;
+  }
+
+  .first-run .fr-acts .fr-pri .ui-button-trailing svg {
+    transition: transform var(--astral-duration) var(--fr-ease);
+  }
+
+  .first-run .fr-acts .fr-pri:hover:not(:disabled) .ui-button-trailing svg {
+    transform: translateX(3px);
+  }
+
+  /* Невысокое окно: подсказки прячутся, чтобы панель не вылезла за край */
+  @media (max-height: 790px) {
+    .first-run .fr-flow {
+      margin-top: 14px;
+      gap: 11px;
+    }
+
+    .first-run .fr-flow p {
+      display: none;
+    }
+
+    .first-run .fr-glass {
+      padding: 16px 22px 10px;
+    }
+
+    .first-run .fr-dc {
+      height: 54px;
+    }
+
+    .first-run .fr-notes {
+      display: none;
+    }
+
+    .first-run .fr-orbit {
+      width: 76px;
+      height: 76px;
+    }
+
+    .first-run .fr-tile {
+      padding: 11px 14px;
+    }
+
+    /* Как в макете (`@media(max-height:790px){.acts{margin-top:12px}}`): без этой строки панель выше на 4 px. */
+    .first-run .fr-acts {
+      margin-top: 12px;
+    }
+
+    /* «Браузер не открылся?» в столбик (две кнопки во всю ширину) выше прежней строки на ~27 px: в низком окне
+       блок плотнее, иначе панель заденет подпись кадра. */
+    .first-run .fr-linkrow {
+      gap: 6px;
+      margin: 0 0 4px;
+      padding: 8px 12px 10px;
+    }
+
+    .first-run .fr-linkrow .fr-sm {
+      height: 30px;
+    }
+  }
+
+  /* Самое низкое окно (1180×720): между панелью и подписью кадра нужен воздух ≈15 px, а не 1–5, — подпись опускается ближе к краю. */
+  @media (max-height: 760px) {
+    .first-run .fr-cap {
+      bottom: 10px;
+    }
+
+    /* «Браузер не открылся?» в столбик на самом низком окне (де: три строки подзаголовка): ещё плотнее и сцена чуть выше,
+       чтобы нижний край панели не доходил до подписи кадра. */
+    .first-run .fr-stage {
+      padding-bottom: 12px;
+    }
+
+    .first-run .fr-linkrow {
+      gap: 5px;
+      margin: 0 0 2px;
+      padding: 6px 12px 8px;
+    }
+
+    .first-run .fr-linkrow .fr-sm {
+      height: 28px;
+    }
+  }
+
+  /* Кадр медленно отъезжает: в покое он стоит как есть, и при выключенном движении тоже. */
+  @keyframes fr-kb {
+    from {
+      transform: scale(1.09);
+    }
+  }
+
+  @keyframes fr-rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fr-tick {
+    from {
+      transform: scale(0.6);
+    }
+
+    60% {
+      transform: scale(1.1);
+    }
+
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes fr-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes fr-appear {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fr-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  @keyframes fr-sp {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, 0, 0) scale(0.2) rotate(0);
+    }
+
+    14% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate3d(var(--x), var(--y), 0) scale(var(--s))
+        rotate(var(--r));
+    }
+  }
+}

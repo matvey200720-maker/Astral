@@ -1,0 +1,128 @@
+{
+  "size": {
+    "width": 320,
+    "height": 200
+  },
+  "covers": {
+    "airships": {
+      "text": false
+    },
+    "animals": {
+      "text": false
+    },
+    "arenas": {
+      "text": false
+    },
+    "atms": {
+      "text": false
+    },
+    "banners": {
+      "text": false
+    },
+    "billboards": {
+      "text": false
+    },
+    "busstops": {
+      "text": false
+    },
+    "captzones": {
+      "text": false
+    },
+    "climbs": {
+      "text": false
+    },
+    "factory": {
+      "text": false
+    },
+    "fire": {
+      "text": false
+    },
+    "flags": {
+      "text": false
+    },
+    "floatlogo": {
+      "text": false
+    },
+    "fonts": {
+      "text": false
+    },
+    "group-markers": {
+      "text": true
+    },
+    "hangar": {
+      "text": false
+    },
+    "impact": {
+      "text": false
+    },
+    "kill-effect": {
+      "text": false
+    },
+    "lamps": {
+      "text": false
+    },
+    "majesticinteriors": {
+      "text": false
+    },
+    "mapping": {
+      "text": false
+    },
+    "megamall": {
+      "text": false
+    },
+    "minimap": {
+      "text": false
+    },
+    "mslzones": {
+      "text": false
+    },
+    "reticle": {
+      "text": false
+    },
+    "roads": {
+      "text": false
+    },
+    "schedule": {
+      "text": false
+    },
+    "screen-hits": {
+      "text": false
+    },
+    "sky": {
+      "text": false
+    },
+    "sound": {
+      "text": false
+    },
+    "target-hp": {
+      "text": true
+    },
+    "tracer": {
+      "text": false
+    },
+    "vegetation": {
+      "text": false
+    },
+    "vinewood": {
+      "text": false
+    },
+    "wallbang": {
+      "text": false
+    },
+    "water": {
+      "text": false
+    },
+    "wheel-smoke": {
+      "text": false
+    },
+    "world-map": {
+      "text": false
+    },
+    "youtool": {
+      "text": false
+    },
+    "zones": {
+      "text": false
+    }
+  }
+}

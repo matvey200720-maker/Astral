@@ -1,0 +1,115 @@
+/*
+ * Метки Majestic (18.10): строки категорий с выключателем и счётчиком, вид
+ * включённой категории раскрывается под строкой.
+ */
+
+/*
+ * Ленивый лист (18.10): едет вместе с редактором большой карты по `import()`
+ * (импорт — `WorldMapCustomizer.jsx`), а не в стартовом `main.css` (потолок
+ * 190 KiB, `scripts/verify-web-architecture.js`). Слой тот же, `overrides`;
+ * лист приходит после `main.css`, порядок листов карты — порядок импортов.
+ */
+@layer overrides {
+  .wmc-majestic {
+    display: grid;
+    gap: 10px;
+  }
+
+  .wmc-majestic-list {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .wmc-majestic-list > li {
+    display: grid;
+    border-radius: var(--astral-radius-sm);
+  }
+
+  .wmc-majestic-list > li.is-on {
+    background: var(--astral-surface-hover);
+  }
+
+  .wmc-majestic-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--astral-control-h);
+    padding: 4px 8px;
+  }
+
+  .wmc-majestic-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--astral-line-strong);
+  }
+
+  .wmc-majestic-copy {
+    display: grid;
+    min-width: 0;
+  }
+
+  .wmc-majestic-copy > b {
+    font-size: var(--astral-text-body);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .wmc-majestic-copy > small {
+    color: var(--astral-ink-muted);
+    font-size: var(--astral-text-small);
+  }
+
+  .wmc-majestic-more {
+    display: grid;
+    place-items: center;
+    width: var(--astral-control-h-xs);
+    height: var(--astral-control-h-xs);
+    padding: 0;
+    border: 0;
+    border-radius: var(--astral-radius-sm);
+    color: var(--astral-ink-muted);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .wmc-majestic-more:hover {
+    color: var(--astral-ink);
+  }
+
+  .wmc-majestic-more > svg {
+    width: 14px;
+    height: 14px;
+    transition: transform var(--astral-duration-fast) ease;
+  }
+
+  .wmc-majestic-more[aria-expanded="true"] > svg {
+    transform: rotate(180deg);
+  }
+
+  .wmc-majestic-look {
+    display: grid;
+    gap: 8px;
+    padding: 2px 8px 10px;
+  }
+
+  /* Выбранная щелчком метка (задача 36): название категории и номер, ниже — цвет и «спрятать». */
+  .wmc-majestic-pick {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+
+  .wmc-majestic-pick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

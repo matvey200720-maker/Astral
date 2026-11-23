@@ -1,0 +1,56 @@
+/*
+ * «Интерьеры проектов» (задача 10 ТЗ 17.10.2026, вечер): проекты сверху — по
+ * ширине подписи («GTA 5 РП» не сжимается в многоточие); сведения об
+ * интерьере — строками без заливки; раздел «Цвета и блеска», открытый
+ * щелчком в кадре, коротко обводится; блеск — четыре сегмента по ширине
+ * подписей, а не поровну (длинное «Дзеркало» рядом с коротким «Ні» не
+ * обрезается в узкой панели).
+ */
+.project-interiors-facts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--astral-ink-muted);
+  font-size: var(--astral-text-body);
+}
+
+.project-interiors-facts b {
+  color: var(--astral-ink);
+  font-weight: 500;
+}
+
+.project-interiors-editor .project-interiors-shine .ui-segment {
+  flex: 1 1 auto;
+}
+
+.project-interiors-sides .ui-segment {
+  flex: 0 0 auto;
+}
+
+/*
+ * Блок «Из каталога Astral» (решение владельца 17.10.2026, вечер; страницы без абзацев — 29.10.2026): пак — строка общей группы
+ * (`ListGroup`, `ListRow`, лист `components/ui/list-group.css`), своих двойников строки здесь нет. Остались две вещи, которых у группы
+ * нет: полоса хода скачивания под строкой и слово об отказе.
+ */
+.project-interiors-pack-note {
+  color: var(--astral-warning);
+  overflow-wrap: anywhere;
+}
+
+.project-interiors-pack-bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--astral-ink) 16%, transparent);
+}
+
+.project-interiors-pack-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--astral-ink);
+  transition: width var(--astral-duration-slow) var(--astral-ease);
+}
