@@ -875,11 +875,25 @@ mod tests {
         ] {
             assert_eq!(verdict(&import(bad), &a), unsafe_path(bad), "{bad:?}");
         }
-        // П28: звено «буква и двоеточие» в середине выводит за корень
-        assert_eq!(
-            verdict(&import("a/C:/b"), &a),
-            "Err InvalidDataException|Path escapes its allowed directory: a/C:/b"
-        );
+        // П28: звено «буква и двоеточие» в середине прежде выводило за корень и
+        // ловилось свёрткой («Path escapes its allowed directory»). Файл нагрузки
+        // лежит на диске, и двоеточие в звене теперь отказ ещё до свёртки
+        // (разбор безопасности 23.11.2026, H3-03); код отказа тот же.
+        assert_eq!(verdict(&import("a/C:/b"), &a), unsafe_path("a/C:/b"));
+        // Имена, которые Windows понимает иначе, чем написано: поток, точка и
+        // пробел на конце, устройство. Пробел внутри имени — обычное имя.
+        for bad in [
+            "payload/a::$DATA",
+            "payload/a:b",
+            "payload/a.",
+            "payload /a",
+            "payload/nul",
+            "payload/COM1.xml",
+        ] {
+            assert_eq!(verdict(&import(bad), &a), unsafe_path(bad), "{bad:?}");
+        }
+        let spaced: [(&str, &[u8]); 1] = [("pay load/my file.xml", b"abc")];
+        assert_eq!(verdict(&import("pay load/my file.xml"), &spaced), update);
         // П30: у Delete источник не проверяется, даже мусорный
         let garbage = r#"{"Actions":[{"Type":"Delete","TargetPath":"update:/x","SourcePath":"../..//","Size":9,"Sha256":"zz"}]}"#;
         assert_eq!(verdict(garbage, &[]), update);

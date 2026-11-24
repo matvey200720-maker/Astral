@@ -132,8 +132,21 @@ struct Job {
 impl Job {
     /// Сначала путь цели, потом (кроме удаления) файл нагрузки: отказ по пути
     /// идёт раньше отказа по источнику.
+    ///
+    /// Удаление только ищет место в дереве архива в памяти: его звенья идут в
+    /// поиск по дереву, в журнал и в список проверок, поэтому для цели удаления
+    /// действует мягкое правило (`normalize_inner`), и цель, которой нет, молча
+    /// пропускается. Import и Replace кладут запись, а её имя потом становится
+    /// именем файла: вложенный `.rpf` писатель архива выкладывает на доводку в
+    /// файл своего имени (`rage_rpf`, `Scratch::create`), запись читают в файл
+    /// (`read-archive-file`). Поэтому их цель, как и файл нагрузки на диске,
+    /// проверяется правилом диска.
     fn parse(action: &PatchAction, patch_dir: &Path) -> Result<Job> {
-        let relative = paths::normalize_relative(&strip_archive_prefix(&action.target_path))?;
+        let target = strip_archive_prefix(&action.target_path);
+        let relative = match action.kind {
+            ActionKind::Delete => paths::normalize_inner(&target)?,
+            _ => paths::normalize_relative(&target)?,
+        };
         let segments = relative.split('/').map(|part| part.to_owned()).collect();
         let work = match action.kind {
             ActionKind::Delete => Work::Remove,
@@ -1192,6 +1205,67 @@ mod tests {
                     format!("Unsafe relative path: {shown}")
                 ),
                 "{target:?}"
+            );
+        }
+    }
+
+    /// Удаление только ищет место в дереве архива: имя, которое Windows понимает
+    /// иначе, чем написано, для него — место, которого нет. Import и Replace кладут
+    /// запись, а её имя потом становится именем файла (вложенный `.rpf` уходит на
+    /// доводку в файл своего имени, запись читают в файл): у них цель проверяется
+    /// правилом диска, как и файл нагрузки (разбор безопасности 23.11.2026, H3-03).
+    #[test]
+    fn windows_name_rules_bind_what_lands_as_a_file_and_not_a_delete_target() {
+        let odd_targets = [
+            "update:/common/data:old.xml",
+            "update:/common/data/old.xml.",
+            "update:/common/data /old.xml",
+            "update:/common/nul/old.xml",
+            "update:/common/data/a?b.xml",
+            "update:/x64/C:probe.rpf",
+            "update:/x64/nul.rpf",
+            "update:/x64/probe.rpf::$DATA",
+        ];
+        // удаление: такого места в дереве нет, действие молча пропущено, как прежде
+        for target in odd_targets {
+            unchanged(&done(Base::Update, &[(Delete, target, "")]));
+        }
+        // Import и Replace: отказ до чтения нагрузки и до взгляда на дерево
+        for target in odd_targets {
+            for kind in [Import, Replace] {
+                assert_eq!(
+                    refused(Base::Update, &[(kind, target, "new.xml")]),
+                    (
+                        "InvalidDataException".to_owned(),
+                        format!(
+                            "Unsafe relative path: {}",
+                            target.trim_start_matches("update:")
+                        )
+                    ),
+                    "{target:?}"
+                );
+            }
+        }
+        // у файла нагрузки: отказ до чтения диска и до взгляда на дерево
+        for source in [
+            "new.xml::$DATA",
+            "new.xml:x",
+            "new.xml.",
+            "new.xml ",
+            "nul",
+            "COM1.xml",
+            "sub /new.xml",
+        ] {
+            assert_eq!(
+                refused(
+                    Base::Update,
+                    &[(Import, "update:/common/data/x.xml", source)]
+                ),
+                (
+                    "InvalidDataException".to_owned(),
+                    format!("Unsafe relative path: {source}")
+                ),
+                "{source:?}"
             );
         }
     }

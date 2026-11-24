@@ -6,7 +6,7 @@ import {
   watchLongFrames,
 } from "./features/app-errors/index.js";
 import { normalizeLanguage } from "./locales/desktop.js";
-import { languageFromTimeZone, systemTimeZone } from "./locales/time-zone-language.js";
+import { firstRunLanguage, systemTimeZone } from "./locales/time-zone-language.js";
 import { prepareUiText } from "./locales/ui.js";
 import { installHiddenRangeRelease } from "./utils/rangeSelection.js";
 import { primeHibernation, startHibernationClient } from "./features/hibernation/hibernation-client.js";
@@ -69,12 +69,12 @@ if (!served) {
     import.meta.env.MODE !== "perf" && !import.meta.env.DEV
       ? Promise.resolve()
       : import("./dev/qa-fixtures.js").then((chunk) => chunk.prepareQaFixtures());
-  // Первый запуск: язык по часовому поясу системы, дальше его выбирают в настройках.
+  // Первый запуск: язык по общему правилу (`firstRunLanguage`: язык установщика `?lang=`, язык системы из `?syslang=` главного процесса (`navigator.languages` — без него: у Chromium язык Windows без перевода откатывается на en-US), пояс, английский), дальше его выбирают в настройках.
   // Хранилище может быть недоступно — тогда молча остаёмся на русском.
   let language = "ru";
   try {
     const stored = localStorage.getItem(LANGUAGE_KEY);
-    const guess = stored ? null : languageFromTimeZone(systemTimeZone());
+    const guess = stored ? null : firstRunLanguage({ installer: query().get("lang"), systems: query().get("syslang")?.split(",") ?? navigator.languages, zone: systemTimeZone() });
     if (guess) {
       localStorage.setItem(LANGUAGE_KEY, guess);
     }

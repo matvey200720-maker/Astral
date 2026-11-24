@@ -68,6 +68,8 @@ const MAX_RECTS = 8;
 export const HATCH_HOLD_MS = 1200;
 export const HATCH_FADE_MS = 500;
 const HATCH_ALPHA = 0.16;
+/* Заливка под курсором у цели с известным цветом (`surface`): слабая, чтобы цель читалась, а её цвет не уезжал (ориентир рецензии 24.11.2026 — 6–8 %). У выбранной такой цели заливки нет вовсе: цвет подбирают на глаз. */
+const SURFACE_HOVER_ALPHA = 0.07;
 /* Контур: ширина линии и каймы, пиксели экрана. */
 const LINE_WIDTH = { select: 2, hover: 1.5, model: 2, change: 1.5 };
 const HALO_WIDTH = { select: 4.5, hover: 3.5, model: 4.5, change: 3.5 };
@@ -193,6 +195,37 @@ function tokenColours(element) {
     /* нет окна или значения — остаются запасные цвета */
   }
   return colours;
+}
+
+/** Яркость цвета по WCAG (0 — чёрный, 1 — белый); `color` — цвет three или строка CSS. */
+const luminanceOf = (color) => {
+  const rgb = new THREE.Color(color).getHexString().match(/../g).map((part) => parseInt(part, 16) / 255);
+  const [r, g, b] = rgb.map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+/** Контраст двух цветов по WCAG (от 1 до 21). */
+export function contrastRatio(a, b) {
+  const [high, low] = [luminanceOf(a), luminanceOf(b)].sort((x, y) => y - x);
+  return (high + 0.05) / (low + 0.05);
+}
+
+/** Порог контраста значимого элемента интерфейса не текстом (WCAG 1.4.11): контур подсветки на цели читается, когда контраст не ниже. */
+export const HIGHLIGHT_MIN_CONTRAST = 3;
+
+/**
+ * Цвета подсветки для цели цвета `surface` (владелец и Helper 3, 24.11.2026: белая подсветка на белом домике ангара не видна): из двух цветов токенов — `accent` (контур и заливка) и `ink` (кайма) —
+ * контурным берётся тот, что контрастнее цели, второй идёт каймой. Светлая цель — тёмный контур со светлой каймой; тёмная — как всегда. Если и лучший из двух ниже порога `HIGHLIGHT_MIN_CONTRAST`
+ * (цель среднего тона при необычных токенах), `weak` истинно: слой делает кайму сплошной (противоположный цвет на полную силу), и контур читается на любом тоне. `outcome` — исход выбора
+ * (`keep`, `swap`, с `-weak`; пусто без цвета цели): слой пересобирается, когда меняется он, а не оттенок цели — перетаскивание цвета не пересобирает подсветку на каждый кадр.
+ */
+export function highlightPalette(accent, ink, surface) {
+  const keep = { accent: new THREE.Color(accent), ink: new THREE.Color(ink) };
+  if (!surface) return { ...keep, outcome: "", weak: false };
+  const swap = contrastRatio(ink, surface) > contrastRatio(accent, surface);
+  const weak = Math.max(contrastRatio(ink, surface), contrastRatio(accent, surface)) < HIGHLIGHT_MIN_CONTRAST;
+  const outcome = `${swap ? "swap" : "keep"}${weak ? "-weak" : ""}`;
+  return swap ? { accent: keep.ink, ink: keep.accent, outcome, weak } : { ...keep, outcome, weak };
 }
 
 /** Сколько треугольников у сеток вместе. */
@@ -505,8 +538,8 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
     layer.silhouette = [];
   }
 
-  function same(layer, meshes, rects, follow) {
-    if (!layer || layer.meshes.length !== meshes.length || layer.follow !== follow) return false;
+  function same(layer, meshes, rects, follow, outcome = "") {
+    if (!layer || layer.meshes.length !== meshes.length || layer.follow !== follow || (layer.outcome || "") !== outcome) return false;
     if (layer.rects !== rects && JSON.stringify(layer.rects) !== JSON.stringify(rects)) return false;
     return layer.meshes.every((mesh, index) => mesh === meshes[index]);
   }
@@ -598,9 +631,10 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
       material.uniforms.uWidth.value = width * px;
       return material;
     };
-    const halo = ring("halo", palette.ink, SILHOUETTE_PX.halo, SILHOUETTE_ALPHA.halo);
+    const haloAlpha = layer.weak ? 1 : SILHOUETTE_ALPHA.halo;
+    const halo = ring("halo", palette.ink, SILHOUETTE_PX.halo, haloAlpha);
     const line = ring("line", palette.accent, SILHOUETTE_PX.line, kind === "hover" ? SILHOUETTE_ALPHA.hover : SILHOUETTE_ALPHA.line);
-    layer.silhouetteBase = new Map([[halo, SILHOUETTE_ALPHA.halo], [line, kind === "hover" ? SILHOUETTE_ALPHA.hover : SILHOUETTE_ALPHA.line]]);
+    layer.silhouetteBase = new Map([[halo, haloAlpha], [line, kind === "hover" ? SILHOUETTE_ALPHA.hover : SILHOUETTE_ALPHA.line]]);
     const size = new THREE.Vector2();
     for (const mesh of meshes) {
       mesh.updateWorldMatrix(true, false);
@@ -642,14 +676,22 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
     }
   }
 
-  function build(kind, meshes, rects, follow, steady = false) {
+  /* Цвета слоя: токены (или своя палитра), для цели с известным цветом — выбор по контрасту (`highlightPalette`). Токены читаются один раз на слой подсветки. */
+  function paletteOf(surface) {
+    tokens ||= tokenColours(element);
+    const base = { accent: tokens.accent.clone(), ink: tokens.ink.clone() };
+    if (custom?.accent) base.accent.set(custom.accent);
+    if (custom?.ink) base.ink.set(custom.ink);
+    return highlightPalette(base.accent, base.ink, surface);
+  }
+
+  function build(kind, meshes, rects, follow, steady = false, surface = "") {
     /* Токены читаются один раз на слой подсветки: `getComputedStyle` сразу после фиксации React заставляет страницу
        пересчитать стили целиком (щелчок по предмету арены — 300 мс на ×4), а цвета с кадра не меняются. */
-    tokens ||= tokenColours(element);
-    const palette = { accent: tokens.accent.clone(), ink: tokens.ink.clone() };
-    if (custom?.accent) palette.accent.set(custom.accent);
-    if (custom?.ink) palette.ink.set(custom.ink);
+    const palette = paletteOf(surface);
     const layer = {
+      outcome: palette.outcome,
+      weak: palette.weak,
       meshes: [...meshes],
       rects,
       follow,
@@ -748,8 +790,9 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
       }
     }
 
-    /* Заливка — у выбранного; под курсором контур без заливки. */
-    if (kind !== "hover") {
+    /* Заливка — у выбранного; под курсором контур без заливки. У цели с известным цветом (`surface`) наоборот: выбранная — только контур (цвет подбирают на глаз), под курсором — слабая заливка. */
+    const known = Boolean(surface);
+    if (known ? kind === "hover" : kind !== "hover") {
       layer.material = pooled(`fill:${kind}`, () =>
         new THREE.ShaderMaterial({
           uniforms: {
@@ -770,7 +813,7 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
       );
       const hatch = layer.material.uniforms;
       hatch.uColour.value.copy(palette.accent);
-      hatch.uAlpha.value = HATCH_ALPHA;
+      hatch.uAlpha.value = known ? SURFACE_HOVER_ALPHA : HATCH_ALPHA;
       hatch.uRects.value.forEach((rect, index) => rect.set(...(rects?.[index] || [0, 0, 0, 0])));
       hatch.uRectCount.value = rects ? rects.length : 0;
       layer.overlays = meshes.map((mesh) => {
@@ -811,7 +854,7 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
 
   return {
     /** `options.follow` — слой едет вместе с сеткой (своя модель мастерской, что двигается). */
-    set(kind, meshes, uvRects = null, { follow = false, steady: asked = false } = {}) {
+    set(kind, meshes, uvRects = null, { follow = false, steady: asked = false, surface = "" } = {}) {
       const rects = uvRects?.length ? uvRects.slice(0, MAX_RECTS) : null;
       /* Выбранное и своя модель держатся, пока выбраны (владелец 01.11.2026: «тыкаю — не показывает, что выделил»): вспышка гасла через 1,2 с,
          у экрана оставалась линия в 2 px, у стены и пола — ничего. Гаснет только правка (`change`); наведение — без штрихов. */
@@ -821,9 +864,9 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
         return;
       }
       /* Те же сетки и те же прямоугольники — ничего не меняем: наведение дёргается каждые сто мс. */
-      if (same(layers[kind], meshes, rects, follow) && Boolean(layers[kind]?.steady) === steady) return;
+      if (same(layers[kind], meshes, rects, follow, (surface ? paletteOf(surface).outcome : "")) && Boolean(layers[kind]?.steady) === steady) return;
       drop(kind);
-      build(kind, meshes, rects, follow, steady);
+      build(kind, meshes, rects, follow, steady, surface || "");
       invalidate();
       if (kind !== "hover") kick();
     },

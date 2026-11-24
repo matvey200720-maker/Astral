@@ -6,6 +6,7 @@ import { appLog } from "./app-log.js";
 import { assertInstallRuntimeSafe, inspectInstallRuntime } from "./install-safety.js";
 import { provisionAstralLayer } from "./astral-layer-provisioner.js";
 import { healEngineLayer } from "./engine-layer-heal.js";
+import { retireLoadersIfUnused } from "./loaders-on-demand.js";
 import {
   archiveFingerprint,
   engineAbsorbedEntries,
@@ -18,6 +19,7 @@ import {
   LIBRARY_REMOVAL_JOURNAL,
   planLibraryRemoval,
   recoverLibraryRemoval,
+  removalOutcomeLog,
   removeLibraryItems,
   retireLibraryItems,
 } from "./library-removal.js";
@@ -209,6 +211,19 @@ export function removalTools({
           assertInstallRuntimeSafe(await findGame(game.id)),
         onProgress,
       }),
+    /* Несколько модов одной транзакцией (`catalog-uninstall.js: uninstallCatalogMods`): пак по стволам и его «прочее» собирают архивы один раз. */
+    uninstallMods: async (modIds, onProgress) =>
+      (await import("./catalog-uninstall.js")).uninstallCatalogMods({
+        modIds,
+        targetId: game.id,
+        stateDir,
+        gameRoot: game.path,
+        settingsPath: gtaSettingsPath(),
+        settingsStateDir: await gtaSettingsStateDir(),
+        assertRuntimeSafety: async () =>
+          assertInstallRuntimeSafe(await findGame(game.id)),
+        onProgress,
+      }),
     statfs: fs.statfs,
     lock: withGameArchives,
     /* Закрытая игра и свободный лаунчер — перед каждым шагом, а не один раз:
@@ -347,8 +362,16 @@ export function registerLibraryRemovalIpc({
         { gameRoot: game.path, targetId: game.id, ...request(value) },
         tools,
       );
+      /* Не снятые моды и слои, что не встали обратно, — в журнал предупреждением: общая строка «готово» их не называет (разбор 23.11.2026). */
+      for (const line of removalOutcomeLog(result)) appLog.record(line);
       const rebuilt = await withRebuiltAfterRemoval(result, game, tools);
       await healAfter(game, tools, "удаления из библиотеки");
+      /* Снята последняя работа, которой нужна пара загрузчиков, — пара уходит (только наша; 23.11.2026). */
+      await retireLoadersIfUnused({
+        game,
+        stateDir: tools.stateDir,
+        assertRuntimeSafety: async () => assertInstallRuntimeSafe(await findGame(game.id)),
+      });
       return rebuilt;
     }),
   );

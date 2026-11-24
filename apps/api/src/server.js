@@ -53,12 +53,16 @@ import { apiRateLimit } from "./rate-limit.js";
 import { cloudClipFromEnv } from "./cloud-clip.js";
 import { cloudMediaFromEnv, newsMediaFromEnv } from "./cloud-media.js";
 import { fxScenesFromEnv } from "./fx-scenes.js";
-import { mountWebInterface } from "./web-interface.js";
+import { mountGuardedWebInterface } from "./guarded-web.js";
+import { createLocalGuard } from "./local-guard.js";
 
 export const app = express();
 const production = process.env.NODE_ENV === "production";
 const localDesktop = process.env.MODOVIK_LOCAL_DESKTOP === "1";
 const secureCookies = production && !localDesktop;
+/* Упакованный Astral (`apps/desktop/src/packaged-services.js` выставляет оба значения до импорта): службу вызывает только окно, охрана — `local-guard.js`. */
+const packagedDesktop = production && localDesktop;
+const localGuard = createLocalGuard({ enabled: packagedDesktop });
 const runtimeRoot = process.env.MODOVIK_RUNTIME_ROOT
   ? path.resolve(process.env.MODOVIK_RUNTIME_ROOT)
   : fileURLToPath(new URL("../../../runtime/", import.meta.url));
@@ -180,6 +184,7 @@ async function loadSessionSecret() {
 const sessionSecret = await loadSessionSecret();
 if (production) app.set("trust proxy", 1);
 app.disable("x-powered-by");
+app.use(localGuard.middleware);
 app.use(desktopSecurityMiddleware);
 app.use(
   cors({
@@ -229,7 +234,10 @@ app.use(
 // Облачный каталог v2 по хэшу (cloud-media.js) — раньше статики /api/media.
 app.get("/api/media/cloud/:sha256", cloudMediaFromEnv(runtimeRoot));
 // Ролики со звуком (media.clip, до 256 МиБ) — свой маршрут: поток на диск, а не в память (cloud-clip.js).
-app.get("/api/media/clip/:sha256", cloudClipFromEnv(runtimeRoot));
+const cloudClip = cloudClipFromEnv(runtimeRoot);
+app.get("/api/media/clip/:sha256", cloudClip);
+// Почему ролик не отдан в последний раз (`{ error, code }` или 204): `<video>` тела отказа не читает, окно спрашивает отдельно.
+app.get("/api/media/clip/:sha256/reason", cloudClip.reason);
 // Картинки новостей из бота Telegram (ТЗ 05.10, задача 12) — тем же путём.
 app.get("/api/news/media/:sha256", newsMediaFromEnv(runtimeRoot));
 // Кадры GTA V с глубиной для предпросмотра эффектов (docs/fx-scenes.md): с CDN, по манифесту и хэшу (fx-scenes.js).
@@ -342,7 +350,8 @@ async function requireAdmin(req, res, next) {
   req.user = user;
   next();
 }
-app.use("/api", runtimeRouter(liveCatalog, playerBaseCatalog, runtimeRoot));
+/* Профиль установок и список игр окну упакованного Astral не нужны (оно спрашивает главный процесс по IPC), поэтому там маршрутов нет. */
+app.use("/api", runtimeRouter(liveCatalog, playerBaseCatalog, runtimeRoot, { exposeLocalState: !packagedDesktop }));
 app.use("/api/builds", createBuildsRouter({ requireCsrf, requireUser }));
 app.use(
   "/api/workshop/projects",
@@ -559,13 +568,8 @@ app.post("/api/mods/:id/rating", requireCsrf, requireUser, async (req, res) => {
   }
 });
 
-// Интерфейс окна — из папки или (бета-сборка) из памяти: web-interface.js.
-export const serveWebFromMemory = mountWebInterface(app, {
-  webRoot: process.env.MODOVIK_WEB_ROOT
-    ? path.resolve(process.env.MODOVIK_WEB_ROOT)
-    : null,
-  production,
-});
+// Интерфейс окна — из папки или (бета-сборка) из памяти: web-interface.js; токен запуска передаётся охране (`guarded-web.js`, `local-guard.js`).
+export const serveWebFromMemory = mountGuardedWebInterface(app, localGuard, { production });
 
 app.use((_req, res) => res.status(404).json({ error: "Маршрут не найден." }));
 app.use((error, _req, res, _next) => {

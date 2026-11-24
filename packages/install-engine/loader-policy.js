@@ -72,6 +72,19 @@ export const VANILLA_GUARD_ITEMS = Object.freeze([
   ...MODS_PLUGINS,
 ]);
 
+/** id записи установки нашей пары в состоянии цели (`astral-loader-legacy` / `astral-loader-enhanced`). */
+export const loaderManifestId = (edition) => `astral-loader-${String(edition || "").toLowerCase()}`;
+
+/**
+ * Наши файлы пары для редакции: `[{ target, sha256, size }]` — сверка «наш ли файл» при миграции (23.11.2026):
+ * чужой или изменённый файл с тем же именем не наш и не трогается.
+ */
+export function ownLoaderFiles(edition) {
+  const files = PINNED_LOADER_FILES[edition];
+  if (!files) return [];
+  return files.map(({ target, sha256, size }) => ({ target, sha256, size }));
+}
+
 export function pinnedLoaderManifest(edition) {
   const files = PINNED_LOADER_FILES[edition];
   if (!files) throw new Error(`Неподдерживаемая редакция GTA V: ${edition}.`);

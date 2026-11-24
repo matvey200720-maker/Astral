@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Plus, Stack } from "../../../ui/icons.jsx";
 
 import Button from "../../../ui/Button.jsx";
@@ -7,6 +8,7 @@ import {
   useWorkshopLocalization,
 } from "./shared.jsx";
 import { WorkshopCard } from "./cards.jsx";
+import { legacyMallWorks } from "./legacy-mall-works.js";
 import { tr, useTr } from "../../../../locales/ui.js";
 
 /*
@@ -25,6 +27,10 @@ function Dashboard({
   useTr();
   const { translate: t, modules } = useWorkshopLocalization();
   const activeProject = projects[0] || recovery;
+  /* Плитки прежнего редактора фасадов — только там, где у человека прежняя работа (23.11.2026): новая «Мастерская Мегамолла» —
+     в студии зданий, без загрузчика. */
+  const legacy = useMemo(() => legacyMallWorks(), []);
+  const tileCount = modules.length + (legacy.megaMall ? 1 : 0) + (legacy.youTool ? 1 : 0);
   return (
     <section className="studio-dashboard studio-dashboard-focused">
       <header className="studio-dashboard-hero">
@@ -55,8 +61,8 @@ function Dashboard({
         <div>
           <span>{t("Доступно сейчас")}</span>
           <strong>
-            <b>{modules.length + 2}</b>
-            <small>/ {modules.length + 2}</small>
+            <b>{tileCount}</b>
+            <small>/ {tileCount}</small>
           </strong>
         </div>
         <small>
@@ -76,18 +82,22 @@ function Dashboard({
             onOpen={() => onOpenModule(module.id, activeProject)}
           />
         ))}
-        <WorkshopCard
-          module={MEGA_MALL_DASHBOARD_MODULE}
-          project={null}
-          index={modules.length}
-          onOpen={onOpenMegaMall}
-        />
-        <WorkshopCard
-          module={YOU_TOOL_DASHBOARD_MODULE}
-          project={null}
-          index={modules.length + 1}
-          onOpen={onOpenYouTool}
-        />
+        {legacy.megaMall && (
+          <WorkshopCard
+            module={MEGA_MALL_DASHBOARD_MODULE}
+            project={null}
+            index={modules.length}
+            onOpen={onOpenMegaMall}
+          />
+        )}
+        {legacy.youTool && (
+          <WorkshopCard
+            module={YOU_TOOL_DASHBOARD_MODULE}
+            project={null}
+            index={modules.length + (legacy.megaMall ? 1 : 0)}
+            onOpen={onOpenYouTool}
+          />
+        )}
       </div>
     </section>
   );

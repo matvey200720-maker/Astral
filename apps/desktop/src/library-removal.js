@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { invalidateOperation } from "@modovik/install-engine/operation-scope.js";
+import { moveBuildEnabled } from "@modovik/install-engine/transactions.js";
 import {
   ENGINE_STEP,
   liveArchivePath,
@@ -48,6 +49,7 @@ import { besideCopiesOfPoint, removeBesideCopies } from "./restore-point-beside.
  */
 
 const HEADROOM_BYTES = 256 * 1024 * 1024;
+const GIB = 1024 ** 3;
 /*
  * Сколько работ уборка прежней версии согласна переставлять.
  *
@@ -108,6 +110,42 @@ const errorText = (error) =>
   String(error?.message || error || "Неизвестная ошибка");
 
 /*
+ * Отказ «нет места на диске». Сначала по КОДУ, он от языка Windows не зависит: `(os error 112)` / `(os error 39)` — так Rust-движок дописывает код системы
+ * к тексту (`ERROR_DISK_FULL` = 112, `ERROR_HANDLE_DISK_FULL` = 39), `0x80070070` / `0x80070027` — те же коды в виде HRESULT, `ENOSPC`.
+ * Запасной путь — по тексту: русский, украинский и английский (как у помощника на этих Windows) и польский/немецкий из словаря окна
+ * (`utils/installFailure.js`). Точные тексты польской, немецкой и французской Windows для этой ошибки по документации не сверены (в документации
+ * Microsoft код 112 описан только по-английски, «There is not enough space on the disk.»); помощник C# в ответе отдаёт `error`, `type`, `detail`,
+ * но не HRESULT, поэтому на этих системах отказ помощника, возможно, не опознается — см. отчёт.
+ */
+const NO_SPACE =
+  /\(os error (?:112|39)\)|0x80070070|0x80070027|ENOSPC|Недостаточно места|Недостатньо місця|Диск заполнен|Диск заповнений|not enough space|not enough disk space|disk is full|no space left|Za mało miejsca|Dysk jest pełny|nicht genügend Speicherplatz|Datenträger ist voll/i;
+
+/** Одна строка отказа для журнала: первая строка, без путей (в них имя профиля), не длиннее 240 знаков. */
+const logText = (value) =>
+  errorText(value)
+    .split("\n")[0]
+    .replace(/(?:[A-Za-z]:[\\/]|\\\\)[^\s"'<>|*?]*/g, "<путь>")
+    .slice(0, 240);
+
+/**
+ * Что из итога удаления попадает в журнал приложения предупреждением.
+ *
+ * Итог удаления — не «готово»: мод, который не снялся (`failedMods`), слои каталога, которые не встали обратно после снятия
+ * (`engineRecomposeFailed`), и работы, что не вернулись (`lost`), названы строкой с причиной. Без этого журнал называл такое удаление
+ * «готово» и больше ничего (разбор 23.11.2026, 18:43). Чистое удаление — пустой список.
+ * @returns {Array<{ level: "warn", source: "install", message: string }>}
+ */
+export function removalOutcomeLog(result) {
+  const lines = [];
+  const warn = (message) => lines.push({ level: "warn", source: "install", message: `удаление из библиотеки: ${message}` });
+  for (const item of result?.failedMods || []) warn(`мод ${String(item?.modId ?? "?").slice(0, 120)} не снят: ${logText(item?.message)}`);
+  if (result?.engineRecomposeFailed)
+    warn(`слои каталога не встали обратно после снятия: ${logText(result.engineRecomposeFailed)}; их вернёт подготовка игры при следующем запуске`);
+  for (const item of result?.lost || []) warn(`работа ${String(item?.restorePointId ?? "?").slice(0, 120)} не встала обратно: ${logText(item?.message)}`);
+  return lines;
+}
+
+/*
  * Папка патча записана в точке абсолютным путём. Каталог кэша приложения
  * человек может перенести в настройках хранения, и тогда путь в точке
  * устаревает, хотя сама папка переехала вместе с кэшем
@@ -128,23 +166,36 @@ function volumeKey(value) {
   return path.parse(path.resolve(value)).root.toLowerCase();
 }
 
-async function spaceReport(locations, statfs) {
+/* Свободно на томе, где лежит `place`; `null` — том не ответил. */
+async function freeOn(place, statfs, exact = false) {
+  try {
+    const disk = await statfs(exact ? place : path.parse(path.resolve(place)).root);
+    const free = Number(disk.bavail) * Number(disk.bsize);
+    return Number.isFinite(free) ? free : null;
+  } catch {
+    return null;
+  }
+}
+
+/* `volumeOf` — подмена признака тома (тесты с двумя «томами» на одном диске); по умолчанию корень диска. Тогда и о месте спрашивается не корень, а сам путь. */
+async function spaceReport(locations, statfs, volumeOf = null) {
   const volumes = new Map();
   for (const location of locations) {
     if (!location.bytes) continue;
-    const key = volumeKey(location.root);
+    const key = volumeOf ? volumeOf(location.root) : volumeKey(location.root);
     const current = volumes.get(key) || {
       root: path.parse(path.resolve(location.root)).root,
+      probe: volumeOf ? location.root : path.parse(path.resolve(location.root)).root,
       requiredBytes: 0,
     };
     current.requiredBytes += location.bytes;
     volumes.set(key, current);
   }
   const report = [];
-  for (const volume of volumes.values()) {
+  for (const { probe, ...volume } of volumes.values()) {
     let freeBytes = Number.POSITIVE_INFINITY;
     try {
-      const disk = await statfs(volume.root);
+      const disk = await statfs(probe);
       freeBytes = Number(disk.bavail) * Number(disk.bsize);
     } catch {
       /* Том не ответил — места не считаем, запись сама скажет, если его нет. */
@@ -458,11 +509,57 @@ async function preparePlan(input, tools) {
     chainPlan.rewindTo !== null ||
     replays.length > 0 ||
     modsToRemove.length > 0;
+  /*
+   * Пик записи (разбор 23.11.2026: в 18:43 помощник отказал «Недостаточно места» посреди сборки, а проверка до записи прошла). A — размер живого архива.
+   * Что лежит и на каком томе, по шагам (строки кода — в скобках), «+» — новые байты на диске сверх уже занятых:
+   *
+   *   шаг                                   | где            | сверх занятого                          | когда уходит
+   *   --------------------------------------|----------------|-----------------------------------------|----------------------------------------------------
+   *   перемотка: копия точки рядом с живым  | игра           | +A, потом rename: живой → «прежний»     | прежний — до конца операции (`commitJournal`)
+   *   (`native-restore-chain.js`)           |                | (`previousPath`), копия → живой         |
+   *   сборка движка: основа в               | тома сборок    | +A: `File.Copy` основы в `.astral-      | `Move` в `<отпечаток>.rpf` и rename — новая сборка
+   *   `.astral-compose-*` (`Program.cs`)    | (см. ниже)     | compose-*`, ArchiveFix правит на месте  | остаётся +A; прежние сборки не заменяются (имя —
+   *                                         |                |                                         | отпечаток, `resource-composition.js`), чистит уборка
+   *   подмена в игре: стейдж рядом с живым  | игра           | +A копией (`copyFileCancellable`);      | старый живой — жёсткая ссылка-снимок (0), уходит
+   *   (`transaction.js: stageSource`)       |                | перенос (`moveStage`) — rename, 0       | при завершении транзакции
+   *   возврат работы: точка отката          | точки          | +A на каждую работу (`installPatch`)    | остаются (точки)
+   *   возврат работы: запись хостом         | игра           | +A стейдж рядом с живым (оценка)        | rename
+   *
+   * Сборки лежат на диске игры, когда хранилище на другом диске и на игре свободно ≥ 2·max(A, 1 ГиБ) + 1 ГиБ (`composite-home.js: compositesDirectory`),
+   * иначе — в кэше. Перенос (`ASTRAL_INSTALL_MOVE_BUILD`, `shouldMove`) срабатывает, только когда сборка лежит на томе игры (rename в пределах тома):
+   * стейдж-копии нет. Фазы идут по очереди, а не разом: сборка (+A на томе сборок), потом стейдж (+A в игре), потом возврат работ.
+   *
+   * Итог по томам: игра — «прежний» (A, если была перемотка) + наибольшее из: [сборка на этом же томе (A) + стейдж-копия], возврата работы (A); кэш — A,
+   * если сборка легла в него; точки — A на работу. Не измерено и стоит на стенде: рабочий файл ArchiveFix (в `RunArchiveFixAsync` процесс правит файл на месте —
+   * по коду второй копии нет) и стейдж Rust-хоста при возврате работы (взято A, как было). Условие «у движка есть отпечаток» убрано: снятие мода собирает архив и без него.
+   */
+  const engineCompose = Boolean(modsToRemove.length || engineReplay);
+  const rewinds = chainPlan.rewindTo !== null;
+  const statfs = tools.statfs || fs.statfs;
+  const volumeOf = tools.volumeOf || null;
+  const sameVolume = (left, right) => (volumeOf ? volumeOf(left) === volumeOf(right) : volumeKey(left) === volumeKey(right));
+  const cacheRoot = tools.stateDir || gameRoot;
+  /* Куда ляжет сборка: правило `compositesDirectory` — на диск игры, если хранилище на другом томе и там свободно с запасом. */
+  let compositeOnGame = false;
+  if (engineCompose) {
+    if (sameVolume(cacheRoot, gameRoot)) compositeOnGame = true;
+    else {
+      const free = await freeOn(gameRoot, statfs, Boolean(volumeOf));
+      compositeOnGame = free !== null && free >= 2 * Math.max(archiveBytes, GIB) + GIB;
+    }
+  }
+  const moveBuild = Boolean(engineCompose && compositeOnGame && (tools.moveBuild ? tools.moveBuild() : moveBuildEnabled()));
+  const gameHeld = rewinds ? archiveBytes : 0;
+  const gameTransient = Math.max(
+    engineCompose ? (compositeOnGame ? archiveBytes : 0) + (moveBuild ? 0 : archiveBytes) : 0,
+    replays.length ? archiveBytes : 0,
+  );
+  const gameBytes = writesGame ? gameHeld + gameTransient : 0;
   const space = await spaceReport(
     [
       {
         root: gameRoot,
-        bytes: writesGame ? archiveBytes + HEADROOM_BYTES : 0,
+        bytes: gameBytes ? gameBytes + HEADROOM_BYTES : 0,
       },
       {
         root: tools.restorePointsRoot,
@@ -471,14 +568,12 @@ async function preparePlan(input, tools) {
           : 0,
       },
       {
-        root: tools.stateDir || gameRoot,
-        bytes:
-          (modsToRemove.length || engineReplay) && engine?.expected
-            ? archiveBytes + HEADROOM_BYTES
-            : 0,
+        root: cacheRoot,
+        bytes: engineCompose && !compositeOnGame ? archiveBytes + HEADROOM_BYTES : 0,
       },
     ],
-    tools.statfs || fs.statfs,
+    statfs,
+    volumeOf,
   );
   for (const volume of space)
     if (!volume.enough)
@@ -918,31 +1013,71 @@ export async function removeLibraryItems(input, tools) {
      работы позже вернёт его. Снятому моду слои не кладутся: пересборки
      между работами берут слои, что есть сейчас, — получается тот же архив,
      как если бы снятой вещи не было. */
-    for (const modId of modsToRemove) {
+    const reportMod = (status) =>
+      report({
+        phase: "remove-mod",
+        copiedBytes: status?.copiedBytes,
+        totalBytes: status?.totalBytes,
+      });
+    const markEngineStarted = async () => {
+      if (journal.engineStarted) return;
+      journal.engineStarted = true;
+      await writeJournal(tools.journalPath, journal);
+    };
+    if (typeof tools.uninstallMods === "function" && modsToRemove.length > 1) {
+      /* Несколько модов (пак по стволам и его «прочее») — одной транзакцией движка: каждый затронутый архив собирается и подменяется один
+         раз, а не по разу на мод (23.11.2026). Что не снялось, названо в `failed`; снятые остались снятыми. */
       report({ phase: "remove-mod" });
-      if (!journal.engineStarted) {
-        journal.engineStarted = true;
-        await writeJournal(tools.journalPath, journal);
-      }
+      await markEngineStarted();
+      let batch;
       try {
-        await tools.uninstallMod(modId, (status) =>
-          report({
-            phase: "remove-mod",
-            copiedBytes: status?.copiedBytes,
-            totalBytes: status?.totalBytes,
-          }),
-        );
+        batch = await tools.uninstallMods(modsToRemove, reportMod);
+      } catch (error) {
+        batch = { removed: [], failed: modsToRemove.map((modId) => ({ modId, message: errorText(error) })) };
+      }
+      if (batch.removed?.length) {
         engineChanged = true;
         result.restartRequired = true;
-      } catch (error) {
-        result.failedMods.push({ modId, message: errorText(error) });
       }
-    }
+      for (const failure of batch.failed || [])
+        result.failedMods.push({ modId: failure.modId, message: String(failure.message || "") });
+    } else
+      for (const modId of modsToRemove) {
+        report({ phase: "remove-mod" });
+        await markEngineStarted();
+        try {
+          await tools.uninstallMod(modId, reportMod);
+          engineChanged = true;
+          result.restartRequired = true;
+        } catch (error) {
+          result.failedMods.push({ modId, message: errorText(error) });
+        }
+      }
     if (!engineChanged && modsToRemove.length && journal.engineStarted) {
       /* Ни один мод не снялся: движок остался прежним, и откат всё ещё
        возможен — журнал не должен считать иначе. */
       journal.engineStarted = false;
       await writeJournal(tools.journalPath, journal);
+    }
+
+    /* Ни один мод не снялся, и у всех причина одна — на диске нет места. Сборка движка атомарна (архив остался прежним), а ждать от следующих шагов
+       другого нечего: перемотка уже сделана, работы встанут обратно в ту же нехватку. Откатываем всё, что успели (прежний архив на место, новые
+       точки убрать), и отказываем словами помощника — окно переводит их на язык человека. Раньше это уходило в `failedMods`, а удаление шло дальше и
+       заканчивалось «готово» (разбор 23.11.2026). Любая другая причина, как и частичный успех, остаётся в итоге по каждому моду. */
+    if (
+      !engineChanged &&
+      modsToRemove.length &&
+      result.failedMods.length === modsToRemove.length &&
+      result.failedMods.every((item) => NO_SPACE.test(item.message))
+    ) {
+      journal.engineStarted = false;
+      await rollbackJournal(journal, tools);
+      const failure = new Error(
+        `Не удалось снять: ${result.failedMods[0].message} Игра возвращена к прежнему состоянию, ничего не удалено.`,
+      );
+      failure.code = "ASTRAL_LIBRARY_NO_SPACE";
+      failure.failedMods = result.failedMods;
+      throw failure;
     }
 
     /* Снятие мода пересобрало архив со всеми слоями разом: остальные моды

@@ -11,7 +11,7 @@ import { placeModelImages } from "../models/model-assets.js";
 export async function hangarImages(project) {
   const parts = [
     await emblemImages(project?.emblems),
-    await finishImagesFor([project?.outside, project?.inside, project?.floor]),
+    await finishImagesFor([project?.outside, project?.inside, project?.floor, project?.ceiling]),
     /* Свои модели (задача 1 ТЗ 11.10.2026, вечер). */
     await placeModelImages(project?.models),
   ].filter(Boolean);

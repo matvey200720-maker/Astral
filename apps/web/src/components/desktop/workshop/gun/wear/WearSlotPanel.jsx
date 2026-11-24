@@ -170,7 +170,7 @@ export default function WearSlotPanel({
   /* Нажатие — намерение выбрать: вещь готовится сразу, не дожидаясь отпускания кнопки и задержки наведения (22.11.2026: щелчок без остановки мыши ничего не прогревал). */
   const press = (item) => {
     window.clearTimeout(hoverTimer.current);
-    if (item && onHoverItem) onHoverItem(item);
+    if (item && onHoverItem) onHoverItem(item, true);
   };
 
   const choose = (next) => {

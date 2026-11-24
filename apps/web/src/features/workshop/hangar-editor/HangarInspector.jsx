@@ -15,7 +15,7 @@
  * fx-section`, как у остальных редакторов.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   HANGAR_DECAL,
   HANGAR_EMBLEM_SIZE,
@@ -35,12 +35,13 @@ import EmblemSection from "../emblem/EmblemSection.jsx";
 import HangarPresets from "./HangarPresets.jsx";
 import HangarLightHook from "./HangarLightHook.jsx";
 import HangarPaintHook from "./HangarPaintHook.jsx";
-import HangarRoomHook from "./HangarRoomHook.jsx";
+import HangarHouseHook from "./HangarHouseHook.jsx";
 import SectionHeading from "../section-help.jsx";
 import {
   HANGAR_LAMP_PATCHES,
   HANGAR_RUST_SWATCHES,
   HANGAR_SWATCHES,
+  hangarCeilingOptions,
   hangarFloorOptions,
   hangarLampOptions,
   hangarLampState,
@@ -49,8 +50,9 @@ import {
 import { tr, useTr } from "../../../locales/ui.js";
 
 /* «Студия» поверхности ангара: основа — первый лист этой поверхности из игры игрока (`surface`: `floor`, `outside`, `inside`). */
-function hangarStudio(surface, title) {
-  const texture = Object.keys(HANGAR_SHEETS).find((name) => HANGAR_SHEETS[name].surface === surface);
+function hangarStudio(surface, title, sheet = "") {
+  /* Потолок — свои листы гофры (`HANGAR_CEILING_SHEETS`), в описи они «внутри»: основу студии называет вызывающий. */
+  const texture = sheet || Object.keys(HANGAR_SHEETS).find((name) => HANGAR_SHEETS[name].surface === surface);
   /* `path` — поверхность в работе (стены `outside` и `inside`, пол `floor`): живой вид — кадр ангара с этой отделкой из студии. */
   return { id: `hangar:${surface}`, title: `${tr("Ангар")} · ${title}`, path: [surface], ...(texture ? { baseSheet: { scene: HANGAR_INVENTORY.scene.url, texture } } : {}) };
 }
@@ -76,9 +78,71 @@ const sideNotes = () => ({
     "Красятся гофра стен, белый цоколь из блоков, светлые панели у ворот, ворота и рольставни, крыша с кромками; гофра и цоколь одевают и часть стен изнутри. Ржавые потёки, ржавчина ворот, светлые заплаты на гофре, грязь со стен и пятна с крыши уходят. Двери для людей и окна остаются как в игре.",
   ),
   inside: tr(
-    "Синие стены и потолок изнутри, колонны и фермы под крышей; ржавчина и грязь с них уходят. Пол — своей настройкой ниже.",
+    "Синие стены изнутри, колонны и фермы под крышей; ржавчина и грязь с них уходят. Потолок и пол — на своих вкладках: пока у потолка «Как у стен», он красится вместе со стенами.",
   ),
 });
+
+/* Подвкладки отделки: у «Внутри» — потолок, стены, пол, дом и ржавчина; у «Снаружи» — стены и ржавчина. Подписи — в месте отрисовки (до смены языка модульные строки ещё русские). */
+const INSIDE_TABS = Object.freeze(["ceiling", "walls", "floor", "house", "rust"]);
+const OUTSIDE_TABS = Object.freeze(["walls", "rust"]);
+const tabLabel = (id) => ({ ceiling: tr("Потолок"), walls: tr("Стены"), floor: tr("Пол"), house: tr("Дом"), rust: tr("Ржавчина") })[id];
+/* Вкладка, к которой подводит щелчок по детали в кадре. */
+const AIM_TABS = Object.freeze({ floor: "floor", markings: "floor", rust: "rust", house: "house", ceiling: "ceiling", walls: "walls" });
+
+/* Второй ряд над панелью: переключатель из словаря; не влезает по ширине — органы переносятся второй строкой сами (`.ui-segmented` — `flex-wrap`). */
+function SideTabs({ tabs, value, onChange }) {
+  useTr();
+  return (
+    <SegmentedControl
+      label={tr("Раздел отделки")}
+      size="sm"
+      options={tabs.map((id) => ({ value: id, label: tabLabel(id) }))}
+      value={value}
+      onChange={onChange}
+    />
+  );
+}
+
+/*
+ * Потолок (владелец, 23.11.2026): своя отделка потолка ангара, отдельно от стен. «Как у стен» — потолок красится вместе с синими стенами, как раньше; свой цвет, узор, картинка, градиент —
+ * только потолку (два листа гофры под крышей). Ржавчина потолка — в «Ржавчине»: у крашеного потолка её убирает чистка.
+ */
+function CeilingSection({ ceiling, onSide, onNotice }) {
+  useTr();
+  return (
+    <Section title="" label={tr("Потолок")} element="ceiling" help={[tr("Гофра потолка под крышей: свой цвет, узор, картинка или градиент. Тени и швы листа остаются.")]}>
+      <FinishField
+        label={tr("Потолок")}
+        settings={ceiling}
+        modes={hangarCeilingOptions()}
+        swatches={HANGAR_SWATCHES}
+        surface="sheet"
+        rows
+        title=""
+        inherit={{ mode: "inside", label: "Как у стен" }}
+        studio={hangarStudio("ceiling", tr("Потолок"), "ap1_01_hangre_1")}
+        shadeLabel={tr("Светотень листа")}
+        hints={{
+          ...wallHints(),
+          standard: tr("Штатная гофра потолка ангара из вашей GTA V."),
+          inside: tr("Потолок той же отделки, что синие стены внутри."),
+        }}
+        onNotice={onNotice}
+        onChange={(patch, label) => onSide("ceiling", patch, label)}
+      >
+        {ceiling.mode === "colour" && (
+          <ColorField
+            label={tr("Цвет потолка")}
+            value={ceiling.colour}
+            swatches={HANGAR_SWATCHES}
+            editable
+            onChange={(colour) => onSide("ceiling", { colour }, "Потолок: цвет")}
+          />
+        )}
+      </FinishField>
+    </Section>
+  );
+}
 
 /*
  * Раздел: заголовок, пояснения — за «?» у заголовка, а не абзацами (слово владельца 29.10.2026, `design-qa.md`). `title` пустой — имя
@@ -416,6 +480,8 @@ export default function HangarInspector({
   onView = null,
   /* Щелчок по детали в кадре (`{ key, count }`): колонка подводит к её полю. */
   aim = null,
+  /* Открытая подвкладка «Внутри» (`"house"`…; у других инструментов пусто): кадр светит то, что вкладка красит (`hangar-aim.js`). */
+  onTab = null,
 }) {
   useTr();
   const holder = useRef(null);
@@ -429,18 +495,60 @@ export default function HangarInspector({
     return () => cancelAnimationFrame(frame);
   }, [aimCount, aimKey]);
   const side = HANGAR_SIDES.find((item) => item.id === tool);
+  /* Подвкладка у каждой стороны своя и помнится, пока панель открыта; щелчок по детали в кадре (`aim`) подводит к её вкладке. */
+  const [tabs, setTabs] = useState({ outside: "walls", inside: "walls" });
+  useEffect(() => {
+    const aimed = AIM_TABS[aimKey];
+    if (!aimCount || !aimed || !side) return;
+    const allowed = side.id === "inside" ? INSIDE_TABS : OUTSIDE_TABS;
+    if (allowed.includes(aimed)) setTabs((current) => (current[side.id] === aimed ? current : { ...current, [side.id]: aimed }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- вкладку подводит только новый щелчок по детали
+  }, [aimCount, aimKey]);
+  /* Вернулся во «Внутри» (пунктом над панелью) с запомненной подвкладкой «Потолок» или «Дом» — камера летит к ней, как при выборе. Щелчок по детали в кадре (`aim`) вид не меняет: человек смотрит на то, что нажал. */
+  const seenAim = useRef(aimCount);
+  const seenTool = useRef(tool);
+  useEffect(() => {
+    const aimed = aimCount !== seenAim.current;
+    const entered = seenTool.current !== tool;
+    seenAim.current = aimCount;
+    seenTool.current = tool;
+    if (!entered || aimed || tool !== "inside" || !onView) return;
+    if (tabs.inside === "ceiling" || tabs.inside === "house") onView(tabs.inside);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- вход во «Внутри» и новый щелчок по детали
+  }, [tool, aimCount]);
+  const pickTab = (next) => {
+    const before = tabs[side.id];
+    setTabs((current) => ({ ...current, [side.id]: next }));
+    /* Камера — тем же механизмом, что у «Цвета труб» (`hangar-views.js`): потолок — вверх, дом — на домик со стороны ангара; уходя с них, камера возвращается к виду «Внутри». Снаружи камеру ведёт пункт над панелью. */
+    if (side.id !== "inside" || !onView) return;
+    if (next === "ceiling" || next === "house") onView(next);
+    else if (before === "ceiling" || before === "house") onView("inside");
+  };
+  const tab = side ? tabs[side.id] : "";
+  const shownTab = side?.id === "inside" ? tab : "";
+  useEffect(() => {
+    onTab?.(shownTab);
+    return () => onTab?.("");
+  }, [onTab, shownTab]);
+  /* Тронул орган потолка или дома — камера к ним (один перелёт на вход, как у «Цвета труб»): после возврата к виду повторным щелчком по пункту правку снова видно. */
+  const withView = (key, change) => (...args) => {
+    onView?.(key);
+    return change(...args);
+  };
   let body;
   if (side)
     body = (
       <>
-        <SideSection
-          side={side}
-          settings={project[side.id]}
-          onSide={onSide}
-          onNotice={onNotice}
-        />
+        <SideTabs tabs={side.id === "inside" ? INSIDE_TABS : OUTSIDE_TABS} value={tab} onChange={pickTab} />
+        {tab === "walls" && (
+          <>
+            <SideSection side={side} settings={project[side.id]} onSide={onSide} onNotice={onNotice} />
+            <SideActions side={side} settings={project[side.id]} onSide={onSide} />
+          </>
+        )}
+        {side.id === "inside" && tab === "ceiling" && <CeilingSection ceiling={project.ceiling} onSide={withView("ceiling", onSide)} onNotice={onNotice} />}
         {/* Пол — своим разделом с именем: раньше вторая «Отделка» стояла под стенами без подписи. */}
-        {side.id === "inside" && (
+        {side.id === "inside" && tab === "floor" && (
           <Section title={tr("Пол")}>
             <FloorControls
               floor={project.floor}
@@ -451,10 +559,9 @@ export default function HangarInspector({
             />
           </Section>
         )}
-        {/* Мастерская ангара — цвета: место раздела части В (комната внутри) под «Стенами внутри»; пока часть не готова, крючок ничего не рисует. */}
-        {side.id === "inside" && <HangarRoomHook project={project} onStructure={onStructure} onView={onView} />}
-        <RustSection project={project} onStructure={onStructure} />
-        <SideActions side={side} settings={project[side.id]} onSide={onSide} />
+        {/* «Дом»: цвет стен и окон домика у торца зала; нет листа в описи — нет строки, крючок ничего не рисует. */}
+        {side.id === "inside" && tab === "house" && <HangarHouseHook project={project} onStructure={withView("house", onStructure)} />}
+        {tab === "rust" && <RustSection project={project} onStructure={onStructure} />}
       </>
     );
   else if ((tool === "emblem" || tool === "text") && emblems)

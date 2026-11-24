@@ -15,7 +15,8 @@ import {
 } from "@modovik/install-engine";
 import fs from "node:fs";
 import path from "node:path";
-import { clearModsShadow, settleGameLoaders } from "./game-loaders.js";
+import { clearModsShadow } from "./game-loaders.js";
+import { ensureLoaders, ensureLoadersFor, loadersNeededBy, retireLoadersIfUnused } from "./loaders-on-demand.js";
 import { returnGameAfterCancel } from "./install-cancel-rollback.js";
 import { appReduxInstall } from "./redux-install.js";
 import { appCatalogAppend } from "./catalog-append.js";
@@ -32,10 +33,7 @@ import {
   provideUpdateContentXml,
   resolveRpfHelperExecutable,
 } from "./rpf-composer.js";
-import {
-  provisionArchiveSupport,
-  provisionOfficialLoaders,
-} from "./loader-provisioner.js";
+import { provisionArchiveSupport } from "./loader-provisioner.js";
 import {
   assertInstallCapacity,
   combineInstallInputs,
@@ -323,8 +321,8 @@ export function registerInstallerIpc({
         assertRuntimeSafety,
       }),
     );
-    /* Пересборка архива и подмена снаружи — строкой в журнал (`prepare-log.js`). */
-    if (astralLayer && (astralLayer.committed || astralLayer.swap || astralLayer.ownEdits))
+    /* Пересборка архива, подмена снаружи и отказ подготовки слоя — строкой в журнал (`prepare-log.js`). */
+    if (astralLayer && (astralLayer.committed || astralLayer.swap || astralLayer.ownEdits || astralLayer.status === "unavailable"))
       logPrepare({
         result: astralLayer,
         before: archiveBefore,
@@ -371,21 +369,24 @@ export function registerInstallerIpc({
           })
         : { status: "no-helper", migrated: [], failed: [] },
     );
-    game = await settleGameLoaders({
-      game,
-      provision: () =>
-        provisionOfficialLoaders({
-          gameRoot: game.path,
-          targetId: game.id,
-          edition: game.edition,
-          stateDir: storageOptions.stateDir,
-          assertRuntimeSafety,
-        }),
-      reread: async () => {
-        await assertRuntimeSafety();
-        return game;
-      },
-    });
+    /*
+     * Загрузчики подготовка больше не ставит (23.11.2026, слово владельца): прямая схема их не требует, а на RP-серверах пара в корне
+     * игры — лишний риск. Пара встаёт при установке, которой она нужна (`loaders-on-demand.js`). Миграция: наша пара, поставленная
+     * раньше и больше никому не нужная, уходит — тихо, чужое не трогается, занятое откладывается до следующего раза.
+     */
+    if (value.ensureLoaders === true) {
+      /* Кнопка «Установить» в панели «Игра»: строки про загрузчики видны только тому, у кого стоит то, чему пара нужна (`loadersNeededBy`) — она и ставит пару. */
+      game = await ensureLoaders({
+        game,
+        stateDir: storageOptions.stateDir,
+        assertRuntimeSafety,
+        reread: async () => {
+          await assertRuntimeSafety();
+          return game;
+        },
+      });
+    } else await retireLoadersIfUnused({ game, stateDir: storageOptions.stateDir, assertRuntimeSafety });
+    game = await findGame(game.id).catch(() => game);
     const fastWeaponDlc = await provisionOptional(async () =>
       (await import("./weapon-dlc-provisioner.js")).provisionFastWeaponInfrastructure({
         gameRoot: game.path,
@@ -438,6 +439,8 @@ export function registerInstallerIpc({
     });
     return {
       ...game,
+      /* Окно по этому флагу решает, показывать ли строки про загрузчики (`GamePanel.jsx`). */
+      loadersNeeded: await loadersNeededBy({ game, stateDir: storageOptions.stateDir }),
       ...(rockstarCopy ? { rockstarCopy } : {}),
       astralLayer,
       soundArchives,
@@ -552,7 +555,23 @@ export function registerInstallerIpc({
       const storageOptions = await desktopStorage().installOptions();
       desktopStorage().offerFastInstall?.();
       /* Папка игры — найденная установка, а не путь из окна. */
-      const game = await findGame(value.targetId);
+      let game = await findGame(value.targetId);
+      /* Как в пакетной ветке: пара ложится в папку игры, значит игра не должна быть запущена (`assertSafe`). */
+      const assertRuntimeSafety = async () => {
+        game = await findGame(value.targetId);
+        await assertSafe(game);
+      };
+      /* Пакету из `mods` нужна пара загрузчиков (23.11.2026): встаёт тихо перед установкой; прямым пакетам — не нужна. */
+      game = await ensureLoadersFor({
+        game,
+        manifests: [value.manifest],
+        stateDir: storageOptions.stateDir,
+        assertRuntimeSafety,
+        reread: async () => {
+          await assertRuntimeSafety();
+          return game;
+        },
+      });
       /* Оружие через контейнер (`ASTRAL_WEAPONS_VIA_UPDATE=container`): пакет оружия с подписью идёт тем же маршрутом, что установка каталога ниже; без выключателя — `null`, путь прежний. */
       const weaponUpdateRoute = appWeaponUpdateRoute({
         gameRoot: game.path,
@@ -690,6 +709,17 @@ export function registerInstallerIpc({
         await clearModsShadow(game.path);
         const storage = desktopStorage();
         const storageOptions = await storage.installOptions();
+        /* Пакету из `mods` нужна пара загрузчиков (23.11.2026): встаёт тихо, прямо перед установкой; прямым пакетам — не нужна. */
+        game = await ensureLoadersFor({
+          game,
+          manifests: items.map((item) => item.manifest),
+          stateDir: storageOptions.stateDir,
+          assertRuntimeSafety,
+          reread: async () => {
+            await assertRuntimeSafety();
+            return game;
+          },
+        });
         /* Снять можно только то, что стоит в этой игре, и только то, что окно могло бы снять обычным снятием (`UNINSTALL_PACKAGE`). */
         if (removing.length) {
           const installedNow = (await inspectProfile({ stateDir: storageOptions.stateDir }))?.targets?.[game.id]?.installed || [];
@@ -1074,6 +1104,8 @@ export function registerInstallerIpc({
           removed: [value.modId],
           assertRuntimeSafety,
         }).catch((error) => console.warn(`[astral] Арена не пересобралась после снятия мода: ${error?.message || error}`));
+        /* Снята последняя работа, которой нужна пара загрузчиков, — пара уходит (только наша; 23.11.2026). */
+        await retireLoadersIfUnused({ game, stateDir: storageOptions.stateDir, assertRuntimeSafety });
         return removed;
       } finally {
         if (operationId) activeOperations.delete(operationId);

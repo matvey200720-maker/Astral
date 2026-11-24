@@ -573,6 +573,13 @@ export function LibraryRemovalDialog({
       }
       for (const item of result.lost || [])
         failures.push({ name: nameOf(item), message: copy.lostWork });
+      /* Моды сняты, а слои каталога поверх работ не встали (чаще всего — нет места на диске): раньше поле главный процесс отдавал, а окно его не читало
+         и показывало «Удалено», хотя часть модов в игре пропала до следующей подготовки. Причина — теми же словами, что у отказа установки. */
+      if (result.engineRecomposeFailed)
+        failures.push({
+          name: copy.kinds.mod,
+          message: removalErrorText(result.engineRecomposeFailed, locale),
+        });
       /*
        * Части наборов эффектов — после удаления: пересборка ложится поверх
        * того, что осталось, и читает запись набора такой, какой её оставило

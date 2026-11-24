@@ -19,6 +19,7 @@ const PROP_DEFAULTS = Object.freeze({
   onRetry: null,
   onOpenWithoutTextures: null,
   onBack: null,
+  outMs: null,
 });
 
 const LOADER_VARIANTS = Object.freeze("star frame scan orbit".split(" "));
@@ -324,6 +325,8 @@ const StageLoader = (props) => {
     "data-phase": phase,
     role: "status",
     "aria-live": "polite",
+    /* Короткое растворение (`StageLoadOverlay`, `outMs`): анимация кончается чуть раньше, чем карточка уходит из дерева. */
+    style: view.outMs ? { "--stage-loader-out": `${Math.max(view.outMs - 20, 60)}ms` } : undefined,
   };
   return h(
     "div",

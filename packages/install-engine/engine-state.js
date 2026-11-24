@@ -511,6 +511,13 @@ const snapshotShape = (target, copy) => ({
       copy(resource.layers || []),
     ]),
   ),
+  /* Основа, на которой собраны слои снимка (отпечаток файла по ресурсам; `resource-composition.js`: `compositionBase || base`). Сборки точки в кэше может не быть («одна запись вместо двух»),
+     и возврат пересобирает её из ТЕКУЩЕЙ основы: если основа с тех пор другая, пересборка выйдет не той, и возврат отказывает до записи (`restore-point-base.js`). Старые точки поля не несут. */
+  compositionBases: Object.fromEntries(
+    Object.entries(target?.resources || {})
+      .map(([relativePath, resource]) => [relativePath, String((resource?.compositionBase || resource?.base)?.sha256 || "").toLowerCase()])
+      .filter(([, sha256]) => sha256),
+  ),
 });
 
 export function snapshotTarget(target) {

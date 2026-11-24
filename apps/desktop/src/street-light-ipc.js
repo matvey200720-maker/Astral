@@ -21,7 +21,10 @@ export function registerStreetLightIpc({
   listGames,
   gameProcessRunning,
   createService = createStreetLightCustomizerService,
+  /* Пара загрузчиков по требованию (`loaders-on-demand.js`, 23.11.2026): прежним фонарям она нужна, ставится перед планом и уходит со снятием. */
+  loaders = null,
 }) {
+  const loaderState = async () => (await desktopStorage().installOptions()).stateDir;
   let servicePromise;
   const service = async () => {
     if (!servicePromise)
@@ -55,6 +58,7 @@ export function registerStreetLightIpc({
           input.replaceInstallId.length > 160)
       )
         throw new TypeError("planStreetLights.replaceInstallId invalid.");
+      if (loaders) await loaders.ensure({ listGames, stateDir: await loaderState() });
       return (await service()).plan(input);
     }),
   );
@@ -81,7 +85,9 @@ export function registerStreetLightIpc({
         )
       )
         throw new TypeError("removeStreetLights.installId invalid.");
-      return (await service()).remove(input.installId);
+      const removed = await (await service()).remove(input.installId);
+      if (loaders) await loaders.retire({ listGames, stateDir: await loaderState() });
+      return removed;
     }),
   );
   handleIpc(IPC.WORKSHOP_DISABLE_STREET_LIGHTS, (event, raw) =>
@@ -94,7 +100,9 @@ export function registerStreetLightIpc({
         )
       )
         throw new TypeError("disableStreetLights.installId invalid.");
-      return (await service()).disable(input.installId);
+      const disabled = await (await service()).disable(input.installId);
+      if (loaders) await loaders.retire({ listGames, stateDir: await loaderState() });
+      return disabled;
     }),
   );
 }

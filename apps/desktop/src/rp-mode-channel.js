@@ -1,7 +1,9 @@
 /*
  * Режим «RP» (20.11.2026, `docs/RP-MODE-ALPHA.md`; в альфе, бете и релизе с 22.11.2026, слово владельца: «в релиз всем»): оружие, одежда, дороги, растительность, места и наложения тела (тату, бороды) ставятся через контейнер `x64/astral/*.rpf` в `update.rpf`.
- * Включается само: канал alpha, beta или release, найден RAGE MP, Majestic не найден; найдены оба — сам не включается (журнал), `ASTRAL_RP_MODE=on` включает при любом наборе (в тех же каналах; запуск вне канала, dev-сборка — выключено),
- * `off`/`0`/`false`/`no` — не ставить ничего. Выключатель вида в окружении (в том числе `0`) сильнее умолчания. Что поставил режим сам — в `ASTRAL_RP_MODE_AUTO`:
+ * Включается само: канал alpha, beta или release, найден RAGE MP (Majestic рядом или нет — решает `RP_BOTH_CLIENTS_DEFAULT`: слово владельца 23.11.2026 «да, так» — при двух клиентах и без выбора человека режим включается сам),
+ * `ASTRAL_RP_MODE=on` включает при любом наборе (в тех же каналах; запуск вне канала, dev-сборка — выключено), `off`/`0`/`false`/`no` — не ставить ничего.
+ * Выбор человека «Где играю» (`rp-place.js`, настройки → GTA V): `rp` включает без поиска клиентов, `majestic` и `story` не включают; без выбора — по найденным клиентам.
+ * Выключатель вида в окружении (в том числе `0`) сильнее умолчания. Что поставил режим сам — в `ASTRAL_RP_MODE_AUTO`:
  * дороги и растительность на стоящих пакетах тогда идут прежним путём со строкой в журнале (`viaContainerOrOld`), явное значение отказывает, как раньше.
  * Имена и слова записаны здесь без импорта пакета установки (его при старте грузить нельзя, `tests/main-startup-imports.test.js`); равенство держит `tests/rp-mode-channel.test.js`.
  */
@@ -33,6 +35,15 @@ export const SUBPACK_CARRIERS_VALUE = ["update2", ...SUBPACK_LANE_WORDS].join(",
  */
 export const RP_MODE_SUBPACK_LANES = true;
 
+/** Выбор человека «Где играю» (настройки → GTA V): GTA 5 RP, Majestic, только сюжет. Пустая строка — не выбирал. Запись выбора — `rp-place.js`. */
+export const RP_PLACES = Object.freeze(["rp", "majestic", "story"]);
+
+/**
+ * Что делать при двух клиентах (RAGE MP и Majestic), пока человек не выбрал: `"on"` — режим включается сам (решение владельца 23.11.2026, «да, так»),
+ * `"wait"` — режим не включается и ждёт выбора (поведение 20–23.11.2026, строка `warn` в журнале). Одна константа: вариант А ↔ Б меняется здесь.
+ */
+export const RP_BOTH_CLIENTS_DEFAULT = "on";
+
 /** Каналы, где режим «RP» включается сам (имена каналов — `channels/branches.js`, `BRANCHES`): альфа, бета и релиз. Запуск вне канала (dev-сборка, `ownChannel` пуст) в список не входит: режим выключен. */
 export const RP_MODE_CHANNELS = Object.freeze(["alpha", "beta", "release"]);
 
@@ -63,18 +74,21 @@ export function rpModeKindsOn(env = process.env) {
 }
 
 /** Клиент RAGE MP по умолчанию — по реестру (`rage-mp-status.js`); модуль грузится по вызову, при старте его не тянем. */
-async function findRageMp() {
+export async function findRageMp() {
   const { rageGamePath } = await import("./launcher-game-paths.js");
   return rageGamePath();
 }
 
 /** Лаунчер Majestic по умолчанию — по его папке (`majesticGamePath`); по вызову, не при старте. */
-async function findMajestic() {
+export async function findMajestic() {
   const { majesticGamePath } = await import("./launcher-game-paths.js");
   return (await majesticGamePath()).installed === true;
 }
 
 const BOTH_LINE = "найдены RAGE MP и Majestic: режим RP не включён, включить вручную — ASTRAL_RP_MODE=on";
+/** Два клиента, выбора нет, `RP_BOTH_CLIENTS_DEFAULT = "on"`: режим включён сам, человек может выбрать другое (уровень `info`, не поломка). */
+const BOTH_AUTO_LINE = "найдены RAGE MP и Majestic: режим RP включён сам; другое — Настройки → GTA V → Где играю";
+const PLACE_OFF_LINE = (place) => `в настройках выбрано «${place === "majestic" ? "Majestic" : "Только сюжет"}»: режим RP не включён`;
 
 /** Поставил ли выключатель `name` сам режим (а не человек): места установки читают это в момент установки. */
 export function isRpModeAuto(name, env = process.env) {
@@ -86,9 +100,9 @@ export function isRpModeAuto(name, env = process.env) {
 
 /**
  * Ставит умолчания видов в окружение. Ответ: `{ state: "on" | "off", set: [имена] }`; `off` — окружение не менялось.
- * `detect` — поиск RAGE MP, `detectMajestic` — поиск Majestic, `note(строка)` — журнал.
- * `subpackLanes` — сборочный флаг `RP_MODE_SUBPACK_LANES` (тесты подают свой).
- * @param {{ channel?: string|null, env?: object, detect?: () => Promise<unknown>, detectMajestic?: () => Promise<unknown>, note?: (line: string) => void, subpackLanes?: boolean }} [options]
+ * `detect` — поиск RAGE MP, `detectMajestic` — поиск Majestic, `note(строка, уровень)` — журнал (уровень `info`; без него — `warn`).
+ * `subpackLanes` — сборочный флаг `RP_MODE_SUBPACK_LANES` (тесты подают свой). `place` — выбор человека `RP_PLACES` (`""` — не выбирал), `bothClients` — умолчание при двух клиентах (`RP_BOTH_CLIENTS_DEFAULT`).
+ * @param {{ channel?: string|null, env?: object, detect?: () => Promise<unknown>, detectMajestic?: () => Promise<unknown>, note?: (line: string, level?: string) => void, subpackLanes?: boolean, place?: string, bothClients?: "on"|"wait" }} [options]
  */
 export function applyRpModeDefault(options = {}) {
   const run = applyRpModeDefaultNow(options);
@@ -101,12 +115,32 @@ let lastApply = Promise.resolve();
 /** Дожидается последнего вызова `applyRpModeDefault` (сбой не бросает); вызова не было — готово сразу. */
 export const rpModeSettled = () => lastApply;
 
-async function applyRpModeDefaultNow({ channel, env = process.env, detect = findRageMp, detectMajestic = findMajestic, note = () => {}, subpackLanes = RP_MODE_SUBPACK_LANES } = {}) {
+/**
+ * Снимает то, что поставил САМ режим (имена из `ASTRAL_RP_MODE_AUTO`, в том числе `ASTRAL_CARRIERS`, если его поставил режим), и стирает метку. Значения, заданные человеком (их нет в метке), не трогаются.
+ * Нужна при смене выбора «Где играю» на лету (`rp-place.js`): `applyRpModeDefault` только ставит, обратного хода у него нет. Ответ — снятые имена.
+ */
+export function resetRpModeAuto(env = process.env) {
+  const names = String(env?.[RP_MODE_AUTO_ENV] ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  for (const name of names) delete env[name];
+  delete env[RP_MODE_AUTO_ENV];
+  return names;
+}
+
+async function applyRpModeDefaultNow({ channel, env = process.env, detect = findRageMp, detectMajestic = findMajestic, note = () => {}, subpackLanes = RP_MODE_SUBPACK_LANES, place = "", bothClients = RP_BOTH_CLIENTS_DEFAULT } = {}) {
   const none = { state: "off", set: [] };
   if (!RP_MODE_CHANNELS.includes(channel)) return none;
   const word = String(env[RP_MODE_ENV] ?? "").trim().toLowerCase();
   if (OFF_WORDS.has(word)) return none;
-  if (word !== "on") {
+  const chosen = RP_PLACES.includes(place) ? place : "";
+  /* Выбор человека сильнее поиска клиентов (реестр не читается): «Majestic» и «Только сюжет» — не включать, «GTA 5 RP» — включить, как `ASTRAL_RP_MODE=on`. `off` в окружении (выше) главнее и выбора. */
+  if (word !== "on" && (chosen === "majestic" || chosen === "story")) {
+    note(PLACE_OFF_LINE(chosen), "info");
+    return none;
+  }
+  if (word !== "on" && chosen !== "rp") {
     let rage = false;
     try {
       rage = Boolean(await detect());
@@ -122,8 +156,12 @@ async function applyRpModeDefaultNow({ channel, env = process.env, detect = find
       note(`поиск Majestic не удался (${error?.message || error}): считаем, что Majestic не найден`);
     }
     if (majestic) {
-      note(BOTH_LINE);
-      return none;
+      /* Два клиента, выбора нет: по слову владельца 23.11.2026 режим включается сам; `"wait"` возвращает прежнее «не включать, пока не скажут». */
+      if (bothClients !== "on") {
+        note(BOTH_LINE);
+        return none;
+      }
+      note(BOTH_AUTO_LINE, "info");
     }
   }
   const set = [];

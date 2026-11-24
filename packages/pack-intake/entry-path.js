@@ -1,3 +1,8 @@
+import { nameSegmentProblem, nameSegmentReason } from "../mod-targets/file-names.js";
+
+/* Правило звена — одно на установку, распаковку и бандлы (`mod-targets/file-names.js`); окно берёт его отсюда (`@modovik/pack-intake/entry-path`). */
+export { nameSegmentProblem, nameSegmentReason };
+
 const KNOWN_EXTENSIONS = ".zip .oiv .7z .rar".split(" ");
 
 export const ARCHIVE_KINDS = Object.freeze(Object.fromEntries(KNOWN_EXTENSIONS.map((ext) => [ext, ext.slice(1)])));
@@ -41,6 +46,12 @@ const isAbsoluteEntry = (text) => {
 const isJunk = (parts) =>
   JUNK_FOLDERS.has(parts[0].toLowerCase()) || JUNK_FILES.has(parts.at(-1).toLowerCase());
 
+/* Имя в сообщении: управляющие знаки и знаки направления — кодами, чтобы строка в журнале читалась так, как она записана. */
+const visible = (text) =>
+  [...text]
+    .map((ch) => (/^(?:character|direction)$/.test(nameSegmentProblem(ch)) ? `<U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}>` : ch))
+    .join("");
+
 const tooLong = (piece) => piece.length > MAX_SEGMENT;
 
 // Вердикты идут в порядке проверок; побеждает первый, что вернул ответ (иначе — undefined).
@@ -51,6 +62,11 @@ const RULINGS = [
   ({ rough }) => (rough.some((piece) => piece.includes("\0")) ? { unsafe: "нулевой символ в имени" } : undefined),
   ({ text, parts }) => (parts.length === 0 ? { unsafe: `пустой путь «${text}»` } : undefined),
   ({ parts }) => (isJunk(parts) ? { junk: true } : undefined),
+  ({ text, parts }) => {
+    const bad = parts.find((piece) => nameSegmentProblem(piece));
+    if (bad === undefined) return undefined;
+    return { unsafe: `недопустимое имя в пути «${visible(text)}»: ${nameSegmentReason(nameSegmentProblem(bad))}`, badName: true };
+  },
   ({ parts }) => (parts.some(tooLong) ? { unsafe: "слишком длинное имя" } : undefined),
 ];
 

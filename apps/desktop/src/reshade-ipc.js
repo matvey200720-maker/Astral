@@ -7,6 +7,7 @@
  */
 
 import { rageGamePath } from "./launcher-game-paths.js";
+import { ensureLoadersAtRoot, retireLoadersAtRoot } from "./loaders-on-demand.js";
 import {
   applyReshade,
   readReshadeState,
@@ -44,6 +45,10 @@ export function registerReshadeIpc({
       return applyReshade(
         await withGameRoot(safeInput(input), findRage),
         storage.stateDir,
+        {
+          /* Нет ASI-прокси в корне игры — Astral ставит свою пару загрузчиков (`loaders-on-demand.js`). */
+          ensureGameLoader: (gameRoot) => ensureLoadersAtRoot({ gameRoot, stateDir: storage.stateDir }),
+        },
       );
     }),
   );
@@ -51,10 +56,11 @@ export function registerReshadeIpc({
   handleIpc(IPC.RESHADE_REMOVE, (event, input) =>
     trusted(event, async () => {
       const storage = await installOptions();
-      return removeReshade(
-        await withGameRoot(safeInput(input), findRage),
-        storage.stateDir,
-      );
+      const value = await withGameRoot(safeInput(input), findRage);
+      const result = await removeReshade(value, storage.stateDir);
+      /* ReShade снят — если пара больше никому не нужна, она уходит (только наша; 23.11.2026). */
+      if (value?.gameRoot) await retireLoadersAtRoot({ gameRoot: value.gameRoot, stateDir: storage.stateDir });
+      return result;
     }),
   );
 }

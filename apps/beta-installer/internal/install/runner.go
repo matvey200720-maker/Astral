@@ -555,6 +555,16 @@ func (r *Runner) hOpenVerifyURL(context.Context, json.RawMessage) (any, error) {
 // siteParams — параметры вызова openSite.
 type siteParams = struct {
 	Page string `json:"page"`
+	Lang string `json:"lang"`
+}
+
+// siteLangQuery — «?lang=xx» для страницы сайта, если сайт знает этот язык (ru, uk, en, de, pl: ?lang= разбирает
+// languageFromParam сайта); французского на сайте нет, чужое и пустое значение — без параметра.
+func siteLangQuery(lang string) string {
+	if slices.Contains([]string{"ru", "uk", "en", "de", "pl"}, strings.ToLower(lang)) {
+		return "?lang=" + strings.ToLower(lang)
+	}
+	return ""
 }
 
 func (r *Runner) hOpenSite(_ context.Context, raw json.RawMessage) (any, error) {
@@ -564,7 +574,8 @@ func (r *Runner) hOpenSite(_ context.Context, raw json.RawMessage) (any, error) 
 	}
 	switch in.Page {
 	case "", "beta":
-		return opened(r.common.OpenAllowed(r.common.Site + "/beta"))
+		// Только страница /beta: адрес подтверждения кода (openVerifyUrl) язык не получает.
+		return opened(r.common.OpenAllowed(r.common.Site + "/beta" + siteLangQuery(in.Lang)))
 	}
 	return nil, argErr("unknown page %s", in.Page)
 }
@@ -745,6 +756,18 @@ func (r *Runner) awaitStopped(finished <-chan struct{}) {
 // launchParams — параметры вызова launch.
 type launchParams = struct {
 	Channel string `json:"channel"`
+	Lang    string `json:"lang"`
+}
+
+// launchArgs — аргументы запуска лаунчера: язык, показанный установщиком, едет флагом
+// --astral-lang=xx (приём — apps/desktop/src/launch-language.js). Значение сворачивается тем же путём, что язык системы
+// («ua» → «uk», «de-DE» → «de»), передаётся один из шести кодов, а не сам тег; чужое молча не передаётся.
+func launchArgs(lang string) []string {
+	known, ok := KnownLanguage(lang)
+	if !ok {
+		return nil
+	}
+	return []string{"--astral-lang=" + known}
 }
 
 func (r *Runner) hLaunch(_ context.Context, raw json.RawMessage) (any, error) {
@@ -757,7 +780,7 @@ func (r *Runner) hLaunch(_ context.Context, raw json.RawMessage) (any, error) {
 	case !found, !lay.Installed():
 		return nil, bridge.Errf("INSTALL_FAILED", false, "Astral.exe is not installed")
 	}
-	_, err = r.sys.Launch(lay.Exe(), nil, lay.App())
+	_, err = r.sys.Launch(lay.Exe(), launchArgs(in.Lang), lay.App())
 	if err != nil {
 		return nil, bridge.Errf("INTERNAL", false, "launch: %v", err)
 	}

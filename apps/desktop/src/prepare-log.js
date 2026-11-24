@@ -32,6 +32,18 @@ const fileText = (identity) =>
 
 const secondsText = (seconds) => `${seconds.toFixed(1).replace(".", ",")} с`;
 
+/** Мёртвого места в основе больше этого — отдельная строка уровня warn (след чужой сборки, 23.11.2026). */
+export const DEAD_SPACE_WARN_BYTES = 16 * 1024 * 1024;
+
+const megabytesText = (size) => `${(size / 1048576).toFixed(1).replace(".", ",")} МБ`;
+
+/* Счёт записей сборки (`compose` в ответе подготовки, поля движка `compose-rpf`): «записей N → M, мёртвого места K МБ». Нет числа — нет и куска. */
+function countText(compose) {
+  if (!compose || !Number.isFinite(compose.entriesBefore) || !Number.isFinite(compose.entriesAfter)) return "";
+  const dead = Number.isFinite(compose.deadBytesBefore) ? `, мёртвого места ${megabytesText(compose.deadBytesBefore)}` : "";
+  return `; записей ${compose.entriesBefore} → ${compose.entriesAfter}${dead}`;
+}
+
 /* Причина пересборки: что именно заставило подготовку переписать архив. */
 function reasonOf(result) {
   if (result.freshBaseline) return "первая подготовка игры";
@@ -65,18 +77,32 @@ function modsText(result) {
 export function prepareLogEntries({ result, before = null, after = null, seconds = 0 }) {
   if (!result || typeof result !== "object") return [];
   const entries = [];
+  /* Подготовка слоя отказала (в том числе страховкой: основа менялась в ходе снятия, архив беднее основы, `lost entries`): отказ в журнал, чтобы он был виден в «Логах». Это журнал, не интерфейс. */
+  if (result.status === "unavailable")
+    entries.push({
+      level: "warn",
+      source: SOURCE,
+      message: `подготовка игры: слой Astral не подготовлен (${secondsText(seconds)}) — ${result.reason ? String(result.reason).slice(0, 600) : "причина не названа"}`,
+    });
   if (result.swap?.outside)
     entries.push({
       level: "warn",
       source: SOURCE,
       message: `подготовка игры: update.rpf подменён снаружи — был ${fileText(result.swap.before)}, стал ${fileText(result.swap.found)}; ${modsText(result)}`,
     });
-  if (result.committed)
+  if (result.committed) {
     entries.push({
       level: "info",
       source: SOURCE,
-      message: `подготовка игры: архив пересобран за ${secondsText(seconds)} — причина: ${reasonOf(result)}; update.rpf ${bytesText(before?.size)} → ${bytesText(after?.size)}`,
+      message: `подготовка игры: архив пересобран за ${secondsText(seconds)} — причина: ${reasonOf(result)}; update.rpf ${bytesText(before?.size)} → ${bytesText(after?.size)}${countText(result.compose)}`,
     });
+    if (Number.isFinite(result.compose?.deadBytesBefore) && result.compose.deadBytesBefore > DEAD_SPACE_WARN_BYTES)
+      entries.push({
+        level: "warn",
+        source: SOURCE,
+        message: `подготовка игры: в архиве игры было ${megabytesText(result.compose.deadBytesBefore)} данных вне оглавления (след чужой сборки) — в новый архив они не вошли`,
+      });
+  }
   else if (result.ownEdits)
     entries.push({
       level: "info",

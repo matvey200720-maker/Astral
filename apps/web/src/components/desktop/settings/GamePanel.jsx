@@ -23,6 +23,7 @@ import { useRestoreStatus } from "./restore-status.js";
 import { storeLogo } from "./store-logo.js";
 import RestoreModsRow from "./RestoreModsRow.jsx";
 import RpMigrateRow from "./RpMigrateRow.jsx";
+import RpPlaceRow from "./RpPlaceRow.jsx";
 
 const PATH_WIDTH = 44;
 const NOTE_ID = "game-restore-note";
@@ -210,7 +211,8 @@ function useLoaderInstall(game, language) {
     setBusy(true);
     setError("");
     try {
-      const request = { targetId: main.id, releaseStockHold: true };
+      /* `ensureLoaders`: подготовка пару не ставит (она по требованию), кнопка — ставит. */
+      const request = { targetId: main.id, releaseStockHold: true, ensureLoaders: true };
       const record = await prepareGameInstallation(request);
       if (record && record.id) setFresh({ source: game, record });
     } catch (failure) {
@@ -410,7 +412,12 @@ function LoaderRow({ installing, onInstall, row, words }) {
   );
 }
 
+/*
+ * Строки про загрузчики — только тому, у кого стоит то, чему пара нужна (`loadersNeeded` от главного процесса: запись установки с `needsLoader`
+ * или прежние фонари). Остальным их нет вовсе: слово владельца 23.11.2026 — «новым людям пару не ставить» и никаких плашек про неё.
+ */
 function LoaderChecks({ record, words, installing, error, onInstall }) {
+  if (record?.loadersNeeded !== true) return null;
   const gaps = readLoaderGaps(record);
   const rows = LOADER_CHECKS.map((check) => ({
     id: check.id,
@@ -460,31 +467,6 @@ function MissingNotice({ words, onChoose }) {
         {words.pickFolder}
       </FolderButton>
     </div>
-  );
-}
-
-// Без игры загрузчикам не на чем стоять: обе строки видны, но притушены и без значений.
-function IdleLoaders({ words }) {
-  return (
-    <Group
-      className="settings-group is-idle"
-      setting="loaders"
-      title={words.loadersNeed}
-    >
-      {LOADER_CHECKS.map((check) => (
-        <Row key={check.id} data-present="none">
-          <TitledCopy
-            note={words.why[check.id]}
-            title={words.checks[check.id]}
-          />
-          <RowControl>
-            <span className="settings-idle-dash" aria-hidden="true">
-              —
-            </span>
-          </RowControl>
-        </Row>
-      ))}
-    </Group>
   );
 }
 
@@ -678,7 +660,7 @@ export default function GamePanel({
           <RockstarLinkRow language={language} onOpen={onOpenSection} />
         </Suspense>
       ) : null}
-      {main ? <LoaderChecks {...loaderProps} /> : <IdleLoaders words={words} />}
+      {main ? <LoaderChecks {...loaderProps} /> : null}
       {main ? (
         <section className="settings-card">
           <Row data-setting="add-folder">
@@ -710,6 +692,8 @@ export default function GamePanel({
           </Row>
           {/* Пропали моды после проверки файлов — строка подсвечивается и возвращает их (16.11.2026). */}
           <RestoreModsRow language={language} restoreMods={restoreMods} />
+          {/* «Где играю» (23.11.2026): GTA 5 RP / Majestic / только сюжет — по выбору главный процесс включает или выключает режим RP. */}
+          <RpPlaceRow />
           {/* Моды, стоящие пакетами до режима RP, на серверах RAGE MP не видны: предложение пересобрать (только по слову человека). */}
           <RpMigrateRow language={language} targetId={main.id} />
         </section>

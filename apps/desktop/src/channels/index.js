@@ -15,6 +15,7 @@ import { applyStreamShaDefault } from "../stream-sha.js";
 import { applySoundSlotRaiseDefault } from "../sound-slot-raise-channel.js";
 import { applyCatalogAppendDefault } from "../catalog-append-channel.js";
 import { applyRpModeDefault } from "../rp-mode-channel.js";
+import { rpPlaceForApp } from "../rp-place.js";
 import { applyRpMigrateDefault } from "../rp-migrate-channel.js";
 import { applyArenaAlphaDefaults } from "../arena-alpha-channel.js";
 import { spawn } from "node:child_process";
@@ -262,18 +263,20 @@ export const createDesktopChannels = (parts) => {
   const rustSwitches = rustSwitchesForApp({ app: parts.app, channel: parts.ownChannel });
   /* Третий пакет растительности: в альфе включён, когда двух мало; в бете и релизе — выключен (19.11.2026). */
   applyVegetationThirdPackDefault({ channel: parts.ownChannel });
-  /* «Одна запись вместо двух»: собранный update.rpf в игру переносится, а не копируется — в альфе включено (19.11.2026). */
+  /* «Одна запись вместо двух»: собранный update.rpf в игру переносится, а не копируется — в альфе включено (19.11.2026), в бете и релизе (23.11.2026); аварийно — ASTRAL_INSTALL_MOVE_BUILD=off. */
   applyMoveBuildDefault({ channel: parts.ownChannel });
   /* Отпечаток по ходу записи: движок не читает собранный update.rpf второй раз ради SHA-256 — в альфе включено (19.11.2026). */
   applyStreamShaDefault({ channel: parts.ownChannel });
-  /* Подъём слота памяти звуков оружия: в альфе включён, в бете и релизе выключен до отзывов альфы (20.11.2026). */
+  /* Подъём слота памяти звуков оружия: в альфе (20.11.2026), бете и релизе (23.11.2026, решение владельца) включён; вне каналов выключен. */
   applySoundSlotRaiseDefault({ channel: parts.ownChannel });
   /* Дозапись мода каталога в update.rpf: в альфе включена, в бете и релизе выключена; аварийно — ASTRAL_ENGINE_CATALOG_APPEND=0 (20.11.2026). */
   applyCatalogAppendDefault({ channel: parts.ownChannel });
   /* Арена Majestic: замена аирдропов, плита перед экраном и свои модели внутри зала — в альфе включены (заход владельца на arena10, 21.11.2026), в бете и релизе выключены; аварийно — ASTRAL_ARENA_SLABS=0, ASTRAL_ARENA_SCREEN_PLATES=0, ASTRAL_ARENA_HALL_ENTITIES=0. */
   applyArenaAlphaDefaults({ channel: parts.ownChannel });
-  /* Режим «RP»: в альфе, бете и релизе (22.11.2026) при найденном клиенте RAGE MP и ненайденном Majestic оружие, одежда, дороги, растительность, места и наложения тела ставятся через контейнер/носитель в update.rpf; иначе и вне канала (dev-сборка) — прежний путь; аварийно ASTRAL_RP_MODE=off или выключатель вида (20.11.2026). */
-  applyRpModeDefault({ channel: parts.ownChannel, note: (line) => parts.appLog.record({ level: "warn", source: "channels", message: line }) }).catch(() => {});
+  /* Режим «RP»: в альфе, бете и релизе (22.11.2026) при найденном клиенте RAGE MP (и при двух клиентах, пока человек не выбрал, — слово владельца 23.11.2026) оружие, одежда, дороги, растительность, места и наложения тела ставятся через контейнер/носитель в update.rpf; иначе и вне канала (dev-сборка) — прежний путь; аварийно ASTRAL_RP_MODE=off или выключатель вида (20.11.2026). Выбор «Где играю» (`rp-place.js`) читается здесь же, до режима. */
+  const rpNote = (line, level = "warn") => parts.appLog.record({ level, source: "channels", message: line });
+  const rpPlace = rpPlaceForApp({ app: parts.app, channel: parts.ownChannel, busy: parts.busy, note: rpNote });
+  applyRpModeDefault({ channel: parts.ownChannel, note: rpNote, place: rpPlace.chosen() }).catch(() => {});
   /* Регулятор диска: в обычном режиме установки держит занятость диска около половины на любом носителе — в альфе включён, в бете и релизе выключен до приёмки на трёх носителях (20.11.2026). */
   applyDiskGovernorDefault({ channel: parts.ownChannel });
   /* Мягкий сторож «Быстрой установки» (`ASTRAL_DISK_GUARD`): отдельный выключатель, по умолчанию — только альфа и только когда замеры цены приняты (`DISK_GUARD_ALPHA_DEFAULT`). */
@@ -300,6 +303,6 @@ export const createDesktopChannels = (parts) => {
   });
 
   return Object.assign({}, service, {
-    registerIpc: (options) => [service, rustSwitches].forEach((part) => part.registerIpc(options)),
+    registerIpc: (options) => [service, rustSwitches, rpPlace].forEach((part) => part.registerIpc(options)),
   });
 };

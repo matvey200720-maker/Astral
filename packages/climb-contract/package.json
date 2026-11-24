@@ -31,7 +31,7 @@
     "./recolor/hangar-clean": "./recolor/hangar-clean.js",
     "./recolor/hangar-lights": "./recolor/hangar-lights.js",
     "./recolor/hangar-paint": "./recolor/hangar-paint.js",
-    "./recolor/hangar-room": "./recolor/hangar-room.js",
+    "./recolor/hangar-house": "./recolor/hangar-house.js",
     "./recolor/mapping": "./recolor/mapping.js",
     "./recolor/scene-item-rules": "./recolor/scene-item-rules.js",
     "./recolor/uv-raster": "./recolor/uv-raster.js",

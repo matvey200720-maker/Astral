@@ -109,6 +109,15 @@ function entry(store, folder, source, buildId, launcherState = null) {
     store !== "Epic" &&
     !exists(path.join(normalized, "steam_api64.dll")) &&
     !exists(path.join(normalized, ".egstore"));
+  /*
+   * Готовность игры к модам от загрузчиков НЕ зависит (23.11.2026, слово владельца: «новым людям пару не ставить»).
+   * Прямая схема пишет в `update/update.rpf` и `update/x64/dlcpacks/astral_*`, и игра грузит их сама
+   * (`packages/install-engine/astral-layer.js`); `dinput8.dll` + `RageOpenV.asi` нужны только пакетам с
+   * `requiresLoader` и ReShade `.asi`, и Astral ставит пару при такой установке (`apps/desktop/src/loaders-on-demand.js`).
+   * Поэтому «нет загрузчика» — не изъян готовности, а свойство игры: `loader`, `asiLoader`, `hasRageOpenV` отдаются как есть,
+   * а `readinessIssues` по-прежнему перечисляет, чего из пары нет (панель «Игра» показывает это строками «Есть»/«Не найден»),
+   * но на `installReadiness` это не влияет.
+   */
   const readinessIssues = [];
   if (launcherState?.busy) readinessIssues.push("launcher-busy");
   if (!loader)
@@ -142,11 +151,7 @@ function entry(store, folder, source, buildId, launcherState = null) {
     loader,
     requiredLoader: "RageOpenV",
     readinessIssues,
-    installReadiness: launcherState?.busy
-      ? "launcher-busy"
-      : readinessIssues.length
-        ? "needs-loader"
-        : "ready",
+    installReadiness: launcherState?.busy ? "launcher-busy" : "ready",
     safetyMode: "isolated-mods",
     onlinePolicy: "follow-server-rules",
   };

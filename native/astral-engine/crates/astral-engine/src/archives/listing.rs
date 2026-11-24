@@ -144,6 +144,9 @@ pub fn read_archive_file(options: &Options, _progress: &Progress) -> Result<Valu
             .ok_or_else(|| EngineError::argument(format!("Unsupported archive entry: {entry}")))
     })?;
     let entry = options.required("entry")?;
+    // Запись уходит в файл, и имя файла вызывающий нередко берёт из имени записи
+    // (`rpf-composer.js`, чтение записей хостом). Поэтому имя записи здесь
+    // проверяется правилом диска, а не мягким правилом дерева архива.
     let inner_path = normalize_relative(&strip_archive_prefix(entry))?;
 
     let output = full_path(options.required("output")?)?;

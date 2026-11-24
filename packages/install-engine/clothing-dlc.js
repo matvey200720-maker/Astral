@@ -340,7 +340,16 @@ export async function provisionClothingDlcCore(
       },
       deps,
     );
-    if (activate) {
+    /* Вещи уже стоят в хосте — DLC включён и остаётся включённым (по образцу оружия, `fast-weapon-dlc.js: hostInUse`). Подготовка без включения (`activate:false`:
+       перед установкой заменёнки или покраски) раньше снимала регистрацию из состояния и не пересобирала `dlclist.xml`: хост «не готов» (update.rpf правили снаружи
+       или нативной правкой мастерской, сменилась основа, файл хоста другой) — и, если установка следом не дошла до регистрации (отказ слота, сбой, отмена), состояние
+       говорило «не зарегистрирован» при записи в `dlclist.xml`. Следующая пересборка `dlclist.xml` из состояния (дороги, места, первый ганпак) выбрасывала
+       `astral_clothing` при стоящих вещах — «одежда исчезла» (разбор 23.11.2026). Теперь при стоящих вещах регистрация остаётся и пересобирается в этой же операции. */
+    const hostInUse = Object.values(
+      target.archives?.[CLOTHING_DLC_TARGET]?.entries || {},
+    ).some((entry) => (entry?.layers || []).length > 0);
+    const shouldActivate = activate || hostInUse;
+    if (shouldActivate) {
       target.directDlcRegistrations[CLOTHING_DLC_NAME] = {
         owner: "@astral-clothing-host",
         registeredAt: new Date().toISOString(),
@@ -375,7 +384,7 @@ export async function provisionClothingDlcCore(
       assertRuntimeSafety,
       onProgress,
     });
-    const updateSource = activate
+    const updateSource = shouldActivate
       ? await composeArchiveResource({
           target,
           archiveTarget: ASTRAL_UPDATE_TARGET,
@@ -392,7 +401,7 @@ export async function provisionClothingDlcCore(
       : null;
     const affected = (
       await Promise.all([
-        activate
+        shouldActivate
           ? changedFile(ASTRAL_UPDATE_TARGET, updateSource, root, deps)
           : null,
         changedFile(CLOTHING_DLC_TARGET, hostSource, root, deps),
@@ -402,7 +411,8 @@ export async function provisionClothingDlcCore(
       schema: CLOTHING_DLC_SCHEMA,
       target: CLOTHING_DLC_TARGET,
       preparedAt: new Date().toISOString(),
-      preparedOnly: !activate,
+      /* «Подготовлен, пуст» — только когда в хосте ничего нет; с вещами DLC включён (как у оружия). */
+      preparedOnly: !shouldActivate,
     };
     const result = affected.length
       ? await transact({
@@ -423,7 +433,7 @@ export async function provisionClothingDlcCore(
     onProgress?.({ phase: "clothing-host-ready", percent: 100 });
     return {
       ready: true,
-      active: activate,
+      active: shouldActivate,
       changed: affected.length > 0,
       target: CLOTHING_DLC_TARGET,
     };

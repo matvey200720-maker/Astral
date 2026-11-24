@@ -22,6 +22,7 @@ use rage_rpf::{
     Handled, Layout, NestedMode, TrialRun,
 };
 
+use super::census::{self, BaseCount, Census, Moves};
 use super::streamed::{write_streamed, Streamed};
 use rage_rpf::{Body, Compress, Data, DirNode, FileNode};
 use rage_rpf::{Encryption, EntryCipher, EntryKind};
@@ -39,7 +40,7 @@ use crate::{
     args::Options,
     disk::{self, WritePacer},
     error::{EngineError, Result},
-    failpoint,
+    failpoint, paths,
     progress::Progress,
 };
 
@@ -965,6 +966,9 @@ impl Request {
 
     /// Имя архива для ключей и доводки: последнее звено `archiveTarget`, а если
     /// его нет, имя файла выхода. Оканчиваться оно обязано на `.rpf` (регистр важен).
+    /// Под этим именем архив собирается в служебной папке (`workshop.path.join`),
+    /// поэтому имя проверяется правилом диска: имя с диском или потоком NTFS увело
+    /// бы файл из служебной папки.
     fn archive_name(&self) -> Result<String> {
         // Последнее непустое звено; косые обоих видов равны.
         let name = match self
@@ -978,6 +982,7 @@ impl Request {
         if !names_container(&name) {
             return Err(invalid("Logical RPF target name is missing."));
         }
+        paths::normalize_relative(&name)?;
         Ok(name)
     }
 
@@ -1090,7 +1095,7 @@ impl<'a> Job<'a> {
     }
 
     /// Операция над одной записью на своём уровне (без вложенных архивов в пути).
-    fn apply_to(&self, root: &mut DirNode) -> Result<()> {
+    fn apply_to(&self, root: &mut DirNode, moves: &Moves) -> Result<()> {
         let op = &self.prep.op;
         let Some((leaf, parents)) = self.rel.split_last() else {
             return Ok(());
@@ -1106,10 +1111,12 @@ impl<'a> Job<'a> {
         match edit {
             Edit::Skip => {}
             Edit::Remove(at) => {
-                dir.files.remove(at);
+                let gone = dir.files.remove(at);
+                moves.removed_file(&gone.name, &gone.body);
             }
             Edit::Overwrite(at) => {
                 let file = &mut dir.files[at];
+                moves.replaced_body(&file.name, &file.body);
                 file.body = payload_body(source, is_resource_body(&file.body), leaf);
                 file.name.clone_from(leaf);
             }
@@ -1119,6 +1126,7 @@ impl<'a> Job<'a> {
                     body: payload_body(source, resource, leaf),
                     name: leaf.clone(),
                 });
+                moves.appended();
             }
         }
         Ok(())
@@ -1300,10 +1308,22 @@ fn not_binary_entry(shown: &str) -> EngineError {
     invalid(format!("Nested RPF is not a binary entry: {shown}"))
 }
 
-/// Ключи для вложенных архивов и ход выполнения.
+/// Ключи для вложенных архивов и ход выполнения; `moves` — сколько записей операции убрали и добавили
+/// (допуск для сверки счёта файлов, `census.rs`).
 struct Env<'a> {
     keys: &'a Arc<KeySet>,
     progress: &'a Progress,
+    moves: Moves,
+}
+
+impl<'a> Env<'a> {
+    fn new(keys: &'a Arc<KeySet>, progress: &'a Progress) -> Env<'a> {
+        Env {
+            keys,
+            progress,
+            moves: Moves::default(),
+        }
+    }
 }
 
 impl Env<'_> {
@@ -1319,7 +1339,7 @@ impl Env<'_> {
 
         for job in direct {
             self.progress.checkpoint()?;
-            if let Err(error) = job.apply_to(node) {
+            if let Err(error) = job.apply_to(node, &self.moves) {
                 return Err(failed_here(error, &job));
             }
             if job.prep.is_whole_container() {
@@ -1373,6 +1393,7 @@ impl Env<'_> {
 
         if is_hollow(&dir.files[at].body) && inner_prefix.starts_with(ASTRAL_LAYER) {
             dir.files.remove(at);
+            self.moves.hollow_removed();
         }
         Ok(())
     }
@@ -1606,6 +1627,8 @@ struct Plan {
     prepared: Vec<Prepared>,
     base: Option<Arc<Archive>>,
     broken_before: Option<Vec<String>>,
+    /// Счёт записей и занятого места основы (`None`, если основы не было).
+    counted: Option<BaseCount>,
     total: u64,
 }
 
@@ -1630,9 +1653,12 @@ impl Env<'_> {
 
         // Без основы читать нечего: стадия `read` не сообщается вовсе.
         let mut broken_before = None;
+        let mut counted = None;
         if let Some(opened) = &base {
             self.progress.report("read");
             broken_before = Some(opened.unopenable_nested(""));
+            // после разбора вложенных: их оглавления уже в кэше архива
+            counted = Some(BaseCount::of(opened));
         }
         let total = request.planned_bytes(&prepared);
         Ok(Plan {
@@ -1640,8 +1666,37 @@ impl Env<'_> {
             prepared,
             base,
             broken_before,
+            counted,
             total,
         })
+    }
+
+    /// Сверка счёта записей: нигде не пропало больше, чем убрали сами операции. `base` — основа (если была), `tree` — дерево
+    /// после операций, `result` — записанный файл (`None`, пока файла ещё нет).
+    fn check_census(
+        &self,
+        base: Option<&BaseCount>,
+        tree: Census,
+        result: Option<Census>,
+    ) -> Result<()> {
+        if let Some(base) = base {
+            let (removed, added) = (self.moves.removed(), self.moves.added());
+            if tree.files + removed < base.census.files + added {
+                return Err(invalid(format!(
+                    "RPF compose lost entries of the base archive: {} files in the base, {} after the operations, {} removed and {} added by them.",
+                    base.census.files, tree.files, removed, added
+                )));
+            }
+        }
+        if let Some(result) = result {
+            if result.files < tree.files {
+                return Err(invalid(format!(
+                    "RPF compose lost entries while writing: {} files planned, {} in the written archive.",
+                    tree.files, result.files
+                )));
+            }
+        }
+        Ok(())
     }
 
     /// Готовый архив открывается, запечатан, если нужно, содержит всё заказанное, а
@@ -1654,7 +1709,8 @@ impl Env<'_> {
         broken_before: Option<&[String]>,
         sealed: bool,
         name: &str,
-    ) -> Result<()> {
+        planned: Option<Census>,
+    ) -> Result<Option<Census>> {
         let result = match Archive::open_path(staged, Some(Arc::clone(self.keys))) {
             Ok(opened) => opened,
             Err(error) => {
@@ -1683,7 +1739,14 @@ impl Env<'_> {
                 )));
             }
         }
-        Ok(())
+        // Записанный файл не беднее дерева, из которого его писали. Без основы счёта нет: вложенные архивы результата при
+        // проверке не раскрывались, и счёт добавил бы разбор их оглавлений (`compose_stream_tests`: «разбирается только готовый файл»).
+        let Some(planned) = planned else {
+            return Ok(None);
+        };
+        let written = census::of_archive(&result);
+        self.check_census(None, planned, Some(written))?;
+        Ok(Some(written))
     }
 }
 
@@ -1881,7 +1944,7 @@ pub fn compose_batched(
 ) -> Result<Value> {
     let stream = streaming.enabled;
     let parses_before = rage_rpf::toc::parse_count();
-    let env = Env { keys, progress };
+    let env = Env::new(keys, progress);
     let sealed = finalizer.is_some();
     let observer = Arc::new(progress.clone());
     let _hook = activity::install(observer);
@@ -1911,7 +1974,15 @@ pub fn compose_batched(
     }
     let jobs: Vec<Job<'_>> = plan.prepared.iter().map(Job::whole).collect();
     env.apply_level(&mut tree, jobs, "")?;
+    #[cfg(test)]
+    tests::simulate_loss(&mut tree);
     let apply_ms = apply_clock.millis();
+    // Счёт записей до записи: если дерево стало беднее основы больше, чем убрали сами операции, два гигабайта не пишутся.
+    // Без основы считать нечего (и разбирать вложенные архивы ради счёта незачем).
+    let planned = plan.counted.as_ref().map(|_| census::of_tree(&tree));
+    if let Some(planned) = planned {
+        env.check_census(plan.counted.as_ref(), planned, None)?;
+    }
 
     let write_clock = Stage::begin();
     let mut workshop = request.open_workshop()?;
@@ -1952,6 +2023,7 @@ pub fn compose_batched(
         prepared,
         base,
         broken_before,
+        counted: base_count,
         ..
     } = plan;
     drop(base);
@@ -1962,17 +2034,20 @@ pub fn compose_batched(
     let verify_clock = Stage::begin();
     progress.report("verify");
     let broken = broken_before.as_deref();
-    if let Err(error) = env.check_result(&staged, &prepared, broken, sealed, &name) {
-        // стенд разбора: отказ проверки оставляет собранный файл и называет его путь
-        if env::var(KEEP_REFUSED_ENV).is_ok_and(|text| text.trim() == "1") {
-            workshop.keep = true;
-            return Err(EngineError::new(
-                error.code,
-                format!("{} [kept: {}]", error.message, staged.display()),
-            ));
+    let written = match env.check_result(&staged, &prepared, broken, sealed, &name, planned) {
+        Ok(written) => written,
+        Err(error) => {
+            // стенд разбора: отказ проверки оставляет собранный файл и называет его путь
+            if env::var(KEEP_REFUSED_ENV).is_ok_and(|text| text.trim() == "1") {
+                workshop.keep = true;
+                return Err(EngineError::new(
+                    error.code,
+                    format!("{} [kept: {}]", error.message, staged.display()),
+                ));
+            }
+            return Err(error);
         }
-        return Err(error);
-    }
+    };
     let validate_ms = verify_clock.millis();
 
     deliver(&staged, &request.output, &mut workshop)?;
@@ -2055,7 +2130,21 @@ pub fn compose_batched(
             Value::Object(object_of(timings.map(|(stage, ms)| (stage, json!(ms))))),
         ),
     ];
-    Ok(Value::Object(object_of(answer)))
+    let mut object = object_of(answer);
+    // Счёт записей (файлы и каталоги, вложенные архивы внутрь) и мёртвое место основы: журнал подготовки пишет их строкой
+    // (`apps/desktop/src/prepare-log.js`). Без основы считать «до» нечего.
+    if let Some(base) = &base_count {
+        object.insert("entriesBefore".to_owned(), json!(base.census.entries()));
+    }
+    if let Some(written) = written {
+        object.insert("entriesAfter".to_owned(), json!(written.entries()));
+    }
+    if let Some(base) = &base_count {
+        object.insert("usefulBytesBefore".to_owned(), json!(base.space.useful_bytes));
+        object.insert("fileBytesBefore".to_owned(), json!(base.space.file_bytes));
+        object.insert("deadBytesBefore".to_owned(), json!(base.space.dead_bytes));
+    }
+    Ok(Value::Object(object))
 }
 
 // ---------------------------------------------------------------------------
@@ -2121,7 +2210,7 @@ pub(super) fn apply_for_append(
         .filter_map(|prep| prep.op.source.as_deref())
         .map(size_of)
         .sum();
-    let env = Env { keys, progress };
+    let env = Env::new(keys, progress);
     let mut tree = DirNode::from_archive(base);
     {
         let jobs: Vec<Job<'_>> = prepared.iter().map(Job::whole).collect();
@@ -4191,6 +4280,39 @@ pub(crate) mod tests {
         }
     }
 
+    /// Имя архива становится именем файла в служебной папке. Имя, которое Windows
+    /// понимает иначе, чем написано (диск, поток NTFS, устройство, точка на конце),
+    /// отвергается до записи: доводчик не вызван, выхода нет (разбор безопасности
+    /// 23.11.2026, H3-03).
+    #[test]
+    fn an_archive_name_that_windows_reads_differently_is_refused_before_the_write() {
+        let lab = Lab::new();
+        // первым идёт имя, которое без проверки остаётся внутри служебной папки
+        for (target, name) in [
+            ("update:/x64/a:b.rpf", "a:b.rpf"),
+            ("update:/x64/C:evil.rpf", "C:evil.rpf"),
+            ("x64/nul.rpf", "nul.rpf"),
+            ("x64/COM1.rpf", "COM1.rpf"),
+            ("x64/a?b.rpf", "a?b.rpf"),
+        ] {
+            let spy = Spy::new();
+            let out = lab.out("unsafe-names");
+            let mut request = lab.request(Some("b1"), &[import("x64/a/z.txt", "small.txt")], &out);
+            request.archive_target = target.to_owned();
+            let error = lab.run_with(&request, &spy).err().unwrap();
+            assert_eq!(
+                (error.code.as_str(), error.message.as_str()),
+                (
+                    "InvalidDataException",
+                    format!("Unsafe relative path: {name}").as_str()
+                ),
+                "цель {target:?}"
+            );
+            assert_eq!(spy.names(), Vec::<String>::new(), "цель {target:?}");
+            assert!(!out.exists());
+        }
+    }
+
     #[test]
     fn edition_and_archive_are_echoed_as_given() {
         let lab = Lab::new();
@@ -5468,5 +5590,218 @@ pub(crate) mod tests {
                 "ArgumentException: Install archive must be an .rpf file."
             );
         }
+    }
+
+    // ----- счёт записей и мёртвое место основы (страховка первой подготовки, 23.11.2026) -----
+
+    thread_local! {
+        /// Сколько файлов тест «теряет» из дерева сразу после операций (как если бы их потерял сам движок).
+        pub(super) static SIMULATED_LOSS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+
+    /// Только для тестов: убирает файлы из дерева после операций, не сообщая об этом допуску.
+    pub(super) fn simulate_loss(tree: &mut DirNode) {
+        let mut left = SIMULATED_LOSS.with(std::cell::Cell::get);
+        let mut stack = vec![tree];
+        while left > 0 {
+            let Some(dir) = stack.pop() else { break };
+            while left > 0 && !dir.files.is_empty() {
+                dir.files.remove(0);
+                left -= 1;
+            }
+            stack.extend(dir.dirs.iter_mut());
+        }
+    }
+
+    fn compose_plain(lab: &Lab, label: &str, base: &str, ops: &[Op]) -> Result<Value> {
+        let request = lab.request(Some(base), ops, &lab.out(label));
+        compose_with(&request, &quiet_keys(), None, &Progress::silent())
+    }
+
+    #[test]
+    fn the_answer_counts_the_entries_and_a_base_with_dead_space_still_passes() {
+        let lab = Lab::new();
+        let ops = [replace("x64/a/a.ydd", "new.ydd")];
+        let tight = compose_plain(&lab, "tight", "b1", &ops).unwrap();
+        let before = tight["entriesBefore"].as_u64().unwrap();
+        assert!(before > 5, "{tight}");
+        assert_eq!(tight["entriesAfter"].as_u64().unwrap(), before);
+        let file_len = fs::metadata(lab.base("b1")).unwrap().len();
+        assert_eq!(tight["fileBytesBefore"], file_len);
+        let useful = tight["usefulBytesBefore"].as_u64().unwrap();
+        assert!(useful > 0 && useful <= file_len, "{tight}");
+        assert!(
+            tight["deadBytesBefore"].as_u64().unwrap() < 512,
+            "в плотно записанной основе мёртвого места нет: {tight}"
+        );
+
+        // та же основа и три мегабайта данных вне оглавления: счёт тот же, мёртвое место названо, подмена проходит, архив меньше
+        let dead = lab.base("dead");
+        fs::copy(lab.base("b1"), &dead).unwrap();
+        let junk = 3 * 1024 * 1024;
+        let mut handle = fs::OpenOptions::new().append(true).open(&dead).unwrap();
+        std::io::Write::write_all(&mut handle, &vec![0u8; junk]).unwrap();
+        drop(handle);
+        let answer = compose_plain(&lab, "dead", "dead", &ops).unwrap();
+        assert_eq!(answer["status"], "ready");
+        assert_eq!(answer["entriesBefore"], tight["entriesBefore"]);
+        assert_eq!(answer["entriesAfter"], tight["entriesAfter"]);
+        assert_eq!(answer["usefulBytesBefore"], tight["usefulBytesBefore"]);
+        assert_eq!(answer["fileBytesBefore"], file_len + junk as u64);
+        assert_eq!(
+            answer["deadBytesBefore"].as_u64().unwrap(),
+            tight["deadBytesBefore"].as_u64().unwrap() + junk as u64
+        );
+        assert!(answer["bytes"].as_u64().unwrap() < file_len + junk as u64);
+    }
+
+    #[test]
+    fn deleting_entries_is_not_a_loss_and_a_hollowed_astral_container_goes_with_its_content() {
+        let lab = Lab::new();
+        let base = compose_plain(&lab, "none", "b1", &[replace("x64/a/a.ydd", "new.ydd")]).unwrap();
+        let one = compose_plain(&lab, "one", "b1", &[delete("x64/a/a.ydd")]).unwrap();
+        assert_eq!(one["status"], "ready");
+        assert_eq!(
+            one["entriesAfter"].as_u64().unwrap(),
+            base["entriesBefore"].as_u64().unwrap() - 1
+        );
+        // опустевший вложенный архив слоя Astral уходит из родителя: два файла, сама запись и корень архива — отказа нет
+        let hollow = compose_plain(
+            &lab,
+            "hollow",
+            "b1",
+            &[delete("x64/astral/c.rpf/one.ydd"), delete("x64/astral/c.rpf/two.ydd")],
+        )
+        .unwrap();
+        assert_eq!(hollow["status"], "ready");
+        assert_eq!(
+            hollow["entriesAfter"].as_u64().unwrap() + 4,
+            base["entriesBefore"].as_u64().unwrap()
+        );
+    }
+
+    /// Цена счёта на настоящем архиве: три прохода по оглавлению (основа, дерево, результат), три прогона. Запуск:
+    /// `ASTRAL_CENSUS_COST_FILE=<update.rpf> ASTRAL_CENSUS_COST_KEYS=<папка ключей> cargo test --release -p astral-engine --lib census_cost -- --ignored --nocapture`.
+    /// Разбор оглавления и вложенных (он идёт в любом случае) в цену не входит: каждый прогон открывает архив и прогревает вложенные заранее.
+    #[test]
+    #[ignore = "нужен настоящий update.rpf и ключи"]
+    fn census_cost_on_a_real_archive() {
+        let (Some(file), Some(keys)) = (
+            std::env::var_os("ASTRAL_CENSUS_COST_FILE"),
+            std::env::var_os("ASTRAL_CENSUS_COST_KEYS"),
+        ) else {
+            eprintln!("пропущен: нет ASTRAL_CENSUS_COST_FILE и ASTRAL_CENSUS_COST_KEYS");
+            return;
+        };
+        let keys = Arc::new(KeySet::load_dir(Path::new(&keys)).unwrap());
+        for run in 1..=3 {
+            let open = Instant::now();
+            let base = Arc::new(Archive::open_path(Path::new(&file), Some(Arc::clone(&keys))).unwrap());
+            let opened = open.elapsed();
+            let warm = Instant::now();
+            let broken = base.unopenable_nested("").len();
+            let warmed = warm.elapsed();
+            let first = Instant::now();
+            let counted = BaseCount::of(&base);
+            let pass1 = first.elapsed();
+            let build = Instant::now();
+            let tree = DirNode::from_archive(&base);
+            let built = build.elapsed();
+            let second = Instant::now();
+            let planned = census::of_tree(&tree);
+            let pass2 = second.elapsed();
+            let again = Archive::open_path(Path::new(&file), Some(Arc::clone(&keys))).unwrap();
+            let _ = again.unopenable_nested("");
+            let third = Instant::now();
+            let written = census::of_archive(&again);
+            let pass3 = third.elapsed();
+            eprintln!(
+                "прогон {run}: открытие {opened:?}, разбор вложенных {warmed:?} (неоткрывшихся {broken}), дерево {built:?}; СЧЁТ: основа {pass1:?} + дерево {pass2:?} + результат {pass3:?} = {:?}; записей {} файлов {} мёртвого {} Б",
+                pass1 + pass2 + pass3,
+                counted.census.entries(),
+                planned.files.max(written.files),
+                counted.space.dead_bytes
+            );
+        }
+    }
+
+    #[test]
+    fn replacing_a_nested_archive_with_an_empty_one_is_not_a_loss() {
+        let lab = Lab::new();
+        write_tree(&dir("", vec![], vec![]), &lab.src.join("empty.rpf"));
+        let kept = compose_plain(&lab, "kept", "b1", &[replace("x64/other/e.rpf", "nested2.rpf")]).unwrap();
+        assert_eq!(kept["status"], "ready");
+        let emptied = compose_plain(&lab, "emptied", "b1", &[replace("x64/other/e.rpf", "empty.rpf")]).unwrap();
+        assert_eq!(emptied["status"], "ready", "подмена проходит: содержимое вложенного ушло вместе с ним");
+        assert!(emptied["entriesAfter"].as_u64().unwrap() < emptied["entriesBefore"].as_u64().unwrap());
+    }
+
+    #[test]
+    fn a_nested_archive_that_does_not_open_counts_as_one_file_and_the_base_passes() {
+        let lab = Lab::new();
+        // основа b4: единственная запись `pack.rpf` — не архив (чужое шифрование для проверки то же: не открывается)
+        let base = Archive::open_path(&lab.base("b4"), Some(quiet_keys())).unwrap();
+        let counted = census::of_archive(&base);
+        assert_eq!(counted.files, 1, "неоткрывшийся вложенный — один файл");
+        assert_eq!(counted, census::of_tree(&DirNode::from_archive(&Arc::new(base))));
+        let answer = compose_plain(&lab, "b4", "b4", &[import("a/extra.ydd", "new.ydd")]).unwrap();
+        assert_eq!(answer["status"], "ready");
+        assert_eq!(answer["entriesBefore"].as_u64().unwrap(), counted.entries());
+        assert_eq!(answer["entriesAfter"].as_u64().unwrap(), counted.entries() + 2, "добавлены файл и каталог");
+    }
+
+    #[test]
+    fn a_loss_beyond_what_the_operations_removed_refuses_before_anything_is_written() {
+        let lab = Lab::new();
+        let ops = [replace("x64/a/a.ydd", "new.ydd")];
+        SIMULATED_LOSS.with(|loss| loss.set(2));
+        let out = lab.out("lost");
+        let refused = compose_plain(&lab, "lost", "b1", &ops);
+        SIMULATED_LOSS.with(|loss| loss.set(0));
+        let error = refused.unwrap_err();
+        assert_eq!(error.code, "InvalidDataException");
+        assert!(
+            error
+                .message
+                .starts_with("RPF compose lost entries of the base archive:"),
+            "{}",
+            error.message
+        );
+        assert!(!out.exists(), "выход не должен появиться");
+        no_workshop_left(&out);
+        // без потери та же сборка проходит
+        assert!(compose_plain(&lab, "kept", "b1", &ops).is_ok());
+    }
+
+    #[test]
+    fn the_census_check_weighs_what_was_removed_and_added_and_what_was_written() {
+        let keys = quiet_keys();
+        let progress = Progress::silent();
+        let env = Env::new(&keys, &progress);
+        let base = BaseCount {
+            census: Census { files: 10, dirs: 2 },
+            space: census::Space::default(),
+        };
+        let tree = |files| Census { files, dirs: 2 };
+        assert!(env.check_census(Some(&base), tree(10), None).is_ok());
+        let lost = env.check_census(Some(&base), tree(8), None).unwrap_err();
+        assert!(lost.message.contains("lost entries of the base archive"));
+        let plain = Body::Binary {
+            data: Data::memory(Vec::new()),
+            compress: Compress::Auto,
+        };
+        env.moves.removed_file("x.bin", &plain);
+        env.moves.removed_file("y.bin", &plain);
+        assert!(env.check_census(Some(&base), tree(8), None).is_ok());
+        env.moves.appended();
+        assert!(env.check_census(Some(&base), tree(8), None).is_err());
+        assert!(env.check_census(Some(&base), tree(9), None).is_ok());
+        let short = env
+            .check_census(None, tree(9), Some(Census { files: 8, dirs: 2 }))
+            .unwrap_err();
+        assert!(short.message.contains("lost entries while writing"));
+        assert!(env
+            .check_census(None, tree(9), Some(Census { files: 12, dirs: 5 }))
+            .is_ok());
     }
 }

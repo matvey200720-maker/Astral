@@ -1252,6 +1252,12 @@ export default defineConfig(({ mode, command }) => {
                каждый новый редактор добавляет имена файлов. Кусок грузится вместе с главным, поведение не меняется; выносить так
                можно только модуль без импортов, иначе куски зациклятся (docs/UI-TEXT-BUNDLE.md). */
             if (normal.endsWith("/packages/publishing/part-names.js")) return "part-names";
+            /* Таблица слов каталога (`catalogLabel`, `catalogWordsFor`; ~64 КБ минифицированно, 15 КБ gzip) — лист без импортов, один зовущий в главном куске
+               (`catalog-utils.js`): своим куском по тому же правилу, что part-names (замер 23.11.2026, `weakpc2/main-chunk-diet-probe`). */
+            if (normal.endsWith("/features/catalog/catalog-words.js")) return "catalog-words";
+            /* Слова оболочки без единого импорта (листья): `shell-notices.js` (уведомления и «Подготовка»), `preparation-copy.js`, `cart-copy.js`, `waiting-copy.js`, `home-copy.js` —
+               одним куском; грузится вместе с главным, поведение не меняется. Выносить так можно только модуль без импортов (docs/UI-TEXT-BUNDLE.md). */
+            if (/\/(components\/desktop\/shell-notices|hooks\/preparation-copy|features\/cart\/cart-copy|features\/library\/waiting-copy|features\/home\/home-copy)\.js$/.test(normal)) return "shell-copy";
             if (!id.includes("node_modules")) return undefined;
             if (id.includes("/three/") || id.includes("\\three\\")) {
               return "three-viewer";

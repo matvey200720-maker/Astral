@@ -81,6 +81,10 @@ export default function ClipPlayer({
   const [playing, setPlaying] = useState(false);
   /* «Повторить» пересоздаёт `<video>`: сбой браузер запоминает на элементе. */
   const [attempt, setAttempt] = useState(0);
+  /* Вид отказа по слову службы (`cloud-clip.js`): `storage-unavailable` — нет связи с хранилищем роликов, плашка говорит это словами; пусто — общая. */
+  const [why, setWhy] = useState("");
+  const attemptNow = useRef(0);
+  attemptNow.current = attempt;
   /* Органы (ТЗ 29.10.2026): время и длина ролика, громкость, во весь экран, «разбужены ли» органы мышью или клавишей. */
   const [clock, setClock] = useState({ time: 0, duration: NaN });
   const [volume, setVolumeState] = useState(memory.volume);
@@ -154,6 +158,9 @@ export default function ClipPlayer({
     if (url && wantPlay.current) tryPlay(video.current);
   }, [url, attempt]);
 
+  /* Причина отказа ролика — в журнал окна: модуль берётся по `import()` только при сбое. */
+  const note = useCallback((stage, error, mode) => import("../../features/catalog/clip-failure-note.js").then((module) => module.noteClipFailure({ stage, error, mode, bytes, src })).catch(() => ""), [bytes, src]);
+
   const start = useCallback(async () => {
     wantPlay.current = true;
     if (urlRef.current) {
@@ -167,20 +174,30 @@ export default function ClipPlayer({
     }
     try {
       const response = await fetch(src);
-      if (!response.ok) throw new Error(`clip ${response.status}`);
+      if (!response.ok) {
+        /* Служба отказала словами (`{ error, code }`): код ответа и причина — в сбой, «потоком» ту же закачку второй раз не повторяем. */
+        const body = await Promise.resolve(response.json?.()).catch(() => null);
+        throw Object.assign(new Error(`clip ${response.status}${body?.error ? `: ${body.error}` : ""}`), { service: body?.code || "" });
+      }
       const blob = await response.blob();
       if (wantPlay.current) setUrl(URL.createObjectURL(blob));
-    } catch {
-      /* Не сошлось с памятью (сеть, нет места) — пробуем потоком: сбой покажет сам `<video>`. */
-      if (wantPlay.current) setUrl(src);
+    } catch (error) {
+      /* Не сошлось с памятью (сеть, нет места) — пробуем потоком: сбой покажет сам `<video>`. Причина — в журнал окна (`clip-failure-note.js`, по `import()`). */
+      note("в память", error, "blob");
+      if (error.service) {
+        setWhy(error.service);
+        setPhase("failed");
+        onError?.();
+      } else if (wantPlay.current) setUrl(src);
     }
-  }, [src, bytes, loop, silent, setUrl]);
+  }, [src, bytes, loop, silent, setUrl, note, onError]);
 
   /* Другой ролик в том же месте или новая попытка — всё с начала; просмотрщик и «Повторить» запускают ролик сразу. */
   useEffect(() => {
     wantPlay.current = false;
     urlRef.current = "";
     setUrlState("");
+    setWhy("");
     setPhase("idle");
     setPlaying(false);
     setClock({ time: 0, duration: NaN });
@@ -300,7 +317,9 @@ export default function ClipPlayer({
         onWaiting={() => setPhase("loading")}
         onCanPlay={() => setPhase("ready")}
         onPlaying={() => setPhase("ready")}
-        onError={() => {
+        onError={(event) => {
+          const asked = attemptNow.current;
+          note("поток", event.currentTarget?.error, urlRef.current.startsWith("blob:") ? "blob" : "stream").then((code) => code && attemptNow.current === asked && setWhy(code));
           setPhase("failed");
           setPlaying(false);
           onError?.();
@@ -349,7 +368,8 @@ export default function ClipPlayer({
       )}
       {phase === "failed" && (
         <span className="ui-clip-player-state is-failed" role="alert">
-          <span>{tr("Ролик не загрузился")}</span>
+          {/* Хранилище роликов недоступно (нет имени, нет связи): честные слова вместо общих; адресов и кодов человеку нет. */}
+          <span>{why === "storage-unavailable" ? tr("Нет связи с хранилищем роликов. Проверьте интернет и нажмите «{0}».").replace("{0}", tr("Повторить")) : tr("Ролик не загрузился")}</span>
           <button type="button" className="ui-clip-player-retry" onClick={retry}>
             <Play weight="fill" aria-hidden="true" />
             {tr("Повторить")}

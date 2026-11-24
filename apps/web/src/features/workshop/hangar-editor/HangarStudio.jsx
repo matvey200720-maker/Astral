@@ -135,6 +135,8 @@ export default function HangarStudio({ onExit, onNotice }) {
   const [view, setView] = useRememberedState("hangar:view", "outside");
   /* Деталь, на которую щёлкнули в кадре: переключатель или поле, к которому колонка подводит (`count` растёт с каждым щелчком). */
   const [element, setElement] = useState({ tool: "", key: "", count: 0 });
+  /* Открытая подвкладка «Внутри» (сообщает панель): на «Доме» кадр светит домик, а не всё нутро. */
+  const [insideTab, setInsideTab] = useState("");
   const editor = useRecolorEditor({
     set: "hangar",
     contract: RECOLOR_PROJECTS.hangar,
@@ -190,19 +192,23 @@ export default function HangarStudio({ onExit, onNotice }) {
    * от задней стены на ворота, «Конструкции» — зал, взгляд вверх на фермы и кран. Повторный щелчок возвращает камеру туда же (`at`).
    */
   const [shot, setShot] = useState(null);
+  /* Метка «камеру в этот раздел уже водили» (`onFocusView` ниже); пункт над панелью её сбрасывает. */
+  const focused = useRef("");
   const onSwitch = useCallback(
     (next) => {
       if (next !== "outside" && next !== "inside" && next !== "structure") return;
+      /* Явный щелчок по пункту (в том числе повторный по активному, инструмент тот же) возвращает камеру к виду: следующее касание раздела снова считается входом. */
+      focused.current = "";
       setView(next === "outside" ? "outside" : "inside");
       setShot({ tool: next, at: Date.now() });
     },
     [setView],
   );
   /*
-   * Разделы «Цвет труб» и «Комната» (мастерская ангара — цвета): человек тронул их орган — камера летит к трубам или в комнату (`hangar-views.js`), чтобы результат правки был виден. Перелёт — один на вход
-   * в раздел: правка цвета и повторные щелчки в том же разделе камеру не трогают, а улетевшего в полёте человека к виду насильно не возвращают; смена раздела (инструмента) даёт новый вход.
+   * «Цвет труб» и подвкладки «Потолок», «Дом» у «Внутри» (мастерская ангара — цвета): человек тронул их орган или вкладку — камера летит к трубам, вверх на потолок или на домик (`hangar-views.js`),
+   * чтобы результат правки был виден. Перелёт — один на вход: правка цвета и повторные щелчки там же камеру не трогают, а улетевшего в полёте человека к виду насильно не возвращают; смена раздела
+   * (инструмента) даёт новый вход.
    */
-  const focused = useRef("");
   useEffect(() => {
     focused.current = "";
   }, [tool]);
@@ -254,7 +260,11 @@ export default function HangarStudio({ onExit, onNotice }) {
     apply: useCallback(
       (target, finish) => {
         if (target?.tool !== "outside" && target?.tool !== "inside") return null;
-        if (target.element === "markings") return null;
+        if (target.element === "markings" || target.element === "house") return null;
+        if (target.element === "ceiling") {
+          onSide("ceiling", finish, "Потолок: узор");
+          return tr("Потолок");
+        }
         if (target.element === "floor") {
           onFloor(finish, "Пол: узор");
           return tr("Пол");
@@ -343,6 +353,7 @@ export default function HangarStudio({ onExit, onNotice }) {
               onPlacing={onPlacing}
               onView={onFocusView}
               aim={element}
+              onTab={setInsideTab}
             />
           </StudioLiveProvider>
         )}
@@ -364,7 +375,7 @@ export default function HangarStudio({ onExit, onNotice }) {
         /* После свойств «Моделей»: щелчок сам спрашивает их первыми. */
         onAim={tool === "patterns" ? stamp.onAim : onAim}
         tool={tool}
-        element={element.tool === tool ? element.key : ""}
+        element={tool === "inside" && insideTab === "house" ? "house" : element.tool === tool ? element.key : ""}
         overlay={models.bar}
       />
       {editor.works.dialogs}

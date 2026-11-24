@@ -18,7 +18,7 @@ use super::{
 use crate::{
     args::Options,
     error::{EngineError, Result},
-    paths::{existing_file, full_path},
+    paths::{existing_file, full_path, normalize_relative},
     progress::Progress,
 };
 
@@ -116,7 +116,13 @@ impl Job<'_> {
         };
         let mut batch = Vec::new();
         for text in listed {
-            batch.push(normalize_entry(text, true)?);
+            let links = normalize_entry(text, true)?;
+            // Звенья станут путём файла под папкой выхода (`lay_entry`): имя, которое
+            // Windows понимает иначе, чем написано, — такой же негодный путь записи.
+            if normalize_relative(&links.join("/")).is_err() {
+                return Err(EngineError::invalid_data("Unsafe RPF entry path."));
+            }
+            batch.push(links);
         }
         let distinct = batch.iter().fold(HashSet::new(), |mut seen, links| {
             seen.insert(links.join("/"));
@@ -824,6 +830,41 @@ mod tests {
             );
         }
         assert!(!lab.at("o").exists());
+    }
+
+    /// В пачке звенья записи становятся путём файла под папкой выхода. Имя, которое
+    /// Windows понимает иначе, чем написано (точка или пробел на конце, устройство,
+    /// знак не из имён файлов), отвергается до работы с диском тем же отказом, что и
+    /// прочие негодные пути записи (разбор безопасности 23.11.2026, H3-03). У
+    /// одиночной выгрузки файл выхода назван запросом, её это не касается.
+    #[test]
+    fn a_batch_refuses_entry_names_that_windows_reads_differently() {
+        let lab = Lab::new();
+        let arch = lab.update();
+        let out = lab.text("batch-out");
+        let many = |entries: &[&str]| {
+            failure(
+                lab.many(&json!({"baseArchive": arch, "extractEntries": entries,
+                "extractOutputDirectory": out})),
+            )
+        };
+        for entry in [
+            "common/data/a.xml.",
+            "common/data /a.xml",
+            "common/nul",
+            "common/COM1.xml",
+            "common/data/a?.xml",
+        ] {
+            assert_eq!(
+                many(&["common/data/a.xml", entry]),
+                refusal("InvalidDataException", "Unsafe RPF entry path."),
+                "{entry}"
+            );
+            assert!(!lab.at("batch-out").exists(), "{entry}");
+        }
+        // пробел и точки внутри имени — обычное имя: отказа по имени нет, записи просто нет
+        let (code, message) = many(&["common/data/my file.v2.xml"]);
+        assert_eq!(code, "FileNotFoundException", "{message}");
     }
 
     #[test]

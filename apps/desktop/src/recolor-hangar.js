@@ -89,6 +89,7 @@ import {
   hangarRustLook,
   hangarRustPixels,
   hangarSheetLook,
+  hangarSheetSurface,
   hangarShellLabels,
   hangarSidePainted,
   hangarStructure,
@@ -96,7 +97,7 @@ import {
   normalizeHangarProject,
   placementTransform,
 } from "@modovik/climb-contract/recolor";
-import { hangarRoomSheetCopies } from "@modovik/climb-contract/recolor/hangar-room";
+import { hangarHouseSheetCopies } from "@modovik/climb-contract/recolor/hangar-house";
 import { bakeSheetFinish, finishSource } from "./finish-bake.js";
 import { buildAssetPlates } from "./recolor-emblem.js";
 import {
@@ -107,7 +108,6 @@ import {
 } from "./recolor-lod.js";
 import { hangarLightsPass } from "./recolor-hangar-lights.js";
 import { hangarPaintPass } from "./recolor-hangar-paint.js";
-import { hangarRoomPass } from "./recolor-hangar-room.js";
 import { tintTable } from "./recolor-pixels.js";
 import { resourceRefs } from "./recolor-sheets.js";
 import { patchResourceTextures } from "./recolor-textures.js";
@@ -115,9 +115,10 @@ import { texturePayload } from "./texture-payload.js";
 
 const inflateRaw = inflateResource;
 const LUT_STEPS = 1024;
-/* Проходы мастерской ангара — цвета (порядок слияния частей: А, Б, В; договор прохода — в `recolor-hangar-lights.js`). */
-const HANGAR_PASSES = Object.freeze([hangarLightsPass, hangarPaintPass, hangarRoomPass]);
-const SURFACES = Object.freeze(["outside", "inside", "floor"]);
+/* Проходы мастерской ангара — цвета (порядок слияния частей: А, Б; договор прохода — в `recolor-hangar-lights.js`). Дом красится листами (`hangar-house.js`), своего прохода не имеет. */
+const HANGAR_PASSES = Object.freeze([hangarLightsPass, hangarPaintPass]);
+/* Облики дальнего вида: номер — место в `SURFACES`. Потолок — свой облик (у листов гофры потолка в описи поверхность `inside`, но настройки потолка свои: `hangarSheetSurface`). */
+export const SURFACES = Object.freeze(["outside", "inside", "floor", "ceiling"]);
 /* Огонь (CodeWalker LightAttributes): 168 байт; сила, объём и ореол. */
 const LIGHT_BYTES = 168;
 const LIGHT_OFF = Object.freeze([0x1c, 0x4c, 0x6c]);
@@ -173,21 +174,23 @@ function tintSheet(rgba, look) {
  * (`hangarRustLook`, ТЗ 17.10.2026). `sourceOf(settings)` — источник
  * отделки. `{ bytes, textures }`.
  */
-export function bakeHangarSheets(base, fileName, input, sourceOf) {
+export function bakeHangarSheets(base, fileName, input, sourceOf, { interior } = {}) {
   const project = normalizeHangarProject(input);
   const raw = base instanceof Uint8Array ? base : new Uint8Array(base);
   const { refs } = resourceRefs(raw, fileName);
+  /* Блочный лист и окна дома — листы модели нутра (`hangar-house.js`): у корпуса тот же блочный лист — цоколь «Снаружи», его красит облик «Снаружи». */
+  const ofInterior = interior ?? HANGAR_FILES.some((file) => file.name === fileName && file.role === "interior");
   const replacements = {};
   for (const ref of refs) {
     if (!ref.complete) continue;
-    const look = hangarSheetLook(project, ref.name);
+    const look = hangarSheetLook(project, ref.name, { interior: ofInterior });
     const rust = look ? null : hangarRustLook(project, ref.name);
     if (!look && !rust) continue;
     const decoded = decodeTextureRef(ref, { level: 0 }).rgba;
     let rgba;
     if (rust) rgba = hangarRustPixels(decoded, ref.width, ref.height, rust);
     else {
-      /* Листы комнаты (`hangar-room.js`): ржавчины и пятен чистки у них нет, рисунок штатного листа остаётся целиком (`look.clean === false`); у стен ангара чистка прежняя. */
+      /* Листы дома (`hangar-house.js`): ржавчины и пятен чистки у них нет, рисунок штатного листа остаётся целиком (`look.clean === false`); у стен ангара чистка прежняя. */
       const pixels = look.clean === false ? decoded : hangarCleanPixels(decoded, ref.width, ref.height);
       rgba =
         look.kind === "tint"
@@ -738,7 +741,7 @@ async function embedSheetCopies({
  * ------------------------------------------------------------------ */
 
 /* Облик поверхности вдали: «Стандарт» — как в игре, свой цвет — тоном, отделка — переносом листа HD. */
-function lodOp(project, surface) {
+export function lodOp(project, surface) {
   const settings = hangarSurfaceSettings(project, surface);
   if (!settings) return null;
   if (settings.mode === "colour")
@@ -757,6 +760,11 @@ function lodOp(project, surface) {
         ? settings.gradient?.colours?.[0]
         : settings.image?.tint;
   return { kind: "transfer", fallback: fallback || "#8a8a8a" };
+}
+
+/** Номер облика дальнего вида у листа: поверхность листа по настройкам (потолок — свой), `-1` — лист вдали не правится. */
+export function lodLookOf(sheet, record) {
+  return record ? SURFACES.indexOf(hangarSheetSurface(sheet, record)) : -1;
 }
 
 /**
@@ -803,7 +811,7 @@ export async function buildHangarLod(input, { game, lod, files = [] }) {
     const toWorld = placementTransform(placement);
     for (const mesh of drawable.meshes) {
       const record = HANGAR_SHEETS[sheetOf(mesh)];
-      const look = record ? SURFACES.indexOf(record.surface) : -1;
+      const look = lodLookOf(sheetOf(mesh), record);
       if (look < 0 || !ops[look]) continue;
       const sample = sampler && mesh.uvs ? sampler.colourOf(mesh) : null;
       const points = [];
@@ -838,8 +846,8 @@ export async function buildHangarLod(input, { game, lod, files = [] }) {
       }
     }
   }
-  /* Нутро и пол издалека не видны: уровням SLOD — только облик снаружи. */
-  return buildLodFiles({ lod, game, field, ops, interior: [1, 2] });
+  /* Нутро, пол и потолок издалека не видны: уровням SLOD — только облик снаружи. */
+  return buildLodFiles({ lod, game, field, ops, interior: [1, 2, 3] });
 }
 
 /* ------------------------------------------------------------------ *
@@ -909,12 +917,12 @@ export async function buildHangarFiles(
     }
     const patch = { file: file.name };
     let bytes = null;
-    /* Корпус: копии листов соседей — до покраски, покраска — как своих. Нутро: плитка пола комнаты из словаря района (`hangar-room.js`, ступень 2) — только когда у «Пола» задан свой цвет. */
+    /* Корпус: копии листов соседей — до покраски, покраска — как своих. Нутро: блочный лист дома из словаря района (`hangar-house.js`) — только когда у «Стен» дома задан свой цвет. */
     const copies =
       file.role === "shell" && /\.ydr$/.test(file.name)
         ? sheetCopies(project, file.name)
         : file.role === "interior" && /\.ydr$/.test(file.name)
-          ? hangarRoomSheetCopies(project, file.name)
+          ? hangarHouseSheetCopies(project, file.name)
           : [];
     if (copies.length) {
       bytes = await embedSheetCopies({
@@ -986,7 +994,7 @@ export async function buildHangarFiles(
           report.overlays[side] += result.overlays[side];
       }
     }
-    /* Мастерская ангара — цвета: проходы частей А (свет ламп), Б (конструкции и трубы), В (комната) — над тем, что уже собрано для файла; пока части не готовы, проходы ничего не меняют. */
+    /* Мастерская ангара — цвета: проходы частей А (свет ламп), Б (конструкции и трубы) — над тем, что уже собрано для файла; пока части не готовы, проходы ничего не меняют. */
     for (const pass of HANGAR_PASSES) {
       const current = bytes || base;
       const result = await pass({ file, bytes: current, project, structure });

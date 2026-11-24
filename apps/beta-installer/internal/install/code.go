@@ -90,15 +90,32 @@ func NormalizeCode(in string) (string, error) {
 var uiLanguages = [...]string{"ru", "uk", "en", "de", "pl", "fr"}
 
 // MapLocale сворачивает язык системы («ru-RU», «pl_PL») в один из шести языков окна.
+// Язык первого запуска — одно правило для окна, установщика и сайта:
+// 1) явный выбор человека (сохранённый язык) — всегда главный; язык, показанный установщиком, идёт сразу за ним;
+// 2) язык системы или браузера — первый из списка, который у нас есть;
+// 3) иначе часовой пояс; 4) иначе английский.
+// Здесь, у родных окон, п. 1 и 3 нет (выбор и пояс знает окно интерфейса): язык системы — `OSLocale`, неизвестный даёт английский.
 func MapLocale(tag string) string {
+	if lang, ok := KnownLanguage(tag); ok {
+		return lang
+	}
+	return "en"
+}
+
+// KnownLanguage — язык окна по тегу («de-DE», «pl_PL», «ua» → «uk»); false, если такого языка у нас нет.
+// Возвращается всегда один из шести кодов, а не сам тег: лишнее из тега дальше не уходит.
+func KnownLanguage(tag string) (string, bool) {
 	lang := strings.TrimSpace(strings.ToLower(tag))
 	if cut := strings.IndexAny(lang, "-_"); cut >= 0 {
 		lang = lang[:cut]
 	}
+	if lang == "ua" {
+		lang = "uk"
+	}
 	for _, known := range uiLanguages {
 		if lang == known {
-			return lang
+			return lang, true
 		}
 	}
-	return uiLanguages[0]
+	return "", false
 }

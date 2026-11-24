@@ -8,6 +8,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash, verify as verifySignature } from "node:crypto";
 import { cleanId } from "./state-record.js";
+import {
+  FORBIDDEN_EXTENSIONS,
+  hasForbiddenExtension,
+  nameSegmentProblem,
+  nameSegmentReason,
+} from "../mod-targets/file-names.js";
 import { CARRIER_REGISTRATION_ROOT, PACK_FORM_CARRIER_TARGETS, carrierEnabled } from "./carrier-targets.js";
 import { CAREFUL_MIN_BYTES, carefulReadFlags, diskTurn, throttledOp } from "./disk-care.js";
 import {
@@ -23,6 +29,7 @@ import { DRAW_DISTANCE_TIMECYCLE_ENTRY, isLocalDrawDistanceManifest } from "./dr
 import { isLocalOptimizationSetManifest } from "./optimization-manifest-trust.js";
 import { clothingItemSlots } from "./clothing-slots.js";
 import { withOwnMapsContainer } from "./manifest-containers.js";
+import { manifestNeedsLoader } from "./loader-need.js";
 import { WEAPONS_META_ENTRY, WEAPONS_META_MAX_FILES, WEAPONS_META_STRATEGY } from "./weapons-meta-bindings.js";
 import { PROJECT_INTERIORS_DATA_CAPABILITY, assertProjectInteriorsData } from "./project-interiors-data.js";
 import {
@@ -38,24 +45,8 @@ import {
   TRACER_RPF_ENTRIES,
 } from "@modovik/tracer-contract";
 
-export const FORBIDDEN_EXTENSIONS = new Set([
-  ".exe",
-  ".dll",
-  ".asi",
-  ".bat",
-  ".cmd",
-  ".com",
-  ".cpl",
-  ".js",
-  ".jse",
-  ".msi",
-  ".msp",
-  ".ps1",
-  ".scr",
-  ".vbs",
-  ".vbe",
-  ".wsf",
-]);
+/* Список запрещённых расширений и правило звена пути — одно на установку, распаковку и бандлы (`mod-targets/file-names.js`). */
+export { FORBIDDEN_EXTENSIONS };
 
 export const isModsTarget = (relativePath) =>
   relativePath === "mods" || relativePath.startsWith("mods/");
@@ -806,14 +797,18 @@ export function normalizeRelativePath(value, { allowExecutable = false } = {}) {
   )
     throw new Error("Путь файла должен быть относительным.");
   const parts = raw.split("/");
-  if (parts.some((part) => !part || part === "." || part === ".."))
-    throw new Error("Путь файла содержит недопустимый сегмент.");
+  /* Одно правило звена для всех (`mod-targets/file-names.js`): поток NTFS, хвостовая точка и пробел, имена устройств,
+     знаки направления текста. Расширение смотрится только после него: до него часть имени расширением не считалась. */
+  for (const part of parts) {
+    const problem = nameSegmentProblem(part);
+    if (problem === "empty" || problem === "dots")
+      throw new Error("Путь файла содержит недопустимый сегмент.");
+    if (problem)
+      throw new Error(`Путь файла содержит недопустимый сегмент: ${nameSegmentReason(problem)}.`);
+  }
   const normalized = parts.join("/");
   if (normalized.length > 240) throw new Error("Путь файла слишком длинный.");
-  if (
-    !allowExecutable &&
-    FORBIDDEN_EXTENSIONS.has(path.extname(normalized).toLowerCase())
-  )
+  if (!allowExecutable && hasForbiddenExtension(normalized))
     throw new Error(`Исполняемый файл запрещён в пакете: ${normalized}`);
   return normalized;
 }
@@ -2128,5 +2123,7 @@ export function validateManifest(
     slots,
     files,
     ...(adapter === "managed-addon-dlc" ? { dlcName } : {}),
+    /* Пакету нужна пара загрузчиков (`loader-need.js`): запись установки это запоминает, снятие последней такой работы уносит пару. */
+    needsLoader: manifestNeedsLoader(manifest),
   });
 }

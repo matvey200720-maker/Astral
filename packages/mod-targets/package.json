@@ -6,6 +6,7 @@
   "exports": {
     ".": "./index.js",
     "./sky-files": "./sky-files.js",
-    "./water-files": "./water-files.js"
+    "./water-files": "./water-files.js",
+    "./file-names": "./file-names.js"
   }
 }

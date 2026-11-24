@@ -3,6 +3,7 @@
 pub mod append;
 pub mod apply;
 pub mod archivefix;
+mod census;
 pub mod cloud;
 pub mod compose;
 #[cfg(test)]

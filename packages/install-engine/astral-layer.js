@@ -63,7 +63,7 @@ import { parkRevertedArchives } from "./archive-rebase.js";
 import { carrierOwnership, carrierVerdict, liveFileIdentity, parkLostCarrierMods, recordCarrierIdentity } from "./carrier-follow.js";
 import { sharedManifestsToRelocate } from "./manifest-containers.js";
 import { cleanDirectUpdateBase } from "./direct-base-cleanup.js";
-import { ensureArchiveResource } from "./resource-composition.js";
+import { composeCountOf, ensureArchiveResource } from "./resource-composition.js";
 import { packedManifestPath } from "./chunk-store.js";
 import { exists } from "./storage-state.js";
 import { noteReconcile, reconcileEventsSince } from "./reconcile-report.js";
@@ -950,6 +950,8 @@ export async function prepareAstralLayerCore(
       registryReady = true;
     }
     const affected = [];
+    /* Счёт записей сборки (ответ движка) — в журнал подготовки (`prepare-log.js`). */
+    let composeCounts = null;
     if (composerReady) {
       // Папка держится меткой-слоем движка: она собирается в архив тем же
       // путём, что и моды, и переживает снятие последнего мода, но уходит с
@@ -1019,6 +1021,16 @@ export async function prepareAstralLayerCore(
         onProgress: (progress) =>
           onProgress?.({ ...progress, phase: "astral-layer-folder" }),
       });
+      /* Первая подготовка: основа снята с живого `update.rpf` в начале хода. Если файл за время сборки изменился (Rockstar Launcher, проверка файлов или обновление пишут в него на месте), основа была смесью
+         версий, а подмена положила бы собранное из неё на чужой файл — отказ до подмены (23.11.2026). Позже основа живёт отдельно, и подмену снаружи ловят `swap` и `rebased`. */
+      if (freshBaseline && identityFound) {
+        const identityAfterCompose = await liveIdentity(resolveInside(root, ASTRAL_UPDATE_TARGET)).catch(() => null);
+        if (!sameIdentity(identityFound, identityAfterCompose))
+          throw new Error(
+            `RPF live archive changed during the first preparation: update.rpf was ${identityFound.size} bytes, now ${identityAfterCompose ? identityAfterCompose.size : "missing"}.`,
+          );
+      }
+      composeCounts = composeCountOf(source);
       const change = await changedFile(ASTRAL_UPDATE_TARGET, source, root, {
         resolveInside,
         sha256File,
@@ -1066,6 +1078,7 @@ export async function prepareAstralLayerCore(
       committed: affected.length > 0,
       rebased,
       freshBaseline,
+      ...(composeCounts ? { compose: composeCounts } : {}),
       ...(swap ? { swap } : {}),
       reconcile: reconcileEventsSince(saved, startedAt),
     });

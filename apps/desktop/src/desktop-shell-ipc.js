@@ -22,6 +22,7 @@ export function registerDesktopShellIpc({
   dialog,
   shell,
   clipboard,
+  markGames = async (games) => games,
 }) {
   /* «Искать снова» нажимает человек, который только что поставил или
      перенёс игру: ответ из памяти реестра тут был бы враньём. */
@@ -31,7 +32,8 @@ export function registerDesktopShellIpc({
       /* Версия игры и размер update.rpf — в «Логи», один раз на папку
          (`game-files-facts.js`); ответ окну не ждёт. */
       void noteGameFiles(games, (entry) => appLog.record(entry)).catch(() => {});
-      return games;
+      /* `loadersNeeded` для панели «Игра» (`loaders-on-demand.js`): нет — игры отдаются как есть. */
+      return await markGames(games).catch(() => games);
     }),
   );
 

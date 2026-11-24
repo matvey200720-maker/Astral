@@ -389,6 +389,9 @@ export function createMegaMallInstallAdapter({
   plan = planPackage,
   install = installLocalMegaMallOverlayPackage,
   uninstall = uninstallPackage,
+  /* Пара загрузчиков (23.11.2026): мегамоллу она нужна (`newmods`-VFS), ставится перед установкой и уходит со снятием; без них — как раньше. */
+  ensureLoaders = null,
+  retireLoaders = null,
   compileOverlay = null,
   createRpf = createRpfArchive,
   provideDlcList = provideLegacyDlcList,
@@ -1007,6 +1010,7 @@ export function createMegaMallInstallAdapter({
         profile: planEnvelope.profile,
       });
       const overlayConfig = overlayConfigForProfile(planEnvelope.profile);
+      if (ensureLoaders) await ensureLoaders({ targetId: prepared.targetId, stateDir: prepared.stateDir });
       const result = await install({
         manifest: prepared.manifest,
         packageRoot: prepared.packageRoot,
@@ -1059,6 +1063,7 @@ export function createMegaMallInstallAdapter({
           await assertRuntimeSafe(current);
         },
       });
+      if (retireLoaders) await retireLoaders({ targetId: input.targetId, stateDir: path.resolve(options.stateDir) });
       return {
         ...result,
         installId: input.modId,

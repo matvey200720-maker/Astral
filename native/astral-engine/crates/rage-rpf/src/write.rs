@@ -745,8 +745,22 @@ struct Scratch {
     file: PathBuf,
 }
 
+/// Имя вложенного архива становится именем файла в папке доводки (доводчик сверяет имя
+/// файла с именем записи), а приходит оно из запроса или из оглавления чужого архива.
+/// Годится только одно обычное звено: с разделителем, двоеточием (диск или поток NTFS),
+/// нулём или из одних точек `join` увёл бы файл из папки доводки.
+fn plain_file_name(name: &str) -> bool {
+    !matches!(name, "" | "." | "..") && !name.contains(['/', '\\', ':', '\0'])
+}
+
 impl Scratch {
-    fn create(staging: &Path, name: &str) -> io::Result<Scratch> {
+    /// Отказ по имени идёт до создания папки: на диске не появляется ничего.
+    fn create(staging: &Path, name: &str) -> Result<Scratch> {
+        if !plain_file_name(name) {
+            return Err(RpfError::format(format!(
+                "Unsafe nested archive name: {name}"
+            )));
+        }
         let folder = format!(
             "nested-{}-{}",
             std::process::id(),

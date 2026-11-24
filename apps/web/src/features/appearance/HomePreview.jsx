@@ -130,7 +130,7 @@ function PreviewWindow({ language, mods, backdrop }) {
   return (
     <>
       <div className="look-home-window" aria-hidden="true">
-        <BackdropArt backdrop={backdrop} />
+        <BackdropArt backdrop={backdrop} mini />
         <div className="look-home-titlebar">
           <Brand className="desktop-titlebar-brand" markClassName="desktop-titlebar-brand-mark" wordmarkAs="b" />
         </div>

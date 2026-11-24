@@ -15,6 +15,7 @@ import { createMegaMallBuildingModelProvider } from "./mega-mall-building-model.
 import { createMegaMallSectionProvider } from "./mega-mall-section-model.js";
 import { extractRpfEntries, runStreetLightRpfHelper } from "./rpf-composer.js";
 import { provisionArchiveSupport } from "./loader-provisioner.js";
+import { ensureLoaders, retireLoadersIfUnused } from "./loaders-on-demand.js";
 import { assertInstallRuntimeSafe } from "./install-safety.js";
 import { callNativeEngine } from "./native-engine.js";
 import { compileWithGameDonor } from "./game-donor.js";
@@ -44,6 +45,16 @@ export function registerMegaMallDesktopIpc({
       storageOptions: () => desktopStorage().installOptions(),
       findGame,
       assertRuntimeSafe: assertInstallRuntimeSafe,
+      /* Мегамоллу нужна пара загрузчиков (`newmods`-VFS): ставится перед установкой, уходит со снятием (23.11.2026). */
+      ensureLoaders: async ({ targetId, stateDir }) => {
+        const game = await findGame(targetId);
+        const assertRuntimeSafety = async () => assertInstallRuntimeSafe(await findGame(targetId));
+        await ensureLoaders({ game, stateDir, assertRuntimeSafety, reread: async () => { await assertRuntimeSafety(); return findGame(targetId); } });
+      },
+      retireLoaders: async ({ targetId, stateDir }) => {
+        const game = await findGame(targetId);
+        await retireLoadersIfUnused({ game, stateDir, assertRuntimeSafety: async () => assertInstallRuntimeSafe(await findGame(targetId)) });
+      },
       /* Донор из игры добавляет `compileWithGameDonor`, как у плашки эмблемы. Выключатель выключен — запрос уходит как был. */
       compileOverlay: async (input) => {
         const { stateDir } = await desktopStorage().installOptions();

@@ -89,7 +89,8 @@
 
 .settings-nav {
   border-inline-end: 1px solid var(--prefs-edge);
-  background: var(--astral-bg);
+  /* Колонка прозрачна: за ней выбранный во «Внешнем виде» фон (окно настроек рисует его у себя, под содержимым). */
+  background: transparent;
   padding-block: 22px 24px;
   padding-inline: 16px 12px;
   min-inline-size: 0;
@@ -1010,9 +1011,13 @@
   overflow-x: hidden;
   overflow-y: hidden;
   display: flex;
+  /* Опора для фона окна (`AppBackdrop scoped`): он занимает всё тело и лежит под страницей. */
+  position: relative;
 }
 
 .settings-window-body > .settings-hub {
+  position: relative;
+  z-index: 1;
   inline-size: 100%;
   min-block-size: 0;
   margin-block: 0;

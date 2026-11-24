@@ -1536,21 +1536,43 @@ mod tests {
             ("update/update.rpf", "update/update.rpf"),
             (r"update\update.rpf", "update/update.rpf"),
             ("/x/y", "x/y"),
-            ("a/ /b", "a/ /b"),
             ("Ё/x", "Ё/x"),
-            ("1:/x", "1:/x"),
+            ("mods/my file.rpf", "mods/my file.rpf"),
+            ("GTA V/update/update.rpf", "GTA V/update/update.rpf"),
         ];
         for (given, expected) in ok {
             assert_eq!(safe_relative(given).unwrap(), expected);
         }
         assert_eq!(safe_relative(r"\\srv\share").unwrap(), "srv/share");
-        for bad in [
+        let earlier = [
             "", "a/../b", "C:x", "a//b", ".", " ", "a/b/", "a/./b", "..", "c:/x", "x:",
-        ] {
+        ];
+        // Путь точки возврата — путь на диске. «a/ /b» и «1:/x» прежде проходили:
+        // Windows звено из пробела выбрасывает, а после двоеточия видит поток
+        // (разбор безопасности 23.11.2026, H3-03).
+        let windows_names = [
+            "a/ /b",
+            "1:/x",
+            "update/update.rpf.",
+            "update /update.rpf",
+            "nul.rpf",
+            "update/update.rpf::$DATA",
+        ];
+        let bad = earlier.into_iter().chain(windows_names);
+        for value in bad.clone() {
             refused(
-                safe_relative(bad),
+                safe_relative(value),
                 "InvalidDataException",
-                &format!("Unsafe relative path: {bad}"),
+                &format!("Unsafe relative path: {value}"),
+            );
+        }
+        // Равенство с соседом: на любом входе ответ тот же, что у `paths::normalize_relative`.
+        let every = ok.iter().map(|(given, _)| *given).chain(bad);
+        for value in every.chain([r"\\srv\share", "a?b", "con/x.rpf", "x64/a b/c.rpf"]) {
+            assert_eq!(
+                safe_relative(value),
+                paths::normalize_relative(value),
+                "{value:?}"
             );
         }
     }

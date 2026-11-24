@@ -20,6 +20,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import zlib from "node:zlib";
 import { createHash } from "node:crypto";
+import { nameSegmentProblem } from "@modovik/pack-intake/entry-path";
 import { posixRelative } from "./stock-rules.js";
 
 export const MANIFEST_SCHEMA = "astral-stock-manifest/1";
@@ -39,10 +40,13 @@ function parseJsonBytes(raw) {
   return JSON.parse(Buffer.from(bytes).toString("utf8"));
 }
 
+/* Путь описи — относительный, внутри папки игры. Правило звена — общее с установкой мода (`mod-targets/file-names.js`,
+   через `@modovik/pack-intake/entry-path`): пустое звено, `.`, `..`, поток NTFS (`:`), точка или пробел на конце, имя
+   устройства, знаки направления текста, управляющие знаки. Запрета по расширению здесь нет: в папке игры законны
+   `GTA5.exe` и `.dll`, описи нужны именно их хеши. */
 function safeRelative(value) {
   const relative = posixRelative(value);
-  if (!relative || relative.split("/").some((part) => !part || part === "." || part === ".." || part.includes(":")))
-    return null;
+  if (!relative || relative.split("/").some((part) => nameSegmentProblem(part) !== null)) return null;
   if (/^[a-z]:/i.test(relative)) return null;
   return relative;
 }

@@ -22,8 +22,10 @@ export default function StageLoadOverlay({
   stage = "",
   onRetry = null,
   onBack = null,
+  /* Короткое растворение (мс) для карточки, что не мешает работе (`dim={false}` и `passThrough`): модель уже на экране, и «загрузка» поверх неё не должна висеть полсекунды. Без значения — `OUT_MS`. */
+  outMs = undefined,
 }) {
-  const load = useStageLoad(Boolean(active));
+  const load = useStageLoad(Boolean(active), outMs ? { outMs } : {});
   useStageBusy(dim && load.shown && load.phase === "in");
   if (!load.shown) return null;
   return (
@@ -36,6 +38,7 @@ export default function StageLoadOverlay({
       passThrough={passThrough}
       kit={kit}
       stage={stage}
+      outMs={outMs}
       onRetry={onRetry}
       onBack={onBack}
     />

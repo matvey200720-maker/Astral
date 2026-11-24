@@ -100,7 +100,7 @@ function respond(request, response, entry) {
   endWith(response, plan.span ? reader.part(plan.span.start, plan.span.end) : reader.whole());
 }
 
-function secretsMatch(given, expected) {
+export function secretsMatch(given, expected) {
   if (typeof given !== "string") return false;
   const [ours, theirs] = [expected, given].map((text) => Buffer.from(text));
   return ours.length === theirs.length && timingSafeEqual(ours, theirs);

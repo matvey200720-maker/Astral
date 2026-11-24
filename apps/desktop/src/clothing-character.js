@@ -344,18 +344,30 @@ const MAX_OUTFIT = 12;
 /* Пустая картинка зон тату: рисунок кладёт окно. */
 const CLEAR_PICTURE = Object.freeze({ width: 4, height: 4, rgba: new Uint8ClampedArray(64) });
 
+/* Для строки «вещь не встала»: id вещи каталога или номер вещи игры и слово ошибки (без путей и текста). */
+const failedIdOf = (other) => (other.catalog ? String(other.catalog.manifest.id) : String(other.variant));
+const failedCodeOf = (error) => String(error?.code || error?.name || "Error").replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 40) || "Error";
+
 /* Вещи комплекта из запроса окна: вещь игры (`{ slot, variant }`) или вещь каталога (`{ slot, manifest, baseUrl, colour }`, ТЗ 30.10.2026 — человек одевает персонажа вещами
    из каталога по всем слотам), по одной на категорию. Тату (тело) в комплект не входят — они на коже. */
-export function outfitOthers(input, slot, gender = "male") {
+export function outfitOthers(input, slot, gender = "male", dropped = []) {
   const list = Array.isArray(input?.others) ? input.others.slice(0, MAX_OUTFIT) : [];
   const seen = new Set([slot]);
   const out = [];
+  /* Вещь каталога, которую разбор запроса отбросил, — в `dropped` с причиной (23.11.2026: раньше молча, и «не встало» было без следа). */
+  const drop = (item, other, code) => dropped.push({ slot: other, id: String(item?.manifest?.id || ""), stage: "request", code });
   for (const item of list) {
     const other = String(item?.slot || "");
-    if (!Object.hasOwn(CHARACTER_OUTFITS, other) || other === "tattoos" || seen.has(other)) continue;
+    if (!Object.hasOwn(CHARACTER_OUTFITS, other) || other === "tattoos" || seen.has(other)) {
+      if (item?.manifest && other !== "tattoos") drop(item, other, seen.has(other) ? "SLOT_TAKEN" : "SLOT_UNKNOWN");
+      continue;
+    }
     if (item?.manifest) {
       const id = String(item.manifest.id || "");
-      if (!/^[a-z0-9][a-z0-9._-]{0,95}$/i.test(id) || !item.manifest.version) continue;
+      if (!/^[a-z0-9][a-z0-9._-]{0,95}$/i.test(id) || !item.manifest.version) {
+        drop(item, other, "BAD_MANIFEST");
+        continue;
+      }
       seen.add(other);
       out.push({
         slot: other,
@@ -980,7 +992,9 @@ export async function readClothingCharacter(input, context, deps) {
   const rig = Boolean(track);
   /* Слот без вещи (`bare`, ТЗ 30.10.2026): человек открыл категорию, но ничего не выбрал, — на персонаже все надетые вещи (и своего слота тоже), а не «вещь слота и остальные». */
   const bare = input?.bare === true && slot !== "tattoos";
-  const others = outfitOthers(input, bare ? "" : slot, gender);
+  /* Вещи комплекта, что не встали, и почему (23.11.2026): `{ slot, id, stage, code }` едут в ответе — потоку читателя журнал недоступен, а окно пишет строку в журнал приложения. */
+  const failed = [];
+  const others = outfitOthers(input, bare ? "" : slot, gender, failed);
   /* Шапка или маска (открытая или в комплекте) закрывают причёску: вещь-причёска и причёска облика под ними не рисуются. */
   const coversHair = hairCovered(slot, bare, others);
   const hiddenHair = !bare && slot === "hair" && coversHair;
@@ -1095,7 +1109,10 @@ export async function readClothingCharacter(input, context, deps) {
           const meshes = (piece.drawable?.meshes || []).filter(
             (mesh) => (mesh.positions?.length || 0) > 12,
           );
-          if (!meshes.length) continue;
+          if (!meshes.length) {
+            failed.push({ slot: other.slot, id: failedIdOf(other), stage: "empty", code: "NO_MESHES" });
+            continue;
+          }
           const solid = { ...piece.drawable, meshes };
           const drawable = isHeadProp(piece.component) ? onHead(solid, stance) : inStance(COVERS_SKIN.has(other.slot) ? withHandMarks(solid) : solid, stance);
           if (COVERS_SKIN.has(other.slot)) covers.push(drawable);
@@ -1109,8 +1126,9 @@ export async function readClothingCharacter(input, context, deps) {
             extras: { astralBody: true, astralOutfit: other.slot },
           });
           wornOthers.push(other);
-        } catch {
-          /* вещи больше нет в игре или пакет не скачался — комплект без неё; такой персонаж в кэш не кладётся: вещь может вернуться */
+        } catch (error) {
+          /* вещи больше нет в игре или пакет не скачался — комплект без неё; такой персонаж в кэш не кладётся: вещь может вернуться. Причина — в ответ (`failed`), окно пишет её в журнал. */
+          failed.push({ slot: other.slot, id: failedIdOf(other), stage: "load", code: failedCodeOf(error) });
           degraded = true;
         }
       }
@@ -1177,6 +1195,8 @@ export async function readClothingCharacter(input, context, deps) {
     bytes: asArrayBuffer(bytes),
     /* Какие вещи комплекта на персонаже. */
     outfit: outfitAnswer(others, fromCache ? others : wornOthers, coversHair),
+    /* Вещи комплекта, что не встали, и почему (`{ slot, id, stage, code }`); поля нет, когда всё встало: ответ прежний байт в байт. */
+    ...(failed.length ? { failed: failed.slice(0, MAX_OUTFIT) } : {}),
     tattoos,
     gender,
     hair: choice.hair,

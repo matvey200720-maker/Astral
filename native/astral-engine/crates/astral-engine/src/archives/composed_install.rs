@@ -1804,12 +1804,36 @@ mod tests {
                 ops_block("/update/update.rpf"),
                 Verdict::Installed { archives: 1 },
             ),
+            // Прежде такой путь ловила свёртка («Path escapes its allowed directory»);
+            // архив лежит на диске, и двоеточие в звене теперь отказ ещё до неё
+            // (разбор безопасности 23.11.2026, H3-03). Код отказа тот же.
             (
                 "диск в середине пути",
                 ops_block("a/C:/b.rpf"),
+                refused("InvalidDataException", "Unsafe relative path: a/C:/b.rpf"),
+            ),
+            (
+                "поток NTFS в имени архива",
+                ops_block("update/update.rpf::$DATA"),
                 refused(
                     "InvalidDataException",
-                    "Path escapes its allowed directory: a/C:/b.rpf",
+                    "Unsafe relative path: update/update.rpf::$DATA",
+                ),
+            ),
+            (
+                "точка на конце имени архива",
+                ops_block("update/update.rpf."),
+                refused(
+                    "InvalidDataException",
+                    "Unsafe relative path: update/update.rpf.",
+                ),
+            ),
+            (
+                "имя устройства вместо папки",
+                ops_block("nul/update.rpf"),
+                refused(
+                    "InvalidDataException",
+                    "Unsafe relative path: nul/update.rpf",
                 ),
             ),
             (

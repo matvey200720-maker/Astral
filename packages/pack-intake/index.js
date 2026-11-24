@@ -162,10 +162,9 @@ const lockedMessage = (name, locked) => {
 const entryRefusal = (entry, name, canUnlock) => {
   const verdict = classifyEntryPath(entry.path);
   if (verdict.unsafe) {
-    return refusal(
-      "PACK_ARCHIVE_UNSAFE",
-      `Архив «${name}» пытается записать файл за пределы своей папки (${verdict.unsafe}). Такой архив не принимается.`,
-    );
+    /* Имя, которое Windows понимает иначе, чем написано (поток, имя устройства, хвостовая точка), — не «выход наружу», но архив так же не принимается. */
+    const what = verdict.badName ? "содержит файл с недопустимым именем" : "пытается записать файл за пределы своей папки";
+    return refusal("PACK_ARCHIVE_UNSAFE", `Архив «${name}» ${what} (${verdict.unsafe}). Такой архив не принимается.`);
   }
   if (entry.link) {
     return refusal(

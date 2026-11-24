@@ -286,14 +286,15 @@ export function catalogItemWear(item) {
   return { gender, component, prop: component.startsWith("p_") };
 }
 
-export async function catalogPackageOf(item) {
+/* Пакет вещи каталога. `level` — насколько вещь нужна сейчас (`GRANT.*`, `grant-level.js`; по умолчанию выбор): очередь выдачи под пределом сервера стоит в Desktop (`grant-pacer.js`). */
+export async function catalogPackageOf(item, { level } = {}) {
   if (item?.manifest && item.packageBaseUrl) {
     return { manifest: item.manifest, baseUrl: item.packageBaseUrl };
   }
   if (!cloudCatalogIDPattern.test(String(item?.id || ""))) {
     throw new Error(tr("У вещи каталога нет пакета."));
   }
-  const grant = await getCloudDownloadGrant(item.id);
+  const grant = await (level ? getCloudDownloadGrant(item.id, level) : getCloudDownloadGrant(item.id));
   return { manifest: grant.manifest, baseUrl: grant.packageBaseUrl };
 }
 

@@ -232,7 +232,8 @@ contextBridge.exposeInMainWorld("modovik", {
     ipcRenderer.on(IPC.CLOUD_CATALOG_UPDATED, wrapped);
     return () => ipcRenderer.removeListener(IPC.CLOUD_CATALOG_UPDATED, wrapped);
   },
-  getCloudDownloadGrant: (modID) => invoke(IPC.CLOUD_DOWNLOAD_GRANT, modID),
+  /* `level` — `choice` (по умолчанию), `press` или `background`: очередь выдачи под пределом сервера (`grant-pacer.js`). */
+  getCloudDownloadGrant: (modID, level) => (level ? invoke(IPC.CLOUD_DOWNLOAD_GRANT, modID, String(level)) : invoke(IPC.CLOUD_DOWNLOAD_GRANT, modID)),
   getCloudRating: (modID) => invoke(IPC.CLOUD_CATALOG_RATING_GET, modID),
   setCloudRating: (input) => invoke(IPC.CLOUD_CATALOG_RATING_SET, input),
   getCloudFavorites: () => invoke(IPC.CLOUD_LIBRARY_FAVORITES),
@@ -265,6 +266,9 @@ contextBridge.exposeInMainWorld("modovik", {
   },
   getAppInfo: () => invoke(IPC.APP_INFO),
   getRageMpStatus: () => invoke(IPC.RAGE_MP_STATUS),
+  /* «Где играю» (настройки → GTA V): выбор GTA 5 RP / Majestic / только сюжет и режим RP (`rp-place.js`). */
+  getRpPlace: () => invoke(IPC.RP_PLACE_STATE),
+  setRpPlace: (place) => invoke(IPC.RP_PLACE_SET, { place: String(place) }),
   getAppPreferences: () => invoke(IPC.APP_PREFERENCES),
   setAppPreferences: (input) =>
     invoke(IPC.APP_PREFERENCES_SET, {

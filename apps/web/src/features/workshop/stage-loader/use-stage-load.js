@@ -60,6 +60,8 @@ export function useStageLoad(
     showAfterMs = SHOW_AFTER_MS,
     longAfterMs = 0,
     reading = false,
+    /* Сколько карточка растворяется после готовой сцены (по умолчанию `OUT_MS`). Короче — только у карточки, что мышь не блокирует и редактор не приглушает (студия ствола, 24.11.2026). */
+    outMs = OUT_MS,
   } = {},
 ) {
   useFrameHold(holdRoom && Boolean(busy));
@@ -125,20 +127,20 @@ export function useStageLoad(
     if (phaseRef.current !== "in") return undefined;
     if (!QA_SLOW_STAGE_MS) {
       setPhase("out");
-      const gone = setTimeout(() => setPhase("idle"), OUT_MS);
+      const gone = setTimeout(() => setPhase("idle"), outMs);
       return () => clearTimeout(gone);
     }
     /* QA: сцена готова, а заставка стоит ещё `QA_SLOW_STAGE_MS`. Новая загрузка удержание снимает (cleanup), фаза не меняется. */
     let gone = null;
     const hold = setTimeout(() => {
       setPhase("out");
-      gone = setTimeout(() => setPhase("idle"), OUT_MS);
+      gone = setTimeout(() => setPhase("idle"), outMs);
     }, QA_SLOW_STAGE_MS);
     return () => {
       clearTimeout(hold);
       clearTimeout(gone);
     };
-  }, [alive, showAfterMs, longAfterMs]);
+  }, [alive, showAfterMs, longAfterMs, outMs]);
 
   return {
     shown: phase !== "idle",

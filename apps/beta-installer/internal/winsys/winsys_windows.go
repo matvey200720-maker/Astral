@@ -203,6 +203,12 @@ func (*System) OSLocale() (tag string) {
 	if err != nil || len(tags) == 0 {
 		return defaultLocaleName()
 	}
+	return firstSupportedTag(tags)
+}
+
+// firstSupportedTag — первый из предпочитаемых тегов, чей язык у нас есть, иначе самый первый (список не пуст).
+// Порядок списка — порядок языков отображения в Windows: русский впереди английского даёт «ru-RU», а язык браузера может быть другим.
+func firstSupportedTag(tags []string) string {
 	at := slices.IndexFunc(tags, func(t string) bool { return slices.Contains(uiLanguages[:], primaryLanguage(t)) })
 	return tags[max(at, 0)]
 }

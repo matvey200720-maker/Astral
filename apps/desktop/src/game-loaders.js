@@ -26,11 +26,18 @@ export async function clearModsShadow(gameRoot, park = parkModsShadowArchive) {
 }
 
 /**
+ * Стоит ли наша пара: плагин архивов `RageOpenV.asi` и ASI-прокси своей редакции. С 23.11.2026 это не «готовность игры»
+ * (она от загрузчиков не зависит, `packages/game-discovery`), а условие установки, которой пара нужна.
+ */
+export const loadersStanding = (game) => Boolean(game?.hasRageOpenV && game?.asiLoader);
+
+/**
  * `provision` ставит загрузчики, `reread` отдаёт игру после них и бросает, если
  * писать в неё уже нельзя (игра запущена, лаунчер обновляет файлы).
+ * Зовётся только из установки, которой пара нужна (`loaders-on-demand.js`), а не из подготовки игры.
  */
 export async function settleGameLoaders({ game, provision, reread, park = parkForeignPlugins }) {
-  if (game.installReadiness === "ready") return game;
+  if (loadersStanding(game)) return game;
   await provision();
   /* Не отложилось (файл занят) — не повод останавливаться: RageOpenV.asi уже стоит. */
   const parked = await park(game.path).catch((error) => {
@@ -39,6 +46,6 @@ export async function settleGameLoaders({ game, provision, reread, park = parkFo
   });
   if (parked.length) console.info(`[astral] Отложены чужие плагины: ${parked.join(", ")}`);
   const settled = await reread();
-  if (settled.installReadiness !== "ready") throw new Error(LOADERS_VANISHED_MESSAGE);
+  if (!loadersStanding(settled)) throw new Error(LOADERS_VANISHED_MESSAGE);
   return settled;
 }

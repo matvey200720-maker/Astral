@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import { LIVE_CARRIER_TARGETS } from "./carrier-targets.js";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { inOperation } from "./operation-scope.js";
@@ -13,15 +12,7 @@ import {
   ownRecordValue,
   setRecordValue,
 } from "./state-record.js";
-import {
-  ASTRAL_UPDATE_TARGET,
-  isAstralUpdateTarget,
-  MANAGED_DLC_LIST_TARGET,
-  composeAstralContentRegistry,
-  composeDirectDlcRegistry,
-  composeManagedDlcList,
-  addCarrierRegistryArchive,
-} from "./registry-composers.js";
+import { ASTRAL_UPDATE_TARGET } from "./registry-composers.js";
 import {
   ASTRAL_CONTAINER_ROOT,
   ASTRAL_LAYER_MARKER_ENTRY,
@@ -39,7 +30,6 @@ import { astralContainerOf } from "./astral-paths.js";
 import {
   FAST_WEAPON_DLC_NAME,
   FAST_WEAPON_DLC_TARGET,
-  fastWeaponHostReady as checkFastWeaponHostReady,
   provisionFastWeaponDlcCore,
 } from "./fast-weapon-dlc.js";
 import {
@@ -48,15 +38,9 @@ import {
   clothingRegistrationStatus,
   provisionClothingDlcCore,
 } from "./clothing-dlc.js";
-import {
-  rebaseBeforeUninstall,
-  rebaseDirectUpdateIfNeeded,
-} from "./direct-update-rebase.js";
-import { directDlcsOf } from "./direct-dlcs.js";
-import { rebaseArchiveIfNeeded } from "./archive-rebase.js";
+import { rebaseDirectUpdateIfNeeded } from "./direct-update-rebase.js";
 import { auditTarget, parkedModsInArchives, parkRevertedMods, repairTarget } from "./target-repair.js";
 import { restoreTargetBaseline } from "./target-restore.js";
-import { removeModLayers, settleAudioSlotLayer } from "./mod-layers.js";
 import {
   ASI_LOADERS,
   MODS_PLUGINS,
@@ -64,7 +48,6 @@ import {
 } from "./loader-policy.js";
 import {
   activeBaseline,
-  activeBaselinePath,
   assertGameRoot,
   DEFAULT_DIR,
   exists,
@@ -92,6 +75,7 @@ import {
   serializeMutation,
   writeState,
 } from "./engine-state.js";
+import { basesDiffer, restorePointBaseChanged } from "./restore-point-base.js";
 import {
   composeArchiveResource,
   ensureArchiveResource,
@@ -104,9 +88,7 @@ export { noteReconcile, reconcileEventsSince } from "./reconcile-report.js";
 export { engineLayerGaps } from "./engine-layer-gaps.js";
 export { parkedSummary } from "./parked-mods.js";
 export { enginePoint } from "./transactions.js";
-import { defaultOpsEngineFor, deferredBuildFor, opsAllowedFor } from "./ops-build.js";
 export { restoreParkedMods } from "./parked-restore.js";
-import { forgetParked } from "./parked-mods.js";
 export {
   canonicalManifest,
   mergeAstralContentXml,
@@ -185,6 +167,7 @@ export {
 /* Единственный список того, чем игру заставляют читать `mods`: его спрашивают
    и предпросмотр в apps/desktop, и охрана ванильной установки. */
 export { ASI_LOADERS, MODS_PLUGINS };
+export { loaderManifestId, ownLoaderFiles } from "./loader-policy.js"; export { manifestNeedsLoader, recordNeedsLoader } from "./loader-need.js"; // пара загрузчиков — по требованию установки (`loader-need.js`)
 export {
   parkForeignPlugins,
   parkModsShadowArchive,
@@ -279,15 +262,11 @@ import {
   recoverInterruptedTransactions,
   recoverPendingTransactions,
   transact,
-  opsHoldIsKnown,
-  opsRouteIsOpen,
 } from "./transactions.js";
-import { orderForCarriers, orderForRestoreOf } from "./carrier-order.js";
-import { addSubpackHostArchives, pruneEmptySubpackResources } from "./subpack-closure.js";
+import { orderForRestoreOf } from "./carrier-order.js";
 import { getVanillaGuardStatus } from "./vanilla-guard-status.js";
-import { pruneEmptyManagedDirectories } from "./fs-guards.js";
 import { installPackage, installPackageBatch, planPackage } from "./plan-install.js";
-import { reduxLayerOf } from "./redux-state.js";
+import { uninstallPackageNow, uninstallPackagesBatched } from "./remove-batch.js";
 
 export { recoverInterruptedTransactions, recoverPendingTransactions };
 export { installPackage, installPackageBatch, planPackage };
@@ -754,258 +733,9 @@ export function uninstallPackage(...args) {
   return inOperation(() => uninstallPackageNow(...args));
 }
 
-async function uninstallPackageNow({
-  modId,
-  targetId = "default",
-  stateDir = DEFAULT_DIR,
-  rpfComposer = null,
-  contentXmlProvider = null,
-  dlcListProvider = null,
-  signal = null,
-  assertRuntimeSafety = null,
-  onProgress = null,
-  tracerMaterializer = null,
-  ptfxTextureMaterializer = null,
-  awcMaterializer = null,
-  bloodRoutingMaterializer = null,
-  audioRelMaterializer = null,
-  audioChunkMaterializer = null, audioSlotSettler = null, /* слой слотов звука: `audio-slot-layer.js` */
-  /* Снятие редукса со слоем движка (`redux-state.js`): `async ({ item, target, gameRoot, stateDir, signal })`; слой снимается, свои dlc освобождаются. */
-  reduxRemover = null,
-  /* Дозапись в update.rpf (`append-item.js`): снятие последнего дозаписанного мода — откат его записи вместо пересборки архива. Без неё — прежний путь. */
-  appendInstall = null,
-}) {
-  return serializeMutation(async () => {
-    onProgress?.({ phase: "prepare", percent: 6, cancellable: true });
-    await assertRuntimeSafe(assertRuntimeSafety, signal, "before-uninstall");
-    await recoverPendingTransactions({ stateDir });
-    const current = await readState(stateDir);
-    const next = structuredClone(current);
-    const targetKey = checkedRecordKey(targetId, "Target ID");
-    const target = ownRecordValue(next.targets, targetKey);
-    if (!target) throw new Error("Игровой профиль не найден.");
-    if (target.vanillaGuard && target.vanillaGuard.phase !== "restored")
-      throw new Error(
-        "Сначала завершите сеанс Vanilla Guard и восстановите профиль.",
-      );
-    const installed = (target.installed || []).find(
-      (item) => item.modId === modId,
-    );
-    /* Мод из «снятых проверкой файлов» — в игре его уже нет: уходит запись. */
-    if (!installed) return forgetParked(target, modId) ? writeState(next, stateDir) : next;
-    /* Редукс: данные в своём dlc, регистрация — малый слой движка. Снимает его крючок приложения (слой `remove`, dlc `release`);
-       отказ — запись остаётся, а не прячется, чтобы человек мог повторить или «Починить». */
-    if (reduxLayerOf(installed)) {
-      if (typeof reduxRemover !== "function")
-        throw new Error("Редукс снимается только приложением с движком: без него слой не снять.");
-      onProgress?.({ phase: "compose", percent: 24, cancellable: true });
-      await reduxRemover({ item: structuredClone(installed), target: structuredClone(target), gameRoot: target.gameRoot, stateDir, signal });
-      target.installed = target.installed.filter((item) => item.modId !== modId);
-      onProgress?.({ phase: "commit", percent: 94, cancellable: false });
-      const written = await writeState(next, stateDir);
-      onProgress?.({ phase: "finalizing", percent: 99, cancellable: false });
-      return written;
-    }
-    onProgress?.({ phase: "compose", percent: 24, cancellable: true });
-    if (
-      (installed.archiveEntries || []).some(
-        (item) => item.target === FAST_WEAPON_DLC_TARGET,
-      ) &&
-      !(await checkFastWeaponHostReady(target, { resolveInside, sha256File: fingerprintSha256 }))
-    ) {
-      throw new Error(
-        "Astral Weapons DLC изменён. Сначала повторите подготовку GTA V в Astral.",
-      );
-    }
-    const affected = [];
-    for (const relativePath of installed.resources || []) {
-      const resource = target.resources[relativePath];
-      if (!resource) continue;
-      resource.layers = (resource.layers || []).filter(
-        (layer) => layer.modId !== modId,
-      );
-      const top = resource.layers.at(-1);
-      affected.push({
-        relativePath,
-        livePath: resolveInside(target.gameRoot, relativePath),
-        sourcePath: top?.cachePath || activeBaselinePath(target, resource),
-      });
-    }
-    const affectedArchives = new Set();
-    /* Прямые DLC Astral включены, пока в них что-то стоит: снятие последней
-       вещи выключает DLC, и update.rpf возвращается к прежнему виду. */
-    const directDlcs = directDlcsOf(installed, target.directDlcRegistrations);
-    /* Отпечатки файлов после снятия помнит только DLC оружия. */
-    const uninstallsFastWeapon = directDlcs.some(
-      (dlc) => dlc.name === FAST_WEAPON_DLC_NAME,
-    );
-    const paths = statePaths(stateDir);
-    await rebaseBeforeUninstall({
-      target,
-      installed,
-      touchesDirectDlc: directDlcs.length > 0,
-      paths,
-      targetKey,
-      contentXmlProvider,
-      dlcListProvider,
-      signal,
-    });
-    /* Остальные архивы мода (звук, пакеты дополнений): правка, сделанная
-       в них после Astral, остаётся при снятии (задача 1 ТЗ 07.10.2026). */
-    for (const archiveTarget of new Set(
-      (installed.archiveEntries || []).map((item) => item.target),
-    ))
-      await rebaseArchiveIfNeeded({ target, archiveTarget, paths, targetKey, signal });
-    for (const archiveTarget of removeModLayers(target, installed, modId))
-      affectedArchives.add(archiveTarget);
-    addCarrierRegistryArchive(target, affectedArchives); /* контейнер в носителе (`update2.rpf`) снят: из `content.xml` в `update.rpf` уходит и его регистрация */
-    await addSubpackHostArchives({ target, archives: affectedArchives, root: target.gameRoot, paths, targetKey, signal }); /* контейнер в подпакете (`dlc<N>.rpf`) снят: из `content.xml` и `setup2.xml` хозяина уходят регистрация и число (`subpack-closure.js`) */
-    if (await settleAudioSlotLayer({ audioSlotSettler, target, targetKey, paths, signal })) affectedArchives.add("update/update.rpf"); /* снят пак звуков или редукс со своим audioconfig: слот звука пересчитан */
-    for (const dlc of directDlcs) {
-      const remainingLayers = Object.values(
-        target.archives?.[dlc.target]?.entries || {},
-      ).some((entry) => (entry.layers || []).length > 0);
-      if (remainingLayers) continue;
-      delete target.directDlcRegistrations?.[dlc.name];
-      await composeDirectDlcRegistry({
-        target,
-        targetKey,
-        paths,
-        dlcListProvider,
-        archiveTarget: "update/update.rpf",
-      });
-      if (dlc.state && target[dlc.state]) target[dlc.state].preparedOnly = true;
-      affectedArchives.add("update/update.rpf");
-    }
-    /* «Одна запись вместо двух» при снятии (`ops-build.js`): подмена по умолчанию от приложения; `null` — прежний путь. */
-    const engineInstall = defaultOpsEngineFor({ gameRoot: target.gameRoot, workId: modId });
-    const opsHold = opsAllowedFor(engineInstall) && typeof engineInstall.writerFor === "function" && (await opsHoldIsKnown(engineInstall));
-    for (const archiveTarget of affectedArchives) {
-      if (isAstralUpdateTarget(archiveTarget)) {
-        await composeAstralContentRegistry({
-          target,
-          targetKey,
-          paths,
-          contentXmlProvider,
-          archiveTarget,
-          carrierWriting: new Set([...affectedArchives].filter((archive) => LIVE_CARRIER_TARGETS.includes(archive))),
-        });
-      }
-      const sourcePath = await composeArchiveResource({
-        target,
-        archiveTarget,
-        targetKey: targetId,
-        edition: target.edition,
-        gameRoot: target.gameRoot,
-        paths,
-        rpfComposer,
-        tracerMaterializer,
-        ptfxTextureMaterializer,
-        awcMaterializer,
-        bloodRoutingMaterializer,
-        audioRelMaterializer,
-        audioChunkMaterializer,
-        signal,
-        assertRuntimeSafety,
-        /* update.rpf не пишется, пока не ясно, откатить ли запись дозаписи или собрать архив (`transact` решает и собирает сам). */
-        deferBuild:
-          (Boolean(appendInstall) && archiveTarget.toLowerCase() === "update/update.rpf" && affectedArchives.size === 1) ||
-          /* «Одна запись вместо двух»: движок соберёт архив рядом с живым файлом и подменит сам (`ops-build.js`). */
-          (opsHold && archiveTarget === ASTRAL_UPDATE_TARGET),
-      });
-      affected.push({
-        relativePath: archiveTarget,
-        livePath: resolveInside(target.gameRoot, archiveTarget),
-        sourcePath,
-      });
-    }
-    if (installed.dlcName) {
-      target.dlcRegistrations ||= {};
-      const registration = target.dlcRegistrations[installed.dlcName];
-      if (registration?.modId === modId) {
-        delete target.dlcRegistrations[installed.dlcName];
-      }
-      const sourcePath = await composeManagedDlcList({
-        target,
-        targetKey: targetId,
-        paths,
-      });
-      affected.push({
-        relativePath: MANAGED_DLC_LIST_TARGET,
-        livePath: resolveInside(target.gameRoot, MANAGED_DLC_LIST_TARGET),
-        sourcePath,
-      });
-    }
-    pruneEmptySubpackResources(target, affectedArchives); /* подпакет без записей: файл удалится подменой без источника, ресурс и записи уходят из состояния */
-    orderForCarriers(affected, "remove"); /* носитель среди целей (`carrier-order.js`): при снятии `update.rpf` первым, носители последними; без носителя порядок прежний */
-    /* Отложенную сборку `update.rpf` движок возьмёт в два шага (`transactions.js`); проверка между шагами пустая, как у прежнего
-       пути при снятии. Кто исполнит сборку (дозапись, движок, прежний способ), решает `transact`. */
-    if (opsHold)
-      for (const item of affected) {
-        if (item.relativePath !== ASTRAL_UPDATE_TARGET) continue;
-        const build = deferredBuildFor(item.sourcePath);
-        if (build && (await opsRouteIsOpen(item, build, engineInstall, signal))) item.verifyHeld = async () => {};
-      }
-    target.installed = target.installed.filter((item) => item.modId !== modId);
-    onProgress?.({
-      phase: "ready-to-commit",
-      percent: 90,
-      cancellable: true,
-    });
-    await assertRuntimeSafe(
-      assertRuntimeSafety,
-      signal,
-      "before-uninstall-commit",
-    );
-    onProgress?.({ phase: "commit", percent: 94, cancellable: false });
-    const result = await transact({
-      stateDir,
-      current,
-      next,
-      targetId,
-      affected,
-      action: "uninstall",
-      signal,
-      engineInstall,
-      ...(appendInstall ? { appendInstall } : {}),
-      /* Байты подмены идут той же фазой `commit`: снятие мода — это тоже
-         пересборка и подмена архива игры, и молчать ей нельзя. */
-      onStaging: onProgress
-        ? ({ copiedBytes, totalBytes }) =>
-            onProgress({
-              phase: "commit",
-              percent: 94,
-              cancellable: false,
-              copiedBytes,
-              totalBytes,
-            })
-        : null,
-    });
-    await pruneEmptyManagedDirectories(
-      target.gameRoot,
-      affected.map((item) => item.relativePath),
-    );
-    if (uninstallsFastWeapon) {
-      const savedTarget = ownRecordValue(result.targets, targetKey);
-      const [updateStat, hostStat] = await Promise.all([
-        fs.lstat(resolveInside(target.gameRoot, "update/update.rpf")),
-        fs.lstat(resolveInside(target.gameRoot, FAST_WEAPON_DLC_TARGET)),
-      ]);
-      savedTarget.fastWeaponDlc.updateIdentity = {
-        size: updateStat.size,
-        mtimeMs: updateStat.mtimeMs,
-      };
-      savedTarget.fastWeaponDlc.hostIdentity = {
-        size: hostStat.size,
-        sha256: await sha256File(
-          resolveInside(target.gameRoot, FAST_WEAPON_DLC_TARGET),
-        ),
-      };
-      await writeState(result, stateDir);
-    }
-    onProgress?.({ phase: "finalizing", percent: 99, cancellable: false });
-    return result;
-  });
+/* Снятие нескольких модов одной транзакцией (23.11.2026): тело — в `remove-batch.js` (вынесено 24.11.2026, потолок строк). */
+export function uninstallPackages(input = {}) {
+  return uninstallPackagesBatched(input);
 }
 
 export function resetTarget(input = {}) {
@@ -1104,12 +834,17 @@ export async function restorePoint({
         }
       }
       if (sourcePath) {
-        /* Сборки точки в кэше нет — она собирается заново из основы и слоёв снимка: отпечаток сверяется ниже, как у копии. */
-        if (top && !(await exists(sourcePath)) && typeof rpfComposer === "function" && desired.archives?.[relativePath])
+        /* Сборки точки в кэше нет — она собирается заново из основы и слоёв снимка: отпечаток сверяется ниже, как у копии. Без отпечатка в записи точки сверять пересборку не с чем,
+           а основа к возврату могла измениться (правка мастерской, обновление игры): пересборка легла бы в игру молча и была бы не той сборкой, что хранит точка. Тогда не собираем:
+           ниже отказ «Файл контрольной точки недоступен» до записи в игру (приёмка слабого ПК, 22.11.2026). */
+        if (top && expectedHash && !(await exists(sourcePath)) && typeof rpfComposer === "function" && desired.archives?.[relativePath]) {
+          /* Основа с тех пор другая — пересборка вышла бы не той сборкой: отказ до пересборки и до записи в игру, словами про причину (шаг 2, `restore-point-base.js`). */
+          if (basesDiffer({ snapshot, relativePath, resource }) === true) throw restorePointBaseChanged(relativePath);
           sourcePath = assertCompositeSource(
             paths,
             await composeArchiveResource({ target: desired, archiveTarget: relativePath, targetKey, edition: desired.edition, gameRoot: desired.gameRoot, paths, rpfComposer, signal }),
           );
+        }
         if (!(await exists(sourcePath)))
           throw new Error(`Файл контрольной точки недоступен: ${relativePath}`);
         if (expectedHash && (await sha256File(sourcePath)) !== expectedHash)

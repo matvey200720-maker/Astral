@@ -7,11 +7,21 @@ const uuidPattern =
 const keyIDPattern = /^[A-Za-z0-9._-]{1,64}$/;
 const signaturePattern = /^[A-Za-z0-9+/]{86}==$/;
 
+/*
+ * Выдача ссылки не годится. `status` — HTTP-статус ответа сервера (429 — предел выдачи, 403/401 — доступ, 201 — ответ пришёл, но тело или срок негодны), `reason` — слово изъяна
+ * при 201 (`body`, `expiry`). Они стоят в тексте («… unavailable (HTTP 429).»): через мост Electron свойства ошибки теряются, текст доходит до журнала и до окна (23.11.2026: двенадцать
+ * одинаковых «unavailable» в журнале владельца не говорили, что это предел 30 ссылок в минуту).
+ */
 export class DownloadGrantV1Error extends Error {
-  constructor(message = "Astral download grant is unavailable.") {
-    super(message);
+  constructor(detail = {}) {
+    const { status = null, reason = "" } = typeof detail === "object" && detail ? detail : {};
+    const parts = [Number.isInteger(status) ? `HTTP ${status}` : "", reason].filter(Boolean);
+    /* Прежняя сигнатура брала готовую строку сообщения — она по-прежнему сообщение. */
+    super(typeof detail === "string" && detail ? detail : `Astral download grant is unavailable${parts.length ? ` (${parts.join(", ")})` : ""}.`);
     this.name = "DownloadGrantV1Error";
     this.code = "INVALID_DOWNLOAD_GRANT_V1";
+    this.status = Number.isInteger(status) ? status : null;
+    this.reason = String(reason || "");
   }
 }
 
@@ -82,7 +92,18 @@ function validPackageURL(raw, digest) {
   }
 }
 
-export async function parseDownloadGrantV1Response(
+/** Ответ выдачи ссылки; любой изъян — `DownloadGrantV1Error` со статусом ответа (429 против остального). */
+export async function parseDownloadGrantV1Response(response, options) {
+  try {
+    return await parseGrant(response, options);
+  } catch (error) {
+    if (error instanceof DownloadGrantV1Error && error.status === null)
+      throw new DownloadGrantV1Error({ status: response?.status, reason: error.reason });
+    throw error;
+  }
+}
+
+async function parseGrant(
   response,
   { now = () => Date.now() } = {},
 ) {
@@ -128,7 +149,7 @@ export async function parseDownloadGrantV1Response(
     Buffer.from(payload.manifest.signature, "base64").length !== 64 ||
     !validPackageURL(payload.package_base_url, payload.sha256)
   ) {
-    throw new DownloadGrantV1Error();
+    throw new DownloadGrantV1Error({ reason: "body" });
   }
   const expiresAt = Date.parse(payload.expires_at || "");
   /* Срок ссылки меряется по часам сервера (заголовок `Date`), а не компьютера (31.10.2026, журнал
@@ -141,7 +162,7 @@ export async function parseDownloadGrantV1Response(
     expiresAt <= current ||
     expiresAt > current + 5 * 60_000 + 10_000
   ) {
-    throw new DownloadGrantV1Error();
+    throw new DownloadGrantV1Error({ reason: "expiry" });
   }
   const manifestBytes = Buffer.byteLength(
     JSON.stringify(payload.manifest),

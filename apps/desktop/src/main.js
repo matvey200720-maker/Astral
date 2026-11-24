@@ -76,6 +76,7 @@ import { appWindow, applyTitlebarTheme, raiseAppWindow } from "./app-window.js";
 import { applyGpuPreference, guardStartup, guardWindow } from "./startup-guards.js";
 import { showStartupFailure } from "./startup-failure-words.js";
 import { createAppPresence, registerAppPresenceIpc } from "./app-presence.js";
+import { launchLanguageArgument, preferredSystemLanguages, withLaunchLanguage } from "./launch-language.js";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const { IPC_CHANNELS: IPC, assertIpcArguments } = ipcContract;
 const ipcCrashGuard = createDesktopIpcCrashGuard(app);
@@ -227,7 +228,8 @@ if (betaGate) {
  * Ветки Astral на одном ПК (`channels/`): вопрос о переключении при запуске другой ветки,
  * «Версии» в окне, «Доступ снят». Живёт и без обновителя; обновитель отдаёт ей ответы сервера.
  */
-const channels = createDesktopChannels({ app, dialog, appWindow, raiseAppWindow, appLog, betaGate, ownChannel: ownBranch, broadcast: broadcastChannels });
+/* `busy` — идёт установка или работа мастерской: смена «Где играю» тогда действует со следующего запуска (`rp-place.js`). */
+const channels = createDesktopChannels({ app, dialog, appWindow, raiseAppWindow, appLog, betaGate, ownChannel: ownBranch, broadcast: broadcastChannels, busy: () => workshopOperations.isBusy() || activeOperations.size > 0 });
 /* Журнал фаз установки (каталог, растительность): во всех ветках; установка дольше минуты уходит в авто-ошибки только из альфы. */
 configureInstallJournal({
   channel: ownBranch,
@@ -399,7 +401,7 @@ function openAppWindow(win) {
           : registeredPreview
             ? "?preview=after-registration"
             : "";
-  const url = `${webUrl}/app${launchQuery}`;
+  const url = `${webUrl}/app${withLaunchLanguage(launchQuery, launchLanguageArgument(process.argv), preferredSystemLanguages(app))}`;
   guardWindow(win, dialog, () => void win.loadURL(url), reportProcessGone, () => presence.language(), reportHang);
   return loadAppWindow(win, {
     url,
@@ -459,6 +461,7 @@ function registerIpc() {
     dialog,
     shell,
     clipboard,
+    markGames: async (games) => (await import("./loaders-on-demand.js")).markLoaderNeed(games, { stateDir: (await desktopStorage().installOptions()).stateDir }),
   });
   registerAppIconIpc({ IPC, handleIpc, trusted, appIcon });
   registerSystemFontsIpc({ IPC, handleIpc, trusted });

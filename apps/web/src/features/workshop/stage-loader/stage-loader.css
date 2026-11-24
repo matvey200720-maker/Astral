@@ -47,7 +47,7 @@
 
 .stage-loader[data-phase="out"] {
   pointer-events: none;
-  animation: stage-loader-out 480ms var(--astral-ease) forwards;
+  animation: stage-loader-out var(--stage-loader-out, 480ms) var(--astral-ease) forwards;
 }
 
 .stage-loader-art {

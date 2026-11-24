@@ -50,7 +50,7 @@ export const audioSlotsLayerStands = (target) =>
 
 /**
  * Включён ли подъём слота: копия `slotRaiseEnabled` из `@modovik/sound-studio/slot-fit.js` (движок установки пакет звука не импортирует; равенство двух разборов слова держит `tests/sound-slot-raise-word-engine.test.js`).
- * Умолчание в коде — выкл; в альфе канал ставит `ASTRAL_SOUND_SLOT_RAISE=1` на старте (`sound-slot-raise-channel.js`), в бете и релизе слова нет.
+ * Умолчание в коде — выкл; в альфе, бете и релизе (с 23.11.2026) канал ставит `ASTRAL_SOUND_SLOT_RAISE=1` на старте (`sound-slot-raise-channel.js`).
  */
 export function soundSlotRaiseOn(env = typeof process !== "undefined" ? process.env : {}) {
   const raw = String(env?.ASTRAL_SOUND_SLOT_RAISE ?? "").trim().toLowerCase();

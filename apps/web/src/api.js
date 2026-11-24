@@ -405,11 +405,12 @@ export async function setDownloadsAccelerated(enabled) {
     desktop.setDownloadsAccelerated({ enabled: enabled === true }),
   );
 }
-export async function getCloudDownloadGrant(modID) {
+/* `level` — `choice` (по умолчанию), `press` или `background` (прогрев наведением, снимки плиток): очередь выдачи под пределом сервера в Desktop (`grant-pacer.js`). */
+export async function getCloudDownloadGrant(modID, level) {
   const desktop = desktopBridge();
   if (!desktop?.getCloudDownloadGrant)
     throw new Error("Загрузка доступна только в приложении Astral.");
-  return desktop.getCloudDownloadGrant(modID);
+  return level ? desktop.getCloudDownloadGrant(modID, level) : desktop.getCloudDownloadGrant(modID);
 }
 export async function getCloudRating(modID) {
   const desktop = desktopBridge();
@@ -557,6 +558,18 @@ export async function getRpMigrateStatus(input) {
   const desktop = desktopBridge();
   if (!desktop?.rpMigrateStatus) return { enabled: false, needed: false };
   return desktop.rpMigrateStatus(input);
+}
+/** «Где играю» (настройки → GTA V): `{ place, active, available }`; вне приложения — `null` (строки нет). */
+export async function getRpPlace() {
+  const desktop = desktopBridge();
+  if (!desktop?.getRpPlace) return null;
+  return desktop.getRpPlace();
+}
+/** Выбрать «rp», «majestic» или «story»: ответ — то же состояние и `applied` (`now`, `restart`, `none`). */
+export async function setRpPlace(place) {
+  const desktop = desktopBridge();
+  if (!desktop?.setRpPlace) throw new Error("Выбор доступен только в приложении Astral.");
+  return desktop.setRpPlace(place);
 }
 /** Запуск переноса по слову человека; `operationId` — чтобы отменить тем же `cancelOperation`, что установку. */
 export async function runRpMigrate(input) {

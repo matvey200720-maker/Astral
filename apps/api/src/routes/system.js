@@ -3,7 +3,7 @@ import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverGames } from "@modovik/game-discovery";
-import { getProfile } from "@modovik/install-engine";
+import { inspectProfile } from "@modovik/install-engine";
 
 async function readInstallerMetadata() {
   const candidates = [
@@ -73,7 +73,7 @@ export async function loadGeneratedMods(file) {
   return Array.isArray(value) ? value : value.mods || [];
 }
 
-export function runtimeRouter(liveCatalog, baseCatalog, runtimeRoot) {
+export function runtimeRouter(liveCatalog, baseCatalog, runtimeRoot, { exposeLocalState = true } = {}) {
   const enabled =
     process.env.MODOVIK_LOCAL_DESKTOP === "1" ||
     process.env.NODE_ENV !== "production";
@@ -82,10 +82,15 @@ export function runtimeRouter(liveCatalog, baseCatalog, runtimeRoot) {
         loadGeneratedMods(path.join(runtimeRoot, "local-test-mods.json")),
       )
     : null;
-  return createSystemRouter({ liveCatalog, localTestCatalog });
+  return createSystemRouter({ liveCatalog, localTestCatalog, exposeLocalState });
 }
 
-export function createSystemRouter({ liveCatalog, localTestCatalog }) {
+/*
+ * `exposeLocalState` — отдавать ли профиль установок и список игр человека (`/profile`, `/system/installations`). Нужны они только окну в браузере (разработка, песочница): окно
+ * Astral спрашивает главный процесс по IPC, поэтому в упакованной службе этих маршрутов нет (`server.js`). Профиль читается без восстановления транзакций: GET не должен
+ * возвращать снимки в папку игры (`inspectProfile`, а не `getProfile`).
+ */
+export function createSystemRouter({ liveCatalog, localTestCatalog, exposeLocalState = true }) {
   const router = Router();
 
   router.get("/health", (_req, res) =>
@@ -142,10 +147,12 @@ export function createSystemRouter({ liveCatalog, localTestCatalog }) {
     res.setHeader("Cache-Control", "no-store");
     return res.json(await localTestCatalog());
   });
-  router.get("/profile", async (_req, res) => res.json(await getProfile()));
-  router.get("/system/installations", async (_req, res) =>
-    res.json(await discoverGames()),
-  );
+  if (exposeLocalState) {
+    router.get("/profile", async (_req, res) => res.json(await inspectProfile()));
+    router.get("/system/installations", async (_req, res) =>
+      res.json(await discoverGames()),
+    );
+  }
 
   return router;
 }

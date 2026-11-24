@@ -4,7 +4,7 @@ import { fullCode, isCodeComplete } from "./code.js";
 import { presentError } from "./errors.js";
 import { branchList } from "./branches.js";
 import { formatUserCode, isBranch } from "./format.js";
-import { createTranslator, isLanguage, pickLanguage } from "./i18n/index.js";
+import { createTranslator, firstLanguage, isLanguage } from "./i18n/index.js";
 import { createStore } from "./store.js";
 
 const LANG_KEY = "astral-installer-language";
@@ -96,6 +96,11 @@ const guarded = (fallback, run) => {
 const windowStorage = () => ({
   get: (key) => guarded(null, () => window.localStorage.getItem(key)),
   set: (key, value) => guarded(undefined, () => window.localStorage.setItem(key, value)),
+});
+// Языки и пояс системы для языка первого запуска: у WebView2 их даёт Chromium; недоступно — молча пусто.
+const windowSystem = () => ({
+  languages: guarded([], () => [...navigator.languages]),
+  zone: guarded(null, () => Intl.DateTimeFormat().resolvedOptions().timeZone),
 });
 
 // Страница ошибки: одна и та же для события `error` и для отказов вызовов.
@@ -254,7 +259,15 @@ function eventPatch(name, s, d) {
   }
 }
 
-export function createApp({ bridge, params = new URLSearchParams(), storage = windowStorage() }) {
+export function createApp({ bridge, params = new URLSearchParams(), storage = windowStorage(), system = windowSystem() }) {
+  /*
+   * Язык первого запуска — одно правило для окна, установщика и сайта: `?lang`, потом сохранённый выбор человека,
+   * потом язык системы, потом часовой пояс, иначе английский (`firstLanguage`, i18n/index.js). Язык системы — тег от хоста (первый
+   * поддерживаемый из списка Windows, иначе первый как есть); языки WebView2 — только когда хоста не слышно: Chromium при языке
+   * Windows, которого у него нет (казахский…), откатывается на en-US и закрыл бы дорогу к поясу.
+   */
+  const languageFor = (systems) =>
+    [params.get("lang"), storage.get(LANG_KEY)].find((c) => isLanguage(c)) ?? firstLanguage({ systems, zone: system.zone });
   const initial = initialState();
   const store = createStore(initial);
   const put = (patch) => store.set(patch);
@@ -280,16 +293,19 @@ export function createApp({ bridge, params = new URLSearchParams(), storage = wi
   async function boot({ trustHost = false } = {}) {
     const res = await outcome("init");
     if (res.failed) {
-      put(errorPatch(res.err, "init"));
+      // Хоста не слышно, а страница ошибки обязана заговорить на языке человека, а не на запасном русском.
+      put({ ...errorPatch(res.err, "init"), lang: languageFor(system.languages) });
       return;
     }
     // Поля читаются безусловно: пустой ответ даёт TypeError при любом адресе.
-    const { mode: hostMode, frame: hostFrame, osLocale } = res.value;
+    const { mode: hostMode, frame: hostFrame, osLocale, osLocaleRaw } = res.value;
     const mode = [trustHost ? null : params.get("mode"), hostMode].find((m) => MODES.includes(m)) ?? "install";
-    const saved = storage.get(LANG_KEY);
-    const lang = [params.get("lang"), saved].find((c) => isLanguage(c)) ?? pickLanguage(osLocale);
+    // Язык системы — тег как есть (`osLocaleRaw`): `osLocale` хост уже свернул к одному из шести, и неизвестный язык в нём не виден.
+    const lang = languageFor([osLocaleRaw ?? osLocale]);
     const frame = [params.get("frame"), hostFrame].includes("native") ? "native" : "custom";
     put({ init: res.value, mode, lang, frame, ...viewPatch(mode, res.value, store.get()) });
+    // Родные окна хоста (ошибка запуска, нет WebView2) говорят на том же языке, что страница; отказ хоста молча терпим.
+    quiet("setLocale", { lang });
   }
 
   function setLanguage(code) {
@@ -431,7 +447,8 @@ export function createApp({ bridge, params = new URLSearchParams(), storage = wi
     editCode: ({ body, rejected = [], truncated = false }) =>
       void put({ code: body, rejected, truncated, ...nulls("fieldError", "notice") }),
     submitCode,
-    openSite: (page = "beta") => quiet("openSite", { page }),
+    // Сайт открывается на том языке, что показан в установщике (хост добавляет `?lang=`; адрес подтверждения кода язык не получает).
+    openSite: (page = "beta") => quiet("openSite", { page, lang: store.get().lang }),
     cancelConfirm,
     setOption: (name, value) => put(into(store.get(), "options", { [name]: Boolean(value) })),
     chooseBranch: (channel) => put({ selected: channel }),

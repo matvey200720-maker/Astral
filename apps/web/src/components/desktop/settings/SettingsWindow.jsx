@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import * as Prewarm from "./SettingsPrewarm.jsx";
 import { featurePage, usePreloadWhenIdle } from "../lazy-page.jsx";
 import Dialog from "../../ui/Dialog.jsx";
+import AppBackdrop from "../../../features/appearance/AppBackdrop.jsx";
 
 function loadSettingsChunk() {
   return import("../../../features/settings/index.js");
@@ -30,10 +32,27 @@ function useWindowPrewarm(open, busy) {
   return keep;
 }
 
+/* Пока окно открыто, общий фон приложения под ним (его закрывает плотная подложка окна) стоит: окно рисует тот же фон у себя, и две анимации разом не нужны.
+   Признак на корне, как у остальных правил остановки (`look.css`): ставится один раз на открытие и снимается на закрытие, слушателей на кадр нет. */
+function useShellBackdropPause(open) {
+  useEffect(() => {
+    if (!open) return undefined;
+    const root = document.documentElement;
+    root.setAttribute("data-settings-open", "");
+    return () => root.removeAttribute("data-settings-open");
+  }, [open]);
+}
+
 const SettingsWindow = (props) => {
   const { open, onClose, settings } = props;
   const keep = useWindowPrewarm(open, !!settings.installing);
-  const page = <SettingsPage {...settings} onBack={onClose} />;
+  useShellBackdropPause(open);
+  const page = (
+    <>
+      <AppBackdrop scoped />
+      <SettingsPage {...settings} onBack={onClose} />
+    </>
+  );
 
   return (
     <Dialog open={open} keep={keep} onClose={onClose} {...DIALOG_FIXED}>

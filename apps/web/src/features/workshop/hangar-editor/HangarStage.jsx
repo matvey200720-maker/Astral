@@ -47,26 +47,12 @@ import { useSelectionMarkup } from "../model-stage/use-selection-markup.js";
 import { StageSheetsNote } from "../model-stage/StageControls.jsx";
 import { placeBounds, ringDisc, ringEdgeFade } from "../model-stage/ring-fade.js";
 import { emblemDecalLooks, useEmblemTextures } from "../emblem/emblem-items.js";
-import { hangarAimSpec, hangarAimTarget } from "./hangar-aim.js";
+import { hangarAimHover, hangarAimSpec, hangarAimTarget, hangarHouseSurface } from "./hangar-aim.js";
 import { HANGAR_SHOWCASE_YAW, hangarFrameLook } from "./hangar-text.js";
 import { hangarFocusFor } from "./hangar-views.js";
 import { hangarLampLights } from "./hangar-lights-look.js";
 import { tr, useTr } from "../../../locales/ui.js";
 
-/* Детали ангара для подписи у курсора — те же слова, что у переключателей «Конструкций и света» и у разделов сторон. */
-const HANGAR_ELEMENT_NAMES = Object.freeze({
-  trusses: "Фермы",
-  crane: "Кран",
-  vents: "Вентиляция",
-  gallery: "Галерея",
-  bracing: "Связи",
-  pipes: "Трубы",
-  lamps: "Лампы",
-  floor: "Пол",
-  markings: "Разметка",
-  rust: "Ржавчина",
-});
-import { labelOf, labelled } from "../model-stage/hover-label.js";
 import { steadyScope } from "../model-stage/selection-highlight.js";
 
 /* Потолочные лампы в кадре (прожекторы вниз у 16 ламп нутра, цвет и сила — по «Свету ламп» работы): `hangar-lights-look.js`. */
@@ -113,9 +99,11 @@ export default function HangarStage({
   const outside = useFinishTexture(project.outside);
   const insideFinish = useFinishTexture(project.inside);
   const floor = useFinishTexture(project.floor);
+  /* Потолок со своей отделкой — своя текстура; «как у стен» берёт отделку нутра (`finishKeyOf`). */
+  const ceiling = useFinishTexture(project.ceiling);
   const textures = useMemo(
-    () => ({ outside, inside: insideFinish, floor }),
-    [outside, insideFinish, floor],
+    () => ({ outside, inside: insideFinish, floor, ceiling }),
+    [outside, insideFinish, floor, ceiling],
   );
   const decals = useMemo(
     () => emblemDecalLooks(hangarEmblemDecals(project), emblemTextures),
@@ -211,18 +199,22 @@ export default function HangarStage({
    * её, а у выбранной модели свои ручки — деталь тогда не выбирается и не светится.
    */
   const aimOff = Boolean(placing) || Boolean(modelSelection?.canEdit);
+  /* Цвет домика сейчас (для видимой подсветки на нём): `hangarHouseSurface`. */
+  const houseSurface = hangarHouseSurface(project);
   /* Подсвечено то, что правится (п. 7 `docs/3D-ELEMENTS-PICTURES.md`, владелец 31.10.2026: «я выделил одно это, а у меня покрасилось всё»):
      правка инструмента ложится на всю его деталь — светится она вся, и под курсором, и выбранная. */
   const aimTarget = useCallback(
     (hit) => {
-      const target = aimOff ? null : hangarAimTarget(asset, hit);
+      if (aimOff) return null;
       /* С «Узорами» светятся только стены и пол — куда узор ляжет. */
-      if (tool === "patterns" && (target?.tool !== "outside" && target?.tool !== "inside")) return null;
-      /* Подпись у курсора — деталь («Фермы», «Пол») и сторона («Снаружи», «Внутри»). */
-      const name = target ? labelOf(target.element ? tr(HANGAR_ELEMENT_NAMES[target.element] || "") : "", target.tool === "outside" ? tr("Снаружи") : target.tool === "inside" ? tr("Внутри") : "") : "";
-      return target ? labelled(hangarAimSpec(asset, target.tool, target.tool === "structure" ? target.element : ""), name) : null;
+      if (tool === "patterns") {
+        const target = hangarAimTarget(asset, hit);
+        if (target?.tool !== "outside" && target?.tool !== "inside") return null;
+      }
+      /* Подпись у курсора — деталь («Фермы», «Пол», «Дом») и сторона («Снаружи», «Внутри»): `hangar-aim.js`. */
+      return hangarAimHover(asset, hit, tr, houseSurface);
     },
-    [aimOff, asset, tool],
+    [aimOff, asset, tool, houseSurface],
   );
   const onAimed = useCallback(
     (hit) => {
@@ -230,7 +222,7 @@ export default function HangarStage({
     },
     [aimOff, asset, onAim],
   );
-  const selected = useMemo(() => (aimOff ? null : steadyScope(hangarAimSpec(asset, tool, element))), [aimOff, asset, tool, element]);
+  const selected = useMemo(() => (aimOff ? null : steadyScope(hangarAimSpec(asset, tool, element, houseSurface))), [aimOff, asset, tool, element, houseSurface]);
 
   const label = inside
     ? tr(

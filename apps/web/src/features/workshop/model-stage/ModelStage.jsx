@@ -76,7 +76,7 @@ const SHOWN_SCENES = 3;
  * `orbit-stage.js`; `entity` — номер предмета сцены, `additive` — щелчок с Shift, Ctrl или Cmd: «добавить к выбранному»;
  * набор вещей собирает `items-panel/use-scene-items.js`, п. 7 `docs/3D-ELEMENTS-PICTURES.md`); `aimTarget(hit)` — что именно будет правиться по этому
  * попаданию: `true` (весь лист материала), описание подсветки (`{ materials?,
- * parts?, where?, uvRects?, none? }`, `selection-highlight.js`) или `null` —
+ * parts?, where?, uvRects?, none?, surface? }`, `selection-highlight.js`) или `null` —
  * править нечего (ничего не подсвечивается и `onAim` по щелчку не зовётся); `onMiss()` — щелчок ЛКМ мимо правящегося: снять выбор
  * (п. 7 `docs/3D-ELEMENTS-PICTURES.md`), камера стоит; `multi` — редактор берёт несколько вещей Shift+щелчком: после первого выбора
  * подпись у курсора один раз говорит «Shift — ещё» (п. 5 там же);

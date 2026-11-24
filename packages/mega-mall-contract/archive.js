@@ -1,5 +1,6 @@
 import { canonicalJson, sha256Hex } from "./canonical.js";
 import { hashMegaMallDesign, normalizeMegaMallDesign } from "./design.js";
+import { nameSegmentProblem } from "../mod-targets/file-names.js";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-8", { fatal: true });
@@ -23,13 +24,20 @@ function asBytes(value, label = "archive entry") {
   return result;
 }
 
+/*
+ * Имя записи архива: относительный путь без звеньев, которые Windows понимает иначе, чем написано (поток NTFS, точка
+ * или пробел на конце, имя устройства, знаки направления, управляющие знаки; `mod-targets/file-names.js`, H3-03).
+ * Запрета по расширению нет намеренно: имена в астралпаке — закрытый набор (`manifest.json`, `project.json`,
+ * `checksums.json`, `assets/<64 hex>.rgba`), `inspectMegaMallDesignArchive` пускает только его, а содержимое остаётся в
+ * памяти и на диск по имени записи не пишется.
+ */
 function safePath(value) {
   const result = String(value || "").replaceAll("\\", "/");
   return Boolean(
     result &&
     !result.startsWith("/") &&
     !/^[a-z]:/i.test(result) &&
-    !result.split("/").some((part) => !part || part === "." || part === ".."),
+    !result.split("/").some((part) => nameSegmentProblem(part) !== null),
   );
 }
 

@@ -42,6 +42,7 @@ import { defaultLogSources } from "./app-log-sources.js";
 import { startRunState } from "./run-state.js";
 import { createCatalogFetch } from "./catalog-fetch.js";
 import { createGrantReuse } from "./grant-reuse.js";
+import { createGrantPacer, createPacedGrant } from "./grant-pacer.js";
 import { watchEngineRetries, watchHostFailures } from "./native-engine.js";
 import { releaseVersionFor } from "./updates/display-version.js";
 import { openUrl } from "./elevation.js";
@@ -205,8 +206,12 @@ export function resolveDesktopCloudOrigin({
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
-  return "https://astral.com";
+  return DEFAULT_CLOUD_ORIGIN;
 }
+
+/* Сборка без настроек поставки (нет или не прочитан `astral-release.json`) идёт только на свой адрес:
+   запросы входа и токены не должны уходить на домен, который проекту не принадлежит. */
+const DEFAULT_CLOUD_ORIGIN = "https://astral-mods.online";
 
 function readLocalDesktopConfig(resourcesPath) {
   const localConfig = JSON.parse(
@@ -268,8 +273,8 @@ export function registerDesktopAuthIPC({ IPC, handleIpc, trusted, auth, dialog =
   handleIpc(IPC.CLOUD_MOD_LINK, (event, modID) =>
     trusted(event, () => auth.modLink(modID)),
   );
-  handleIpc(IPC.CLOUD_DOWNLOAD_GRANT, (event, modID) =>
-    trusted(event, () => auth.downloadGrant(modID)),
+  handleIpc(IPC.CLOUD_DOWNLOAD_GRANT, (event, modID, level) =>
+    trusted(event, () => auth.downloadGrant(modID, level, event?.sender?.id)),
   );
   handleIpc(IPC.CLOUD_CATALOG_RATING_GET, (event, modID) =>
     trusted(event, () => auth.rating(modID)),
@@ -1082,8 +1087,12 @@ export function createDesktopAuth({
 
   /* Выданные ссылки на пакеты — повторно, пока годны (`grant-reuse.js`): сервер выдаёт 30 в минуту на устройство. */
   const grantReuse = createGrantReuse({ now });
+  /* Новая выдача — через одну очередь на устройство под пределом сервера (`grant-pacer.js`): выбор ждёт слота, фон отказывается сразу. */
+  const grantPacer = createGrantPacer({ now });
+  const pacedGrant = createPacedGrant({ reuse: grantReuse, pacer: grantPacer, request: (modID) => requestDownloadGrant(modID) });
 
-  async function downloadGrant(modID) {
+  /* `level` — `choice` (по умолчанию), `press` или `background` (прогрев наведением, снимки плиток): приходит из окна вторым аргументом. */
+  async function downloadGrant(modID, level, owner) {
     if (
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(
         modID || "",
@@ -1091,7 +1100,7 @@ export function createDesktopAuth({
     ) {
       throw new Error("Invalid Astral catalog identifier.");
     }
-    return grantReuse.get(modID, () => requestDownloadGrant(modID));
+    return pacedGrant(modID, level, owner);
   }
 
   async function requestDownloadGrant(modID) {

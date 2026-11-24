@@ -343,7 +343,13 @@ const MODULES = [
     direct([
       ["IPC", "IPC"], ["handleIpc", "guardedIpc"], ["trusted", "trusted"], ["safeInput", "safeInput"], ["desktopStorage", "desktopStorage"],
       ["listGames", "discoverGames"], ["gameProcessRunning", "gameProcessRunning"],
-    ]),
+    ], () => ({
+      /* Прежним фонарям нужна пара загрузчиков: ставится перед планом, уходит со снятием (`loaders-on-demand.js`, 23.11.2026). */
+      loaders: {
+        ensure: async (input) => (await import("./loaders-on-demand.js")).ensureLoadersForLegacy(input),
+        retire: async (input) => (await import("./loaders-on-demand.js")).retireLoadersForLegacy(input),
+      },
+    })),
   ),
   lazy(
     "hud-surface",

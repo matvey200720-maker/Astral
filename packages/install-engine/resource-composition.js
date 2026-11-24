@@ -52,6 +52,28 @@ import { recipeFile, registerDeferredBuild } from "./ops-build.js";
    оглавления (прежняя сборка weapons.awc роняла игру с ERR_GEN_ZLIB_2). */
 export const COMPOSITE_FORMAT = 3;
 
+/*
+ * Счёт записей последней сборки архива (ответ движка `compose-rpf`) по пути результата: в журнал подготовки (`apps/desktop/src/prepare-log.js`).
+ * В состояние не пишется; запоминаются последние несколько сборок, чтобы карта не росла.
+ */
+const COMPOSE_COUNT_KEYS = ["entriesBefore", "entriesAfter", "usefulBytesBefore", "fileBytesBefore", "deadBytesBefore"];
+const composeCounts = new Map();
+
+function rememberComposeCount(output, composed) {
+  const counts = {};
+  for (const key of COMPOSE_COUNT_KEYS) if (Number.isFinite(composed?.[key])) counts[key] = composed[key];
+  if (!Object.keys(counts).length) return;
+  const key = path.resolve(String(output));
+  composeCounts.delete(key);
+  composeCounts.set(key, counts);
+  while (composeCounts.size > 8) composeCounts.delete(composeCounts.keys().next().value);
+}
+
+/** Счёт записей сборки, что легла по этому пути (`{ entriesBefore, entriesAfter, usefulBytesBefore, fileBytesBefore, deadBytesBefore }`), или `null`. */
+export function composeCountOf(output) {
+  return composeCounts.get(path.resolve(String(output))) ?? null;
+}
+
 /* Настоящий архив игры (RPF7), а не JSON-подделка тестов. */
 async function isRpfArchive(file) {
   let handle;
@@ -151,6 +173,8 @@ async function ensureArchiveResource({
      * `RESIDENT.rpf`, в котором полтора гигабайта: звуковой набор ставился
      * с той же немой паузой, от которой избавляли карты.
      */
+    /* Размер и время правки живого архива до снятия основы и после: Rockstar Launcher, проверка файлов или обновление могут писать в него на месте, и основа тогда была бы смесью двух версий (23.11.2026). */
+    const liveBefore = await fs.stat(baseSource);
     await keepBaseCopy(
       baseSource,
       compositionPath,
@@ -173,6 +197,16 @@ async function ensureArchiveResource({
       sha256: await fingerprintSha256(compositionPath),
       verified: true,
     };
+    const liveAfter = await fs.stat(baseSource);
+    const copied = await fs.stat(compositionPath);
+    if (
+      liveAfter.size !== liveBefore.size ||
+      Math.trunc(liveAfter.mtimeMs) !== Math.trunc(liveBefore.mtimeMs) ||
+      copied.size !== liveBefore.size
+    )
+      throw new Error(
+        `RPF base changed while it was being copied: ${archiveTarget} was ${liveBefore.size} bytes, copy ${copied.size}, now ${liveAfter.size}.`,
+      );
     resource = {
       base: compositionBase,
       compositionBase,
@@ -888,6 +922,7 @@ async function composeArchiveResourceOnce({
          при подмене архива в игре. */
       if (/^[a-f0-9]{64}$/i.test(String(composed?.sha256 || "")))
         await rememberSha256(output, String(composed.sha256).toLowerCase());
+      rememberComposeCount(output, composed);
     } catch (error) {
       await fs.rm(stage, { force: true }).catch(() => {});
       await fs.rm(stagingDirectory, { recursive: true, force: true }).catch(() => {});

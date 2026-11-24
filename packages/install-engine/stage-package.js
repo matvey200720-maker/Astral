@@ -554,6 +554,8 @@ export async function stagePackage(
     resources: layers,
     installedAt: new Date().toISOString(),
     mode: "transactional",
+    /* Нужна ли этой работе пара загрузчиков (`loader-need.js`): по ней пара уходит, когда не нужна никому. */
+    needsLoader: parsed.needsLoader === true,
     ...(archiveEntries.length ? { archiveEntries } : {}),
     ...(parsed.dlcName ? { dlcName: parsed.dlcName } : {}),
     ...installOrigin(origin),

@@ -1,6 +1,7 @@
 import * as desktop from "../../../../api.js";
 import * as taxonomy from "../../../../catalog-taxonomy.js";
 import * as wardrobe from "./clothing-models.js";
+import { GRANT } from "./grant-level.js";
 import * as clothingQueue from "../../../../features/workshop/install-queue/tasks/clothing-skin.js";
 import * as shell from "../../desktopShellDefaults.js";
 import * as drafts from "../../../../features/workshop/works/gun-draft-store.js";
@@ -322,8 +323,8 @@ function catalogGameHint(item, gameRoot) {
 }
 
 async function readClothingCatalogModel(item, slotId, options = {}) {
-  const { gameRoot = "" } = options;
-  const { manifest, baseUrl } = await wardrobe.catalogPackageOf(item);
+  const { gameRoot = "", level } = options;
+  const { manifest, baseUrl } = await wardrobe.catalogPackageOf(item, { level });
   const query = { manifest, baseUrl, slot: slotId };
   if (item.colour) query.colour = item.colour;
   const game = catalogGameHint(item, gameRoot);
@@ -342,10 +343,10 @@ function clothingCharacterReason(model) {
 }
 
 /** Начало запроса персонажа: вещь каталога — пакет и расцветка, иначе вариант игры. */
-async function wearItemRequest({ model, gameRoot, slotId, catalogItem }, markBare) {
+async function wearItemRequest({ model, gameRoot, slotId, catalogItem }, markBare, level = GRANT.frame) {
   const head = { gameRoot, slot: slotId };
   if (model.source === "catalog") {
-    const { manifest, baseUrl } = await wardrobe.catalogPackageOf(catalogItem);
+    const { manifest, baseUrl } = await wardrobe.catalogPackageOf(catalogItem, { level });
     Object.assign(head, { manifest, baseUrl });
     if (catalogItem.colour) head.colour = catalogItem.colour;
   } else if (markBare && model.source === "bare") {
@@ -370,8 +371,9 @@ async function readClothingOnCharacter({ others = [], tattoos = false, gender, .
   return desktop.readClothingCharacter({ ...request, ...womanOf(sex), onModel: true, animated: true, hair, face });
 }
 
-async function warmClothingOnCharacter({ gender, ...subject }) {
-  const request = await wearItemRequest(subject, false);
+async function warmClothingOnCharacter({ gender, level = GRANT.background, ...subject }) {
+  /* Прогрев: наведение — фон (слота нет прямо сейчас — не делается), нажатие — `press` (ждёт слота после выбора); выбранной вещи он ссылку не отнимает (`grant-pacer.js`). */
+  const request = await wearItemRequest(subject, false, level);
   const sex = figureGender(gender);
   const { hair, face } = lookSource.wearLookRequest(sex);
   return desktop.warmWearItem({ ...request, ...womanOf(sex), animated: true, hair, face });

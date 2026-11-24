@@ -552,7 +552,7 @@ const RULES = [
   ],
   [
     "no-space",
-    /Недостаточно места|Недостатньо місця|Диск заполнен|Диск заповнений|not enough space|not enough disk space|disk is full|Za mało miejsca|Dysk jest pełny|nicht genügend Speicherplatz|Datenträger ist voll|0x80070070|ENOSPC|no space left/i,
+    /Недостаточно места|Недостатньо місця|Диск заполнен|Диск заповнений|not enough space|not enough disk space|disk is full|Za mało miejsca|Dysk jest pełny|nicht genügend Speicherplatz|Datenträger ist voll|0x80070070|ENOSPC|no space left|\(os error (?:112|39)\)|0x80070027/i,
   ],
   [
     "network",

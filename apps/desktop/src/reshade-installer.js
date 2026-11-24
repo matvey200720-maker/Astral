@@ -746,6 +746,9 @@ export async function applyReshade(input, stateDir, tools = {}) {
   await ensureGameClosed(tools);
   const record = await readRecord(stateDir);
   const enabled = !reshadeProjectIsEmpty(project);
+  /* ReShade `.asi` в корне игры грузит ASI-прокси: нет его — Astral ставит свою пару загрузчиков тихо, перед установкой (23.11.2026). */
+  if (enabled && tools.ensureGameLoader && folders.game.folder && (await targetAvailable("game", folders)) && !(await asiLoaderIn(folders.game.folder)))
+    await tools.ensureGameLoader(folders.game.folder);
   const places = enabled ? await reshadePlaces(folders) : [];
   const wanted = places.filter((place) => place.ready).map((place) => place.id);
   if (enabled && !wanted.length) throw new Error(`${project.dlss.enabled ? "DLSS 5" : "ReShade"} некуда ставить. ${places.map((place) => place.reason).join(" ")}`);

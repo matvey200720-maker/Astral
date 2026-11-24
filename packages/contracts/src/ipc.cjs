@@ -544,9 +544,13 @@ const IPC_CHANNELS = Object.freeze({
   CHANNELS_EVENT: "astral:channels-event",
   RUST_SWITCHES_STATE: "astral:rust-switches-state",
   RUST_SWITCHES_SET: "astral:rust-switches-set",
+  /* «Где играю» (настройки → GTA V, 23.11.2026): выбор GTA 5 RP / Majestic / только сюжет и режим RP (`rp-place.js`). */
+  RP_PLACE_STATE: "astral:rp-place-state",
+  RP_PLACE_SET: "astral:rp-place-set",
 });
 
 const noArgumentChannels = new Set([
+  IPC_CHANNELS.RP_PLACE_STATE,
   IPC_CHANNELS.RUST_SWITCHES_STATE,
   IPC_CHANNELS.NATIVE_HEALTH,
   IPC_CHANNELS.ENGINE_ASSETS_ORIGIN,
@@ -926,9 +930,13 @@ function assertIpcArguments(channel, args = []) {
     return;
   }
   if (stringArgumentChannels.has(channel)) {
-    const [value] = args;
+    const [value, level] = args;
     if (typeof value !== "string" || value.length > 32_768) {
       throw new TypeError(`${channel} requires a bounded string argument.`);
+    }
+    /* Выдача ссылки на пакет: вторым — слово уровня очереди (`apps/desktop/src/grant-pacer.js`: frame, choice, press, background); чужое слово главный процесс читает как «выбор», но не строку не пускаем. */
+    if (channel === IPC_CHANNELS.CLOUD_DOWNLOAD_GRANT && args.length > 1 && (args.length > 2 || typeof level !== "string" || level.length > 16)) {
+      throw new TypeError(`${channel} accepts a modID and one short level word.`);
     }
     return;
   }

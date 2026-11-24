@@ -14,14 +14,15 @@
  * Распаковка чужого архива — операция, в которой ошибаются: путь вида
  * `../../Windows/System32` внутри zip и есть классический zip slip. Здесь
  * каждая запись проверяется до записи на диск: только относительные пути,
- * никаких `..`, никаких абсолютных и буквенных дисков, никаких ссылок, и
- * жёсткие пределы на число файлов и на распакованный размер.
+ * никаких `..`, никаких абсолютных и буквенных дисков, никаких ссылок, никаких
+ * потоков NTFS и имён устройств, и жёсткие пределы на число файлов и на распакованный размер.
  */
 
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import unzipper from "unzipper";
+import { nameSegmentProblem } from "@modovik/pack-intake/entry-path";
 
 /** Расширения, которые распаковываются. `.oiv` внутри — тот же zip. */
 export const PACK_ARCHIVE_EXTENSIONS = Object.freeze([".zip", ".oiv"]);
@@ -57,6 +58,9 @@ export function safeArchiveEntry(name) {
   /* Служебное дерево macOS и мусор Windows в наборах не нужны никому. */
   if (parts[0] === "__MACOSX" || parts.at(-1) === "desktop.ini") return null;
   if (parts.some((part) => part.length > 200)) return null;
+  /* Имя, которое Windows понимает иначе, чем написано (поток NTFS, хвостовая точка, имя устройства, знаки направления), — тоже
+     пропуск: одно правило на установку и распаковку (`mod-targets/file-names.js`). */
+  if (parts.some((part) => nameSegmentProblem(part) !== null)) return null;
   return parts.join("/");
 }
 
