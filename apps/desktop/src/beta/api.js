@@ -1,10 +1,12 @@
 // apps/desktop/src/beta/api.js
 // Клиент HTTP-API бета-доступа: подпись запросов DPoP, поправка часов по 401,
-// разбор ответов bind/unlock в вердикт («стереть», «остановиться», «не знаем»).
+// разбор ответов bind/unlock в вердикт («доступ отозван», «остановиться», «не знаем»).
 //
-// Вердикт «стереть» принимается только с подписью сервера (ключ лицензии, вшит в сборку),
+// Ни один вердикт ничего не стирает (решение владельца 23.11.2026): отзыв доступа — это окно
+// и выход. Отзыв принимается только с подписью сервера (ключ лицензии, вшит в сборку),
 // привязанной к этому самому запросу: кто просил (ключ устройства), какой запрос (jti),
-// что в нём было (сумма тела). Ответ без такой подписи — «не знаем»: файлы остаются.
+// каким методом и куда, что в нём было (сумма тела). Ответ без такой подписи — «не знаем»:
+// лаунчер работает по кэшу ключа, как при сбое сети.
 
 import crypto from "node:crypto";
 import { createDpopProof, dpopTarget, jwkThumbprint } from "./dpop.js";
@@ -13,8 +15,8 @@ export const API_PREFIX = "/api/v1/beta/";
 
 const frozenTable = (pairs) => Object.freeze(Object.fromEntries(pairs));
 
-// Код сервера → причина самоудаления (ответ 403).
-export const SELF_DESTRUCT_CODES = frozenTable([
+// Код сервера → причина «доступ отозван» (ответ 403 с подписью сервера): окно и выход, файлы остаются.
+export const REVOKING_CODES = frozenTable([
   ["BETA_ACTIVATION_REVOKED", "server_revoked"],
   ["BETA_DEVICE_MISMATCH", "server_device_mismatch"],
   ["BETA_MACHINE_MISMATCH", "server_machine_mismatch"],
@@ -23,7 +25,7 @@ export const SELF_DESTRUCT_CODES = frozenTable([
   ["BETA_ACTIVATION_REPLACED", "server_replaced"],
 ]);
 
-// Код сервера → причина остановки без стирания (ответ 403 или 404).
+// Код сервера → причина остановки с просьбой поставить заново (ответ 403 или 404).
 export const BLOCKING_CODES = frozenTable([
   ["BETA_ACTIVATION_UNKNOWN", "unknown_activation"],
   ["BETA_BIND_INVALID", "bind_invalid"],
@@ -32,7 +34,7 @@ export const BLOCKING_CODES = frozenTable([
 export const VERDICTS_HEADER = "astral-beta-verdicts";
 export const VERDICTS_VERSION = "2";
 
-// Подпись вердикта «стереть»: base64url(JSON) + «.» + подпись Ed25519 ключом лицензии над текстом
+// Подпись вердикта «доступ отозван»: base64url(JSON) + «.» + подпись Ed25519 ключом лицензии над текстом
 // «метка + первая часть». Метка отделяет эту подпись от подписи самой лицензии: одно за другое не выдать.
 export const VERDICT_SIGNATURE_HEADER = "astral-beta-verdict-sig";
 export const VERDICT_TOKEN_TYPE = "astral-beta-verdict";
@@ -101,7 +103,7 @@ const transientReason = (status) => STATUS_REASONS.get(status) ?? (status >= 500
 
 // Вердикты по таблицам кодов: (статусы, таблица, вид).
 const CODE_RULES = [
-  [[403], SELF_DESTRUCT_CODES, "destroy"],
+  [[403], REVOKING_CODES, "revoked"],
   [[403, 404], BLOCKING_CODES, "blocked"],
 ];
 
@@ -143,9 +145,9 @@ function signedVerdictClaims(token, rawKey) {
   }
 }
 
-// «Стереть» доказано: подпись сервера стоит на этом коде и на этом самом запросе —
+// Отзыв доказан: подпись сервера стоит на этом коде и на этом самом запросе —
 // кто просил (jkt), какой запрос (jti), каким методом и куда (htm, htu), что в нём было (bh).
-function eraseIsProven(response, code) {
+function revocationIsProven(response, code) {
   const sent = SENT_REQUESTS.get(response);
   if (!sent || sent.bodyHash === null) return false;
 
@@ -172,8 +174,8 @@ export async function verdictOf(response) {
     // Только свои записи таблицы: код вроде «toString» не должен найти унаследованное свойство.
     if (!statuses.includes(status) || typeof code !== "string" || !Object.hasOwn(table, code)) continue;
     const reason = table[code];
-    // Ответ без подписи сервера не доказывает его решения: это «не знаем», файлы остаются.
-    if (kind === "destroy" && !eraseIsProven(response, code)) {
+    // Ответ без подписи сервера не доказывает его решения: это «не знаем», доступ не отзывается.
+    if (kind === "revoked" && !revocationIsProven(response, code)) {
       return { kind: "transient", reason: "unverified", status, code };
     }
     return { kind, reason, code };
@@ -234,7 +236,7 @@ class BetaApiClient {
     this.#origin = options.origin;
     this.#getKey = options.getKey;
     this.#fetchImpl = options.fetchImpl;
-    // Открытый ключ лицензии (32 байта): без него подписанный вердикт не проверить, и «стереть» не принимается.
+    // Открытый ключ лицензии (32 байта): без него подписанный вердикт не проверить, и отзыв доступа не принимается.
     this.#verdictKey = options.verdictKey;
     this.#now = given("now");
     this.#userAgent = given("userAgent");

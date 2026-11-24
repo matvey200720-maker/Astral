@@ -7,26 +7,28 @@
 // в шесть часов и после пробуждения, подписывает запросы обновителя и отдаёт ключ для
 // расшифровки интерфейса.
 //
-// Главное правило: стирает только достоверный вердикт. Любой сбой самой проверки (нет
-// сети, 5xx/429, чужой ответ, занятый файл, молчащее хранилище, нечитаемый компьютер,
-// идёт обновление) — это «повторить» или окно-ошибка, файлы остаются.
+// Главное правило: лаунчер ничего не стирает — ни себя, ни свои данные (решение владельца
+// 23.11.2026). Отзыв доступа и несовпадение установки с компьютером — это остановка: окно
+// «доступ закрыт» и выход, файлы остаются. Отзыв от сервера принимается только с его подписью
+// на этот самый запрос (api.js); ответ без подписи и любой сбой самой проверки (нет сети,
+// 5xx/429, чужой ответ, занятый файл, молчащее хранилище, нечитаемый компьютер, идёт
+// обновление) — это «повторить» или работа по кэшу ключа.
 
 import { win32 as win } from "node:path";
-import { tmpdir as systemTmpdir } from "node:os";
 import systemFsp from "node:fs/promises";
 
-import { createBetaApi, verdictOf, SELF_DESTRUCT_CODES } from "./api.js";
-import * as eraser from "./self-destruct.js";
-import { betaText, destroyDialogText, pickBetaLanguage, supportCode } from "./messages.js";
-import { DEFAULT_BRANCH, branchOfRoot, siblingRootsOf } from "./branches.js";
+import { createBetaApi, verdictOf } from "./api.js";
+import { resolveLayout } from "./layout.js";
+import { betaText, pickBetaLanguage, revokedDialogText, supportCode } from "./messages.js";
+import { DEFAULT_BRANCH, branchOfRoot } from "./branches.js";
 import { BETA_PRODUCT_NAME, readBetaBuildConfig } from "./build-config.js";
 import { generateDeviceKey, validDeviceKey } from "./dpop.js";
 import { verifyLicense } from "./license.js";
-import { machineHash, readMachineGuid, readRegistryString } from "./machine.js";
+import { machineHash, readMachineGuid } from "./machine.js";
 import { createVault } from "./vault.js";
 import { scanPakOffThread } from "./pak-scan.js";
 import { loadBetaWebBundle } from "./web-bundle.js";
-import { createPakDecryptor as pakDecryptor } from "@modovik/beta-pak";
+import { createPakDecryptor as pakDecryptor, pakOpensWith } from "@modovik/beta-pak";
 
 export { BETA_PRODUCT_NAME };
 export const BETA_RECHECK_MS = 21600000;
@@ -38,10 +40,9 @@ const LICENSE_INVALID_EXTRA_PAUSES = [2800, 4200];
 // Секрет привязки после удачной привязки стирается с повторами (его могла держать антивирусная программа).
 const BIND_REMOVE_PAUSES = [200, 600];
 const CLOCK_BACK_TOLERANCE_MS = 5 * 60 * 1000;
-// Единственный выключатель стирания. false — отзыв доступа и несовпадения только останавливают лаунчер (окно и выход),
-// а файлы установки остаются. Тексты окна (messages.js, ключи destroy*) обещают удаление: менять вместе с этой строкой.
-export const SELF_ERASE_ENABLED = true;
 const UPDATE_MARKERS = ["app.new", "app.old", "beta.new", "beta.old"];
+// Метка «не знаем» для ответа «доступ есть» с ключом, которым интерфейс не открывается.
+const UNPROVEN_KEY = "pak_key_unproven";
 
 // Ключи текста окна-ошибки и окна «повторить» по причине.
 const ERROR_TEXT = Object.fromEntries([
@@ -60,6 +61,8 @@ const ERROR_TEXT = Object.fromEntries([
 const SUPPORT_CODE_REASONS = new Set(["device_key_missing", "device_key_unreadable", "license_missing"]);
 const RETRY_TEXT = Object.fromEntries([
   ["network", ["offlineTitle", "offlineBody"]],
+  // Сервер ответил отказом в доступе, но его подписи на ответе нет: не «нет связи» и не «доступ отозван».
+  ["unverified", ["blockedTitle", "serverUnverified"]],
   ["proof", ["blockedTitle", "proofRejected"]],
   ["storage", ["blockedTitle", "storageUnavailable"]],
   ["machine", ["blockedTitle", "machineUnreadable"]],
@@ -78,8 +81,10 @@ function stripLicense(text) {
   return text.replace(/^\uFEFF/, "").trim();
 }
 
-function safeActivationId(id) {
-  return typeof id === "string" && /^[0-9a-f-]+$/.test(id) ? id : null;
+// Какое окно «повторить» показать, когда сервер не дал ответа, которому можно верить.
+function retryReasonOf(verdict) {
+  if (verdict.reason === "proof" || verdict.reason === "unverified") return verdict.reason;
+  return "network";
 }
 
 function decodePakKey(text) {
@@ -106,22 +111,20 @@ export function createBetaGuard(overrides = {}) {
   const platform = option("platform", () => process.platform);
   const env = option("env", () => process.env);
   const now = option("now", () => Date.now);
-  const tmpdir = option("tmpdir", () => systemTmpdir());
   const readBuildConfig = option("readBuildConfig", () => readBetaBuildConfig);
   const readGuid = option("readMachineGuid", () => readMachineGuid);
-  const readRegistry = option("readRegistryString", () => readRegistryString);
   const createApi = option("createApi", () => createBetaApi);
   const fetchImpl = option("fetchImpl", () => (...args) => fetch(...args));
-  const { spawn } = overrides;
+  // Процессов сторож не запускает и ничего не стирает: ни запуска программ, ни реестра, ни временных сценариев у него нет.
   const setTimer = option("setInterval", () => setInterval);
   const clearTimer = option("clearInterval", () => clearInterval);
   const sleep = option("sleep", () => (ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   const loadBundle = option("loadBundle", () => (opts) => loadBetaWebBundle({ ...opts, scan: scanPakOffThread }));
-  const selfErase = option("selfErase", () => SELF_ERASE_ENABLED);
+  const checkPakKey = option("checkPakKey", () => pakOpensWith);
 
   let buildConfig = null;
   let state = null;
-  let destroying = false;
+  let stopping = false; // доступ закрыт: окно показано или показывается, новых запросов не принимаем
   let rechecking = false;
   let timer = null;
   let resumeHandler = null;
@@ -196,6 +199,26 @@ export function createBetaGuard(overrides = {}) {
     for (const window of windows) destroyQuietly(window);
   }
 
+  // Пока окно «доступ закрыт» на экране, выход приложения отложен. Окна лаунчера к этому мигу уже закрыты, а закрытие
+  // последнего окна само просит выход (main.js, window-all-closed): без задержки процесс завершился бы раньше, чем
+  // человек увидит причину, и лаунчер просто исчез бы. Возвращает функцию, которая снимает задержку.
+  function holdQuit() {
+    const app = session.electron.app;
+    const hold = (event) => event?.preventDefault?.();
+    try {
+      app.on?.("before-quit", hold);
+    } catch {
+      return () => {};
+    }
+    return () => {
+      try {
+        app.removeListener?.("before-quit", hold);
+      } catch {
+        // подписки могло не быть
+      }
+    };
+  }
+
   function clearTimers() {
     if (timer) clearTimer(timer);
     timer = null;
@@ -222,12 +245,12 @@ export function createBetaGuard(overrides = {}) {
       now,
       userAgent,
       headersTimeoutMs: SERVER_HEADERS_TIMEOUT_MS,
-      // Тем же ключом, что и лицензия, сервер подписывает вердикт «стереть»: без его подписи лаунчер не стирает.
+      // Тем же ключом, что и лицензия, сервер подписывает отзыв доступа: без его подписи отзыв не принимается.
       verdictKey: buildConfig?.licensePublicKey,
     });
   }
 
-  // Папки, которые охранник читает у Electron на каждом проходе (запуск, перепроверка, стирание).
+  // Папки, которые охранник читает у Electron на каждом проходе (запуск, перепроверка).
   function appPaths() {
     const app = session.electron.app;
     const asked = [["userDataPath", "userData"], ["appDataPath", "appData"]];
@@ -239,62 +262,44 @@ export function createBetaGuard(overrides = {}) {
     return { activation_id: ctx.activationId, machine: ctx.machine, app_version: ctx.appVersion };
   }
 
+  // Открывает ли ключ интерфейс на диске: "fits" — да; "wrong" — файл на вид цел, но этим ключом не открывается;
+  // "unknown" — файл не прочитать (занят, пропал, обрезан). Читается только начало файла.
+  async function pakKeyFit(pakFile, key) {
+    try {
+      return (await checkPakKey(pakFile, key)) ? "fits" : "wrong";
+    } catch {
+      return "unknown";
+    }
+  }
+
   function logTransient(verdict) {
+    if (verdict.code === UNPROVEN_KEY) {
+      log("warn", "сервер прислал ключ интерфейса, которым интерфейс не открывается: ответ не принят, кэш ключа не тронут");
+      return;
+    }
     if (verdict.reason === "unverified") {
-      log("warn", `ответ велит стереть (${verdict.code}), но подписи сервера на нём нет: ничего не стираем`);
+      log("warn", `сервер ответил отказом в доступе (${verdict.code}), но его подписи на ответе нет: доступ не отзываем`);
       return;
     }
     const label = verdict.status ? `${verdict.reason} ${verdict.status}` : verdict.reason;
     log("info", `сервер недоступен (${label})`);
   }
 
-  // --- самоудаление -------------------------------------------------------
-  const SERVER_VERDICTS = new Set(Object.values(SELF_DESTRUCT_CODES));
-
-  async function findSiblingLicenses(ctx) {
-    const kept = [];
-    for (const root of siblingRootsOf(ctx.layout.root)) {
-      const sibling = eraser.resolveSiblingLayout(root);
-      if (sibling) {
-        try {
-          const text = stripLicense(await fs.readFile(sibling.licenseFile, "utf8"));
-          const check = verifyLicense(text, buildConfig.licensePublicKey);
-          if (check.ok && check.claims.activationId === ctx.activationId) kept.push(sibling.root);
-        } catch {
-          // чужой, битый, занятый или отсутствующий — не трогаем
-        }
-      }
-    }
-    return kept;
-  }
-
-  function accessFilesToRemove(ctx, siblings) {
-    const aid = safeActivationId(ctx.activationId);
-    const ofActivation = aid
-      ? [`beta-device.${aid}.bin`, `beta-cache.${aid}.bin`].map((name) => win.join(ctx.userDataPath, name))
-      : [];
-    const ofLegacy = (ctx.legacyDirs ?? []).flatMap((dir) =>
-      ["beta-device.bin", "beta-cache.bin"].map((name) => win.join(dir, name)));
-    const ofInstalls = [ctx.layout.root, ...siblings].flatMap((root) => {
-      const layout = root === ctx.layout.root ? ctx.layout : eraser.resolveSiblingLayout(root);
-      return layout ? [layout.pakFile, layout.licenseFile, layout.bindFile] : [];
-    });
-    return [...ofActivation, ...ofLegacy, ...ofInstalls];
-  }
-
-  async function selfDestruct(reason, ctx) {
-    if (destroying) return { ok: false, reason };
-    destroying = true;
-    log("warn", `самоудаление: ${reason}`);
+  // --- доступ закрыт ------------------------------------------------------
+  // Отзыв доступа (подписанный сервером) или установка не от этого компьютера: окно с причиной и выход.
+  // Ничего не стирается: ни установка, ни данные, ни ключи. Следующий запуск снова спросит сервер.
+  async function stopRevoked(reason, ctx) {
+    if (stopping) return { ok: false, reason };
+    stopping = true;
+    log("warn", `доступ закрыт: ${reason}`);
     clearTimers();
     state = null;
 
+    // Порядок важен: сначала задержка выхода, потом закрытие окон (интерфейс больше не работает), потом окно с причиной.
+    const releaseQuit = holdQuit();
     closeWindows();
 
-    if (selfErase) await eraseInstallation(reason, ctx);
-    else log("warn", "стирание выключено в сборке: файлы установки остаются");
-
-    const text = destroyDialogText(session.lang, reason, ctx.serial ?? "");
+    const text = revokedDialogText(session.lang, reason, ctx.serial ?? "");
     await showDialog({
       type: "warning",
       title: text.title,
@@ -306,47 +311,9 @@ export function createBetaGuard(overrides = {}) {
       noLink: true,
     });
 
-    eraser.killProcessTree({ platform, spawn, env });
-    session.electron.app.exit(0);
+    releaseQuit();
+    session.electron.app.exit(0); // exit, не quit: событие before-quit он не шлёт
     return { ok: false, reason };
-  }
-
-  // Само стирание: файлы доступа сразу, папки установки, ярлыки и запись «Приложения» — отложенным сценарием.
-  async function eraseInstallation(reason, ctx) {
-    let siblings = [];
-    if (SERVER_VERDICTS.has(reason)) {
-      siblings = await findSiblingLicenses(ctx);
-    }
-
-    try {
-      const removal = await eraser.removeAccessFiles(accessFilesToRemove(ctx, siblings), { fsImpl: fs });
-      if (removal.failed.length) log("warn", "файлы доступа не стёрлись", JSON.stringify(removal.failed));
-
-      const plan = await eraser.planRemoval({
-        exePath: ctx.layout.exe,
-        userDataPath: ctx.userDataPath,
-        appDataPath: ctx.appDataPath,
-        localAppDataPath: env.LOCALAPPDATA,
-        startMenuDir: ctx.appDataPath
-          ? win.join(ctx.appDataPath, "Microsoft", "Windows", "Start Menu", "Programs")
-          : undefined,
-        desktopDir: session.electron.app.getPath("desktop"),
-        siblingRoots: siblings,
-        fsImpl: fs,
-        readShortcut: (file) => session.electron.shell?.readShortcutLink?.(file),
-        readRegistry: (key, name) => readRegistry(key, name, { platform, env, tmpdir, fsImpl: fs }),
-      });
-      plan.skipped.forEach((skip) => log("info", `самоудаление пропустило ${skip.target}`, skip.why));
-
-      const schedule = await eraser.scheduleRemoval(plan, { platform, spawn, fsImpl: fs, env, tmpdir });
-      const planDetail = JSON.stringify({ directories: plan.directories, files: plan.files, registry: plan.registryKeys });
-      const [level, message] = schedule.scheduled
-        ? ["info", "стирание запланировано"]
-        : ["warn", `стирание не запланировано: ${schedule.reason}`];
-      log(level, message, planDetail);
-    } catch (error) {
-      log("error", "самоудаление споткнулось", error?.stack ?? textOf(error));
-    }
   }
 
   // --- кэш ключа ----------------------------------------------------------
@@ -472,7 +439,7 @@ export function createBetaGuard(overrides = {}) {
   }
 
   // --- одна попытка проверки ----------------------------------------------
-  // Исход: { active }, { cache }, { destroy }, { stop }, { retry }.
+  // Исход: { active }, { cache }, { revoked }, { stop }, { retry }. Ни один исход ничего не стирает.
   async function attempt(ctx) {
     // лицензия с перечитываниями: после каждой неудачи, кроме последней, пауза
     let license = null;
@@ -508,12 +475,12 @@ export function createBetaGuard(overrides = {}) {
       if (licenseErr.kind === "unreadable") return { retry: "license" };
       const updating = await hasUpdateMarker(ctx.layout.root);
       if (updating) return { retry: "license" };
-      // Файла нет: без него лаунчер всё равно не стартует, а стирать здесь нечего защищать (антивирус, чистильщик,
-      // недоделанная установка) — остановка без стирания и просьба поставить заново. Подпись не сходится — по-прежнему стираем.
+      // Файла нет (антивирус, чистильщик, недоделанная установка) — остановка и просьба поставить заново.
+      // Подпись не сходится — окно «файлы доступа повреждены» и выход; сами файлы остаются.
       if (licenseErr.kind === "missing") {
         return { stop: "license_missing", detail: "нет файла лицензии (beta/license), перечитан три раза, обновления нет" };
       }
-      return { destroy: "license_invalid" };
+      return { revoked: "license_invalid" };
     }
 
     ctx.activationId = license.activationId;
@@ -525,7 +492,7 @@ export function createBetaGuard(overrides = {}) {
     const guid = await readGuid({ platform, env });
     if (!guid) return { retry: "machine" };
     ctx.machine = machineHash(guid);
-    if (ctx.machine !== license.machineHash) return { destroy: "machine_mismatch" };
+    if (ctx.machine !== license.machineHash) return { revoked: "machine_mismatch" };
 
     // секрет привязки читаем первым: от него зависит, можно ли заводить ключ устройства
     let bindSecret = "";
@@ -537,7 +504,6 @@ export function createBetaGuard(overrides = {}) {
     if (bindSecret && !/^[A-Za-z0-9_-]{16,128}$/.test(bindSecret)) return { stop: "bind_invalid" };
 
     const device = await obtainDeviceKey(ctx, Boolean(bindSecret));
-    if (device.destroy) return { destroy: device.destroy };
     if (device.stop) return { stop: device.stop, detail: device.detail };
     if (device.retry) return { retry: device.retry };
     ctx.deviceKey = device.key;
@@ -554,22 +520,34 @@ export function createBetaGuard(overrides = {}) {
     if (bindSecret) body.bind_secret = bindSecret;
     const verdict = await api.launcher(bindSecret ? "bind" : "unlock", body);
 
-    if (verdict.kind === "destroy" && verdict.reason === "server_bind_conflict" && device.fresh) {
+    if (verdict.kind === "revoked" && verdict.reason === "server_bind_conflict" && device.fresh) {
       // Привязка уже сделана другим ключом, а своего у нас нет (потерян после привязки, секрет остался в папке): ключ, который мы
-      // только что завели, пустой. Стирать нечего защищать: убираем его и остаток секрета и останавливаемся без стирания.
+      // только что завели, пустой. Убираем его и остаток секрета и останавливаемся с просьбой поставить заново.
       await device.vault.remove();
       await blankBindSecret(ctx);
       return { stop: "device_key_missing", detail: "сервер ответил, что установка уже привязана другим ключом, а своего ключа нет; новый ключ убран, секрет привязки обнулён" };
     }
-    if (verdict.kind === "destroy") return { destroy: verdict.reason };
+    if (verdict.kind === "revoked") return { revoked: verdict.reason };
     if (verdict.kind === "blocked") return { stop: verdict.reason };
     if (verdict.kind === "transient") {
       logTransient(verdict);
       if (cache) return { cache, verdict };
-      return { retry: verdict.reason === "proof" ? "proof" : "network" };
+      return { retry: retryReasonOf(verdict) };
     }
 
     // kind === "ok"
+    // Ключ интерфейса в ответе — ещё не доказательство, что отвечал наш сервер: у ответа «доступ есть» подписи нет.
+    // Доказательство — сам интерфейс: наш ключ его открывает. Ключ, которым он не открывается, в кэш не идёт.
+    if ((await pakKeyFit(ctx.layout.pakFile, verdict.pakKey)) === "wrong") {
+      const cachedKey = cache ? decodePakKey(cache.pakKey) : null;
+      if (cachedKey && (await pakKeyFit(ctx.layout.pakFile, cachedKey)) === "fits") {
+        // Прежний ключ интерфейс открывает, значит файл цел, а не тот — ответ: работаем по кэшу, как без связи.
+        logTransient({ code: UNPROVEN_KEY });
+        return { cache };
+      }
+      // Сравнить не с чем: повреждён сам интерфейс либо ответ чужой. Кэш и секрет привязки не трогаем.
+      return { stop: "web", detail: "ключ из ответа сервера не открывает интерфейс, годного ключа в кэше нет; кэш не записан" };
+    }
     await writeCache(ctx, verdict);
     if (bindSecret) await removeBindSecret(ctx);
     log("info", "доступ подтверждён сервером");
@@ -656,7 +634,7 @@ export function createBetaGuard(overrides = {}) {
         activate(ctx, result);
         return { ok: true, active: true };
       }
-      if (outcome.destroy) return selfDestruct(outcome.destroy, ctx);
+      if (outcome.revoked) return stopRevoked(outcome.revoked, ctx);
       if (outcome.stop) return blockAndExit(outcome.stop, ctx, outcome.detail ?? "");
 
       const choice = await showDialog(retryDialog(outcome.retry));
@@ -688,7 +666,7 @@ export function createBetaGuard(overrides = {}) {
     const refused = gates.find(([, passes]) => !passes());
     if (refused) return blockAndExit(refused[0]);
 
-    const layout = eraser.resolveLayout(app.getPath("exe"));
+    const layout = resolveLayout(app.getPath("exe"));
     if (!layout) return blockAndExit("layout");
 
     session.product = (branchOfRoot(layout.root) ?? DEFAULT_BRANCH).product;
@@ -697,7 +675,6 @@ export function createBetaGuard(overrides = {}) {
       appVersion: app.getVersion?.() ?? "",
       sleep,
     });
-    ctx.legacyDirs = legacyDirsOf(ctx);
     return runCheck(ctx);
   }
 
@@ -706,7 +683,7 @@ export function createBetaGuard(overrides = {}) {
   }
 
   async function recheck() {
-    if (!state || destroying || rechecking) return;
+    if (!state || stopping || rechecking) return;
     rechecking = true;
     try {
       const ctx = Object.assign(
@@ -716,13 +693,19 @@ export function createBetaGuard(overrides = {}) {
         ]),
         appPaths(),
       );
-      ctx.legacyDirs = legacyDirsOf(ctx);
       ctx.cacheVault = vaultAt(win.join(ctx.userDataPath, `beta-cache.${ctx.activationId}.bin`));
       const api = apiFor(ctx.apiOrigin, ctx.deviceKey, ctx.appVersion);
-      const verdict = await api.launcher("unlock", launcherBody(ctx));
+      let verdict = await api.launcher("unlock", launcherBody(ctx));
 
-      if (verdict.kind === "destroy") {
-        await selfDestruct(verdict.reason, ctx);
+      // Интерфейс открыт и работает на нынешнем ключе. Другой ключ принимаем, только если он тоже его открывает;
+      // иначе ответу верить нечем — это «не знаем»: ни состояние, ни кэш не меняются.
+      if (verdict.kind === "ok" && state && !verdict.pakKey.equals(state.pakKey)) {
+        if ((await pakKeyFit(ctx.layout.pakFile, verdict.pakKey)) !== "fits")
+          verdict = { kind: "transient", reason: "unverified", status: 200, code: UNPROVEN_KEY };
+      }
+
+      if (verdict.kind === "revoked") {
+        await stopRevoked(verdict.reason, ctx);
         return;
       }
       if (verdict.kind === "blocked") {
@@ -731,8 +714,9 @@ export function createBetaGuard(overrides = {}) {
       }
       if (verdict.kind === "transient") {
         logTransient(verdict);
-        if (now() < state.expiresAt) return;
-        const choice = await showDialog(retryDialog(verdict.reason === "proof" ? "proof" : "network"));
+        // пока ждали ответа, доступ мог закрыть подписанный отзыв на запросе обновителя: состояния уже нет
+        if (!state || now() < state.expiresAt) return;
+        const choice = await showDialog(retryDialog(retryReasonOf(verdict)));
         if (choice !== 0) {
           session.electron.app.exit(0);
           return;
@@ -764,24 +748,15 @@ export function createBetaGuard(overrides = {}) {
     ]);
   }
 
-  function selfDestructContext() {
-    const paths = appPaths();
-    return Object.assign(
-      Object.fromEntries(entriesOf(state, ["layout", "activationId", "serial"])),
-      paths,
-      { legacyDirs: legacyDirsOf(paths) },
-    );
-  }
-
   async function signedFetch(pathOrUrl, init = {}) {
-    if (!state || destroying) throw new Error("beta guard is not active");
+    if (!state || stopping) throw new Error("beta guard is not active");
     const api = apiFor(state.apiOrigin, state.deviceKey, state.version);
     const response = await api.send(pathOrUrl, init);
     if (response.ok) return response;
     const verdict = await verdictOf(response);
-    // пока первый ответ уже запускает самоудаление, второй застаёт пустое состояние — игнорируем
-    if (verdict.kind !== "destroy" || !state || destroying) return response;
-    void selfDestruct(verdict.reason, selfDestructContext());
+    // пока первый ответ уже закрывает доступ, второй застаёт пустое состояние — игнорируем
+    if (verdict.kind !== "revoked" || !state || stopping) return response;
+    void stopRevoked(verdict.reason, { serial: state.serial });
     return response;
   }
 

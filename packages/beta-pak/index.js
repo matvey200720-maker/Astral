@@ -560,6 +560,36 @@ export async function scanPak(filePath, key, { hashPlain = false, batch = DEFAUL
   }
 }
 
+/**
+ * Открывает ли этот ключ pak: проверяется только первый чанк (до 1 МиБ), остальной файл не читается.
+ * true — открыл; false — заголовок на месте, но этим ключом первый чанк не открывается: ключ не тот либо сам
+ * чанк повреждён или оборван (такой интерфейс не откроется никаким ключом).
+ * Файл не прочитать, он короче заголовка или заголовок не тот — исключение: про ключ это ничего не говорит.
+ */
+export async function pakOpensWith(filePath, key) {
+  requireKey(key);
+  const handle = await fs.promises.open(filePath, "r");
+  try {
+    const { size } = await handle.stat();
+    ensure(size >= PAK_HEADER_SIZE + PAK_TAG_SIZE, MESSAGES.pakHeader);
+    const header = Buffer.alloc(PAK_HEADER_SIZE);
+    await readFully(handle, header, PAK_HEADER_SIZE, 0);
+    checkPakHeader(header);
+
+    const length = Math.min(SEALED_CHUNK_SIZE, size - PAK_HEADER_SIZE);
+    const sealed = Buffer.allocUnsafe(length);
+    await readFully(handle, sealed, length, PAK_HEADER_SIZE);
+    try {
+      unsealChunk(key, header, 0, PAK_HEADER_SIZE + length === size, sealed);
+      return true;
+    } catch {
+      return false;
+    }
+  } finally {
+    await handle.close();
+  }
+}
+
 // Кэш открытых чанков: вытесняется давнее по обращению, но последний добавленный остаётся всегда.
 class ChunkCache {
   #limit;

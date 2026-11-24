@@ -272,9 +272,19 @@ export async function verifyAstralLayers(verifier, archives, { target = null, si
   }
   const update = archives.find((item) => item.relativePath.toLowerCase() === "update/update.rpf");
   if (!update) return;
-  const entries = Object.entries(target?.archives?.["update/update.rpf"]?.entries || {})
-    .filter(([entry, entryState]) => /^x64\/astral\/[^/]+\.rpf\//i.test(entry) && entryState?.layers?.at(-1) && entryState.layers.at(-1).action !== "delete")
-    .map(([entry]) => entry.toLowerCase());
+  const claimed = Object.entries(target?.archives?.["update/update.rpf"]?.entries || {}).filter(
+    ([entry, entryState]) => /^x64\/astral\/[^/]+\.rpf\//i.test(entry) && entryState?.layers?.at(-1) && entryState.layers.at(-1).action !== "delete",
+  );
+  /* Модель-пустышка, которую сторож не положил в контейнер (`resource-composition.js`: `modelSafetyGuard`, «вещь остаётся штатной»), числится в
+     состоянии, но в собранном архиве её нет по замыслу: игре её читать незачем. Решение сторожа записано сборкой на слое (`guardDropped`) при том же
+     обходе, что строит список операций, — проверка читает его оттуда, а не спрашивает сторож второй раз (23.11.2026, ганпак автора со спрятанным
+     обвесом на пути RP отказывал «стоит в состоянии, а в контейнере нет»). Запись, которую сторож не снимал, по-прежнему обязана быть в контейнере. */
+  /* Исключение: контейнер, у которого сторож снял ВСЕ записи, остаётся в проверке целиком — регистрация (`content.xml`) строится до сборки и объявила бы
+     контейнер, которого в архиве нет, а такой контейнер игра Legacy не переживает. */
+  const containerOf = (entry) => /^x64\/astral\/([^/]+\.rpf)\//i.exec(entry)?.[1]?.toLowerCase();
+  const kept = (entryState) => entryState.layers.at(-1).guardDropped !== true;
+  const alive = new Set(claimed.filter(([, entryState]) => kept(entryState)).map(([entry]) => containerOf(entry)));
+  const entries = claimed.filter(([entry, entryState]) => kept(entryState) || !alive.has(containerOf(entry))).map(([entry]) => entry.toLowerCase());
   if (!entries.length) return;
   await tracedStep("проверка контейнеров Astral", () => verifier({ file: update.sourcePath || update.livePath, entries, signal }));
 }

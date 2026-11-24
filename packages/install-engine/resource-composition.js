@@ -735,9 +735,16 @@ async function composeArchiveResourceOnce({
       continue;
     }
     /* Модель без группы шейдеров («пустышка» автора) игра Legacy не переживает: сторож приложения (`modelSafetyGuard`) запись не кладёт, вещь остаётся штатной (`model-safety-guard.js`). */
+    /* Решение сторожа остаётся на слое (`guardDropped`): проверка контейнеров (`own-dlcs.js: verifyAstralLayers`) не требует запись, которую сборка
+       сама не положила (23.11.2026: ганпак автора со «спрятанным» обвесом отказывал «стоит в состоянии, а в контейнере нет»). Решение пишется при
+       КАЖДОМ обходе слоёв, и когда сборка берётся из кэша: список операций, а с ним и отпечаток сборки, строится здесь же. */
+    delete top.guardDropped;
     if (typeof modelSafetyGuard === "function" && top.action !== "delete" && MODEL_ENTRY.test(entry)) {
       const verdict = await modelSafetyGuard({ entry, source: assertAbsoluteInside(paths.payloads, top.cachePath), sha256: top.sha256, modId: top.modId });
-      if (verdict?.drop) continue;
+      if (verdict?.drop) {
+        top.guardDropped = true;
+        continue;
+      }
     }
     /* Запись, которую пишет только Astral (`isAstralOwnEntry`: папка слоя в
        update.rpf и свои пакеты дополнения), ложится поверх того, что застала

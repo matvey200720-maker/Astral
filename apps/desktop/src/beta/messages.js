@@ -1,13 +1,14 @@
 // apps/desktop/src/beta/messages.js
-// Тексты системных окон беты (доступ закрыт/нужен интернет/самоудаление) на шести языках.
+// Тексты системных окон беты (доступ закрыт/нужен интернет/доступ отозван) на шести языках.
 // Модуль без побочных действий и без импортов: только данные и чистые функции подстановки.
+// Лаунчер ничего не стирает (решение владельца 23.11.2026): ни один текст не обещает удаления файлов.
 
 export const BETA_LANGUAGES = Object.freeze("ru uk en de pl fr".split(" "));
 
 // Таблица «ключ текста → текст на каждом языке», языки в порядке BETA_LANGUAGES.
 // Ключи — в порядке, заданном описанием модуля.
 const TEXT_TABLE = [
-  ["destroyTitle", [
+  ["revokedTitle", [
     "Доступ к Astral закрыт",
     "Доступ до Astral закрито",
     "Access to Astral has ended",
@@ -15,37 +16,37 @@ const TEXT_TABLE = [
     "Dostęp do Astral został zakończony",
     "L’accès à Astral est fermé",
   ]],
-  ["destroyRevoked", [
-    "Ваш доступ к Astral отозван. Лаунчер удалит свои файлы с этого компьютера. Игра GTA V и ваши моды не затрагиваются.",
-    "Ваш доступ до Astral відкликано. Лаунчер видалить свої файли з цього комп’ютера. Гра GTA V і ваші моди не зачіпаються.",
-    "Your access to Astral has been revoked. The launcher will remove its own files from this computer. GTA V and your mods are not touched.",
-    "Dein Zugang zu Astral wurde widerrufen. Der Launcher entfernt seine eigenen Dateien von diesem Computer. GTA V und deine Mods bleiben unberührt.",
-    "Twój dostęp do Astral został cofnięty. Launcher usunie własne pliki z tego komputera. GTA V i Twoje mody pozostaną nietknięte.",
-    "Votre accès à Astral a été révoqué. Le launcher supprimera ses fichiers de cet ordinateur. GTA V et vos mods ne sont pas touchés.",
+  ["revokedAccess", [
+    "Ваш доступ к Astral отозван, лаунчер больше не запускается. Игра GTA V и ваши моды не затрагиваются. Если это ошибка — напишите в поддержку Astral в Discord.",
+    "Ваш доступ до Astral відкликано, лаунчер більше не запускається. Гра GTA V і ваші моди не зачіпаються. Якщо це помилка — напишіть у підтримку Astral у Discord.",
+    "Your access to Astral has been revoked, and the launcher will no longer start. GTA V and your mods are not touched. If this is a mistake, contact Astral support on Discord.",
+    "Dein Zugang zu Astral wurde widerrufen, der Launcher startet nicht mehr. GTA V und deine Mods bleiben unberührt. Falls das ein Irrtum ist, wende dich auf Discord an den Astral-Support.",
+    "Twój dostęp do Astral został cofnięty, launcher nie będzie się już uruchamiał. GTA V i Twoje mody pozostaną nietknięte. Jeśli to pomyłka, napisz do pomocy technicznej Astral na Discordzie.",
+    "Votre accès à Astral a été révoqué, le launcher ne démarre plus. GTA V et vos mods ne sont pas touchés. S’il s’agit d’une erreur, contactez le support Astral sur Discord.",
   ]],
-  ["destroyCopy", [
-    "Эта копия лаунчера не привязана к вашему компьютеру или к вашей учётной записи Windows. Лаунчер удалит свои файлы. Игра GTA V и ваши моды не затрагиваются. Чтобы продолжить, установите Astral заново. Если не получается — напишите в поддержку.",
-    "Ця копія лаунчера не прив’язана до вашого комп’ютера або до вашого облікового запису Windows. Лаунчер видалить свої файли. Гра GTA V і ваші моди не зачіпаються. Щоб продовжити, встановіть Astral заново. Якщо не виходить — напишіть у підтримку.",
-    "This copy of the launcher is not bound to your computer or your Windows account. The launcher will remove its own files. GTA V and your mods are not touched. To continue, install Astral again. If that does not work, contact support.",
-    "Diese Kopie des Launchers ist nicht an deinen Computer oder dein Windows-Konto gebunden. Der Launcher entfernt seine eigenen Dateien. GTA V und deine Mods bleiben unberührt. Um fortzufahren, installiere Astral erneut. Falls das nicht klappt, wende dich an den Support.",
-    "Ta kopia launchera nie jest powiązana z Twoim komputerem ani kontem Windows. Launcher usunie własne pliki. GTA V i Twoje mody pozostaną nietknięte. Aby kontynuować, zainstaluj Astral ponownie. Jeśli to nie pomoże, skontaktuj się z pomocą techniczną.",
-    "Cette copie du launcher n’est liée ni à votre ordinateur ni à votre compte Windows. Le launcher supprimera ses fichiers. GTA V et vos mods ne sont pas touchés. Pour continuer, réinstallez Astral. Si cela ne fonctionne pas, contactez le support.",
+  ["revokedCopy", [
+    "Эта копия лаунчера не привязана к вашему компьютеру или к вашей учётной записи Windows и не запустится. Игра GTA V и ваши моды не затрагиваются. Чтобы продолжить, установите Astral заново. Если не получается — напишите в поддержку.",
+    "Ця копія лаунчера не прив’язана до вашого комп’ютера або до вашого облікового запису Windows і не запуститься. Гра GTA V і ваші моди не зачіпаються. Щоб продовжити, встановіть Astral заново. Якщо не виходить — напишіть у підтримку.",
+    "This copy of the launcher is not bound to your computer or your Windows account and will not start. GTA V and your mods are not touched. To continue, install Astral again. If that does not work, contact support.",
+    "Diese Kopie des Launchers ist nicht an deinen Computer oder dein Windows-Konto gebunden und startet nicht. GTA V und deine Mods bleiben unberührt. Um fortzufahren, installiere Astral erneut. Falls das nicht klappt, wende dich an den Support.",
+    "Ta kopia launchera nie jest powiązana z Twoim komputerem ani kontem Windows i nie uruchomi się. GTA V i Twoje mody pozostaną nietknięte. Aby kontynuować, zainstaluj Astral ponownie. Jeśli to nie pomoże, skontaktuj się z pomocą techniczną.",
+    "Cette copie du launcher n’est liée ni à votre ordinateur ni à votre compte Windows et ne démarrera pas. GTA V et vos mods ne sont pas touchés. Pour continuer, réinstallez Astral. Si cela ne fonctionne pas, contactez le support.",
   ]],
-  ["destroyBroken", [
-    "Файлы доступа к Astral повреждены или изменены. Лаунчер удалит свои файлы. Игра GTA V и ваши моды не затрагиваются. Чтобы продолжить, установите Astral заново. Если не получается — напишите в поддержку.",
-    "Файли доступу до Astral пошкоджені або змінені. Лаунчер видалить свої файли. Гра GTA V і ваші моди не зачіпаються. Щоб продовжити, встановіть Astral заново. Якщо не виходить — напишіть у підтримку.",
-    "The Astral access files are damaged or have been changed. The launcher will remove its own files. GTA V and your mods are not touched. To continue, install Astral again. If that does not work, contact support.",
-    "Die Zugangsdateien von Astral sind beschädigt oder wurden verändert. Der Launcher entfernt seine eigenen Dateien. GTA V und deine Mods bleiben unberührt. Um fortzufahren, installiere Astral erneut. Falls das nicht klappt, wende dich an den Support.",
-    "Pliki dostępu do Astral są uszkodzone lub zostały zmienione. Launcher usunie własne pliki. GTA V i Twoje mody pozostaną nietknięte. Aby kontynuować, zainstaluj Astral ponownie. Jeśli to nie pomoże, skontaktuj się z pomocą techniczną.",
-    "Les fichiers d’accès à Astral sont endommagés ou ont été modifiés. Le launcher supprimera ses fichiers. GTA V et vos mods ne sont pas touchés. Pour continuer, réinstallez Astral. Si cela ne fonctionne pas, contactez le support.",
+  ["revokedBroken", [
+    "Файлы доступа к Astral повреждены или изменены, лаунчер не запустится. Игра GTA V и ваши моды не затрагиваются. Чтобы продолжить, установите Astral заново. Если не получается — напишите в поддержку.",
+    "Файли доступу до Astral пошкоджені або змінені, лаунчер не запуститься. Гра GTA V і ваші моди не зачіпаються. Щоб продовжити, встановіть Astral заново. Якщо не виходить — напишіть у підтримку.",
+    "The Astral access files are damaged or have been changed, so the launcher will not start. GTA V and your mods are not touched. To continue, install Astral again. If that does not work, contact support.",
+    "Die Zugangsdateien von Astral sind beschädigt oder wurden verändert, der Launcher startet nicht. GTA V und deine Mods bleiben unberührt. Um fortzufahren, installiere Astral erneut. Falls das nicht klappt, wende dich an den Support.",
+    "Pliki dostępu do Astral są uszkodzone lub zostały zmienione, launcher się nie uruchomi. GTA V i Twoje mody pozostaną nietknięte. Aby kontynuować, zainstaluj Astral ponownie. Jeśli to nie pomoże, skontaktuj się z pomocą techniczną.",
+    "Les fichiers d’accès à Astral sont endommagés ou ont été modifiés, le launcher ne démarrera pas. GTA V et vos mods ne sont pas touchés. Pour continuer, réinstallez Astral. Si cela ne fonctionne pas, contactez le support.",
   ]],
-  ["destroyShared", [
-    "Доступ к Astral отозван: аккаунт одновременно работал на двух компьютерах. Доступ личный. Лаунчер удалит свои файлы с этого компьютера; GTA V и моды не трогаются. Если это ошибка — напишите в поддержку Astral в Discord.",
-    "Доступ до Astral відкликано: акаунт одночасно працював на двох комп’ютерах. Доступ особистий. Лаунчер видалить свої файли з цього комп’ютера; GTA V і моди не зачіпаються. Якщо це помилка — напишіть у підтримку Astral у Discord.",
-    "Access to Astral revoked: this account was running on two computers at the same time. Access is personal. The launcher will remove its own files from this computer; GTA V and your mods are not touched. If this is a mistake, contact Astral support on Discord.",
-    "Zugang zu Astral widerrufen: Dein Konto lief gleichzeitig auf zwei Computern. Der Zugang ist persönlich. Der Launcher entfernt seine eigenen Dateien von diesem Computer; GTA V und deine Mods bleiben unberührt. Falls das ein Irrtum ist, wende dich auf Discord an den Astral-Support.",
-    "Dostęp do Astral cofnięty: konto działało jednocześnie na dwóch komputerach. Dostęp jest osobisty. Launcher usunie własne pliki z tego komputera; GTA V i Twoje mody pozostaną nietknięte. Jeśli to pomyłka, napisz do pomocy technicznej Astral na Discordzie.",
-    "Accès à Astral révoqué\u00A0: le compte fonctionnait en même temps sur deux ordinateurs. L’accès est personnel. Le launcher supprimera ses fichiers de cet ordinateur\u00A0; GTA V et les mods ne sont pas touchés. S’il s’agit d’une erreur, contactez le support Astral sur Discord.",
+  ["revokedShared", [
+    "Доступ к Astral отозван: аккаунт одновременно работал на двух компьютерах. Доступ личный. Лаунчер на этом компьютере больше не запускается; GTA V и моды не трогаются. Если это ошибка — напишите в поддержку Astral в Discord.",
+    "Доступ до Astral відкликано: акаунт одночасно працював на двох комп’ютерах. Доступ особистий. Лаунчер на цьому комп’ютері більше не запускається; GTA V і моди не зачіпаються. Якщо це помилка — напишіть у підтримку Astral у Discord.",
+    "Access to Astral revoked: this account was running on two computers at the same time. Access is personal. The launcher will no longer start on this computer; GTA V and your mods are not touched. If this is a mistake, contact Astral support on Discord.",
+    "Zugang zu Astral widerrufen: Dein Konto lief gleichzeitig auf zwei Computern. Der Zugang ist persönlich. Der Launcher startet auf diesem Computer nicht mehr; GTA V und deine Mods bleiben unberührt. Falls das ein Irrtum ist, wende dich auf Discord an den Astral-Support.",
+    "Dostęp do Astral cofnięty: konto działało jednocześnie na dwóch komputerach. Dostęp jest osobisty. Launcher na tym komputerze nie będzie się już uruchamiał; GTA V i Twoje mody pozostaną nietknięte. Jeśli to pomyłka, napisz do pomocy technicznej Astral na Discordzie.",
+    "Accès à Astral révoqué\u00A0: le compte fonctionnait en même temps sur deux ordinateurs. L’accès est personnel. Le launcher ne démarre plus sur cet ordinateur\u00A0; GTA V et les mods ne sont pas touchés. S’il s’agit d’une erreur, contactez le support Astral sur Discord.",
   ]],
   ["replacedTitle", [
     "Установка Astral заменена новой",
@@ -55,13 +56,13 @@ const TEXT_TABLE = [
     "Ta instalacja Astral została zastąpiona",
     "L’installation d’Astral a été remplacée",
   ]],
-  ["destroyReplaced", [
-    "Ваш доступ перенесён на новую установку — на этом или на другом компьютере. Эта копия лаунчера больше не действует и удалит свои файлы с этого компьютера; GTA V и моды не трогаются. Если новую установку ставили не вы — напишите в поддержку Astral в Discord.",
-    "Ваш доступ перенесено на нове встановлення — на цьому або на іншому комп’ютері. Ця копія лаунчера більше не діє й видалить свої файли з цього комп’ютера; GTA V і моди не зачіпаються. Якщо нове встановлення ставили не ви — напишіть у підтримку Astral у Discord.",
-    "Your access has moved to a newer installation, on this or another computer. This copy of the launcher is no longer valid and will remove its own files from this computer; GTA V and your mods are not touched. If you did not make that installation, contact Astral support on Discord.",
-    "Dein Zugang wurde auf eine neuere Installation übertragen – auf diesem oder einem anderen Computer. Diese Kopie des Launchers ist nicht mehr gültig und entfernt ihre eigenen Dateien von diesem Computer; GTA V und deine Mods bleiben unberührt. Wenn die neue Installation nicht von dir stammt, wende dich auf Discord an den Astral-Support.",
-    "Twój dostęp został przeniesiony na nowszą instalację — na tym lub innym komputerze. Ta kopia launchera jest już nieważna i usunie własne pliki z tego komputera; GTA V i Twoje mody pozostaną nietknięte. Jeśli nowa instalacja nie pochodzi od Ciebie, napisz do pomocy technicznej Astral na Discordzie.",
-    "Votre accès a été transféré vers une nouvelle installation, sur cet ordinateur ou sur un autre. Cette copie du launcher n’est plus valide et supprimera ses fichiers de cet ordinateur\u00A0; GTA V et les mods ne sont pas touchés. Si vous n’êtes pas à l’origine de la nouvelle installation, contactez le support Astral sur Discord.",
+  ["revokedReplaced", [
+    "Ваш доступ перенесён на новую установку — на этом или на другом компьютере. Эта копия лаунчера больше не действует и не запускается; GTA V и моды не трогаются. Если новую установку ставили не вы — напишите в поддержку Astral в Discord.",
+    "Ваш доступ перенесено на нове встановлення — на цьому або на іншому комп’ютері. Ця копія лаунчера більше не діє й не запускається; GTA V і моди не зачіпаються. Якщо нове встановлення ставили не ви — напишіть у підтримку Astral у Discord.",
+    "Your access has moved to a newer installation, on this or another computer. This copy of the launcher is no longer valid and will not start; GTA V and your mods are not touched. If you did not make that installation, contact Astral support on Discord.",
+    "Dein Zugang wurde auf eine neuere Installation übertragen – auf diesem oder einem anderen Computer. Diese Kopie des Launchers ist nicht mehr gültig und startet nicht mehr; GTA V und deine Mods bleiben unberührt. Wenn die neue Installation nicht von dir stammt, wende dich auf Discord an den Astral-Support.",
+    "Twój dostęp został przeniesiony na nowszą instalację — na tym lub innym komputerze. Ta kopia launchera jest już nieważna i nie będzie się uruchamiać; GTA V i Twoje mody pozostaną nietknięte. Jeśli nowa instalacja nie pochodzi od Ciebie, napisz do pomocy technicznej Astral na Discordzie.",
+    "Votre accès a été transféré vers une nouvelle installation, sur cet ordinateur ou sur un autre. Cette copie du launcher n’est plus valide et ne démarre plus\u00A0; GTA V et les mods ne sont pas touchés. Si vous n’êtes pas à l’origine de la nouvelle installation, contactez le support Astral sur Discord.",
   ]],
   ["reasonLine", [
     "Код причины для поддержки: {code}",
@@ -223,6 +224,14 @@ const TEXT_TABLE = [
     "Serwer nie przyjął podpisu żądania. Sprawdź, czy data i godzina w systemie Windows są prawidłowe, i spróbuj ponownie.",
     "Le serveur n’a pas accepté la signature de la requête. Vérifiez que la date et l’heure de Windows sont correctes, puis réessayez.",
   ]],
+  ["serverUnverified", [
+    "Сервер ответил, но подтвердить его ответ не удалось. {product} ничего не меняет на компьютере. Проверьте подключение к интернету, дату и время, отключите VPN или прокси и повторите. Если повторяется — напишите в поддержку.",
+    "Сервер відповів, але підтвердити його відповідь не вдалося. {product} нічого не змінює на комп’ютері. Перевірте підключення до інтернету, дату й час, вимкніть VPN або проксі й повторіть. Якщо повторюється — напишіть у підтримку.",
+    "The server answered, but its answer could not be verified. {product} changes nothing on this computer. Check your internet connection, date and time, turn off any VPN or proxy and try again. If it keeps happening, contact support.",
+    "Der Server hat geantwortet, aber seine Antwort ließ sich nicht bestätigen. {product} ändert nichts auf diesem Computer. Prüfe Internetverbindung, Datum und Uhrzeit, schalte VPN oder Proxy aus und versuche es erneut. Falls es wieder passiert, wende dich an den Support.",
+    "Serwer odpowiedział, ale jego odpowiedzi nie udało się potwierdzić. {product} niczego nie zmienia na komputerze. Sprawdź połączenie z internetem, datę i godzinę, wyłącz VPN lub proxy i spróbuj ponownie. Jeśli to się powtarza, skontaktuj się z pomocą techniczną.",
+    "Le serveur a répondu, mais sa réponse n’a pas pu être vérifiée. {product} ne modifie rien sur cet ordinateur. Vérifiez votre connexion Internet, la date et l’heure, désactivez tout VPN ou proxy et réessayez. Si cela se reproduit, contactez le support.",
+  ]],
 ];
 
 // Таблицы по языкам: столбец строки TEXT_TABLE → объект «ключ → шаблон».
@@ -261,16 +270,16 @@ export function betaText(language, key, params = {}) {
   return template.replace(SLOT, (_whole, slot) => printable(params[slot]));
 }
 
-// Причина самоудаления → ключ текста сообщения.
+// Причина «доступ закрыт» → ключ текста сообщения.
 const REASON_MESSAGE_KEY = {
-  server_revoked: "destroyRevoked",
-  server_account_shared: "destroyShared",
-  server_replaced: "destroyReplaced",
-  server_device_mismatch: "destroyCopy",
-  server_machine_mismatch: "destroyCopy",
-  server_bind_conflict: "destroyCopy",
-  machine_mismatch: "destroyCopy",
-  license_invalid: "destroyBroken",
+  server_revoked: "revokedAccess",
+  server_account_shared: "revokedShared",
+  server_replaced: "revokedReplaced",
+  server_device_mismatch: "revokedCopy",
+  server_machine_mismatch: "revokedCopy",
+  server_bind_conflict: "revokedCopy",
+  machine_mismatch: "revokedCopy",
+  license_invalid: "revokedBroken",
 };
 
 const joinCode = (reason, serial) => {
@@ -278,12 +287,13 @@ const joinCode = (reason, serial) => {
   return [String(reason), String(serial)].join(" · ");
 };
 
-// «Код причины для поддержки»: причина, после точки serial установки (его же показывают окна самоудаления).
+// «Код причины для поддержки»: причина, после точки serial установки (его же показывают окна «доступ закрыт»).
 export const supportCode = joinCode;
 
-export const destroyDialogText = (language, reason, serial = "") => {
-  const titleKey = reason === "server_replaced" ? "replacedTitle" : "destroyTitle";
-  const messageKey = REASON_MESSAGE_KEY[reason] ?? "destroyBroken";
+// Окно «доступ закрыт»: заголовок, причина словами, код причины для поддержки. Об удалении файлов — ни слова: его нет.
+export const revokedDialogText = (language, reason, serial = "") => {
+  const titleKey = reason === "server_replaced" ? "replacedTitle" : "revokedTitle";
+  const messageKey = REASON_MESSAGE_KEY[reason] ?? "revokedBroken";
   return {
     title: betaText(language, titleKey),
     message: betaText(language, messageKey),
