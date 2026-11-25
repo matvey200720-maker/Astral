@@ -2,6 +2,8 @@
 import { createRoot } from "react-dom/client";
 import { createElement, Suspense } from "react";
 import { importPart } from "./part-import.js";
+import { withoutCloudChoice } from "./cloud-sky-project.js";
+import { coverWeather } from "./cover-weather.js";
 import { BIG_MAP_COVER } from "@modovik/vector-map";
 import { paintWorkshopMatte, WORKSHOP_MATTE_LIGHT_BASE } from "@modovik/gfx/workshop-matte";
 import { fillCoverWith, pngBytes, rasterizeLayout } from "./rasterize-cover.js";
@@ -420,12 +422,17 @@ const skyQuarter = (sea, shoot) =>
 const skyFrame = async (cover, env) => {
   const project = JSON.parse(cover.state);
   const frame = await skyQuarter(env?.sea, (quarter, gameRoot) => quarter.skyQuarterFrame({ gameRoot, project, size: PART_SHOT }));
-  if (frame?.url) return pngFromDataUrl(frame.url);
+  if (frame?.url) {
+    const png = await pngFromDataUrl(frame.url);
+    /* Погода кадра — в ответ рядом с картинкой (`composeReply`): печь пишет её в журнал. */
+    return frame.weather ? { png, weather: frame.weather } : png;
+  }
   /* Игра дана, а квартал не снялся (движок не собран, секция не прочиталась): нарисованный город за кадр игры не выдаём — отказ с причиной,
      её видно в журнале печи. Без игры (плитки вне печи) — прежний кадр: день мода полосами над нарисованным городом. */
   if (env?.sea?.gameRoot) throw new Error(`квартал из игры под небом части не снят: ${frame?.reason || "сбой съёмки"}`);
   const { skyCover } = await gather("skyCover");
-  return pngFromDataUrl(await skyCover.skyCoverDay(project, PART_SHOT));
+  /* Шейдерное небо без выбора облаков автора: он нужен кадру квартала, а здесь сделал бы вид не нейтральным и стёр бы погоду автора. */
+  return pngFromDataUrl(await skyCover.skyCoverDay(withoutCloudChoice(project), PART_SHOT));
 };
 
 const skyExtras = async (state, env) => {
@@ -434,8 +441,11 @@ const skyExtras = async (state, env) => {
   const onQuarter = await skyQuarter(env?.sea, (quarter, gameRoot) => quarter.skyQuarterStills({ gameRoot, project, size: PART_SHOT }));
   /* Игра дана, а кадры квартала не сняты (нет архива неба или облаков, квартал не собрался): галерея нарисованным городом не подменяется — отказ с причиной (как у обложки, `skyFrame`). */
   if (!Array.isArray(onQuarter) && env?.sea?.gameRoot) throw new Error(`кадры квартала из игры под небом части не сняты: ${onQuarter?.reason || "сбой съёмки"}`);
-  const stills = Array.isArray(onQuarter) ? onQuarter : await sky.skyStills(project, PART_SHOT);
-  const { clip, clipError } = await guardedClip(() => sky.skyClip(project), 200);
+  /* Кадры без квартала и петля — шейдером: той же погоды, что обложка, и без выбора облаков автора (он нужен только кадру квартала). */
+  const shader = withoutCloudChoice(project);
+  const weather = coverWeather(project);
+  const stills = Array.isArray(onQuarter) ? onQuarter : await sky.skyStills(shader, PART_SHOT, undefined, weather);
+  const { clip, clipError } = await guardedClip(() => sky.skyClip(shader, { weather }), 200);
   return { stills, clip, ...when(clipError, { clipError }) };
 };
 
@@ -483,7 +493,7 @@ const minimapLayer = async (kit, env, state, options) => {
   const measure = typeof options === "function" ? options : options?.measure;
   const [width, height] = MINIMAP_SIZE;
   const radarSrc =
-    (env.radar && (await kit.radarField.radarFieldUrl(env.radar.bytes))) || "";
+    (env.radar && (await kit.radarField.radarFieldUrl(env.radar.bytes, env.spot || undefined))) || "";
   return withMounted(
     env.stage,
     MINIMAP_SIZE,
@@ -568,6 +578,7 @@ const composeReply = ({ drawn, loop, sky, work, imported }) =>
     { png: loop?.poster || (drawn instanceof Uint8Array ? drawn : drawn?.png || null) },
     when(drawn?.framed === true, { framed: true, note: drawn?.note }),
     when(drawn?.fxReason, { fxReason: drawn?.fxReason }),
+    when(drawn?.weather, { weather: drawn?.weather }),
     sky,
     loop?.clip ? { clip: loop.clip } : when(loop?.reason, { clipError: loop?.reason }),
     work || { work: null },
@@ -575,14 +586,14 @@ const composeReply = ({ drawn, loop, sky, work, imported }) =>
   );
 
 const ordinaryShot = async ({ request, files, radar, stage }) => {
-  const { partKind, palette, fxClip, clip } = request || {};
+  const { partKind, palette, state, fxClip, clip } = request || {};
   const name = request?.name || "";
-  const imported = await importPart(partKind, files, { name, palette, still: request?.still === true });
+  const imported = await importPart(partKind, files, { name, palette, state, still: request?.still === true });
   const cover = imported?.cover;
   const fx = request?.fx === true;
   if (fxClip) return { ...(await effectClip(cover, fx)), work: null };
 
-  const env = { stage, radar, fx, sea: request?.sea || null };
+  const env = { stage, radar, fx, sea: request?.sea || null, spot: request?.spot || null };
   const drawn = await paintCover(cover, env);
   const slot = cover?.slotId;
   const loops = clip !== false;
@@ -1316,6 +1327,8 @@ const replyExtras = (shot) => {
       note: String(shot.note || ""),
     }),
     when(shot.fxReason, { fxReason: String(shot.fxReason) }),
+    /* Погода кадра неба части (`sky-quarter-cover.js`): печь пишет её в журнал; главный процесс пропускает только названия погод игры. */
+    when(typeof shot.weather === "string" && shot.weather, { weather: shot.weather }),
   );
 };
 

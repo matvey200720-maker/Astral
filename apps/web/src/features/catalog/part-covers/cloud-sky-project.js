@@ -1,11 +1,11 @@
 // Чистые помощники кадра неба с облаками (без WebGL и окна — тесты читают их напрямую): проект неба из файлов таймцикла соседней части и доля облачных точек кадра.
-import { importCloudsFromMod, importSkyFromMod } from "@modovik/timecycle";
+import { createLook, importCloudsFromMod, importSkyFromMod } from "@modovik/timecycle";
 
 /** Облако — светлое и почти бесцветное (насыщенность ниже границы), небо — синее. */
 export const CLOUD_SATURATION = 0.2;
 export const CLOUD_LIGHT = 0.45;
 
-const textOf = (bytes) => new TextDecoder().decode(bytes);
+const textOf = (bytes) => (typeof bytes === "string" ? bytes : new TextDecoder().decode(bytes));
 
 /** Файлы таймцикла соседней части: `w_*.xml` — небо, `clouds.xml` и `cloudkeyframes.xml` — какие облака разрешены. */
 export function skyProjectOf(files, name = "") {
@@ -28,6 +28,16 @@ export function skyProjectOf(files, name = "") {
     sky: Boolean(sky?.project),
     clouds: Boolean(clouds?.project),
   };
+}
+
+/**
+ * Проект без выбора облаков автора (`look.clouds`): выбор нужен кадру квартала из игры, а шейдерному небу (петля, кадры без квартала, обложка без игры) он
+ * делает вид «не нейтральным», и `skySpec` (`SkyCover.jsx`) ушёл бы в ветку «ясный день эталона с видом», потеряв правки погоды автора. Выбора нет — тот же объект.
+ */
+export function withoutCloudChoice(project) {
+  const clouds = project?.look?.clouds;
+  if (!clouds || (clouds.types === null && clouds.template === null)) return project;
+  return { ...project, look: { ...project.look, clouds: createLook().clouds } };
 }
 
 /** Доля «облачных» точек RGBA-кадра (светлые и почти бесцветные). */

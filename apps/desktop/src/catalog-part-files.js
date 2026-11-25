@@ -15,7 +15,7 @@ const wholeName = (body) => new RegExp(`^${body}$`, "i");
 
 // Белый список имён файлов по видам части (то же, что у окна и у разбора обложек): [вид, шаблон].
 const KIND_PATTERNS = [
-  ["timecycle", wholeName(anyOf(raw`w_[a-z0-9_]+\.xml`, raw`timecycle_mods_\d+\.xml`, raw`visualsettings\.dat`))],
+  ["timecycle", wholeName(anyOf(raw`w_[a-z0-9_]+\.xml`, raw`clouds\.xml`, raw`cloudkeyframes\.xml`, raw`timecycle_mods_\d+\.xml`, raw`visualsettings\.dat`))],
   ["kill-effects", wholeName(anyOf(raw`timecycle_mods_\d+\.xml`, raw`visualsettings\.dat`))],
   ["minimap", wholeName(raw`minimap\.gfx`)],
   ["crosshair", wholeName(raw`hud_reticle\.gfx`)],

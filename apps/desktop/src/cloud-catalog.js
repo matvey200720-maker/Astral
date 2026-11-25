@@ -100,6 +100,37 @@ export async function readRememberedCatalogFile({ file, origin, mediaOrigin = ""
   }
 }
 
+/* Сколько подряд главный процесс собирает текст файла, не отдавая цикл событий: каталог на 12 000 карточек — 40 МБ, одним `JSON.stringify` это сотни миллисекунд тишины. */
+export const WRITE_SLICE_MS = 6;
+const yieldToLoop = () => new Promise((resolve) => setImmediate(resolve));
+
+/**
+ * Текст запомненного файла кусками: `JSON.stringify({ ...head, pages })` байт в байт, но страницы собираются по одной, а между кусками (не дольше `WRITE_SLICE_MS`) цикл событий свободен.
+ * `{ chunks, bytes }`: куски по порядку (их и пишет `writeFile`) и их общий вес в байтах.
+ */
+export async function stringifyRemembered(head, pages, sliceMs = WRITE_SLICE_MS) {
+  if (!Array.isArray(pages)) {
+    const text = JSON.stringify({ ...head, pages });
+    return { chunks: [text], bytes: Buffer.byteLength(text) };
+  }
+  /* `"pages":0}` отрезается с хвоста: остаётся начало объекта до списка страниц. */
+  const opening = JSON.stringify({ ...head, pages: 0 }).slice(0, -2);
+  const chunks = [`${opening}[`];
+  let bytes = Buffer.byteLength(chunks[0]);
+  let sliceStart = performance.now();
+  for (let at = 0; at < pages.length; at += 1) {
+    const piece = `${at ? "," : ""}${JSON.stringify(pages[at]) ?? "null"}`;
+    chunks.push(piece);
+    bytes += Buffer.byteLength(piece);
+    if (performance.now() - sliceStart >= sliceMs) {
+      await yieldToLoop();
+      sliceStart = performance.now();
+    }
+  }
+  chunks.push("]}");
+  return { chunks, bytes: bytes + 2 };
+}
+
 /**
  * Запомненный каталог: страницы `[{ cursor, payload }]` с адресом, откуда
  * они пришли. `read()` — каталог, заново проверенный, или `null`;
@@ -138,16 +169,18 @@ export function rememberedCatalog({
   }
 
   async function write({ contract, pages, account = "" }) {
-    const body = JSON.stringify({
-      format: FORMAT,
-      origin,
-      ...(contract === "v2" && { mediaOrigin }),
-      ...(account && { account }),
-      contract,
-      savedAt: new Date(now()).toISOString(),
+    const body = await stringifyRemembered(
+      {
+        format: FORMAT,
+        origin,
+        ...(contract === "v2" && { mediaOrigin }),
+        ...(account && { account }),
+        contract,
+        savedAt: new Date(now()).toISOString(),
+      },
       pages,
-    });
-    if (Buffer.byteLength(body) > MAX_REMEMBERED_BYTES) {
+    );
+    if (body.bytes > MAX_REMEMBERED_BYTES) {
       await forget();
       return false;
     }
@@ -156,7 +189,7 @@ export function rememberedCatalog({
        своё у каждой записи: две записи одного процесса не должны делить файл. */
     const temporary = `${file}.${process.pid}.${randomUUID()}.tmp`;
     try {
-      await fs.writeFile(temporary, body);
+      await fs.writeFile(temporary, body.chunks);
       await fs.rename(temporary, file);
     } catch (error) {
       await fs.rm(temporary, { force: true }).catch(() => {});

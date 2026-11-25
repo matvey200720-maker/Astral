@@ -1,12 +1,24 @@
 import { desktopClothingShooter } from "./clothing-shooter.js";
 import { desktopGunpackShooter } from "./gunpack-shooter.js";
-import { desktopPartShooter } from "./part-shooter.js";
+
+// Съёмщик частей редукса (`part-shooter.js` с белыми списками полей заявки) грузится по первой заявке печи, а не на старте.
+function desktopPartShooterOnCall(deps) {
+  let host = null;
+  let loading = null; // одно обещание на всех: две первые заявки разом получают одного хозяина
+  const open = () => (loading ??= import("./part-shooter.js").then(({ desktopPartShooter }) => (host = desktopPartShooter(deps))));
+  return {
+    render: async (request) => (host ?? (await open())).render(request),
+    // Пока хозяина нет, закрывать и мерить нечего: ни окна, ни заявок.
+    close: () => host?.close(),
+    stats: async () => (host ? host.stats() : { open: false, pid: null, info: null }),
+  };
+}
 
 // Службы в порядке создания и закрытия.
 const SERVICE_FACTORIES = [
   ["clothing", desktopClothingShooter],
   ["gunpack", desktopGunpackShooter],
-  ["part", desktopPartShooter],
+  ["part", desktopPartShooterOnCall],
 ];
 
 // Вид запроса -> имя службы; любой другой вид (и запрос без вида) снимает служба одежды.

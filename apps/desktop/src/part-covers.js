@@ -60,7 +60,7 @@ export const PART_COVER_FILES = Object.freeze(
     ["tracers", /^(core\.ypt|tracer\.dds|tracer-work\.code|ptfx_bullet_tr?acer[a-z0-9_]*\.dds)$/i],
     ["large-map-zoom", /^mapzoomdata\.meta$/i],
     ["sounds", /\.(awc|rel)$/i],
-    ["timecycle", /^(w_[a-z0-9_]+\.xml|timecycle_mods_\d+\.xml|visualsettings\.dat)$/i],
+    ["timecycle", /^(w_[a-z0-9_]+\.xml|clouds\.xml|cloudkeyframes\.xml|timecycle_mods_\d+\.xml|visualsettings\.dat)$/i],
     ["kill-effects", /^(timecycle_mods_\d+\.xml|visualsettings\.dat)$/i],
     ["minimap", /^minimap\.gfx$/i],
     ["minimap-position", /^frontend\.xml$/i],
@@ -1560,13 +1560,17 @@ async function cloudsRoute(job) {
 }
 
 async function windowRoute(job) {
-  const { kind, own, name, render, radar, palette, fxFrames, fxClip, onFramed, onFxNote } = job;
+  const { kind, own, name, render, radar, palette, state, spot, fxFrames, fxClip, onFramed, onFxNote } = job;
   const radarPiece = kind === "minimap" && radar.length ? radarFile(radar) : null;
   if (typeof render !== "function") return null;
   /* Таймцикл снимается на квартале из игры (`sky-quarter-cover.js`), вода — на море из игры: окну нужна папка игры. Без неё — прежний кадр. */
   const gameRoot = SEA_KINDS.has(kind) ? (job.sheets || sheetSourceFromEnv())?.root || "" : "";
   const flags = [
     ["palette", kind === "minimap" && palette === "author", "author"],
+    /* Состояние кадра мини-карты (здоровье и броня) из заявки: окно рисует его вместо демо-значений. */
+    ["state", kind === "minimap" && state !== null && typeof state === "object", state],
+    /* Место радара на карте мира из заявки: окно рисует радар автора на нём, а не на прежнем куске карты. */
+    ["spot", kind === "minimap" && spot !== null && typeof spot === "object", spot],
     ["fx", fxFrames, true],
     ["fxClip", fxClip, true],
     ["sea", Boolean(gameRoot), { gameRoot }],
@@ -1738,10 +1742,12 @@ async function draw({
   onFxNote = null,
   radar = [],
   palette = "game",
+  state = null,
+  spot = null,
   exact = false,
 }) {
   const job = { kind, render, files, name, sheets, hallCover, hint, onGallery, onStaged };
-  Object.assign(job, { fxFrames, fxClip, fxView, onFramed, onFxNote, radar, palette, exact });
+  Object.assign(job, { fxFrames, fxClip, fxView, onFramed, onFxNote, radar, palette, state, spot, exact });
   for (const route of ROUTES) {
     const outcome = route.applies(job) ? await route.handle(job) : NEXT;
     if (outcome !== NEXT) return outcome;

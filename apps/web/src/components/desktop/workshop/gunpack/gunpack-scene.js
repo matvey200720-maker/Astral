@@ -40,6 +40,7 @@ import {
   reflectLayerShader,
 } from "../gun/lighting.js";
 import { NEUTRAL_LOOK } from "./frame-light.js";
+import { seeThroughOf } from "./see-through.js";
 import { tr } from "../../../../locales/ui.js";
 import { trKey } from "../gun/gun-copy.js";
 import {
@@ -305,7 +306,7 @@ function buildDataTexture(image, colorSpace, renderer) {
 }
 
 // Текстуры одной загрузки: пара «ключ + цветовой режим» строится один раз.
-class TextureBank {
+export class TextureBank {
   constructor(images, renderer) {
     this.renderer = renderer;
     this.byKey = images.reduce(
@@ -313,6 +314,12 @@ class TextureBank {
       new Map(),
     );
     this.made = new Map();
+  }
+
+  // Лист без прозрачных точек. Части без листа не считаются: у стёкол прозрачность может идти из материала.
+  opaqueSheet(key) {
+    const image = key ? this.byKey.get(key) : undefined;
+    return Boolean(image) && !seeThroughOf(image);
   }
 
   take(key, role) {
@@ -355,7 +362,12 @@ const MATERIAL_LAYERS = [
     material.normalMap = normalMap;
     material.normalScale.set(1, -1);
   },
-  (material, job) => ALPHA_RULES.get(job.spec.alphaMode)?.(material),
+  (material, job) => {
+    const { alphaMode } = job.spec;
+    // «blend» с непрозрачным листом смешивать нечего: без записи глубины видно часть, нарисованную последней (белая вывернутая оболочка поверх ствола).
+    if (alphaMode === "blend" && job.bank.opaqueSheet(job.textures.diffuse)) return;
+    ALPHA_RULES.get(alphaMode)?.(material);
+  },
   (material, job) => {
     if (!job.spec.emissive) return;
     material.emissive.set(0xffffff);
@@ -366,7 +378,7 @@ const MATERIAL_LAYERS = [
   },
 ];
 
-function buildMaterial(source, bank, finish) {
+export function buildMaterial(source, bank, finish) {
   const spec = source.material;
   const { textures } = spec;
   const map = bank.take(textures.diffuse, "diffuse");

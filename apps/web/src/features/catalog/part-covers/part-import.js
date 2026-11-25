@@ -8,7 +8,7 @@ import { partKindOf } from "../pack-contents.js";
 const RETICLE_FILE = /^hud_reticle\.gfx$/i;
 
 const NAME_PATTERNS = [
-  ["timecycle", /^(w_[a-z0-9_]+\.xml|timecycle_mods_\d+\.xml|visualsettings\.dat)$/i],
+  ["timecycle", /^(w_[a-z0-9_]+\.xml|clouds\.xml|cloudkeyframes\.xml|timecycle_mods_\d+\.xml|visualsettings\.dat)$/i],
   ["kill-effects", /^(timecycle_mods_\d+\.xml|visualsettings\.dat)$/i],
   ["minimap", /^minimap\.gfx$/i],
   ["crosshair", RETICLE_FILE],
@@ -55,6 +55,7 @@ const loadable = {
   minimapContract: () => import("@modovik/minimap-contract"),
   minimapLayout: () => import("../../../components/desktop/workshop/minimap-layout.js"),
   modReticle: () => import("@modovik/reticle-pack/mod-reticle"),
+  cloudSky: () => import("./cloud-sky-project.js"),
   climb: () => import("./climb-part.js"),
   assets: () => import("./part-assets.js"),
   soundKit: () => import("./sound-kit-part.js"),
@@ -128,9 +129,10 @@ const BRANCHES = {
   async timecycle({ files, name }) {
     const skyFiles = files.filter((file) => fileName(file).toLowerCase().startsWith("w_"));
     if (skyFiles.length) {
-      const { importSkyFromMod } = await loadable.timecycle();
-      const sky = importSkyFromMod(asTextFiles(skyFiles), { name });
-      if (sky?.project) return pack(slotCover("timecycle", sky.project), job("sky", { project: sky.project }));
+      /* Небо части — погода автора и его облака (`clouds.xml`, `cloudkeyframes.xml` лежат в самой части): тот же помощник, что у части «Облака». */
+      const { skyProjectOf } = await loadable.cloudSky();
+      const own = skyProjectOf(files, name);
+      if (own.sky && own.project) return pack(slotCover("timecycle", own.project), job("sky", { project: own.project }));
     }
     const project = await killProjectOf(files, name);
     if (!project) return null;
@@ -198,10 +200,10 @@ const BRANCHES = {
     return weapons.length ? pack(null, job("sound-kit", { weapons, lost })) : pack(null, null, { refused: "sounds", lost });
   },
 
-  async minimap({ files, name, palette }) {
+  async minimap({ files, name, palette, state }) {
     const { minimapProjectFromGfx } = await loadable.minimapGfx();
     const gfx = files[0].bytes;
-    const { project, inspected, look } = minimapProjectFromGfx(gfx, { name, palette });
+    const { project, inspected, look } = minimapProjectFromGfx(gfx, { name, palette, state });
     // Полосы рисуются так, как лежат в файле; без цвета полос цифры из файла не прочитать — прячем их.
     const drawn = look ? { ...project, minimapLook: look } : withoutDigits(project);
     return pack({ ...slotCover("minimap", drawn), gfx }, job("minimap", { project, lost: inspected.lost }));
@@ -251,11 +253,11 @@ const BRANCHES = {
 const WORKSHOP_TILE_KINDS = new Set(["msl-zones"]);
 
 export const importPart = async (kind, files = [], options = {}) => {
-  const { name = "", sound = null, palette = "game", still = false } = options;
+  const { name = "", sound = null, palette = "game", state = null, still = false } = options;
   if (WORKSHOP_TILE_KINDS.has(kind)) return pack(slotCover(kind, null), null);
   const pattern = PART_FILES[kind];
   if (!pattern) return null;
   const mine = files.filter((file) => pattern.test(fileName(file)));
   const branch = mine.length ? BRANCHES[kind] : null;
-  return branch ? branch({ files: mine, name, sound, palette, still }) : null;
+  return branch ? branch({ files: mine, name, sound, palette, state, still }) : null;
 };

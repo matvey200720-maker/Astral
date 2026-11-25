@@ -67,11 +67,17 @@ function isTwin(hull, other) {
   });
 }
 
+// Раздутая копия: больше двойника по всем осям. Нужна для кружевных стволов: объём тонкой сетки мал против ящика, и доля не доходит до HULL_RATIO.
+function isInflated(hull, other) {
+  return AXES.every((axis) => hull.size[axis] > other.size[axis]);
+}
+
 export function invertedHulls(meshes) {
   const shapes = listOrEmpty(meshes, "Части модели").map(footprint);
   const hulls = [];
   shapes.forEach((shape, index) => {
-    if (shape.ratio < HULL_RATIO && shapes.some((other, j) => j !== index && isTwin(shape, other))) hulls.push(index);
+    const outline = (other, j) => j !== index && isTwin(shape, other) && (shape.ratio < HULL_RATIO || isInflated(shape, other));
+    if (shape.ratio < 0 && shapes.some(outline)) hulls.push(index);
   });
   return hulls;
 }

@@ -67,8 +67,8 @@ export function radarFieldCanvas(bytes, spot = RADAR_SPOT) {
   return paintChecked(decodePackGeometry(bytes), spot);
 }
 
-export async function radarFieldUrl(bytes) {
-  const canvas = bytes?.length ? radarFieldCanvas(bytes) : null;
+export async function radarFieldUrl(bytes, spot = RADAR_SPOT) {
+  const canvas = bytes?.length ? radarFieldCanvas(bytes, spot) : null;
   if (!canvas) return "";
   const blob = await canvasBlob(canvas);
   return URL.createObjectURL(blob);

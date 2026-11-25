@@ -516,6 +516,8 @@ function noteSuccess(trail) {
   if (!trail.tracked) return;
   const spent = Math.max(0, trail.clock() - trail.startedAt);
   const paths = routeSummary(trail.session);
+  /* Пустое чтение под словом install не пишется. */
+  if (trail.name === "install-profile" && !paths && spent < 50) return;
   const message = `${trail.name}: готово за ${secondsText(spent)} с${paths ? ` · ${paths}` : ""}`;
   trail.log.record({ level: "info", source: "install", message });
   noteWorkers(trail);

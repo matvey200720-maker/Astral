@@ -315,12 +315,14 @@ export async function skyCycleStrip(project, spec = SKY_CYCLE) {
  * внутри вызова (кадр кодируется или снимается сразу), а `await` внутри
  * `onFrame` держит цикл: кодировщик видео не обгоняется кадрами.
  */
-export async function skyHourFrames(project, { hours, size = FRAME }, onFrame) {
+export async function skyHourFrames(project, { hours, size = FRAME, weather: named = null }, onFrame) {
   const { createSkyRendererAsync } =
     await import("../../../components/desktop/workshop/sky-renderer.js");
-  const { project: own, weather } = skySpec(
+  const { project: own, weather: chosen } = skySpec(
     project ? parseProject(project) : null,
   );
+  /* Погоду может назвать вызывающий (петля части ложится на ту же погоду, что обложка); без названия — выбор `skySpec`. */
+  const weather = named || chosen;
   const frame = document.createElement("canvas");
   const renderer = await createSkyRendererAsync(frame);
   try {

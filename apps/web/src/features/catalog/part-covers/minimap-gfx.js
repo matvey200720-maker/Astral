@@ -30,6 +30,20 @@ import { readMinimapScript } from "./minimap-script.js";
 
 export const MINIMAP_LOOK_VERSION = 1;
 export const MINIMAP_LOOK_STATE = Object.freeze({ health: 75, armor: 0 });
+
+/*
+ * Состояние кадра обложки: демо `MINIMAP_LOOK_STATE`, а у стороны, которую назвала заявка (`domain.minimap.state`), — её число по шкале 0…100.
+ * Не число и не объект — прежнее значение стороны; лишние поля в вид не попадают.
+ */
+export function lookStateOf(named) {
+  const state = { ...MINIMAP_LOOK_STATE };
+  if (!named || typeof named !== "object") return state;
+  for (const side of Object.keys(state)) {
+    const value = named[side];
+    if (typeof value === "number" && Number.isFinite(value)) state[side] = Math.min(100, Math.max(0, Math.round(value)));
+  }
+  return state;
+}
 export const EDITOR_VITALS = Object.freeze({
   health: MINIMAP_GAME_COLORS.health,
   armor: MINIMAP_GAME_COLORS.armor,
@@ -57,8 +71,9 @@ const SAY = {
 const tagCodes = (names) => new Set(names.split(" ").map((key) => TAG[key]));
 const SHAPE_CODES = tagCodes("DEFINE_SHAPE DEFINE_SHAPE2 DEFINE_SHAPE3 DEFINE_SHAPE4");
 const PLACE_CODES = tagCodes("PLACE_OBJECT PLACE_OBJECT2 PLACE_OBJECT3");
-const GAME_FONTS = new Set(
-  "$Font2 $Font2_cond $Font2_cond_NOT_GAMERNAME $Font2_cond_MPTimer $FixedWidthNumbers $gtaCash $Font5".split(
+/* Шрифты цифр, которые игра рисует сама (список читают и тесты). */
+export const GAME_FONTS = new Set(
+  "$Font2 $Font2_cond $Font2_cond_NOT_GAMERNAME $Font2_cond_MPTimer $FixedWidthNumbers $GTAVLeaderboard $gtaCash $Font5".split(
     " ",
   ),
 );
@@ -607,7 +622,7 @@ function buildLook(rig) {
   return {
     look: {
       version: MINIMAP_LOOK_VERSION,
-      state: { ...MINIMAP_LOOK_STATE },
+      state: rig.lookState,
       layers,
       bars,
       digits: texts.map((t) => t.digit).filter(Boolean),
@@ -733,7 +748,7 @@ const emptyReport = () => ({
 });
 
 // Всё, что нужно этапам: фильм, контейнер и код мода.
-const openRig = (gfx, author) => {
+const openRig = (gfx, author, lookState = { ...MINIMAP_LOOK_STATE }) => {
   const atlas = openAtlas(gfx);
   const hub = locateHub(atlas, gfx);
   if (!hub) return null;
@@ -746,6 +761,7 @@ const openRig = (gfx, author) => {
     hub,
     script,
     author,
+    lookState,
     barsId,
     outer,
     paintFor: (spec) => (author && spec?.hud ? undefined : spec?.rgb),
@@ -789,7 +805,7 @@ export const animationOf = (gfx, id, depth = 0) => openAtlas(gfx).motion(id, dep
 
 export function inspectMinimapGfx(bytes, options = {}) {
   const author = options.palette === "author";
-  const rig = openRig(readGfx(bytes), author);
+  const rig = openRig(readGfx(bytes), author, lookStateOf(options.state));
   if (!rig) return emptyReport();
   const { fx, lost, look } = readBody(rig);
   const numbers = readNumbers(rig, look);
@@ -833,7 +849,7 @@ const showDigits = (draft, nums) => {
 
 export function minimapProjectFromGfx(bytes, opts = {}) {
   const name = opts.name;
-  const inspected = inspectMinimapGfx(bytes, { palette: opts.palette });
+  const inspected = inspectMinimapGfx(bytes, { palette: opts.palette, state: opts.state });
   const base = createDefaultMinimapLayout();
   const effects = Object.assign(
     {},

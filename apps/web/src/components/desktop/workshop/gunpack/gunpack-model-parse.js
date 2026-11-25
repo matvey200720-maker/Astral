@@ -2,6 +2,7 @@ import { isBlackSheet } from "@modovik/gunpack/crude-model";
 import { inflateSync } from "fflate";
 import { environmentName } from "@modovik/gunpack/shader-colour";
 import { weaponModel } from "@modovik/gunpack/model";
+import { seeThroughOf } from "./see-through.js";
 
 const SLOT_ROLES = "diffuse normal specular emissive".split(" ");
 
@@ -85,6 +86,13 @@ function describeMesh(mesh, shelf) {
   };
 }
 
+// Листы частей «blend» помечаются здесь, в потоке разбора: сцена на главном потоке пиксели не перебирает.
+function markSeeThrough(meshes, images) {
+  const blended = new Set(meshes.filter((mesh) => mesh.material.alphaMode === "blend").map((mesh) => mesh.material.textures.diffuse));
+  images.filter((image) => blended.has(image.key)).forEach(seeThroughOf);
+  return images;
+}
+
 export const parseWeaponModel = ({ files, maxTexture }) => {
   const options = { inflateRaw: (bytes) => inflateSync(bytes), maxTexture };
   const loaded = weaponModel(files, options);
@@ -94,5 +102,5 @@ export const parseWeaponModel = ({ files, maxTexture }) => {
     return kept;
   }, []);
 
-  return { model: loaded.model, meshes, images: shelf.images, bounds: loaded.drawable.bounds };
+  return { model: loaded.model, meshes, images: markSeeThrough(meshes, shelf.images), bounds: loaded.drawable.bounds };
 };

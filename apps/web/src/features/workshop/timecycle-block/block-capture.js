@@ -69,14 +69,25 @@ export async function readBlockSkyBase(gameRoot, { strict = false } = {}) {
 }
 
 /** Небо на час по прочитанной основе: ясный день игрока с правками работы, его облака. Без WebGL. */
-export function blockSkyAt({ bases, baseDocument, fromGame }, { project = null, hour = BLOCK_COVER_HOUR } = {}) {
-  const document = previewDocument(baseDocument || referenceKeyframeDocument(PREVIEW_WEATHER), project);
+export function blockSkyAt({ bases, baseDocument, fromGame }, { project = null, hour = BLOCK_COVER_HOUR, weather = PREVIEW_WEATHER, strict = false } = {}) {
+  /* Погода кадра (обложки частей редукса): не ясная по умолчанию, а та, что тронул автор — основа берётся из игры на ту же погоду, правки проекта ложатся на неё. */
+  let own = weather === PREVIEW_WEATHER ? baseDocument : null;
+  if (!own && bases?.timecycles?.[weather]?.xml) {
+    try {
+      own = parseKeyframeXml(bases.timecycles[weather].xml);
+    } catch {
+      own = null;
+    }
+  }
+  /* Печь обложек (`strict`): основы этой погоды из игры нет или она не разобралась — отказ, а не эталон лаунчера под видом неба игры. */
+  if (strict && !own) throw new Error(`небо игры не прочитано: в основе нет разобранной погоды ${weather}`);
+  const document = previewDocument(own || referenceKeyframeDocument(weather), project, weather);
   const look = normalizeLook(project?.look);
-  const preview = previewProject(document, look);
+  const preview = previewProject(document, look, weather);
   return {
-    state: previewState(document, preview, hour),
+    state: previewState(document, preview, hour, weather),
     clouds: previewClouds(parseCloudBases(bases), look, null, hour),
-    fromGame,
+    fromGame: weather === PREVIEW_WEATHER ? fromGame : Boolean(own) && fromGame,
   };
 }
 
@@ -85,8 +96,8 @@ export function blockSkyAt({ bases, baseDocument, fromGame }, { project = null, 
  * правками работы, облака игрока и признак «небо из игры». Без WebGL —
  * годится для тестов и для ключа кадра.
  */
-export async function blockCoverSky({ gameRoot, project = null, hour = BLOCK_COVER_HOUR }) {
-  return blockSkyAt(await readBlockSkyBase(gameRoot), { project, hour });
+export async function blockCoverSky({ gameRoot, project = null, hour = BLOCK_COVER_HOUR, weather = PREVIEW_WEATHER }) {
+  return blockSkyAt(await readBlockSkyBase(gameRoot), { project, hour, weather });
 }
 
 /**
@@ -97,6 +108,8 @@ export async function captureBlockFrame({
   gameRoot,
   project = null,
   hour = BLOCK_COVER_HOUR,
+  /* Погода кадра: по умолчанию ясный день игрока; обложка части редукса просит ту, что изменил автор (`coverWeather`, `sky-quarter-cover.js`). */
+  weather = PREVIEW_WEATHER,
   size = BLOCK_COVER_SIZE,
   pose = BLOCK_COVER_POSE,
   frame = BLOCK_COVER_FRAME,
@@ -118,7 +131,7 @@ export async function captureBlockFrame({
   if (!gameRoot) return { reason: "no-game" };
   let sky;
   try {
-    sky = strictSources ? blockSkyAt(await readBlockSkyBase(gameRoot, { strict: true }), { project, hour }) : await blockCoverSky({ gameRoot, project, hour });
+    sky = strictSources ? blockSkyAt(await readBlockSkyBase(gameRoot, { strict: true }), { project, hour, weather, strict: true }) : await blockCoverSky({ gameRoot, project, hour, weather });
   } catch (error) {
     return { reason: sourceReason("небо", error) };
   }

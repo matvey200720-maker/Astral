@@ -11,7 +11,10 @@
  */
 import { parseProject } from "@modovik/timecycle";
 import { captureBlockFrame } from "../../workshop/timecycle-block/block-capture.js";
+import { coverWeather } from "./cover-weather.js";
 import { SKY_STILLS } from "./sky-clip-plan.js";
+
+export { coverWeather };
 
 /** Час обложки: яркий день — тот же, что у плитки мастерской. */
 export const QUARTER_COVER_HOUR = 14;
@@ -34,8 +37,10 @@ export async function skyQuarterFrame({ gameRoot, project, hour = QUARTER_COVER_
   /* Проект части не разобрался — штатное небо игры за небо автора не выдаём: печь нарисует прежний кадр. */
   if (project && !parsed) return { reason: "project" };
   /* Печь: нет архива неба или облаков в папке игры — отказ с именем архива (печь не выпускает кадр без облаков игры), а не квартал с эталонным небом. */
-  const frame = await captureBlockFrame({ gameRoot, project: parsed, hour, size, strictSources: true });
-  return frame?.url ? { url: frame.url, fromGame: frame.fromGame === true } : { reason: frame?.reason || "unavailable" };
+  const weather = coverWeather(parsed);
+  const frame = await captureBlockFrame({ gameRoot, project: parsed, hour, size, weather, strictSources: true });
+  /* Погода кадра идёт наружу: печь пишет её в журнал, и небо обложки сверяют с кадром из игры в той же погоде. */
+  return frame?.url ? { url: frame.url, fromGame: frame.fromGame === true, weather } : { reason: frame?.reason || "unavailable" };
 }
 
 const bytesOfDataUrl = async (url) => new Uint8Array(await (await fetch(url)).arrayBuffer());

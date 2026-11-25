@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { isServiceWindow } from "./service-windows.js";
 import { createServiceShooterHost } from "./service-shooter-host.js";
+import { minimapSpotOf, minimapStateOf } from "./minimap-request-fields.js";
 
 export const PART_SHOOTER_PRELOAD = fileURLToPath(new URL("./part-shooter-preload.cjs", import.meta.url));
 
@@ -76,6 +77,9 @@ const REQUEST_FIELDS = [
   ["partKind", (request) => plainText(request?.partKind)],
   ["name", (request) => plainText(request?.name)],
   ["palette", (request) => (request?.palette === "author" ? "author" : OMIT)],
+  /* Состояние кадра мини-карты и место радара на карте мира: та же строгая проверка, что у печи (`minimap-request-fields.js`), лишних полей нет. */
+  ["state", (request) => minimapStateOf(request?.state) ?? OMIT],
+  ["spot", (request) => minimapSpotOf(request?.spot) ?? OMIT],
   ["exact", (request) => (request?.exact === true ? true : OMIT)],
   ["still", (request) => (request?.still === true ? true : OMIT)],
   ["fx", (request) => request?.fx === true],
@@ -157,8 +161,28 @@ export function skyMotionOf(result) {
   ]);
 }
 
+// Погоды игры: название погоды кадра неба части берётся из этого списка, любая другая строка поля не даёт.
+const GAME_WEATHERS = new Set([
+  "EXTRASUNNY",
+  "CLEAR",
+  "CLOUDS",
+  "SMOG",
+  "FOGGY",
+  "OVERCAST",
+  "RAIN",
+  "THUNDER",
+  "CLEARING",
+  "NEUTRAL",
+  "SNOW",
+  "BLIZZARD",
+  "SNOWLIGHT",
+  "XMAS",
+  "HALLOWEEN",
+]);
+
 // Правила служебных полей: каждое даёт список пар [ключ, значение].
 const STATUS_RULES = [
+  (result) => (typeof result?.weather === "string" && result.weather.length <= 40 && GAME_WEATHERS.has(result.weather) ? [["weather", result.weather]] : []),
   (result) => (result?.reason === "nothing" ? [["reason", "nothing"]] : []),
   (result) =>
     result?.framed
@@ -238,11 +262,14 @@ function pageUrlOf(BrowserWindow) {
   };
 }
 
+// Хозяин поднимается по первой заявке (`service-shooters.js`): уже открытые окна слушаются так же, как созданные после него.
 function closeWhenUiGone(app, BrowserWindow, host) {
   const onClosed = () => {
     if (!firstUiWindow(BrowserWindow)) host.close();
   };
-  app.on("browser-window-created", (event, window) => window.once("closed", onClosed));
+  const watch = (window) => window.once("closed", onClosed);
+  BrowserWindow.getAllWindows().forEach(watch);
+  app.on("browser-window-created", (event, window) => watch(window));
 }
 
 export function desktopPartShooter({ app, BrowserWindow, ipcMain }) {

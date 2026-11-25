@@ -89,7 +89,7 @@ export async function skyClip(project, options = {}) {
   try {
     await skyHourFrames(
       project,
-      { hours: clipHours(frames, spec.startHour), size: { width, height } },
+      { hours: clipHours(frames, spec.startHour), size: { width, height }, weather: options.weather },
       async (canvas, _hour, index) => {
         if (failure) throw failure;
         const frame = new VideoFrame(canvas, {
@@ -129,11 +129,11 @@ export async function skyClip(project, options = {}) {
  * обложки. WebP: небо — плавные градиенты, и он втрое легче PNG.
  * @returns {Promise<{ id: string, hour: number, caption: string, bytes: Uint8Array }[]>}
  */
-export async function skyStills(project, size, quality = 0.9) {
+export async function skyStills(project, size, quality = 0.9, weather = null) {
   const out = [];
   await skyHourFrames(
     project,
-    { hours: SKY_STILLS.map((still) => still.hour), size },
+    { hours: SKY_STILLS.map((still) => still.hour), size, weather },
     async (canvas, _hour, index) => {
       const blob = await new Promise((resolve) =>
         canvas.toBlob(resolve, "image/webp", quality),
