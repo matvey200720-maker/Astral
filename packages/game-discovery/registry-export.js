@@ -54,21 +54,49 @@ const exportWithRegExe = (key, file) =>
     execFile("reg.exe", ["export", key, file, "/y"], { windowsHide: true, timeout: TIMEOUT_MS }, (error) => (error ? reject(error) : resolve()));
   });
 
-/**
- * Строковые значения ключа в виде вывода `reg query`; нет ключа, нет `reg.exe` или сбой — пустая строка (для поиска это «пусто», а не сбой).
- * `exportKey(key, file)` подменяется в тестах.
- * @param {string} key например `HKCU\Software\RAGE-MP`
- */
-export async function readRegistryKeyText(key, { exportKey = exportWithRegExe } = {}) {
+/* Прежний `reg query` — запасной путь: во временные файлы не ходит. Вывод в кодировке консоли, русские буквы в нём портятся (см. шапку). */
+const queryWithRegExe = (key) =>
+  new Promise((resolve, reject) => {
+    execFile("reg.exe", ["query", key], { windowsHide: true, timeout: TIMEOUT_MS }, (error, stdout) => (error ? reject(error) : resolve(String(stdout))));
+  });
+
+/** Текст выгрузки ключа или `null`, если выгрузка не вышла (нет временной папки, `reg.exe` упал или завис, файл не создан, не читается, пуст или обрезан). */
+async function exportedText(key, exportKey) {
   let directory = null;
   try {
     directory = await fs.mkdtemp(path.join(os.tmpdir(), "astral-reg-"));
     const file = path.join(directory, "key.reg");
     await exportKey(key, file);
-    return exportToQueryText(decodeRegExport(await fs.readFile(file)));
+    const text = decodeRegExport(await fs.readFile(file));
+    /* Настоящая выгрузка всегда содержит секцию `[ключ]`; без неё файл пуст или обрезан (антивирус). */
+    return /^\[/m.test(text) ? text : null;
   } catch {
-    return "";
+    return null;
   } finally {
     if (directory) await fs.rm(directory, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+/**
+ * Строковые значения ключа в виде вывода `reg query`; нет ключа, нет `reg.exe` или сбой обоих способов — пустая строка (для поиска это «пусто», а не сбой).
+ *
+ * Запасной путь (24.11.2026). Выгрузка ходит во временную папку, а `reg query` — нет, и раньше любой сбой выгрузки (TEMP закрыта на запись, антивирус держит `reg.exe` или файл, срок 10 с)
+ * молча давал пустую строку: «клиент RAGE MP не найден» (режим RP не включался), игра по реестру не находилась, шрифты не читались. Теперь после сбоя выгрузки ключ спрашивается прежним
+ * `reg query`. Его ответ годится как «значение есть», но не как верный путь с не-ASCII буквами: он в кодировке консоли (см. шапку).
+ *
+ * Выгрузка вышла — `reg query` не зовётся, даже если в ключе нет ни одной строки: ключ есть, второй запуск `reg.exe` ничего не добавит. Ключа нет — `reg export` падает с кодом 1, и при
+ * настоящем сбое (не записать файл) код тот же, а текст ошибки на языке Windows, поэтому «нет ключа» от сбоя надёжно не отличить: спрашивается и `reg query`. У людей без ключа это один
+ * лишний запуск `reg.exe` (~40–50 мс на этом ПК) на вызов; чтение реестра игры держит минутную память (`createRegistryReader`).
+ *
+ * `exportKey(key, file)` и `queryKey(key)` подменяются в тестах.
+ * @param {string} key например `HKCU\Software\RAGE-MP`
+ */
+export async function readRegistryKeyText(key, { exportKey = exportWithRegExe, queryKey = queryWithRegExe } = {}) {
+  const text = await exportedText(key, exportKey);
+  if (text !== null) return exportToQueryText(text);
+  try {
+    return String(await queryKey(key));
+  } catch {
+    return "";
   }
 }

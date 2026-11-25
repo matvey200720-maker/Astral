@@ -26,7 +26,7 @@ import path from "node:path";
 import { appExpressInstall } from "./express-install.js";
 import { readStockPackSeniority } from "./carrier-seniority-reader.js";
 import { readHostSubpackInfo } from "./subpack-lane-check.js";
-import { CARRIERS } from "@modovik/install-engine/carrier-targets.js";
+import { CARRIERS, enabledCarrierIds } from "@modovik/install-engine/carrier-targets.js";
 import { mapsReserveFromWork, treesReserveFromWork } from "./trees-reserve.js";
 import { isRoadsContainerRefusal, roadsContainerRequest, roadsFellBackToPacks } from "./roads-update-install.js";
 import { isVegetationContainerRefusal, vegetationContainerRequest, vegetationFellBackToPacks } from "./vegetation-update-install.js";
@@ -230,6 +230,14 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const PLAN_TTL_MS = 10 * 60 * 1000;
 const MAX_PLANS = 8;
 const KEEP_PACKAGES = 4;
+
+/*
+ * Под какой режим RP собран план (24.11.2026). Растительность и дороги решают «носителем или прежним пакетом» по окружению при сборке плана, а проверка манифеста на «Применить»
+ * (`manifest.js`, `carrierEnabled`) читает то же окружение второй раз. Выбор «Где играю» меняет его на лету, и план, собранный минуты назад, мог попасть под другой режим:
+ * движок отвергает носитель, у которого слов носителя в окружении уже нет. Слепок — виды, идущие контейнером, и включённые носители; сравнивается на «Применить».
+ */
+const rpModeStamp = (env = process.env) => JSON.stringify([rpModeKindsOn(env), enabledCarrierIds(env)]);
+const PLAN_STALE = "План установки устарел — нажмите «Применить» ещё раз.";
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
@@ -2428,6 +2436,8 @@ export function createRecolorService({
    * `install` (набора в игре нет или он другой) или `unchanged`.
    */
   async function plan(input, { signal = null } = {}) {
+    /* Режим RP до сборки: выбор «Где играю» может смениться, пока план собирается (замка записи он не берёт). */
+    const modeStamp = rpModeStamp();
     const setId = String(input?.set || "");
     const gameSet = GAME_SETS[setId] || null;
     if (!gameSet) setOf(setId);
@@ -2491,7 +2501,8 @@ export function createRecolorService({
       images: input?.images && typeof input.images === "object" ? input.images : null,
       state: typeof input?.state === "string" ? input.state : null,
     };
-    plans.set(planId, { built, gameRoot, targetId, work, expiresAt: clock() + PLAN_TTL_MS });
+    /* Пакет, собранный под режим RP (носитель, контейнер), помнит его: на «Применить» режим мог смениться. */
+    plans.set(planId, { built, gameRoot, targetId, work, expiresAt: clock() + PLAN_TTL_MS, ...(built.viaUpdate ? { modeStamp } : {}) });
     return {
       planId,
       status: same ? "unchanged" : "install",
@@ -2505,17 +2516,24 @@ export function createRecolorService({
    * (`replaceModIds`): набор в игре один. Пакеты других наборов и модов не
    * трогаются.
    */
-  async function apply(input, { assertRuntimeSafety } = {}) {
+  async function apply(input, { assertRuntimeSafety, rebuiltForMode = false } = {}) {
     const gameRoot = path.resolve(String(input?.gameRoot || ""));
     const planId = String(input?.planId || "");
     const planned = plans.get(planId);
     plans.delete(planId);
-    if (!planned || planned.gameRoot.toLowerCase() !== gameRoot.toLowerCase())
-      throw new Error("План установки устарел — нажмите «Применить» ещё раз.");
+    if (!planned || planned.gameRoot.toLowerCase() !== gameRoot.toLowerCase()) throw new Error(PLAN_STALE);
     const { built, targetId } = planned;
     if (input?.set && input.set !== built.setId) throw new Error("План собран для другого набора — нажмите «Применить» ещё раз.");
+    /* Игра та же и не запущена — до любой работы: при запущенной игре человек сразу слышит «Закройте GTA V», а не после минут сборки. Повторный заход после пересборки проверит оба ещё раз: игру могли запустить за время сборки. */
     await confirmedGame(gameRoot, tools.discover);
     await assertRuntimeSafety?.(gameRoot);
+    /* Режим RP сменился между сборкой плана и «Применить» («Где играю» меняет окружение на лету): пакет собран под прежний режим, и движок такой манифест отвергает — справедливо,
+       проверку не трогаем. Собираем заново той же работой под режим, что действует сейчас; один раз — если режим снова сменился, говорим «устарел», а не крутимся. */
+    if (planned.modeStamp !== undefined && planned.modeStamp !== rpModeStamp()) {
+      if (rebuiltForMode) throw new Error(PLAN_STALE);
+      const again = await plan({ set: built.setId, gameRoot, ...(planned.work || {}) });
+      return apply({ ...input, planId: again.planId }, { assertRuntimeSafety, rebuiltForMode: true });
+    }
     const remember = () =>
       rememberLayerWork({ stateDir, targetId, set: built.setId, modId: built.manifest.id, ...(planned.work || {}), over: built.summary?.atop?.owners || null });
 

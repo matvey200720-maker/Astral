@@ -74,6 +74,8 @@ function makeRig(nodes, read) {
   const ctl = createCameraController({
     snap: read,
     svg,
+    /* Обёртка есть только при «Как в игре»; без неё жест едет трансформом самого svg, как прежде. */
+    live: () => nodes.live.current ?? nodes.svg.current,
     stage: () => nodes.stage.current,
     writeView: (next) => read().setView(next),
     motionOff,
@@ -195,7 +197,7 @@ function useFocusShow({ ctl, focus, around, latest }) {
 }
 
 export function useCamera(props) {
-  const { scene, win, geo, svgRef, stageRef, zoomCommand, focus, selection } = props;
+  const { scene, win, geo, svgRef, liveRef, stageRef, zoomCommand, focus, selection } = props;
   const { frame, canvas, projector, view, setView } = geo;
   const { onViewChange, onZoomChange } = props.callbacks;
 
@@ -204,7 +206,7 @@ export function useCamera(props) {
     frame, canvas, scene, win, projector, hasFloor, onViewChange, onZoomChange, setView,
   });
   const [{ ctl, floor }] = useState(() =>
-    makeRig({ svg: svgRef, stage: stageRef }, () => latest.current),
+    makeRig({ svg: svgRef, live: liveRef, stage: stageRef }, () => latest.current),
   );
 
   useTellUp({ ctl, floor, latest, frame, win, canvas, scene, view, hasFloor });

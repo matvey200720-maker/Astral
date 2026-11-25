@@ -22,6 +22,7 @@ import {
   releaseGpu,
   releaseWindowRenderer,
 } from "../engine/window-renderer.js";
+import { compileScene } from "../model-stage/shader-warmup.js";
 import { MIN_SCALE } from "./animation-pace.js";
 import {
   approach,
@@ -177,12 +178,15 @@ export function createAnimationScene() {
   /** Персонаж из GLB мастерской одежды (`animation-character.js`): сетки общие, скелет у каждого окна свой. */
   async function loadRig(glb) {
     rig = await parseCharacter(glb);
+    /* Сцену закрыли, пока разбирался персонаж: материалы освобождены, рендерер возвращён окну, собирать по ним нечего. */
+    if (disposed) return;
     /* Программы собираются заранее, а не на первом кадре окна: временный человек в сцене (и манекен плиток), сборка без блокировки. */
     const warm = makeView();
     const warmTile = makeView({ mannequin: true });
     try {
       aim(warm, 0.8);
-      await renderer.compileAsync(scene, camera);
+      /* Своё ожидание, а не `renderer.compileAsync` three: сцену закрывают посреди сборки (`dispose()` освобождает материалы), и его опрос роняет TypeError «reading 'isReady'» из таймера. */
+      await compileScene(renderer, scene, camera, () => !disposed);
     } catch {
       /* Сборка заранее — приятное, а не обязательное: первый кадр соберёт сам. */
     } finally {

@@ -78,6 +78,7 @@ export function installStages({
 /* Где остановился отказ: те три семейства, что показаны в макете, стоят на своём этапе, остальные — на том, где был движок. */
 const FAIL_STAGE = new Map([
   ["game-running", 2],
+  ["game-stub", 2],
   ["no-space", 2],
   ["network", 0],
 ]);

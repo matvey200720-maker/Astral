@@ -803,6 +803,28 @@
     border: 1px solid var(--wmc-line);
   }
 
+  /* Слой живого кадра: жест едет трансформом этой обёртки, а не корневого `svg`. Трансформ корня SVG Blink
+     считает сменой раскладки всего текста внутри: на 198 подписях «Как в игре» каждый шаг колеса стоил
+     2–3 мс раскладки (×4 — 10–12 мс), трансформ обычного блока над ним — 0,03 мс. */
+  .wmc-canvas-live {
+    will-change: transform;
+    transform-origin: 0 0;
+    position: absolute;
+    inset-inline-start: -25%;
+    inset-block-start: -25%;
+    block-size: 150%;
+    inline-size: 150%;
+
+    /* Холст в обёртке занимает её целиком и сам не едет (только при «Как в игре», см. `WorldMapStage.jsx`). */
+    & > .wmc-canvas {
+      will-change: auto;
+      inset-inline-start: 0;
+      inset-block-start: 0;
+      block-size: 100%;
+      inline-size: 100%;
+    }
+  }
+
   /* Холст карты и всё, что на нём рисуется */
   .wmc-canvas {
     will-change: transform;

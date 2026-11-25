@@ -34,6 +34,11 @@ const TRAILING_PUNCTUATION = /[.,;:)'"\u00bb]+$/;
 const ARCHIVE_NOT_FOUND = /Archive was not found:\s*(\S+)/i;
 const RUNNING_PROCESS =
   /Найден процесс:\s*([\w.-]+\.exe)(?:\s*\(PID (\d+)\))?/i;
+// В списке «Найден процесс:» только заглушки BattlEye (`GTA5_BE.exe`): игры нет, висит окно BattlEye Launcher (T-0002, журнал релиза 1.0.4).
+const ONLY_STUB_PROCESSES =
+  /Найден процесс:\s*[\w.-]*_BE\.exe(?:\s*\(PID \d+\))?(?:,\s*[\w.-]*_BE\.exe(?:\s*\(PID \d+\))?)*(?![\w,]|\s*\()/i;
+const STUB_NAME = /[\w.-]*_BE\.exe/gi;
+const DEFAULT_STUB_NAME = "GTA5_BE.exe";
 const NESTED_ARCHIVE = /вложенный архив\s+(.+?)\s+не открылся/i;
 const ARCHIVE_SEGMENTS = /[\\/]/;
 const ARCHIVE_IDENTIFIER = /([^\s\\/:]+\.rpf):\s*The identifier/i;
@@ -337,6 +342,12 @@ const WORDS = [
     "GTA V запущена",
     "Закройте игру, лаунчеры GTA5RP и Majestic и нажмите \u00abПовторить\u00bb. В игру ничего не записано.",
   ],
+  /* Игры уже нет, висит окно-заглушка BattlEye (`GTA5_BE.exe`): закрыть надо его, а не «игру и лаунчеры RP». Отказ тот же, слова другие (T-0002). */
+  [
+    "game-stub",
+    "Открыто окно BattlEye Launcher",
+    "Игры уже нет, но окно BattlEye Launcher осталось. Пока оно открыто, Astral не меняет файлы игры. Закройте это окно, а если его не видно, снимите {process} в диспетчере задач. Потом нажмите \u00abПовторить\u00bb. В игру ничего не записано.",
+  ],
   [
     "no-space",
     "Не хватает места на диске",
@@ -546,6 +557,8 @@ const RULES = [
   ],
   ["process-check", /Не удалось проверить запущенные процессы GTA V/i],
   ["no-folder", /В выбранной папке не найден GTA5/i],
+  /* Раньше «игра запущена»: в списке процессов одни заглушки BattlEye. Игра в списке — прежнее семейство. */
+  ["game-stub", ONLY_STUB_PROCESSES],
   [
     "game-running",
     /Закройте GTA V|запущенные процессы GTA V|GTA5\.exe|GTA5_BE\.exe|GTA5_Enhanced\.exe/i,
@@ -659,6 +672,13 @@ function refineRunningGame({ text, reason, advice }) {
   return { reason: `${reason}: ${program}${tail}`, advice };
 }
 
+// В совете — те заглушки, что нашёл Astral (имя из списка процессов); списка нет — штатная `GTA5_BE.exe`.
+function refineBattlEyeStub({ text, reason, advice }) {
+  const names = text.slice(Math.max(0, text.search(/Найден процесс:/i))).match(STUB_NAME) ?? [];
+  const named = names.length ? [...new Set(names)].join(", ") : DEFAULT_STUB_NAME;
+  return { reason, advice: advice.replace("{process}", named) };
+}
+
 function refineUnreadableArchive({ text, reason, advice }) {
   const nested = NESTED_ARCHIVE.exec(text);
   let name = nested ? nested[1].split(ARCHIVE_SEGMENTS).pop() : "";
@@ -705,6 +725,7 @@ const REFINERS = new Map([
   ["game-entry-conflict", refineMissingEntry],
   ["game-archive-missing", refineMissingArchive],
   ["game-running", refineRunningGame],
+  ["game-stub", refineBattlEyeStub],
   ["archive-unreadable", refineUnreadableArchive],
   ["timecycle-broken", refineBrokenTimecycle],
   ["folder-denied", refineDeniedFolder],

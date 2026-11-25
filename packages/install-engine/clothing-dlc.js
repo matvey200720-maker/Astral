@@ -340,15 +340,13 @@ export async function provisionClothingDlcCore(
       },
       deps,
     );
-    /* Вещи уже стоят в хосте — DLC включён и остаётся включённым (по образцу оружия, `fast-weapon-dlc.js: hostInUse`). Подготовка без включения (`activate:false`:
-       перед установкой заменёнки или покраски) раньше снимала регистрацию из состояния и не пересобирала `dlclist.xml`: хост «не готов» (update.rpf правили снаружи
-       или нативной правкой мастерской, сменилась основа, файл хоста другой) — и, если установка следом не дошла до регистрации (отказ слота, сбой, отмена), состояние
-       говорило «не зарегистрирован» при записи в `dlclist.xml`. Следующая пересборка `dlclist.xml` из состояния (дороги, места, первый ганпак) выбрасывала
-       `astral_clothing` при стоящих вещах — «одежда исчезла» (разбор 23.11.2026). Теперь при стоящих вещах регистрация остаётся и пересобирается в этой же операции. */
+    /* Вещи уже стоят в хосте — DLC остаётся включённым (как оружие, `fast-weapon-dlc.js: hostInUse`): подготовка без включения снимала запись в состоянии, не пересобирая `dlclist.xml`,
+       и следующая пересборка выбрасывала `astral_clothing` при стоящих вещах — «одежда исчезла» (разбор 23.11.2026). Пустой хост со стоящей записью выключается, как при снятии (`direct-dlc-settle.js`). */
     const hostInUse = Object.values(
       target.archives?.[CLOTHING_DLC_TARGET]?.entries || {},
     ).some((entry) => (entry?.layers || []).length > 0);
     const shouldActivate = activate || hostInUse;
+    let touchesUpdate = shouldActivate;
     if (shouldActivate) {
       target.directDlcRegistrations[CLOTHING_DLC_NAME] = {
         owner: "@astral-clothing-host",
@@ -368,6 +366,9 @@ export async function provisionClothingDlcCore(
         contentXmlProvider,
         archiveTarget: ASTRAL_UPDATE_TARGET,
       });
+    } else if (target.directDlcRegistrations[CLOTHING_DLC_NAME]) {
+      touchesUpdate = true;
+      await (await import("./direct-dlc-settle.js")).unregisterDirectDlc({ target, targetKey, paths, dlcListProvider, name: CLOTHING_DLC_NAME });
     } else {
       delete target.directDlcRegistrations[CLOTHING_DLC_NAME];
     }
@@ -384,7 +385,7 @@ export async function provisionClothingDlcCore(
       assertRuntimeSafety,
       onProgress,
     });
-    const updateSource = shouldActivate
+    const updateSource = touchesUpdate
       ? await composeArchiveResource({
           target,
           archiveTarget: ASTRAL_UPDATE_TARGET,
@@ -401,7 +402,7 @@ export async function provisionClothingDlcCore(
       : null;
     const affected = (
       await Promise.all([
-        shouldActivate
+        touchesUpdate
           ? changedFile(ASTRAL_UPDATE_TARGET, updateSource, root, deps)
           : null,
         changedFile(CLOTHING_DLC_TARGET, hostSource, root, deps),

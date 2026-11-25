@@ -204,6 +204,14 @@ const T = {
     "Zamknij GTA V i launcher serwera",
     "Fermez GTA V et le lanceur du serveur",
   ],
+  preparationBattleye: [
+    "Закрой окно BattlEye Launcher",
+    "Закрий вікно BattlEye Launcher",
+    "Close the BattlEye Launcher window",
+    "Schließe das Fenster von BattlEye Launcher",
+    "Zamknij okno BattlEye Launcher",
+    "Fermez la fenêtre de BattlEye Launcher",
+  ],
   preparationLauncherBusy: [
     "Чужой лаунчер обновляет или проверяет GTA V",
     "Чужий лаунчер оновлює чи перевіряє GTA V",
@@ -478,6 +486,7 @@ export function shellNoticesFor(language) {
 // Начала русских сообщений главного процесса — внешний контракт, менять нельзя.
 const KNOWN_REASONS = [
   ["Закройте GTA V", "preparationGameOpen"],
+  ["Игры уже нет, но осталось окно BattlEye Launcher", "preparationBattleye"],
   ["Лаунчер обновляет", "preparationLauncherBusy"],
   ["Файлы загрузчиков исчезли", "preparationLoadersVanished"],
 ];

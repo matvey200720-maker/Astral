@@ -24,6 +24,7 @@ import {
   useRememberedState,
 } from "../../../section-memory.js";
 import Showcase from "../../../features/showcase/Showcase.jsx";
+import CatalogScrollThumb from "../../../features/catalog/scroll-thumb/CatalogScrollThumb.jsx";
 import {
   Suspense,
   lazy,
@@ -1577,7 +1578,13 @@ export function PublicCatalog(props) {
     mainColumn,
   );
 
-  if (!variant) return view;
+  if (!variant)
+    return (
+      <>
+        {view}
+        <CatalogScrollThumb />
+      </>
+    );
 
   const model = Object.fromEntries([
     ["language", language],
@@ -1640,5 +1647,10 @@ export function PublicCatalog(props) {
     ["categoryCounts", index.perSection],
     ["shelvesOf", shelvesOf],
   ]);
-  return <CatalogVariant variant={variant} fallback={view} model={model} />;
+  return (
+    <>
+      <CatalogVariant variant={variant} fallback={view} model={model} />
+      <CatalogScrollThumb />
+    </>
+  );
 }

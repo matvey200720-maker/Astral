@@ -1,0 +1,45 @@
+/*
+ * Бегунок прокрутки каталога (владелец, 24.11.2026): тонкая полупрозрачная пилюля у правого края, без дорожки и стрелок.
+ * Нативная полоса по-прежнему скрыта (`foundation.css`, `test/no-scrollbars.test.js`); это отдельный элемент поверх окна.
+ * Дорожка не ловит мышь, ловит только сам бегунок, поэтому плитки под правым краем остаются кликабельными.
+ * Место (верх, высоту, правый отступ) пишет `CatalogScrollThumb.jsx`; бегунок двигается через `transform`.
+ * Сам элемент бегунка шире видимой пилюли (12 px против 4): в полоску в четыре пикселя мышью не попасть; рисует пилюлю `::after`.
+ * Лист подключён в `styles/index.css` слоем `overrides`, как соседние листы каталога.
+ */
+.catalog-scroll-track {
+  position: fixed;
+  z-index: 3;
+  inline-size: 12px;
+  pointer-events: none;
+}
+
+.catalog-scroll-thumb {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  inline-size: 12px;
+  min-block-size: 36px;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.catalog-scroll-thumb::after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 4px;
+  border-radius: 999px;
+  background-color: rgba(var(--astral-accent-rgb), 0.16);
+  content: "";
+  transition:
+    inline-size var(--astral-duration-fast) var(--astral-ease),
+    background-color var(--astral-duration-fast) var(--astral-ease);
+}
+
+.catalog-scroll-thumb:hover::after,
+.catalog-scroll-thumb[data-drag]::after {
+  inline-size: 6px;
+  background-color: rgba(var(--astral-accent-rgb), 0.34);
+}

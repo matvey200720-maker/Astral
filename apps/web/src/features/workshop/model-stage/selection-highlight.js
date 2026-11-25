@@ -228,6 +228,20 @@ export function highlightPalette(accent, ink, surface) {
   return swap ? { accent: keep.ink, ink: keep.accent, outcome, weak } : { ...keep, outcome, weak };
 }
 
+/**
+ * Цвет и сила двух полос контура-силуэта слоя `kind` с палитрой `palette` (ответ `highlightPalette`): `line` — полоса у самой кромки цели, `halo` — шире, снаружи неё. Слой рисует именно эти числа,
+ * тест мерит их же. Контур стоит снаружи цели — на её соседях (крыша, пол, небо), а не на ней самой; у цели с известным цветом соседи любого тона, поэтому полосы разных цветов идут одна за другой.
+ */
+export function silhouetteBands(kind, palette) {
+  /* Цвет цели известен (`outcome` не пуст) — обе полосы в полную силу при любом исходе (владелец, 24.11.2026: на светлом домике наведение — тонкая сероватая линия, у кирпича почти нет): рядом всегда
+     лежат светлая и тёмная полоса, и одна из них читается на любом соседе. Прежние 55 % каймы и 90 % линии под курсором — у целей без цвета, то есть у всей остальной мастерской. */
+  const known = Boolean(palette.outcome);
+  return {
+    halo: { colour: palette.ink, alpha: known ? 1 : SILHOUETTE_ALPHA.halo },
+    line: { colour: palette.accent, alpha: known || kind !== "hover" ? SILHOUETTE_ALPHA.line : SILHOUETTE_ALPHA.hover },
+  };
+}
+
 /** Сколько треугольников у сеток вместе. */
 export const trianglesOf = (meshes) =>
   meshes.reduce(
@@ -631,10 +645,10 @@ export function createSelectionHighlight({ parent, invalidate, kick = () => {}, 
       material.uniforms.uWidth.value = width * px;
       return material;
     };
-    const haloAlpha = layer.weak ? 1 : SILHOUETTE_ALPHA.halo;
-    const halo = ring("halo", palette.ink, SILHOUETTE_PX.halo, haloAlpha);
-    const line = ring("line", palette.accent, SILHOUETTE_PX.line, kind === "hover" ? SILHOUETTE_ALPHA.hover : SILHOUETTE_ALPHA.line);
-    layer.silhouetteBase = new Map([[halo, haloAlpha], [line, kind === "hover" ? SILHOUETTE_ALPHA.hover : SILHOUETTE_ALPHA.line]]);
+    const bands = silhouetteBands(kind, palette);
+    const halo = ring("halo", bands.halo.colour, SILHOUETTE_PX.halo, bands.halo.alpha);
+    const line = ring("line", bands.line.colour, SILHOUETTE_PX.line, bands.line.alpha);
+    layer.silhouetteBase = new Map([[halo, bands.halo.alpha], [line, bands.line.alpha]]);
     const size = new THREE.Vector2();
     for (const mesh of meshes) {
       mesh.updateWorldMatrix(true, false);

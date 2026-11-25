@@ -30,6 +30,7 @@ export default function WorldMapStage(props) {
 
   const stageRef = useRef(null);
   const svgRef = useRef(null);
+  const liveRef = useRef(null);
   const textAdvance = useTextAdvance();
   const win = useStageWindow(stageRef);
   const geo = useStageGeometry({ scene, atlas: p.atlas, memoryId: p.memoryId, svgRef, win });
@@ -38,6 +39,7 @@ export default function WorldMapStage(props) {
     win,
     geo,
     svgRef,
+    liveRef,
     stageRef,
     callbacks: { onViewChange: p.onViewChange, onZoomChange: p.onZoomChange },
     zoomCommand: p.zoomCommand,
@@ -96,7 +98,14 @@ export default function WorldMapStage(props) {
     ghosts,
   });
 
-  const canvas = h(
+  /*
+   * «Как в игре» включено — сотни подписей на холсте сразу: холст сидит в обёртке, размер и место задаёт она, жест едет её
+   * трансформом (см. `.wmc-canvas-live`: трансформ корня svg перекладывает весь текст, 2–3 мс на шаг при 198 подписях).
+   * Выключено — прежний путь без изменений: трансформ на самом svg, подписи ярусами, их мало (замер 23.11.2026:
+   * с обёрткой при выключенном режиме колесо через раз давало p95 ~65 мс против 7).
+   */
+  const wrapped = Boolean(p.gamePreview);
+  const sheet = h(
     MapScene,
     {
       ref: svgRef,
@@ -115,12 +124,15 @@ export default function WorldMapStage(props) {
       }),
       hitProps: { "data-pannable": geo.pannable ? "yes" : "no" },
       className: pointer.dragging ? "wmc-canvas is-dragging" : "wmc-canvas",
-      style: geo.box,
+      ...(wrapped ? {} : { style: geo.box }),
       viewBox: viewBoxOf(geo.canvas),
       ...pointerHandlers(env, hovering, text),
     },
     ...marks,
   );
+  const canvas = wrapped
+    ? h("div", { ref: liveRef, className: "wmc-canvas-live", style: geo.box }, sheet)
+    : sheet;
 
   const drop = hovering.dropHandlers;
   const children = [

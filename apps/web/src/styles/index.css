@@ -76,6 +76,8 @@
 /* Витрина каталога (ТЗ 05.10, задача 14): шапка с поиском на месте, полки,
    строка фильтров. Последним слоем — поверх старых правил шапки. */
 @import "../components/desktop/catalog/catalog-browse.css" layer(overrides);
+/* Бегунок прокрутки каталога (24.11.2026): свой элемент поверх окна, нативной полосы нет. */
+@import "../features/catalog/scroll-thumb/catalog-scroll-thumb.css" layer(overrides);
 /* Карточка мода «афишей» — имя на картинке, под курсором загрузки и вес (ТЗ 24.10.2026, п. 12). */
 @import "../components/desktop/catalog/catalog-poster.css" layer(overrides);
 @import "../components/desktop/catalog/variant-gallery.css" layer(overrides);

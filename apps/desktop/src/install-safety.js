@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { describeProcess, runningProcesses } from "./game-processes.js";
+import { runningProcesses } from "./game-processes.js";
 
 const INSTALL_HEADROOM_BYTES = 256 * 1024 * 1024;
 const DOWNLOAD_HEADROOM_BYTES = 64 * 1024 * 1024;
@@ -80,8 +80,10 @@ export async function assertInstallRuntimeSafe(game, options = {}) {
   const running = await findBlockingGameProcessDetails(game, options);
   if (running.length) {
     throw installBlocked(
-      `Закройте GTA V перед установкой. Найден процесс: ${running.map(describeProcess).join(", ")}. ` +
-        "Также завершите GTA 5 RP Launcher и Majestic Launcher.",
+      await import("./game-running-refusal.js").then(
+        (words) => words.runningRefusal(running),
+        () => "Закройте GTA V перед установкой.",
+      ),
     );
   }
   return { safe: true, running: [] };

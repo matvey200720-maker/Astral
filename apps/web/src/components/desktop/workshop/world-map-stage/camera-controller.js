@@ -2,7 +2,7 @@
 // Всё, что нужно снаружи, приходит через порты:
 //   snap()      → { frame, canvas, scene, win, projector } последней отрисовки
 //   writeView   → записать кадр в состояние (и в память редактора)
-//   svg(), stage() → узлы; motionOff() → без движения; floor → { sync(view) }
+//   svg(), live(), stage() → узлы (live — обёртка холста: жест едет её трансформом, не трансформом корня svg); motionOff() → без движения; floor → { sync(view) }
 //   onView(payload), onZoom(zoom, dots) → сообщения наверх
 import { resolveFrame, clampView, glideZoom, zoomAround, panFrame } from "../world-map-frame.js";
 import { zoomPath, flightDuration, easeInOut } from "../world-map-flight.js";
@@ -65,7 +65,7 @@ class Camera {
 
   // Нарисованный холст едет трансформом к живому кадру; нет живого кадра - трансформ снят
   #paint() {
-    const el = this.#ports.svg();
+    const el = this.#ports.live();
     if (!el) return;
     if (!this.#live) {
       el.style.transform = "";

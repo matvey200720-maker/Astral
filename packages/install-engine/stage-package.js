@@ -389,6 +389,9 @@ export async function stagePackage(
    * (`resources`) перебазирование невозможно, и вызовы движка без поставщиков идут как прежде.
    */
   const withoutDirectRights = !parsed.capabilities.includes("direct-update-entries-v1") && typeof contentXmlProvider === "function" && Boolean(target.resources?.[ASTRAL_UPDATE_TARGET]);
+  /* Прямые DLC, опустевшие после вытеснения, выключает `direct-dlc-settle.js`; `dlclist.xml` собирается в `update.rpf`, и перебазирование нужно заранее. */
+  const settle = await import("./direct-dlc-settle.js");
+  const emptied = settle.directDlcsEmptiedBy({ target, supersededIds, parsedFiles: parsed.files });
   if (
     (target.installed || []).some((item) => {
       if (!supersededIds.has(item.modId)) return false;
@@ -397,7 +400,8 @@ export async function stagePackage(
         touchesCarrierRegistry(target, new Set(targets)) ||
         (withoutDirectRights && (targets.some((name) => String(name).toLowerCase() === ASTRAL_UPDATE_TARGET) || movesAudioSlotLayer(target, item)))
       );
-    })
+    }) ||
+    (withoutDirectRights && emptied.length > 0)
   )
     await rebaseDirectUpdateIfNeeded({ target, root, paths, targetKey, contentXmlProvider, dlcListProvider, signal });
   if (supersededIds.size)
@@ -606,6 +610,7 @@ export async function stagePackage(
     target.clothingDlc.preparedOnly = false;
     ownPaths.add("update/update.rpf");
   }
+  await settle.settleEmptyDirectDlcs({ target, targetKey, paths, dlcListProvider, directDlcs: emptied, touched: ownPaths });
   for (const place of ownPaths) affectedPaths.add(place);
   return { ownDlcs, dlcRegistryChanged, activatesFastWeaponDlc };
 }

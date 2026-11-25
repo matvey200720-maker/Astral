@@ -7,7 +7,6 @@ import {
   isAstralUpdateTarget,
   MANAGED_DLC_LIST_TARGET,
   composeAstralContentRegistry,
-  composeDirectDlcRegistry,
   composeManagedDlcList,
   addCarrierRegistryArchive,
 } from "./registry-composers.js";
@@ -178,22 +177,7 @@ export async function uninstallPackageNow({
     addCarrierRegistryArchive(target, affectedArchives); /* контейнер в носителе (`update2.rpf`) снят: из `content.xml` в `update.rpf` уходит и его регистрация */
     await addSubpackHostArchives({ target, archives: affectedArchives, root: target.gameRoot, paths, targetKey, signal }); /* контейнер в подпакете (`dlc<N>.rpf`) снят: из `content.xml` и `setup2.xml` хозяина уходят регистрация и число (`subpack-closure.js`) */
     if (await settleAudioSlotLayer({ audioSlotSettler, target, targetKey, paths, signal })) affectedArchives.add("update/update.rpf"); /* снят пак звуков или редукс со своим audioconfig: слот звука пересчитан */
-    for (const dlc of directDlcs) {
-      const remainingLayers = Object.values(
-        target.archives?.[dlc.target]?.entries || {},
-      ).some((entry) => (entry.layers || []).length > 0);
-      if (remainingLayers) continue;
-      delete target.directDlcRegistrations?.[dlc.name];
-      await composeDirectDlcRegistry({
-        target,
-        targetKey,
-        paths,
-        dlcListProvider,
-        archiveTarget: "update/update.rpf",
-      });
-      if (dlc.state && target[dlc.state]) target[dlc.state].preparedOnly = true;
-      affectedArchives.add("update/update.rpf");
-    }
+    await (await import("./direct-dlc-settle.js")).settleEmptyDirectDlcs({ target, targetKey, paths, dlcListProvider, directDlcs, touched: affectedArchives }); /* опустевший прямой DLC выключается (`direct-dlc-settle.js`) */
     /* «Одна запись вместо двух» при снятии (`ops-build.js`): подмена по умолчанию от приложения; `null` — прежний путь. */
     const engineInstall = defaultOpsEngineFor({ gameRoot: target.gameRoot, workId: modId });
     const opsHold = opsAllowedFor(engineInstall) && typeof engineInstall.writerFor === "function" && (await opsHoldIsKnown(engineInstall));
@@ -412,14 +396,7 @@ async function uninstallBatchNow({
     /* Прямые DLC: пока в них что-то стоит, они включены; снятие последней вещи выключает DLC (регистрация уходит из `update.rpf`). */
     const directDlcs = [...new Map([...directDlcsOfMod.values()].flat().map((dlc) => [dlc.name, dlc])).values()];
     const uninstallsFastWeapon = directDlcs.some((dlc) => dlc.name === FAST_WEAPON_DLC_NAME);
-    for (const dlc of directDlcs) {
-      const remainingLayers = Object.values(target.archives?.[dlc.target]?.entries || {}).some((entry) => (entry.layers || []).length > 0);
-      if (remainingLayers) continue;
-      delete target.directDlcRegistrations?.[dlc.name];
-      await composeDirectDlcRegistry({ target, targetKey, paths, dlcListProvider, archiveTarget: "update/update.rpf" });
-      if (dlc.state && target[dlc.state]) target[dlc.state].preparedOnly = true;
-      affectedArchives.add("update/update.rpf");
-    }
+    await (await import("./direct-dlc-settle.js")).settleEmptyDirectDlcs({ target, targetKey, paths, dlcListProvider, directDlcs, touched: affectedArchives });
     const engineInstall = defaultOpsEngineFor({ gameRoot: target.gameRoot, workId: records[0].modId });
     const opsHold = opsAllowedFor(engineInstall) && typeof engineInstall.writerFor === "function" && (await opsHoldIsKnown(engineInstall));
     for (const archiveTarget of affectedArchives) {

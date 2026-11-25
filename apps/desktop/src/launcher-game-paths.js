@@ -335,7 +335,7 @@ export async function restoreLaunchers({ copyPath, stateDir, env = process.env, 
 
   if (entry.rage) {
     const now = await rageGamePath(tools);
-    if (now === null || !samePath(now, copyPath)) {
+    if (now === null || !samePath(now, copyPath) || (await (await import("./rage-before.js")).untrusted(entry.rage.before, tools))) {
       result.rage = "left";
       delete entry.rage;
     } else {

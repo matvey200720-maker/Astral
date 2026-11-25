@@ -18,7 +18,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { STAGE_IDLE, startStageLoop } from "../../stage-loop.js";
-import { skipShaderChecks } from "../../../../../features/workshop/model-stage/shader-warmup.js";
+import { compileScene, skipShaderChecks } from "../../../../../features/workshop/model-stage/shader-warmup.js";
 import { profilePixelRatio, qualityProfile } from "../../../../../features/workshop/model-stage/quality-profile.js";
 import { STAGE_LIGHTING, STUDIO_FINISHES, createStudioEnvironment, finishOf, finishShader, isNeutralMaterial } from "../lighting.js";
 import { materialName, opaqueColourAsync } from "../gun-scene.js";
@@ -582,7 +582,9 @@ export function createGunPackScene({ onHover = () => {}, onPick = () => {}, onEm
       if (!alive()) return;
       packMark("pack-adopted", slot);
       measure(entry, root, scale);
-      await renderer.compileAsync?.(root, camera, scene);
+      /* Своё ожидание, а не `renderer.compileAsync` three: его опрос читает программу освобождённого материала и роняет TypeError «reading 'isReady'» из таймера,
+         когда экран закрыли посреди сборки (`dispose()` ниже: `renderer.dispose()` обнуляет записи материалов), а само обещание не завершается. */
+      if (typeof renderer.compile === "function") await compileScene(renderer, root, camera, alive, scene);
       if (!alive()) return;
       packMark("pack-compiled", slot);
       const picture = paint ? await paint(new Map([...fresh.stock].map(([name, stock]) => [name, stock.texture?.image || null]))) : null;

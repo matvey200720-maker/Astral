@@ -387,15 +387,13 @@ export async function provisionFastWeaponDlcCore(
       deps,
     );
     const migratedLayers = migrateLegacyWeaponLayers(target);
-    /* Стволы уже стоят в хосте — DLC включён и остаётся включённым.
-       Подготовка при каждом запуске звала сюда `activate: false` и снимала
-       регистрацию в состоянии, а dlclist.xml в игре оставался с ней: любая
-       следующая правка update.rpf снаружи упиралась в «registers unknown
-       Astral DLC (astral_weapons)» (07.10.2026). */
+    /* Стволы уже стоят в хосте — DLC остаётся включённым: иначе запись снималась в состоянии, а в dlclist.xml оставалась, и правка update.rpf снаружи упиралась
+       в «registers unknown Astral DLC» (07.10.2026). Пустой хост со стоящей записью выключается, как при снятии (`direct-dlc-settle.js`). */
     const hostInUse = Object.values(
       target.archives?.[FAST_WEAPON_DLC_TARGET]?.entries || {},
     ).some((entry) => (entry?.layers || []).length > 0);
     const shouldActivate = activate || migratedLayers > 0 || hostInUse;
+    let touchesUpdate = shouldActivate;
     if (shouldActivate) {
       target.directDlcRegistrations[FAST_WEAPON_DLC_NAME] = {
         owner: "@astral-fast-weapon-host",
@@ -415,6 +413,9 @@ export async function provisionFastWeaponDlcCore(
         contentXmlProvider,
         archiveTarget: ASTRAL_UPDATE_TARGET,
       });
+    } else if (target.directDlcRegistrations[FAST_WEAPON_DLC_NAME]) {
+      touchesUpdate = true;
+      await (await import("./direct-dlc-settle.js")).unregisterDirectDlc({ target, targetKey, paths, dlcListProvider, name: FAST_WEAPON_DLC_NAME });
     } else {
       delete target.directDlcRegistrations[FAST_WEAPON_DLC_NAME];
     }
@@ -431,7 +432,7 @@ export async function provisionFastWeaponDlcCore(
       assertRuntimeSafety,
       onProgress,
     });
-    const updateSource = shouldActivate
+    const updateSource = touchesUpdate
       ? await composeArchiveResource({
           target,
           archiveTarget: ASTRAL_UPDATE_TARGET,
@@ -448,7 +449,7 @@ export async function provisionFastWeaponDlcCore(
       : null;
     const affected = (
       await Promise.all([
-        shouldActivate
+        touchesUpdate
           ? changedFile(ASTRAL_UPDATE_TARGET, updateSource, root, deps)
           : null,
         changedFile(FAST_WEAPON_DLC_TARGET, hostSource, root, deps),

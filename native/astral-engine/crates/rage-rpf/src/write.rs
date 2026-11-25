@@ -748,9 +748,43 @@ struct Scratch {
 /// Имя вложенного архива становится именем файла в папке доводки (доводчик сверяет имя
 /// файла с именем записи), а приходит оно из запроса или из оглавления чужого архива.
 /// Годится только одно обычное звено: с разделителем, двоеточием (диск или поток NTFS),
-/// нулём или из одних точек `join` увёл бы файл из папки доводки.
-fn plain_file_name(name: &str) -> bool {
-    !matches!(name, "" | "." | "..") && !name.contains(['/', '\\', ':', '\0'])
+/// нулём или из одних точек `join` увёл бы файл из папки доводки. Имя устройства Windows
+/// открыло бы устройство вместо файла, а точку или пробел на конце Windows срезает молча
+/// (имя файла перестало бы совпадать с именем записи). Устройства и хвост — то же правило,
+/// что у пути на диске в движке (`paths::normalize_relative`): `rage-rpf` от движка не зависит,
+/// поэтому правило записано дважды, а сходство двух копий держит тест `nested_name_rule_parity`.
+pub fn plain_file_name(name: &str) -> bool {
+    !matches!(name, "" | "." | "..")
+        && !name.contains(['/', '\\', ':', '\0'])
+        && !name.ends_with(['.', ' '])
+        && !is_device_name(name)
+}
+
+/// Цифра после COM и LPT: 0–9 и «верхние» ¹ ² ³ (U+00B9, U+00B2, U+00B3).
+fn is_device_digit(symbol: char) -> bool {
+    symbol.is_ascii_digit() || matches!(u32::from(symbol), 0xb9 | 0xb2 | 0xb3)
+}
+
+/// Имя устройства Windows: CON, PRN, AUX, NUL, CONIN$, CONOUT$, COM0–COM9, LPT0–LPT9. Регистр
+/// не важен, расширение и пробелы перед ним не помогают: считается то, что стоит до первой точки.
+fn is_device_name(name: &str) -> bool {
+    let head = name
+        .split('.')
+        .next()
+        .unwrap_or_default()
+        .trim_end_matches(' ');
+    let lower: Vec<char> = head.to_lowercase().chars().collect();
+    let word: String = lower.iter().collect();
+    if matches!(
+        word.as_str(),
+        "con" | "prn" | "aux" | "nul" | "conin$" | "conout$"
+    ) {
+        return true;
+    }
+    match lower.as_slice() {
+        ['c', 'o', 'm', digit] | ['l', 'p', 't', digit] => is_device_digit(*digit),
+        _ => false,
+    }
 }
 
 impl Scratch {

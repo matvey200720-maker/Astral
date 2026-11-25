@@ -62,6 +62,7 @@ const RESUME_MIN = 0.05;
 
 const FAIL_ICONS = new Map([
   ["game-running", GameController],
+  ["game-stub", GameController],
   ["no-space", HardDrives],
   ["network", WifiSlash],
 ]);
