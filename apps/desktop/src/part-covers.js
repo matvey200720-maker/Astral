@@ -138,6 +138,21 @@ const SCENE_KINDS = new Set(Object.keys(SCENE_COVERS));
 const WINDOW_KINDS = new Set(["timecycle", "kill-effects", "minimap", "minimap-position", "water", "blood-routing", "core-effects", "msl-zones"]);
 const ARENA_SERVERS = ["gta5rp", "majestic"];
 
+/* Подписи кадров галереи арены из архивов двух серверов (VEX REDUX, 15.11.2026): у каждого кадра сказано, чей это зал. Переводы — `locales/ui-text/zone-empty-model-1411.js`. */
+export const ARENA_SERVER_CAPTION = Object.freeze({ majestic: "Арена Majestic", gta5rp: "Арена GTA 5 RP" });
+/* Сколько своих файлов сервера должно быть в наборе, чтобы зал этого сервера считался присутствующим (общий квартал и штатные файлы не в счёт). */
+const ARENA_SECOND_MIN = 5;
+
+/** Второй сервер арены автора из архивов двух серверов: чьих файлов не меньше ARENA_SECOND_MIN, кроме `server`; иначе `null`. */
+export function otherArenaServer(names, server) {
+  const counts = new Map();
+  for (const name of names || []) {
+    const owner = fingerprints.arenaFileOwner(name);
+    if (ARENA_SERVERS.includes(owner)) counts.set(owner, (counts.get(owner) ?? 0) + 1);
+  }
+  return ARENA_SERVERS.find((other) => other !== server && (counts.get(other) ?? 0) >= ARENA_SECOND_MIN) ?? null;
+}
+
 // Где лежат листы потока и сцены мастерской.
 const SHEETS_HREF = new URL("./part-sheets.js", import.meta.url).href;
 const SCENE_DIR = new URL("../../web/public/assets/workshop/", import.meta.url);
@@ -345,6 +360,14 @@ export function sheetSourceFromEnv(env = process.env) {
 export function pickArena(scenes, mod, names = []) {
   const scored = Object.entries(scenes).map(([server, textures]) => ({ server, hits: hitsIn(textures, mod).hits, textures }));
   const best = scored.reduce((top, row) => (!top || row.hits > top.hits ? row : top), null);
+  /* Арена автора из архивов двух серверов (VEX REDUX, 15.11.2026: зал GTA 5 RP в `vex_gg.rpf` и арена Majestic в трёх `arena_mizaro*`): листов набирают оба сервера,
+     и зал брался у того, чья сцена богаче листами, — у GTA 5 RP, хотя файлов Majestic в наборе больше. Зал снимается у сервера, чьих файлов больше. */
+  const proven = scored.filter((row) => row.hits >= ARENA_MIN_SHEETS);
+  if (proven.length > 1 && names.length) {
+    const owned = (server) => names.filter((name) => fingerprints.arenaFileOwner(name) === server).length;
+    const ranked = [...proven].sort((left, right) => owned(right.server) - owned(left.server) || right.hits - left.hits);
+    if (owned(ranked[0].server) > owned(ranked[1].server)) return ranked[0];
+  }
   if (best && best.hits >= ARENA_MIN_SHEETS) return best;
   const server = fingerprints.arenaServerOf(names);
   const known = Boolean(server) && Object.hasOwn(scenes, server);
@@ -970,8 +993,30 @@ async function arenaCover(job, chosen) {
   const shot = await makeCamera(render, name).shoot("arenas", arenaFiles(arena, hall, near, far));
   const frame = frameOf(shot);
   if (!frame) return say("арена", server, "окно не вернуло кадр");
-  if (shot.gallery?.length && typeof onGallery === "function") await onGallery(shot.gallery);
+  const second = otherArenaServer(fingerprintNames, server);
+  const extra = second && typeof onGallery === "function" ? await secondArenaFrame({ second, first: server, inside, modFiles, source, name, render, hallCover }) : null;
+  if (extra) {
+    /* Арена двух серверов: кадры первого — с подписью его сервера, следом зал второго из его файлов автора. */
+    const own = (shot.gallery || []).map((bytes) => (bytes instanceof Uint8Array ? { bytes, caption: ARENA_SERVER_CAPTION[server] } : bytes));
+    await onGallery([...own, extra]);
+  } else if (shot.gallery?.length && typeof onGallery === "function") await onGallery(shot.gallery);
   return frame;
+}
+
+/* Зал второго сервера из файлов автора, которые не принадлежат первому: один кадр в галерею (`null` — снять нечем, в журнал причина). */
+async function secondArenaFrame({ second, first, inside, modFiles, source, name, render, hallCover }) {
+  const files = modFiles.filter((file) => fingerprints.arenaFileOwner(file.name) !== first);
+  const textures = inside[second] || [];
+  if (!textures.length) return debug(name, "арена", second, "второй зал: у сцены нет листов");
+  const near = await sheetsFor(textures, files, source);
+  if (near.missing.length) return debug(name, "арена", second, "второй зал: нет листов игры:", near.missing.length);
+  const hidden = await sheetsThread("blankModelsOf", { files: arenaBlank.blankCandidates(files) });
+  const hall = await (hallCover || hallModule.arenaHallCover)({ files, server: second, source, hidden, venues: hallModule.ARENA_COVER_VENUE, parts: ["inside"] });
+  const arena = Object.assign({ server: second, outside: false, hidden, hall: Boolean(hall?.inside), hallOutside: false }, hall?.star ? { star: hall.star } : null, hall?.cover ? { cover: hall.cover } : null, hall?.views);
+  const shot = await makeCamera(render, name).shoot("arenas", arenaFiles(arena, hall, near, { sheets: [], missing: ["нет сцены"] }));
+  const png = frameOf(shot);
+  if (!png) return debug(name, "арена", second, "второй зал: окно не вернуло кадр");
+  return { bytes: png, name: `arena-${second}`, caption: ARENA_SERVER_CAPTION[second] };
 }
 
 // ---------------------------------------------------------------- зоны и маппинг
@@ -1170,17 +1215,6 @@ async function enclosedShot(c) {
   return { ...shot, galleryCaption: "" };
 }
 
-// Маппинг без карт: модели мода на нейтральной сцене.
-const MODEL_STEPS = [
-  (c) => (typeof c.render === "function" ? undefined : STOP),
-  async (c) => {
-    c.models = named(c.files, /\.(ytd|ydr|yft)$/i);
-    const inside = await enclosedShot(c);
-    if (!inside) return undefined;
-    c.out = inside;
-    return STOP;
-  },
-  async (c) => {
 /*
  * Объекты в небе (северное сияние, Barbie · Mapping (auroraa)): все размещения высоко над миром, коллизий нет, материал прозрачный или светящийся (`sky-objects-cover.js`) — кадр «с земли»:
  * модели на своих местах и в своём масштабе под ночным небом, первый взгляд — обложка, остальные — галерея. Не сошлось — часть снимается как раньше.
@@ -1206,9 +1240,9 @@ async function skyShot(c) {
   return { ...out, layout: "sky" };
 }
 
-    c.planned = await modelSceneApi.modelCoverPlan(c.models, { hint: `${c.hint} ${c.name}`, placed: await placedStems(c.files, c.models) });
-    if (!c.planned) return STOP;
-    /* Объёмы-подсказки автора (призрачные листы — прострелы): не здание и не полотно на стене — ни фасада, ни здания из игры им не нужно (ниже), только общий вид площадки. */
+// Маппинг без карт: модели мода на нейтральной сцене.
+const MODEL_STEPS = [
+  (c) => (typeof c.render === "function" ? undefined : STOP),
   async (c) => {
     const sky = await skyShot(c).catch((failure) => {
       debug(c.name, "объекты в небе не сняты:", String(failure?.message || failure));
@@ -1218,6 +1252,17 @@ async function skyShot(c) {
     c.out = sky;
     return STOP;
   },
+  async (c) => {
+    c.models = named(c.files, /\.(ytd|ydr|yft)$/i);
+    const inside = await enclosedShot(c);
+    if (!inside) return undefined;
+    c.out = inside;
+    return STOP;
+  },
+  async (c) => {
+    c.planned = await modelSceneApi.modelCoverPlan(c.models, { hint: `${c.hint} ${c.name}`, placed: await placedStems(c.files, c.models) });
+    if (!c.planned) return STOP;
+    /* Объёмы-подсказки автора (призрачные листы — прострелы): не здание и не полотно на стене — ни фасада, ни здания из игры им не нужно (ниже), только общий вид площадки. */
     c.volumes = await modelSceneApi.ghostShare({ files: c.models, plan: c.planned.plan }).catch(() => ({ ghost: 0, faint: 0 }));
     return undefined;
   },

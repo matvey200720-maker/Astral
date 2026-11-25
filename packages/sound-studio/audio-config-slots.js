@@ -97,12 +97,22 @@ export function readAudioConfigSlots(buffer) {
   return slots;
 }
 
-/** Значения одного слота (`{bytes, header, metadata}`) или `null`, если слота с таким именем нет. */
+/**
+ * Значения одного слота (`{bytes, header, metadata}`) или `null`, если слота с таким именем нет.
+ *
+ * Общий слот под номерами (24.11.2026, жалоба на 1.0.7: «В audioconfig.dat4.rel игрока нет слота PLAYER_WEAPON»): банки ствола
+ * игрока игра грузит в слоты `PLAYER_WEAPON_0…2`, а таблица студии (`wave-slots.js`) знает их одним именем `PLAYER_WEAPON`.
+ * Записи с точным именем в файле нет — берётся семья `<имя>_<номер>` и по каждому числу самое строгое: банк обязан помещаться
+ * в любой слот семьи.
+ */
 export function audioConfigSlot(buffer, name) {
-  const slot = readAudioConfigSlots(buffer).get(name);
-  return slot
-    ? { bytes: slot.bytes, header: slot.header, metadata: slot.metadata }
-    : null;
+  const slots = readAudioConfigSlots(buffer);
+  const exact = slots.get(name);
+  if (exact) return { bytes: exact.bytes, header: exact.header, metadata: exact.metadata };
+  const family = [...slots.values()].filter((slot) => slot.name.startsWith(`${name}_`) && /^\d+$/.test(slot.name.slice(name.length + 1)));
+  if (!family.length) return null;
+  const least = (key) => Math.min(...family.map((slot) => slot[key]));
+  return { bytes: least("bytes"), header: least("header"), metadata: least("metadata") };
 }
 
 /**

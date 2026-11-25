@@ -27,7 +27,8 @@ export const NAME_RULES = Object.freeze([
   { kind: "vegetation", slot: "vegetation", label: "Растительность", part: ["tree", "derev", "sakura", "palm", "grass", "trava"] },
   { kind: "clouds", slot: "timecycle", label: "Таймцикл", part: ["cloud", "oblak"], token: ["sky"] },
   { kind: "optimization", slot: "optimization-world", label: "Оптимизация", token: ["opt", "optim", "optimization", "fps"] },
-  { kind: "schedule", slot: "schedule", label: "Расписание", token: ["5rp", "drop"], part: ["diller", "rasp", "schedule"] },
+  /* «diller» убрано (CUTTING FEELINGS, 15.11.2026): архив меток дилеров (`dillers.rpf`, 8 размещений в Лос-Сантосе) — маппинг, а не табло расписания; табло узнаёт отпечаток (`yoopiyo_schedule.ydr`). */
+  { kind: "schedule", slot: "schedule", label: "Расписание", token: ["5rp", "drop"], part: ["rasp", "schedule"] },
   { kind: "effects", slot: "effects", label: "Эффекты", token: ["core", "ptfx", "fx", "effect", "effects"] },
   /*
    * Маппинг с известной полкой каталога (владелец, 12.11.2026: «если в редуксе есть дополнительный маппинг — добавить его как часть маппинга и сделать его

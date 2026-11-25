@@ -17,4 +17,17 @@ export const zoneEmptyModel1411 = {
     "Ein Schema, kein Spielbild: Der Autor hat das Gras in den markierten Stadtteilen der Karte entfernt",
     "Schemat, a nie kadr z gry: autor usunął trawę w zacieniowanych dzielnicach mapy",
   ],
+  /* Подписи кадров галереи арены из архивов двух серверов (VEX REDUX, 15.11.2026): `apps/desktop/src/part-covers.js` (`ARENA_SERVER_CAPTION`). */
+  "Арена Majestic": [
+    "Арена Majestic",
+    "Majestic arena",
+    "Majestic-Arena",
+    "Arena Majestic",
+  ],
+  "Арена GTA 5 RP": [
+    "Арена GTA 5 RP",
+    "GTA 5 RP arena",
+    "GTA-5-RP-Arena",
+    "Arena GTA 5 RP",
+  ],
 };

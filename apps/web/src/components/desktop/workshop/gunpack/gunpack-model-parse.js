@@ -77,6 +77,8 @@ function describeMesh(mesh, shelf) {
     material: {
       ...convertFields(MATERIAL_FIELDS, material),
       textures,
+      /* Имя листа цвета из материала — для причины отказа «часть ствола без текстуры» (white-gate.js): какой лист не нашёлся в словарях пака. */
+      diffuseName: material?.textures?.diffuse ?? null,
       environmentLost: Boolean(reflection) && !textures.environment,
       reflectivePower: material?.reflectivePower ?? null,
     },

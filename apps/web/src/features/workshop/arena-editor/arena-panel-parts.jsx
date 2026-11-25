@@ -143,7 +143,7 @@ const COMMON_LABELS = frozenTable({
   walls: "Стены|Стіни|Walls|Wände|Ściany|Murs",
   ceiling: "Потолок|Стеля|Ceiling|Decke|Sufit|Plafond",
   lights: "Свет|Світло|Light|Licht|Światło|Lumière",
-  patterns: "Узоры|Узори|Patterns|Muster|Wzory|Motifs",
+  patterns: "Узоры|Візерунки|Patterns|Muster|Wzory|Motifs",
   facade: "Фасад|Фасад|Facade|Fassade|Fasada|Façade",
   seats: "Кресла|Крісла|Seats|Sitze|Fotele|Sièges",
   star: "Звезда|Зірка|Star|Stern|Gwiazda|Étoile",

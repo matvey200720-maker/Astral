@@ -20,6 +20,7 @@
     "./model": "./model.js",
     "./collage-layout": "./collage-layout.js",
     "./crude-model": "./crude-model.js",
+    "./white-gate": "./white-gate.js",
     "./channel": "./channel.js",
     "./looks": "./looks.js",
     "./stock": "./stock.js",

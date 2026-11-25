@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import os from "node:os";
-import { execFile } from "node:child_process";
 
 const exists = (p) => {
   try {
@@ -316,16 +315,9 @@ export function parseRegQuery(text) {
   return values;
 }
 
-function runReg(args) {
-  return new Promise((resolve) => {
-    execFile(
-      "reg.exe",
-      args,
-      { encoding: "utf8", windowsHide: true, timeout: 10_000 },
-      /* Нет ключа — `reg` выходит с ошибкой: для поиска это «пусто», а не сбой. */
-      (error, stdout) => resolve(error ? "" : stdout),
-    );
-  });
+/* Выгрузка UTF-16, не `reg query`; нет ключа — пустой текст. */
+async function runReg(args) {
+  return (await import("./registry-export.js")).readRegistryKeyText(args[1]);
 }
 
 /**

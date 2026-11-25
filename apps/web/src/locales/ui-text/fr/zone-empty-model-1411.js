@@ -7,4 +7,6 @@ export const frZoneEmptyModel1411 = {
     "Une icône, pas une image du jeu : le modèle du fichier de l'auteur est vide, l'objet n'est pas dessiné dans le jeu",
   "Схема, а не кадр игры: автор убрал траву в закрашенных районах карты":
     "Un schéma, pas une image du jeu : l'auteur a supprimé l'herbe dans les quartiers colorés de la carte",
+  "Арена Majestic": "Arène Majestic",
+  "Арена GTA 5 RP": "Arène GTA 5 RP",
 };

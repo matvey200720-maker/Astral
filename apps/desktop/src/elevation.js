@@ -23,7 +23,8 @@ const WAIT = { ready: 120000, poll: 200, consent: 600000, relay: 120000 };
 
 const POWERSHELL_FIXED_ARGS = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand".split(" ");
 
-const SCRIPT_OPEN = ["$ErrorActionPreference = 'Stop'", "try {"];
+// Ответ в UTF-8: иначе кириллица в причине портится.
+const SCRIPT_OPEN = ["$ErrorActionPreference = 'Stop'", "try { [Console]::OutputEncoding = New-Object Text.UTF8Encoding($false) } catch {}", "try {"];
 const SCRIPT_CLOSE = [
   "} catch {",
   "  $e = $_.Exception; $code = 0",

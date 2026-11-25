@@ -148,6 +148,9 @@ export async function routeComponentDrafts(anatomy, context = {}) {
   const claimed = new Set();
   const tail = postKey(postUrl);
 
+  /* Исполняемые файлы автора разбор не берёт ни в какую часть (ворота пакета их не пропустят): отчёт называет каждый, часть из-за этого не задерживается. */
+  for (const file of anatomy.skipped?.executable || []) problems.push({ code: "executable-dropped", message: `${file.path}: отброшено: исполняемый файл автора ${file.path.split("/").pop()}.`, severity: "warn" });
+
   for (const component of anatomy.components) {
     const members = component.units.map((id) => unitsById.get(id));
     if (!ROUTE_SLOTS.includes(component.slot)) {

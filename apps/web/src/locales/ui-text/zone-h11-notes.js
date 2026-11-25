@@ -18,7 +18,7 @@ export const zoneH11Notes = {
     "W kadrze strzelasz ty, ale ta smuga ma ustawienie „Tylko cudze”: w grze twoje strzały nie będą miały śladu, a cudze z daleka będą go miały.",
   ],
   "Линию рисует Astral теми же толщиной, узором и прозрачностью, что уйдут в игру.": [
-    "Лінію малює Astral тими самими товщиною, узором і прозорістю, що підуть у гру.",
+    "Лінію малює Astral тими самими товщиною, візерунком і прозорістю, що підуть у гру.",
     "Astral draws the line with the same thickness, pattern and transparency that go into the game.",
     "Die Linie zeichnet Astral mit derselben Dicke, demselben Muster und derselben Transparenz, die ins Spiel gehen.",
     "Linię rysuje Astral tą samą grubością, wzorem i przezroczystością, które trafią do gry.",

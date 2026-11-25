@@ -570,9 +570,13 @@ const RULES = [
     "work-folder",
     /Рабочая папка сборки плашек пропала|рабочая папка недоступна хосту/i,
   ],
+  /* `EPERM` на открытии файла — права, а не занятость (24.11.2026). Windows отдаёт Node `EPERM` на «доступ запрещён» (нет права
+     создавать файлы в папке игры, запрет записи, «только чтение»), а `EBUSY` — на «файл держит другая программа»; новое имя
+     стадии (`update.rpf.astral-stage-….stage`) занять некому. Раньше такой отказ шёл в «Файл игры занят: закройте GTA V», и
+     причину искали в игре и её лаунчере. Переименование и прочее остаются за «файл занят»: там `EPERM` двусмыслен. */
   [
     "no-access",
-    /EACCES|permission denied|Access is denied|Access to the path .+ is denied|Отказано в доступе|read-only file system|EROFS/i,
+    /EACCES|permission denied|Access is denied|Access to the path .+ is denied|Отказано в доступе|read-only file system|EROFS|EPERM: operation not permitted, open\b/i,
   ],
   ["file-busy", /EBUSY|EPERM|resource busy|locked|operation not permitted/i],
   [

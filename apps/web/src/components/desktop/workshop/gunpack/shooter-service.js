@@ -1,4 +1,5 @@
 import { colourlessReason, crudeModelReason, meshTriangles } from "@modovik/gunpack/crude-model";
+import { expectedLuma, untexturedReason } from "@modovik/gunpack/white-gate";
 import { parseWeaponModel } from "./gunpack-model-parse.js";
 import { CATALOG_BACKGROUND, composeCollage, isBlankFrame } from "./collage.js";
 import { createGunpackScene } from "./gunpack-scene.js";
@@ -26,6 +27,8 @@ const withBackground = (backgroundId) => ({ backgroundId });
 const REFUSALS = [
   (parsed) => crudeModelReason(meshTriangles(parsed.meshes)),
   (parsed) => colourlessReason(parsed),
+  /* Часть поверхности без листа цвета (по площади, порог ниже, чем у «цвета потеряно»): кадр выходил «белый корпус + декор» (MASK GUNPACK, 18.11.2026). */
+  (parsed) => untexturedReason(parsed),
 ];
 
 // Единственная живая сцена на страницу вместе с холстом и таймером простоя.
@@ -88,6 +91,8 @@ const takeCut = (current) => () => current.snapshot(withBackground("transparent"
    вручную (замер на стенде, `scripts/gunpack-light-sweep-electron.js`): автоматика не работает, кадр снимается как просили. */
 async function captureFrame(current, parsed, look = null) {
   const { length } = current.setModel(parsed);
+  /* Средняя светлота листов цвета: главный процесс сверяет с ней белизну кадра (white-gate.js) и отличает брак рендера от светлого ствола по замыслу автора. */
+  const expected = expectedLuma(parsed);
   current.setAngle("profile");
   const shoot = takeCut(current);
   let cut = shoot();
@@ -95,10 +100,10 @@ async function captureFrame(current, parsed, look = null) {
   if (look) {
     current.setLook(look);
     cut = shoot();
-    return (await isBlankFrame(cut)) ? null : { cut, length, light: await measureFrame(cut) };
+    return (await isBlankFrame(cut)) ? null : { cut, length, light: await measureFrame(cut), expected };
   }
   const settled = await settleLight({ scene: current, cut, shoot });
-  return { cut: settled.cut, length, light: settled.light && { ...settled.light, level: settled.level } };
+  return { cut: settled.cut, length, light: settled.light && { ...settled.light, level: settled.level }, expected };
 }
 
 // Пустой кадр значит потерянный контекст GPU: сцену пересоздаём и снимаем ступенью легче.
@@ -119,10 +124,10 @@ const coverShot = async (request) => ({
 });
 
 async function weaponShot(request, rig, ledger) {
-  const { cut, length, light } = await shootFrom(rig, request?.files || [], request?.look || null);
+  const { cut, length, light, expected } = await shootFrom(rig, request?.files || [], request?.look || null);
   const card = await composeCollage([{ bytes: cut, length }], withBackground(CATALOG_BACKGROUND));
   ledger.shots += 1;
-  return { cut, card, length, light };
+  return { cut, card, length, light, expected };
 }
 
 // Любой op, кроме «cover», снимает ствол.

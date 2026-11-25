@@ -7,6 +7,10 @@ import * as mapEntities from "./map-entities-append.js";
 
 // Лист зоны — крошечная ровная текстура: больше этой стороны не бывает.
 export const ZONE_SHEET_MAX = 16;
+// Оболочка зоны — плоская: выше этого, м, это здание или полотно, а не зона.
+export const ZONE_SHELL_HEIGHT_MAX = 8;
+// Здание — не шире этого, м: районы МСЛ (1000 м и больше, без листа, высокие) — зоны, не здания.
+export const BUILDING_SIDE_MAX = 150;
 
 const AXES = [0, 1, 2];
 const FAILED = Symbol("failed");
@@ -103,6 +107,18 @@ function embeddedSheet(bytes) {
   return { colour, size: [texture.width, texture.height] };
 }
 
+/**
+ * Модель — оболочка зоны, а не здание. Оболочки зон бывают высокими (бизвар 26 м, ВЗХ 42 м) и несут крошечный лист — их не трогаем. Здание или полотно автора,
+ * у которого листа в модели нет вовсе (CUTTING FEELINGS · Мегамолл: `mall.ydr` 69×75×12 м, текстуры тяжёлые и отдельные), зоной не считается (районы МСЛ — без листа и высокие, но шире `BUILDING_SIDE_MAX`: они зоны): цвет ему дал бы лист соседней модели,
+ * и обложка части становилась схемой с сиреневым прямоугольником. `shell` — результат `modelShellOf`.
+ */
+export function isZoneShell(shell) {
+  if (!shell) return false;
+  if (shell.sheet) return true;
+  const side = Math.max(shell.size?.[0] || 0, shell.size?.[1] || 0);
+  return !(shell.size?.[2] > ZONE_SHELL_HEIGHT_MAX && side <= BUILDING_SIDE_MAX);
+}
+
 export function modelShellOf(bytes) {
   const geometry = attempt(() => ypt.readDrawableGeometry(bytes), FAILED);
   if (geometry === FAILED) return null;
@@ -143,7 +159,7 @@ function shellPairs(files) {
   for (const [file, name] of withExtension(files, ".ydr")) {
     if (!file.bytes) continue;
     const shell = modelShellOf(new Uint8Array(file.bytes));
-    if (shell && shell.hull.length >= 3) pairs.push([rage.joaat(name.slice(0, -4)) >>> 0, { ...shell, model: name }]);
+    if (shell && shell.hull.length >= 3 && isZoneShell(shell)) pairs.push([rage.joaat(name.slice(0, -4)) >>> 0, { ...shell, model: name }]);
   }
   return pairs;
 }

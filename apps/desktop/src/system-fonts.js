@@ -11,7 +11,6 @@
  * шрифтов человека. Остальные системы (разработка) — папки шрифтов по именам файлов.
  */
 
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -43,13 +42,8 @@ export function parseRegistryFonts(output) {
   return rows;
 }
 
-function defaultRunRegistry(key) {
-  return new Promise((resolve) => {
-    execFile("reg", ["query", key], { encoding: "utf8", windowsHide: true, timeout: 8000, maxBuffer: 4 * 1024 * 1024 }, (error, stdout) =>
-      resolve(error ? "" : stdout),
-    );
-  });
-}
+/* Выгрузка UTF-16 (`registry-export.js`): файлы шрифтов профиля с кириллицей. */
+const defaultRunRegistry = async (key) => (await import("@modovik/game-discovery/registry-export.js")).readRegistryKeyText(key);
 
 /**
  * Средство списка и чтения. Всё внешнее приходит параметрами (реестр, папки, файловая система) — модуль проверяется

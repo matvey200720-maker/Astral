@@ -185,7 +185,7 @@ async function majesticRunning(tools) {
 
 /* ------------------------------------------------------------ RAGE */
 
-/** Путь к игре в RAGE Multiplayer или `null` (лаунчера нет). */
+/** Путь к игре в RAGE Multiplayer или `null` (лаунчера нет). Выгрузка UTF-16, не `reg query`. */
 export async function rageGamePath(tools = {}) {
   if (tools.readRage) return tools.readRage();
   const qa = qaLaunchers();
@@ -197,11 +197,9 @@ export async function rageGamePath(tools = {}) {
     }
   }
   try {
-    const { stdout } = await execFileAsync("reg.exe", ["query", RAGE_KEY, "/v", RAGE_VALUE], {
-      windowsHide: true,
-      encoding: "utf8",
-    });
-    const match = new RegExp(`${RAGE_VALUE}\\s+REG_[A-Z_]+\\s+(.+)`, "i").exec(stdout);
+    const { readRegistryKeyText } = await import("@modovik/game-discovery/registry-export.js");
+    const text = await (tools.registryText || readRegistryKeyText)(tools.rageKey || RAGE_KEY);
+    const match = new RegExp(`${RAGE_VALUE}\\s+REG_[A-Z_]+\\s+(.+)`, "i").exec(text);
     return match ? match[1].trim() : null;
   } catch {
     return null;

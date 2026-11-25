@@ -190,10 +190,9 @@ export async function slotInState(target, slotName, { withoutOwn = false } = {})
   const record = entries ? ownRecordValue(entries, AUDIO_CONFIG_ENTRY) : null;
   const top = (record?.layers || []).filter((layer) => !(withoutOwn && layer.modId === AUDIO_SLOTS_LAYER)).at(-1);
   if (!top?.cachePath || top.action === "delete") return null;
-  const slot = audioConfigSlot(await fs.readFile(top.cachePath), slotName);
-  if (!slot)
-    throw new Error(`В audioconfig.dat4.rel игрока нет слота ${slotName}: слот памяти для звукового банка не узнать.`);
-  return slot;
+  /* Нет ни слота, ни семьи `<имя>_<номер>` — как без слоя: штатная таблица (24.11.2026; раньше — отказ, и пак с банком ствола
+     игрока не вставал у каждого, кому 1.0.7 подняла STATIC_WEAPONS). */
+  return audioConfigSlot(await fs.readFile(top.cachePath), slotName);
 }
 
 /*

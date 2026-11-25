@@ -16,7 +16,7 @@ export const zoneS1Sweep1511 = {
   "Показать ещё · {N}": ["Показати ще · {N}", "Show more · {N}", "Mehr anzeigen · {N}", "Pokaż więcej · {N}"],
   /* Студия оружия, «Готовые»: кнопка «Стандарт» стала «Как в игре», запись словаря осталась со «Стандартом». */
   "Ствол как в игре одним шагом: покраска, узоры, наклейки и потёртость снимаются. Скин сейчас стоит в игре — после «Как в игре» «Применить» снимет его, и в игре снова заводской ствол.": [
-    "Ствол як у грі одним кроком: фарбування, узори, наклейки і потертість знімаються. Скін зараз стоїть у грі — після «Як у грі» «Застосувати» зніме його, і в грі знову заводський ствол.",
+    "Ствол як у грі одним кроком: фарбування, візерунки, наклейки і потертість знімаються. Скін зараз стоїть у грі — після «Як у грі» «Застосувати» зніме його, і в грі знову заводський ствол.",
     "The weapon as in the game in one step: paint, patterns, stickers and wear are removed. A skin is installed in the game now — after “As in the game”, “Apply” will remove it and the game will show the factory weapon again.",
     "Die Waffe wie im Spiel mit einem Schritt: Lackierung, Muster, Sticker und Abnutzung werden entfernt. Ein Skin ist jetzt im Spiel installiert — nach „Wie im Spiel“ entfernt „Anwenden“ ihn, und im Spiel erscheint wieder die Werksversion.",
     "Broń jak w grze jednym krokiem: malowanie, wzory, naklejki i zużycie są zdejmowane. Skin jest teraz zainstalowany w grze — po „Jak w grze” „Zastosuj” go zdejmie i w grze znów będzie fabryczna broń.",
