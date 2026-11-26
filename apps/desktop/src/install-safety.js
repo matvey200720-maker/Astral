@@ -79,6 +79,7 @@ export async function assertInstallRuntimeSafe(game, options = {}) {
   }
   const running = await findBlockingGameProcessDetails(game, options);
   if (running.length) {
+    noteRunningGame(running, options);
     throw installBlocked(
       await import("./game-running-refusal.js").then(
         (words) => words.runningRefusal(running),
@@ -87,6 +88,16 @@ export async function assertInstallRuntimeSafe(game, options = {}) {
     );
   }
   return { safe: true, running: [] };
+}
+
+/* Путь и состояние найденного процесса — в журнал (26.11.2026: по журналу игрока не было видно, что за `GTA5.exe`). Отказ не ждёт и от сбоя не меняется. Подставной список процессов (`options.run`) настоящий PowerShell не зовёт. */
+function noteRunningGame(running, { run, note } = {}) {
+  const write =
+    note ??
+    (run === undefined
+      ? (rows) => import("./game-process-facts.js").then((facts) => facts.noteBlockingProcesses(rows))
+      : null);
+  if (write) Promise.resolve().then(() => write(running)).catch(() => {});
 }
 
 export function watchInstallRuntime({

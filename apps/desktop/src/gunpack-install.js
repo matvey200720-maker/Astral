@@ -698,6 +698,15 @@ function containerRouteOf(spec) {
   return route?.mode === "container" ? route : null;
 }
 
+/* Копия мода каталога (смена размера) заменяет то же, что его установка в 100 %: названное (`spec.catalog.replaceModIds`, `catalog-replacements.js`) и конфликты плана без работ мастерской — как `planConflicts` окна
+   (свой скин и «Мои паки» остаются под модом каталога, Т-107b). Снимается только установленное. */
+async function catalogCopyReplaced(plan, asked, stateDir, targetId) {
+  const state = await engine.inspectProfile({ stateDir });
+  const installed = new Set((state?.targets?.[targetId]?.installed || []).map((item) => item.modId));
+  const named = [...engine.conflictsReplacedWhole(plan, (conflict) => !conflict.stack), ...asked];
+  return [...new Set(named)].filter((id) => installed.has(id)).sort();
+}
+
 async function installBuilt(spec) {
   const { built, request, stateDir, dependencies, tools, safety } = spec;
   const { gameRoot, targetId } = request;
@@ -708,7 +717,7 @@ async function installBuilt(spec) {
   if (hostNeeded) await provision({ ...common, assertRuntimeSafety: safety, activate: false });
   const base = { manifest: built.manifest, packageRoot: built.directory, ...common, rpfProbe: tools.rpfProbe };
   const plan = hostNeeded ? await engine.planLocalGunpackPackage(base) : { conflicts: [] };
-  const replaceModIds = conflictModIds(plan);
+  const replaceModIds = spec.catalog ? await catalogCopyReplaced(plan, spec.catalog.replaceModIds, stateDir, targetId) : conflictModIds(plan);
   const options = { replaceModIds, assertRuntimeSafety: safety, onProgress: dependencies.onProgress, ...(route ? { weaponUpdateRoute: route } : {}), ...(spec.origin ? { origin: spec.origin } : {}) };
   const installed = await engine.installLocalGunpackPackage(Object.assign({}, base, composersOf(tools), options));
   return { installed, replaceModIds };
@@ -886,25 +895,36 @@ export async function removeGunpack(input, stateDir, dependencies = {}) {
   return { ...outcome, modId: installed.modId, restartRequired: true };
 }
 
-/**
- * Готовый набор файлов — в игру пакетом ганпака (библиотека v2, 14.11.2026): тот же путь, что у сборки из «Моих паков» (план, замена по слотам, строгая локальная форма
- * манифеста), только файлы пришли не из пака, а из каталожного пакета с перешитыми моделями (`catalog-model-scale.js`).
- * @param {{ label: string, models: string[], files: { name: string, bytes: Uint8Array }[], gameRoot: string, targetId?: string }} spec
- */
-export async function installPreparedGunpack(spec, stateDir, dependencies = {}) {
-  const request = { gameRoot: path.resolve(spec.gameRoot), targetId: String(spec.targetId || "default") };
+function preparedPackage(spec) {
   const records = spec.files
     .map((file) => ({ name: file.name, bytes: file.bytes, size: file.bytes.byteLength, sha256: sha256Of(file.bytes) }))
     .sort(byFileName);
   const models = [...spec.models].sort();
   const manifest = buildGunpackManifest({ label: spec.label, models, files: records.map(({ name, size, sha256 }) => ({ name, size, sha256 })) });
+  return { records, models, manifest };
+}
+
+/** Влезает ли готовый набор в локальный пакет ганпака: пределы числа стволов и файлов и веса файла проверяет движок. */
+export function preparedGunpackFits(spec) {
+  return engine.isLocalGunpackManifest(preparedPackage(spec).manifest, "Legacy");
+}
+
+/**
+ * Готовый набор файлов — в игру пакетом ганпака (библиотека v2, 14.11.2026): тот же путь, что у сборки из «Моих паков» (план, замена по слотам, строгая локальная форма
+ * манифеста), только файлы пришли не из пака, а из каталожного пакета с перешитыми моделями (`catalog-model-scale.js`).
+ * @param {{ label: string, models: string[], files: { name: string, bytes: Uint8Array }[], gameRoot: string, targetId?: string, origin?: object, catalog?: { replaceModIds: string[] } }} spec
+ *   `catalog` — это копия мода каталога: замена по его правилам (`catalogCopyReplaced`), а не по всем конфликтам плана
+ */
+export async function installPreparedGunpack(spec, stateDir, dependencies = {}) {
+  const request = { gameRoot: path.resolve(spec.gameRoot), targetId: String(spec.targetId || "default") };
+  const { records, models, manifest } = preparedPackage(spec);
   const directory = path.join(stateDir, "gunpack-installs", randomUUID());
   try {
     for (const file of records) await bake.atomicWrite(path.join(directory, "payload", file.name), file.bytes);
     const game = await gameReady(dependencies, request.gameRoot);
     const safety = runtimeGuard(dependencies, game);
     const tools = archiveToolsOf(dependencies);
-    const { installed, replaceModIds } = await installBuilt({ built: { manifest, directory }, request, stateDir, dependencies, tools, safety, origin: spec.origin });
+    const { installed, replaceModIds } = await installBuilt({ built: { manifest, directory }, request, stateDir, dependencies, tools, safety, origin: spec.origin, catalog: spec.catalog });
     return { ...installed, modId: manifest.id, targetId: request.targetId, models, replaced: replaceModIds, restartRequired: true };
   } finally {
     await dropFolder(directory);

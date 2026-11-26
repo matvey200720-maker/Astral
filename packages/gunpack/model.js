@@ -8,6 +8,8 @@ const STUB_AREA = 16 * 16;
 const HULL_RATIO = -0.02;
 const BOX_SLACK = 0.05;
 const TRIANGLE_SLACK = 0.25;
+const SEE_THROUGH_SHARE = 0.1;
+const SHORT_SIDE = 0.0015;
 const AXES = [0, 1, 2];
 
 function listOrEmpty(value, what) {
@@ -25,7 +27,7 @@ function footprint(mesh) {
   const indices = mesh?.indices;
   const triangles = indices ? indices.length / 3 : 0;
   const vertexCount = positions ? Math.floor(positions.length / 3) : 0;
-  const shape = { triangles, ratio: 0, low: [], high: [], size: [] };
+  const shape = { triangles, ratio: 0, low: [], high: [], size: [], seeThrough: mesh?.material?.alphaMode === "blend" };
   if (vertexCount === 0 || !indices?.length) return shape;
 
   const sum = [0, 0, 0];
@@ -72,12 +74,41 @@ function isInflated(hull, other) {
   return AXES.every((axis) => hull.size[axis] > other.size[axis]);
 }
 
+// Обводка постоянной толщины: копия той же сетки обнимает двойника со всех сторон, и зазор на каждой стороне не больше доли самой длинной стороны.
+// У плоских стволов (пиксельные, 2 см толщиной) обводка в 6 мм шире допуска по тонкой оси: без этого оболочка рисовалась поверх ствола, и обложка выходила серой (25.11).
+function isRim(hull, other) {
+  if (!(other.ratio > 0)) return false;
+  if (Math.abs(other.triangles - hull.triangles) > hull.triangles * TRIANGLE_SLACK) return false;
+  const limit = Math.max(...hull.size) * BOX_SLACK;
+  return AXES.every((axis) => {
+    const below = other.low[axis] - hull.low[axis];
+    const above = hull.high[axis] - other.high[axis];
+    return below > 0 && above > 0 && below <= limit && above <= limit;
+  });
+}
+
+// Оболочка поверх всего ствола: вывернутая часть обнимает объединение всех остальных частей, смотрящих наружу. Граней не столько же, когда тело собрано из
+// нескольких частей или с удвоенными гранями, — без этого белая оболочка закрывала розовый ствол (25.11). Совпадающая сторона — в пределах 0,2 мм на метр.
+// Только над непрозрачным телом: сквозь стеклянный корпус оболочка видна и так, она и есть его вид.
+function isEnvelope(hull, shapes) {
+  const outward = shapes.filter((other) => other.ratio > 0);
+  const triangles = (list) => list.reduce((sum, other) => sum + other.triangles, 0);
+  if (!outward.length || triangles(outward.filter((other) => other.seeThrough)) > triangles(outward) * SEE_THROUGH_SHARE) return false;
+  const longest = Math.max(...hull.size);
+  const gaps = AXES.flatMap((axis) => [
+    Math.min(...outward.map((other) => other.low[axis])) - hull.low[axis],
+    hull.high[axis] - Math.max(...outward.map((other) => other.high[axis])),
+  ]);
+  /* Не больше одной стороны, где тело выступает за оболочку (у автора край на миллиметр наружу); внутренняя стенка меньше тела со всех сторон. */
+  return gaps.every((gap) => gap <= longest * BOX_SLACK && gap >= -longest * SHORT_SIDE) && gaps.filter((gap) => gap < -longest * 0.0002).length <= 1;
+}
+
 export function invertedHulls(meshes) {
   const shapes = listOrEmpty(meshes, "Части модели").map(footprint);
   const hulls = [];
   shapes.forEach((shape, index) => {
-    const outline = (other, j) => j !== index && isTwin(shape, other) && (shape.ratio < HULL_RATIO || isInflated(shape, other));
-    if (shape.ratio < 0 && shapes.some(outline)) hulls.push(index);
+    const outline = (other, j) => j !== index && ((isTwin(shape, other) && (shape.ratio < HULL_RATIO || isInflated(shape, other))) || isRim(shape, other));
+    if (shape.ratio < 0 && (shapes.some(outline) || isEnvelope(shape, shapes))) hulls.push(index);
   });
   return hulls;
 }

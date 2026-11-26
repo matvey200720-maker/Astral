@@ -133,21 +133,88 @@ const MAP_FILE = /^hei_(?!prop_)/i;
  * Едут только словари стены: цвет стены, окон и металла — листы `sp1_10_stadium.ytd` (99,8 % площади `mainwall_1` — лист `sp1_10_rsn_mc_wall_0001`), модели здания Majestic в игре остаются
  * его собственными. Наши копии моделей набора 09.10 в карту не едут: Majestic мог обновить их после 09.10, и копия откатила бы форму здания. Дальние планы (`sp1_10_lod.ytd`,
  * `sp1_lod_10_11_children.*`) и базовые словари блока (`sp1_10.ytd`, `sp1_10_details.ytd`) остаются на старте: так они уже работали. Файлы, которых нет в наборе, в списке безвредны.
+ *
+ * С 26.11.2026 словари стены лежат в ДВУХ архивах (`MAJESTIC_MIRROR_FILES`): на старте и теми же байтами зеркалом в `astral_arenas_mp.rpf`. С 21.11 они стояли только в
+ * сетевой карте, а сюжет `GROUP_MAP` не исполняет — в сюжете стена откатывалась к штатной. Для Majestic ничего не меняется. Арену с прежней раскладкой переносит
+ * подготовка игры (`recolor-customizer.js`: `migratePlacesOnce`).
  */
 export const ARENA_MAP_FILES = Object.freeze(["sp1_10_stadium.ytd", "sp1_10_stadium+hi.ytd"]);
-const ARENA_MAP_FILE_SET = new Set(ARENA_MAP_FILES);
-/** Файл арены из набора карты Majestic: всегда в архив сетевой карты, список игры его не касается (Majestic в папке игры нет). */
-export const isArenaMapFile = (setId, name) => setId === "arenas" && ARENA_MAP_FILE_SET.has(String(name).toLowerCase());
+/*
+ * Мегамолл Majestic (26.11.2026, жалоба: «поставил Мегамолл, а на Majestic прежний»; разбор по файлам клиента).
+ *
+ * DLC Majestic `mall_txt_repl` (order 69) — свой фасад Davis Mega Mall: набор `mall_txt_repl_MAP` из `GROUP_MAP` включает overlay-архив
+ * `mall_txt_repl.rpf` с моделями `sc1_22_mall_04bb`, `sc1_22_mall_dec`, дальними `sc1_22_slod1_children` и `…21_22_27_28_34_children`,
+ * словарями `sc1_22_hd`, `sc1_22_lod`, `…children` и картой `lr_sc1_22_strm_0`. Наши файлы с теми же именами стояли в архиве на старте
+ * (`GROUP_STARTUP`, раньше `GROUP_MAP`) и проигрывали — как стена арены. Это не замена текстур: форма у них другая (`mall_04bb` — 10 123
+ * треугольника против 11 630, общих 73 %), а их словари — штатные листы байт в байт плюс 17 своих, которые зовут только их модели.
+ * Коллизии в их паке нет. Поэтому на сетевой карте виден весь наш фасад:
+ *
+ *   • сюжет `GROUP_MAP` не исполняет, поэтому файл фасада лежит в ДВУХ архивах пакета: на старте (`astral_megamall.rpf` — сюжет) и теми же
+ *     байтами зеркалом в `astral_megamall_mp.rpf` под `CCS_ASTRAL_PLACES_MAP` (`MAJESTIC_MIRROR_FILES`; order 107 после 69);
+ *   • пакет везёт все семь: нетронутые работой — штатными из игры (`recolor-customizer.js`: `MAJESTIC_STOCK_SOURCES`). Модель и словарь, из
+ *     которого модель Majestic берёт свои новые листы, идут в сетевую карту только вместе (значение в таблице — пара): свой словарь поверх
+ *     их модели оставил бы фасад без листов;
+ *   • нетронутый словарь-наполнитель — ТОЛЬКО в архиве сетевой карты: на старте игра берёт свой файл с теми же байтами, а штатный словарь в
+ *     архиве на старте заставил бы «Билборды» уступить Мегамоллу свои щиты на этих листах (`heldByOtherSets` наполнитель не считает занятым);
+ *   • `+hi` и `+hidr` (`sc1_22_hd+hi.ytd`, `sc1_22_mall_04bb+hidr.ytd`) зеркала не просят: файлов с такими именами у Majestic нет, наши на
+ *     старте ничем не перекрыты;
+ *   • `lr_sc1_22_strm_0.ymap` едет, как раньше, только если человек правил вещи, и тогда — в сетевую карту при любом списке игры
+ *     (`MAJESTIC_MAP_FILES`): вне `GROUP_MAP` (лоурайдеры) такой карты нет. Без правок вещей карта остаётся Majestic;
+ *   • эта раскладка — только у нового «Применить» (`recolor-customizer.js`: `MAJESTIC_APPLY_ONLY_SETS`): Мегамолл, поставленный раньше,
+ *     подготовка игры не переставляет и его раскладку (`facade: false`) считает своей. Автоперенос — после захода человека на Majestic.
+ */
+/** Файлы мест из набора карты Majestic, что кладутся ТОЛЬКО в архивы сетевой карты. */
+export const MAJESTIC_MAP_FILES = Object.freeze({
+  megamall: Object.freeze(["lr_sc1_22_strm_0.ymap"]),
+});
+/** Файлы мест из набора карты Majestic, что нужны и в сюжете: на старте и зеркалом в архиве сетевой карты. Значение — пара: без неё в пакете зеркала нет. */
+export const MAJESTIC_MIRROR_FILES = Object.freeze({
+  arenas: Object.freeze(Object.fromEntries(ARENA_MAP_FILES.map((name) => [name, null]))),
+  megamall: Object.freeze({
+    "sc1_22_mall_04bb.ydr": "sc1_22_hd.ytd",
+    "sc1_22_hd.ytd": "sc1_22_mall_04bb.ydr",
+    "sc1_22_slod1_children.ydd": "sc1_22_lod.ytd",
+    "sc1_22_lod.ytd": "sc1_22_slod1_children.ydd",
+    "sc1_lod_21_22_27_28_34_children.ydd": "sc1_lod_21_22_27_28_34_children.ytd",
+    "sc1_lod_21_22_27_28_34_children.ytd": "sc1_lod_21_22_27_28_34_children.ydd",
+    /* Новых листов модель Majestic этих накладок не берёт — пары нет. */
+    "sc1_22_mall_dec.ydr": null,
+  }),
+});
+const listed = (table, setId, name) => Object.hasOwn(table, setId) && table[setId].includes(String(name).toLowerCase());
+/** Файл из набора карты Majestic: всегда в архив сетевой карты, список игры его не касается (Majestic в папке игры нет). */
+export const isMajesticMapFile = (setId, name) => listed(MAJESTIC_MAP_FILES, setId, name);
+/** Словарь стены арены из набора карты Majestic: в сетевую карту — при любом списке игры. */
+export const isArenaMapFile = (setId, name) => setId === "arenas" && ARENA_MAP_FILES.includes(String(name).toLowerCase());
+/* Раскладка до 26.11.2026 (`facade: false` — поставленное раньше): принудительно в сетевую карту шли только словари стены арены, и только туда. */
+const isForcedBefore2611 = isArenaMapFile;
+const mirrorTableOf = (setId) => (Object.hasOwn(MAJESTIC_MIRROR_FILES, setId) ? MAJESTIC_MIRROR_FILES[setId] : null);
+/** Файл с зеркалом: его основная запись всегда на старте, список игры её не переносит. */
+export const isMajesticMirrorFile = (setId, name) => {
+  const table = mirrorTableOf(setId);
+  return Boolean(table) && Object.hasOwn(table, String(name).toLowerCase());
+};
+/** Запись зеркала в архиве сетевой карты или `null`; `names` — имена файлов того же пакета (строчными). */
+export function placesMirrorEntryOf(setId, name, names) {
+  if (!isMajesticMirrorFile(setId, name)) return null;
+  const lower = String(name).toLowerCase();
+  const pair = mirrorTableOf(setId)[lower];
+  return pair && !names.has(pair) ? null : `${placesMapStreamOf(setId)}/${lower}`;
+}
+/** Словарь фасада, что вправе лежать одним наполнителем в архиве сетевой карты (штатный файл, имени он не занимает). */
+export const isMajesticFillerDictionary = (setId, name) => setId === "megamall" && isMajesticMirrorFile(setId, name) && /\.ytd$/i.test(String(name));
 /*
  * Правило по игре вместо префикса (как у дорог и растительности, `roads-dlc.js`): в архивы `<место>_mp(_metadata).rpf` идёт ровно то, что штатные пакеты включают
  * наборами `GROUP_MAP` и чего нет в игре нигде больше, — `hei_` районов mpheist и файлы без префикса (`lr_*` лоурайдеров, `apa_*`, `m24_*`, `tr_*`…).
  * Остальное, даже с `hei_`, — в архивы на старте. `mapNames` — имена строчными из игры игрока (`apps/desktop/src/game-map-names.js`). Префикс `hei_` —
  * только запасное правило, когда игру прочитать нельзя (`mapNames` — `null`).
  */
-/** Файл места из архивов сетевой карты: имя из `mapNames` — архивы `GROUP_MAP`; без списка игры — `hei_…` (кроме пропов). */
-export const isPlacesMapFile = (setId, name, mapNames = null) =>
+/** Файл места из архивов сетевой карты: имя из `mapNames` — архивы `GROUP_MAP`; без списка игры — `hei_…` (кроме пропов). `facade: false` — раскладка до 26.11.2026. */
+export const isPlacesMapFile = (setId, name, mapNames = null, { facade = true } = {}) =>
   PLACES_MAP_SETS.includes(setId) &&
-  (isArenaMapFile(setId, name) || (mapNames ? mapNames.has(String(name).toLowerCase()) : MAP_FILE.test(String(name))));
+  !(facade && isMajesticMirrorFile(setId, name)) &&
+  ((facade ? isMajesticMapFile(setId, name) : isForcedBefore2611(setId, name)) ||
+    (mapNames ? mapNames.has(String(name).toLowerCase()) : MAP_FILE.test(String(name))));
 /** Имя по правилу `hei_` (запасному): от игры игрока не зависит, по нему считается раскладка `map-group-v1`. */
 export const isPlacesHeiFile = (setId, name) => PLACES_MAP_SETS.includes(setId) && MAP_FILE.test(String(name));
 export const placesMapStreamOf = (setId) => `astral_${setId}_mp.rpf`;
@@ -165,9 +232,9 @@ export const placesStreamOf = (setId) => `astral_${setId}.rpf`;
 export const placesMetadataOf = (setId) => `astral_${setId}_metadata.rpf`;
 const MAP_DATA = /\.(?:ymap|ytyp|ymf)$/i;
 /** Архив места для файла по его имени: данные карты — в свой, файлы сетевой карты — в архивы `GROUP_MAP`. */
-export const placesArchiveOf = (setId, name, mapNames = null) => {
+export const placesArchiveOf = (setId, name, mapNames = null, options = undefined) => {
   const mapData = MAP_DATA.test(String(name));
-  if (isPlacesMapFile(setId, name, mapNames)) return mapData ? placesMapMetadataOf(setId) : placesMapStreamOf(setId);
+  if (isPlacesMapFile(setId, name, mapNames, options)) return mapData ? placesMapMetadataOf(setId) : placesMapStreamOf(setId);
   return mapData ? placesMetadataOf(setId) : placesStreamOf(setId);
 };
 

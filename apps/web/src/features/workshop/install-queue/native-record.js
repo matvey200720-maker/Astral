@@ -14,6 +14,8 @@
  */
 
 import {
+  LEFTOVERS_KEPT_MESSAGE,
+  leftoversKept,
   retireReplacedInstalls,
   SUCCESSOR_LOST_MESSAGE,
   successorLost,
@@ -23,6 +25,41 @@ import { recordProjectInstallation } from "./project-installs.js";
 import { tr } from "../../../locales/ui.js";
 
 const stamp = () => new Date().toISOString();
+
+/*
+ * Мини-карта в игре одна, а своих работ с ней у человека может быть несколько: прежние установки мини-карты из любой работы
+ * на этой игре уходят вместе с прежними версиями этой. Иначе дополнительные записи старой (маска карты, дальность радара,
+ * метка и маршрут GPS) остались бы в игре под новой.
+ */
+export const ONE_PER_GAME_KINDS = new Set(["native-minimap"]);
+
+const place = (value) =>
+  String(value || "")
+    .replaceAll("\\", "/")
+    .replace(/\/+$/, "")
+    .toLowerCase();
+
+/* Прежние действующие установки того же вида: этой работы, а у вида «один на игру» — и всех работ на той же игре.
+   `ownerId` — чья запись: её же и пометить снятой. */
+function earlierInstalls({ projects, projectId, kind, installId, gameRoot }) {
+  const anyWork = ONE_PER_GAME_KINDS.has(kind);
+  return projects.flatMap((project) =>
+    project.id === projectId || anyWork
+      ? (project.installations || [])
+          .filter(
+            (item) =>
+              item.kind === kind &&
+              item.status === "active" &&
+              item.installId !== installId &&
+              (project.id === projectId ||
+                !gameRoot ||
+                !item.gameRoot ||
+                place(item.gameRoot) === place(gameRoot)),
+          )
+          .map((item) => ({ ownerId: project.id, item }))
+      : [],
+  );
+}
 
 /**
  * @param {{
@@ -52,13 +89,14 @@ export async function recordNativeInstall({
   /* Прежние версии берутся из хранилища, а не из проекта в замыкании: за
      время установки список мог поменяться — например, работу сняли из
      библиотеки, пока она ставилась. */
-  const project = readWorkshopProjects().find((item) => item.id === projectId);
-  const previous = (project?.installations || []).filter(
-    (item) =>
-      item.kind === kind &&
-      item.status === "active" &&
-      item.installId !== record.installId,
-  );
+  const earlier = earlierInstalls({
+    projects: readWorkshopProjects(),
+    projectId,
+    kind,
+    installId: record.installId,
+    gameRoot,
+  });
+  const previous = earlier.map((entry) => entry.item);
   recordProjectInstallation(projectId, record);
   if (!previous.length) return record;
   /* Уборка — второй проход по архиву, такой же долгий, как запись. Очередь
@@ -78,6 +116,7 @@ export async function recordNativeInstall({
      окно молча стирало её запись, и «Применить» выглядело удавшимся, а в
      игре оставалось прежнее. Теперь — честная ошибка в очереди. */
   if (successorLost(retired, record.restorePointId)) throw new Error(tr(SUCCESSOR_LOST_MESSAGE));
+  if (leftoversKept(retired)) report?.({ rpNote: tr(LEFTOVERS_KEPT_MESSAGE) });
   const current = moved
     ? {
         ...record,
@@ -89,15 +128,28 @@ export async function recordNativeInstall({
       }
     : record;
   const now = stamp();
-  recordProjectInstallation(projectId, [
-    ...previous
+  const replacedBy = (items) =>
+    items
       .filter((item) => retired.gone.has(item.restorePointId))
       .map((item) => ({
         ...item,
         status: "rolled-back",
         rolledBackAt: now,
         replacedBy: current.installId,
-      })),
+      }));
+  /* Чужие работы — раньше своей: последняя запись поднимает работу наверх списка. */
+  const owners = new Set(earlier.map((entry) => entry.ownerId));
+  owners.delete(projectId);
+  for (const ownerId of owners) {
+    const closed = replacedBy(
+      earlier.filter((entry) => entry.ownerId === ownerId).map((entry) => entry.item),
+    );
+    if (closed.length) recordProjectInstallation(ownerId, closed);
+  }
+  recordProjectInstallation(projectId, [
+    ...replacedBy(
+      earlier.filter((entry) => entry.ownerId === projectId).map((entry) => entry.item),
+    ),
     current,
   ]);
   return current;

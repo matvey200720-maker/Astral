@@ -65,6 +65,13 @@ function stemBelongsTo(stem, model) {
   return stem === model || (stem.startsWith(model) && AFTER_MODEL.test(stem.slice(model.length).charAt(0)));
 }
 
+// Имя файла, которое локальный пакет вообще может нести (`w_xx_….ydr|ytd`, строчные, без точек в имени).
+export const isGunpackLeaf = (name) => typeof name === "string" && WEAPON_FILE.test(name);
+
+// Обвес (`w_at_…`). В подписанном каталожном пакете ствола обвесы едут без своего слота — слот один, у ствола; локальная копия такого пакета (смена размера,
+// `catalog-model-scale.js`) несёт их так же, чтобы слоты и правила замены совпадали с установкой в 100 % (26.11.2026).
+export const isGunpackAttachment = (name) => isGunpackLeaf(name) && name.startsWith("w_at_");
+
 // Самая длинная модель из набора, которой принадлежит файл; при равной длине первая.
 // Ложная находка ("" или 0) уступает любому следующему подходящему кандидату.
 export function gunpackModelOfFile(name, models) {
@@ -159,7 +166,7 @@ class GunpackReview {
     );
   }
 
-  // Модель-владелец файла или null, если файл не годится; занятые имена копятся в claimed.
+  // Модель-владелец файла; "" — обвес без своего слота; null, если файл не годится. Занятые имена копятся в claimed.
   #ownerOfFile(file, claimed) {
     if (!isObjectRecord(file) || !hasExactKeys(file, FILE_KEYS)) {
       return null;
@@ -172,7 +179,7 @@ class GunpackReview {
       return null;
     }
     claimed.add(name);
-    const owner = gunpackModelOfFile(name, this.#models);
+    const owner = gunpackModelOfFile(name, this.#models) ?? (isGunpackAttachment(name) ? "" : null);
     if (owner === null || file.source !== `payload/${name}`) {
       return null;
     }

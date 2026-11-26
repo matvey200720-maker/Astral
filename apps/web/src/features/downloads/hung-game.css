@@ -1,0 +1,13 @@
+/* «Закрыть зависшую GTA V» (`HungGameClose.jsx`): строка словами и кнопка под ней — в доке подготовки, на герое и в очереди «Загрузок». */
+@layer overrides {
+  .hung-game {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+  }
+
+  .hung-game > p {
+    margin: 0;
+    font-size: var(--astral-text-small);
+  }
+}

@@ -4,6 +4,7 @@ import { formatSize } from "../../../catalog-utils.js";
 import { currentUiLanguage, tr, trIn } from "../../../locales/ui.js";
 import { repairLocalTarget } from "../../../api.js";
 import { describeInstallFailure } from "../../../utils/installFailure.js";
+import { joinSentences } from "../../../utils/join-sentences.js";
 import { refreshReduxLayers, runReduxLayerAction, useReduxLayer } from "./redux-layers.js";
 
 /*
@@ -96,7 +97,7 @@ export default function ReduxLayerActions({ modId, language = "" }) {
       )}
       {refusal ? (
         <span className="mod-part-redux-refusal" role="alert">
-          {`${refusal.reason}. ${refusal.advice}`}
+          {joinSentences(refusal.reason, refusal.advice)}
           {REPAIRABLE.has(refusal.kind) ? (
             <Button variant="secondary" size="md" className="mod-part-action is-redux" disabled={Boolean(busy)} onClick={repair}>
               {say("Вернуть как было")}

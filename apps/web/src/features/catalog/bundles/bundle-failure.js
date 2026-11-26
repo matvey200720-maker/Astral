@@ -5,6 +5,7 @@ import { dropBundleRest } from "./bundle-state.js";
 import { failureNotice } from "../../downloads/downloads-copy.js";
 import { bundleStopNotice, heldRowsOf, requeueHeld, settleBundleRow, withForeignList } from "../../downloads/foreign-hold.js";
 import { isQuietRefusal } from "../../library/waiting-mods.js";
+import { deferRefusedRow } from "../../downloads/deferred-installs.js";
 
 /*
  * Исход отказа части сборки в очереди «Загрузок» (разбор 17.11.2026, `docs/beta/incident-2026-11-17-build-foreign-conflict.md`). Правила — `features/downloads/foreign-hold.js`;
@@ -15,12 +16,14 @@ import { isQuietRefusal } from "../../library/waiting-mods.js";
 /**
  * Отказ установки в очереди «Загрузок»: разбор ошибки, слово человеку и список файлов вопроса. Ход оболочки (`catch` строки очереди) зовёт это одним вызовом.
  * Слово: отмена — «отменено»; тихая попытка ждущего компонента — молчание (отказанный релиз движок запомнил, «Библиотека» скажет строкой); часть сборки —
- * `stopNotice`; одиночная установка — «Не удалось установить…» с отсылкой в «Загрузки».
+ * `stopNotice`; одиночная установка — «Не удалось установить…» с отсылкой в «Загрузки». Одиночная установка, отказанная из-за запущенной GTA V, не «Не удалось»:
+ * она уходит в отложенные (`deferred-installs.js`) и встаёт сама, когда игру закроют, — строка снимается тихо.
  * @param {object} shell `error`, `current` (строка очереди), `language`, `notify(text, tone)`, `cancelled` (слово об отмене), `readConflicts` (мост к списку спорных файлов; по умолчанию настоящий)
  * @returns {Promise<{ failure: object | null, quiet: boolean }>} `failure` — `null` для отмены; `quiet` — без строки «Не удалось»
  */
 export async function settleInstallFailure({ error, current, language, notify, cancelled, readConflicts = readForeignConflicts }) {
   const described = describeInstallFailure(error, language);
+  if (deferRefusedRow({ error, row: current, notify })) return { failure: described, quiet: true };
   const quiet = isQuietRefusal(current, described);
   if (quiet) return { failure: described, quiet };
   const failure = await withForeignList(described, readConflicts);

@@ -41,9 +41,8 @@ const GROUP_OF_SLOT = Object.freeze({
   "kill-effects": "fx",
   "fire-explosions": "fx",
   "wheel-smoke": "fx",
-  /* Фонари и «Прострелы» встают в «Эффекты» шестым и седьмым: сетка переносит их на второй ряд. */
-  lights: "fx",
-  wallbang: "fx",
+  /* «Эффекты попадания на экране» — к эффектам, фонари — в «Улицы и город», «Прострелы» — в «Капты» (владелец, 26.11.2026). */
+  "screen-hits": "fx",
 
   timecycle: "nature",
   water: "nature",
@@ -61,8 +60,9 @@ const GROUP_OF_SLOT = Object.freeze({
   hangar: "buildings",
   mapping: "buildings",
 
-  /* Метки игры в мире стоят в «Улицах и городе»: в «Карте и экране» их пять, как в макете, и шрифты не висят шестой плиткой одни в ряду; в «Улицах» с ними ровно два полных ряда. */
+  /* Метки игры в мире стоят в «Улицах и городе»: в «Карте и экране» их пять, как в макете, и шрифты не висят шестой плиткой одни в ряду. */
   "group-markers": "city",
+  lights: "city",
   vinewood: "city",
   busstops: "city",
   billboards: "city",
@@ -74,6 +74,7 @@ const GROUP_OF_SLOT = Object.freeze({
   airships: "city",
 
   climbing: "capt",
+  wallbang: "capt",
   "forbidden-zones": "capt",
   "capt-zones": "capt",
   "msl-zones": "capt",
@@ -112,6 +113,7 @@ const TOUR_OF_SLOT = Object.freeze({
   "kill-effects": "kill-effect",
   "fire-explosions": "effects-environment",
   "wheel-smoke": "wheel-smoke",
+  "screen-hits": "screen-hits",
   timecycle: "timecycle",
   lights: "lamps",
   wallbang: "wallbang",

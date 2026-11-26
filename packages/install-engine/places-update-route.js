@@ -49,7 +49,7 @@ function setOf(setId) {
 /** Может ли набор ехать контейнером: `{ ok: true }` или `{ ok: false, code, count }` (`map-set` — сетевая карта, `overrides` — перекрытия карт и типов игры). */
 export function placesEligibility(setId) {
   const set = setOf(setId);
-  /* Арена в сетевую карту кладёт только здание Majestic (`ARENA_MAP_FILES`, 21.11.2026): отказ контейнеру у неё прежний — перекрытия типов и карт. */
+  /* Арена в сетевую карту кладёт только здание Majestic (`ARENA_MAP_FILES`, 21.11.2026; с 26.11 — зеркалом к копии на старте): отказ контейнеру у неё прежний — перекрытия типов и карт. */
   if (setId !== "arenas" && PLACES_MAP_SETS.includes(setId)) return { ok: false, code: "map-set", count: set.overrides.length };
   if (set.overrides.length) return { ok: false, code: "overrides", count: set.overrides.length };
   return { ok: true, code: null, count: 0 };

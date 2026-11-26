@@ -182,7 +182,8 @@ async function loadSessionSecret() {
   }
 }
 const sessionSecret = await loadSessionSecret();
-if (production) app.set("trust proxy", 1);
+/* В упакованном лаунчере прокси перед службой нет: `X-Forwarded-For` не доверяем (разбор аудита 26.11.2026). */
+if (production && !localDesktop) app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(localGuard.middleware);
 app.use(desktopSecurityMiddleware);
@@ -286,7 +287,9 @@ function csrf(req, res) {
   return token;
 }
 function requireCsrf(req, res, next) {
-  if (!safeEqual(req.get("x-csrf-token"), req.cookies.modovik_csrf))
+  /* Пустой токен — отказ: `safeEqual` двух пустых строк даёт «равны», и запрос без заголовка и без cookie проходил (разбор аудита 26.11.2026). */
+  const sent = req.get("x-csrf-token");
+  if (!sent || !safeEqual(sent, req.cookies.modovik_csrf))
     return res
       .status(403)
       .json({ error: "Проверка безопасности запроса не пройдена." });

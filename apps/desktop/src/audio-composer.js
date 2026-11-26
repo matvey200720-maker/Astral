@@ -352,7 +352,29 @@ export async function planAwcEntry({
       }
       return { output, budget: null, dropped: [], need: null };
     }
-    /* Банк без сверенного слота (музыка, потоки): предел — сам банк игры. Опись основы нужна только ему. */
+    /* Один слой поверх основы с теми же пределами — только чтобы узнать, помещается ли пак один. */
+    const soloPatch = (single, limits) =>
+      tools.patch({
+        input: baseBank,
+        output: path.join(work, `solo-${randomUUID()}.awc`),
+        edition,
+        gameRoot,
+        patches: [{ source: single.cachePath, sha256: single.sha256, streams: single.merge.streams, drop: single.merge.drop || [] }],
+        limits,
+      });
+    /* Признак для слов отказа: `fitsAlone(слой)` — `true`, `false` или `null` (выяснить не удалось). */
+    const slotFitFact = async (fitsAlone) => {
+      const sound = ordered.filter((layer) => layer !== completeBank);
+      const packs = sound.map((layer) => layer.modId);
+      if (sound.length <= 1) return { fit: SLOT_FIT_ALONE, packs };
+      const verdicts = [];
+      for (const single of sound) verdicts.push(await fitsAlone(single));
+      if (verdicts.includes(false))
+        return { fit: SLOT_FIT_ALONE, packs: sound.filter((_, at) => verdicts[at] === false).map((layer) => layer.modId) };
+      return verdicts.every((verdict) => verdict === true) ? { fit: SLOT_FIT_SHARED, packs } : { fit: null, packs };
+    };
+
+    /* Банк, чей слот Astral не растит: предел — записанный слот, а у банка без сверенного слота (музыка, потоки, дополнения) — сам банк игры. Опись основы нужна только ему. */
     if (!growth) {
       const fingerprint = keyOf({});
       const hit = await cached(fingerprint);
@@ -362,8 +384,11 @@ export async function planAwcEntry({
       const limits = known
         ? { slot: known.name, bytes: written.bytes, header: written.header, metadata: written.metadata }
         : waveSlotBudget(archive, entry, own, { completeBank: Boolean(completeBank) });
-      const built = await build(fingerprint, { limits }).catch((error) => {
-        throw error.slotRefusal ? slotBudgetError(entry, error, { catalog }) : error;
+      const built = await build(fingerprint, { limits }).catch(async (error) => {
+        if (!error.slotRefusal) throw error;
+        /* Совет в отказе зависит от того, помещается ли пак один (25.11.2026: раньше здесь всегда советовали снять другие паки — и паку вдвое больше слота). */
+        const fitsLimits = (single) => soloPatch(single, limits).then(() => true, (failure) => (isSlotRefusal(failure) ? false : null));
+        throw slotBudgetError(entry, error, { catalog, ...(catalog ? await slotFitFact(fitsLimits) : {}) });
       });
       return { ...built, need: null };
     }
@@ -373,14 +398,7 @@ export async function planAwcEntry({
     /* Помещается ли слой один: та же сверка, что у банка (потолок роста, мёртвые дорожки), но слой в одиночку. `null` — выяснить не удалось. Зовётся только при отказе. */
     const fitsAlone = async (single) => {
       try {
-        const result = await tools.patch({
-          input: baseBank,
-          output: path.join(work, `solo-${randomUUID()}.awc`),
-          edition,
-          gameRoot,
-          patches: [{ source: single.cachePath, sha256: single.sha256, streams: single.merge.streams, drop: single.merge.drop || [] }],
-          limits: ceiling,
-        });
+        const result = await soloPatch(single, ceiling);
         /* Потолок не отказал: слою хватает слота с подъёмом. Без подъёма — только если он входит в записанный слот сам или с мёртвыми дорожками. */
         if (raiseEnabled) return true;
         if (!result || !Number.isFinite(Number(result.contentBytes))) return null;
@@ -392,22 +410,12 @@ export async function planAwcEntry({
         return isSlotRefusal(error) ? false : null;
       }
     };
-    const slotFitFact = async () => {
-      const sound = ordered.filter((layer) => layer !== completeBank);
-      const packs = sound.map((layer) => layer.modId);
-      if (sound.length <= 1) return { fit: SLOT_FIT_ALONE, packs };
-      const verdicts = [];
-      for (const single of sound) verdicts.push(await fitsAlone(single));
-      if (verdicts.includes(false))
-        return { fit: SLOT_FIT_ALONE, packs: sound.filter((_, at) => verdicts[at] === false).map((layer) => layer.modId) };
-      return verdicts.every((verdict) => verdict === true) ? { fit: SLOT_FIT_SHARED, packs } : { fit: null, packs };
-    };
     const measureKey = keyOf({ measure: [ceiling.bytes, ceiling.header, ceiling.metadata] });
     let measured = await cached(measureKey);
     if (!measured) {
       measured = await build(measureKey, { limits: ceiling }).catch(async (error) => {
         if (!error.slotRefusal) throw error;
-        throw slotBudgetError(entry, error, { catalog, raisable: true, raiseOff: !raiseEnabled, ...(catalog ? await slotFitFact() : {}) });
+        throw slotBudgetError(entry, error, { catalog, raisable: true, raiseOff: !raiseEnabled, ...(catalog ? await slotFitFact(fitsAlone) : {}) });
       });
     }
     if (!measured.budget) throw new Error(`Помощник не назвал размер собранного банка ${entry}: слот сверить нечем.`);
@@ -441,10 +449,10 @@ export async function planAwcEntry({
 
     /* 3. Не хватило и этого: слот надо поднять ровно под банк — решает установка. Подъём выключен — отказ словами, слот не трогается. */
     if (!raiseEnabled)
-      throw slotBudgetError(entry, new Error(`AWC slot budget exceeded (${known.name}): ${Object.keys(slotOverrun(measured.budget, written)).map((key) => `${key === "bytes" ? "content" : key} ${measured.budget[key === "bytes" ? "content" : key]}/${written[key]}`).join(", ")}.`), { catalog, raisable: true, raiseOff: true, ...(catalog ? await slotFitFact() : {}) });
+      throw slotBudgetError(entry, new Error(`AWC slot budget exceeded (${known.name}): ${Object.keys(slotOverrun(measured.budget, written)).map((key) => `${key === "bytes" ? "content" : key} ${measured.budget[key === "bytes" ? "content" : key]}/${written[key]}`).join(", ")}.`), { catalog, raisable: true, raiseOff: true, ...(catalog ? await slotFitFact(fitsAlone) : {}) });
     const raised = raiseSlot(known.name, measured.budget, written);
     if (!raised.slot)
-      throw slotBudgetError(entry, new Error(`AWC slot budget exceeded (${known.name}): ${Object.entries(raised.over).map(([key, value]) => `${key === "bytes" ? "content" : key} ${value}/0`).join(", ")}.`), { catalog, raisable: true, ...(catalog ? await slotFitFact() : {}) });
+      throw slotBudgetError(entry, new Error(`AWC slot budget exceeded (${known.name}): ${Object.entries(raised.over).map(([key, value]) => `${key === "bytes" ? "content" : key} ${value}/0`).join(", ")}.`), { catalog, raisable: true, ...(catalog ? await slotFitFact(fitsAlone) : {}) });
     return { ...measured, need: { slot: known.name, raised: raised.slot, budget: measured.budget } };
   } finally {
     await fs.rm(work, { recursive: true, force: true });

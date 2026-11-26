@@ -103,13 +103,15 @@ async function partialPlacesManifest({ setId, built, kept, compile }) {
 export async function finishPlacesContainer({ built, request, statSize = async (file) => (await fs.stat(file)).size, compile = null }) {
   const { setId } = request;
   const payload = path.join(built.packageRoot, "payload");
+  /* Штатные наполнители фасада Majestic (26.11.2026) контейнеру не нужны: в update.rpf они ничего не меняют, только занимают место. */
+  const payloadFiles = (built.payloadFiles || []).filter((file) => !file.filler);
   /* Частичный набор: в контейнер идёт только то, что без перекрытий; снятое остаётся в сборке (пакетная форма) и в манифест контейнера не попадает. */
-  const split = request.partial ? placesRpSplit(setId, (built.payloadFiles || []).map((file) => file.name), { hall: request.hall === true, types: request.types === true }) : null;
+  const split = request.partial ? placesRpSplit(setId, payloadFiles.map((file) => file.name), { hall: request.hall === true, types: request.types === true }) : null;
   const carried = split ? new Set(split.kept) : null;
   /* Билборды (21.11.2026): «видно N из M щитов» — по проекту работы, а не по файлам (`billboards-rp-count.js`, по требованию: сборка щитов в стартовый граф не входит). */
   const shields = split && setId === "billboards" && request.project ? (await import("./billboards-rp-count.js")).billboardsRpShields(request.project, split.kept) : null;
   const files = [];
-  for (const file of built.payloadFiles || [])
+  for (const file of payloadFiles)
     if ((!carried || carried.has(file.name)) && !(split && file.name === PLACES_RP_MANIFEST)) files.push({ name: file.name, sha256: file.sha256, size: await statSize(path.join(payload, file.name)) });
   if (!files.length) {
     /* Снято всё: нечего положить на RP — отказ с тем же кодом, что у набора целиком (`overrides` или `map-set`; режим включён сам — прежний путь и слова «на GTA 5 RP не видно»). */

@@ -146,6 +146,8 @@ export async function applyWorkshopWork(spec) {
     saved,
     run: spec.run,
     waitForGame: Boolean(spec.waitForGame),
+    /* «Применить» при открытой GTA V не пропадает: после отказа «игра запущена» работа ждёт и встаёт сама. */
+    waitOnRefusal: true,
     onDone: (result) => {
       void settleApplyCover(spec, coverShot);
       /* Слова про GTA 5 RP (`rpNote` в итоге работы: «видно / не видно», откат в старый пакет) — в то же уведомление о завершении: ряд «Загрузок» держит их 30 секунд, а уведомление остаётся человеку. */
@@ -157,6 +159,8 @@ export async function applyWorkshopWork(spec) {
       if (rage) writeRagePackLog(spec.title, rage.packs);
     },
     onFailed: (message) => notify(message, "error"),
+    /* Движок отказал «Закройте GTA V»: работа ждёт и встанет сама — сказано один раз. */
+    onHeld: (words) => notify(`«${spec.title}»: ${words}`, "info"),
   });
   notify(placeText(spec, before, workshopInstallPlace(id)), "success");
   return true;

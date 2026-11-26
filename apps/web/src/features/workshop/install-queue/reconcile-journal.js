@@ -8,8 +8,9 @@
  * («Применить», перестановка при запуске или автопересборка после починки фильма). Дальше запись:
  *   — остаётся в записи установки работы (`record.reconcile`: её хранит проект,
  *     `native-record.js` копирует ответ установки целиком);
- *   — уходит в журнал приложения видом `hud-reconcile` (`writeAppLog`), откуда её
- *     читает «Настройки › Логи › Сверка с игрой».
+ *   — уходит в журнал приложения видом `hud-reconcile` (`writeAppLog`). В окне эти
+ *     записи не показываются (владелец, 26.11.2026); их строки остаются в файле
+ *     «Скачать для тикета».
  * Журнал не должен ронять установку: любой его сбой — молча.
  */
 
@@ -70,8 +71,6 @@ export function enrichReconcile(
         : record.work || null,
   };
 }
-
-const pad = (value) => String(value).padStart(2, "0");
 
 const percent = (value) =>
   Number.isFinite(Number(value))
@@ -156,11 +155,4 @@ export async function journalReconcile({
     ...installed,
     reconcile: Array.isArray(installed.reconcile) ? enriched : enriched[0],
   };
-}
-
-/** «дд.мм чч:мм» для строк журнала и заголовков. */
-export function reconcileStamp(iso) {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

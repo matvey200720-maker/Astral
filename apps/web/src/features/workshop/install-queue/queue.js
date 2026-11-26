@@ -78,6 +78,7 @@ import {
   describeInstallFailure,
   failureLine,
 } from "../../../utils/installFailure.js";
+import { isGameRunningRefusal } from "../../../utils/game-running.js";
 import {
   WORKSHOP_INSTALL_STEPS,
   WORKSHOP_REINSTALL_STEPS,
@@ -112,9 +113,18 @@ export const WORKSHOP_INSTALL_RP_DONE_MS = 30_000;
  * об этом знает (`waitForGame`, скины оружия и одежды), не начинается, а
  * ждёт: строка говорит, чего ждём, очередь заглядывает раз в несколько
  * секунд и ставит сама, как только игра закрыта.
+ *
+ * Работа с `waitOnRefusal` («Применить» редакторов, `apply.js`) игру заранее не
+ * спрашивает, но отказ «Закройте GTA V…» (26.11.2026) её больше не роняет в
+ * «Не удалось»: она возвращается в очередь ждать закрытия игры. Повторный отказ
+ * растягивает паузу вдвое, до минуты: отказать может и то, чего вопрос
+ * «запущена ли игра» не видит (окно-заглушка BattlEye), и гонять сборку каждые
+ * четыре секунды незачем. Снятие из игры и прочие работы (переключатели
+ * «Оптимизации» со своими словами на карточке) отказывают сразу, как раньше.
  */
 export const GAME_WAIT_NOTE = "Ждём, пока закроется GTA V, — поставим сами";
 const GAME_RECHECK_MS = 4_000;
+const GAME_REFUSAL_PAUSE_MAX_MS = 60_000;
 let gameRecheck = null;
 function recheckGameLater() {
   if (gameRecheck) return;
@@ -359,6 +369,32 @@ function listenToBridge() {
 }
 
 /*
+ * Отказ «игра запущена»: в игру не записано ничего (или движок вернул всё назад), поэтому работа встаёт на своё место
+ * ждущей и повторяется сама. Человеку об этом говорится один раз — уведомлением той работы.
+ */
+function waitForClosedGame(job) {
+  const refusals = (job.refusals || 0) + 1;
+  patch(job.id, {
+    status: "queued",
+    waitForGame: true,
+    refusals,
+    notBefore: now() + Math.min(GAME_RECHECK_MS * 2 ** (refusals - 1), GAME_REFUSAL_PAUSE_MAX_MS),
+    note: GAME_WAIT_NOTE,
+    phase: job.steps[0].id,
+    startedAt: 0,
+    phaseStartedAt: 0,
+    copiedBytes: 0,
+    totalBytes: 0,
+    fraction: null,
+    error: "",
+    errorDetail: "",
+    errorKind: "",
+  });
+  if (refusals === 1) job.onHeld?.(tr(GAME_WAIT_NOTE));
+  recheckGameLater();
+}
+
+/*
  * Взять следующую работу.
  *
  * Повторный вход невозможен: `pumping` держит один проход, а следующая
@@ -368,6 +404,10 @@ async function pump() {
   if (pumping) return;
   const next = jobs.find((job) => job.status === "queued");
   if (!next || runningJob() || external || holds.size) return;
+  if (next.notBefore && now() < next.notBefore) {
+    recheckGameLater();
+    return;
+  }
   if (next.waitForGame) {
     pumping = true;
     let open = false;
@@ -440,6 +480,9 @@ async function pump() {
     pumping = false;
     runControllers.delete(next.id);
   }
+  /* Отказ «игра запущена» — и брошенный, и возвращённый работой полем `failed`. */
+  if (outcome?.failed && next.waitOnRefusal && next.operation !== "remove")
+    outcome.gameRunning = isGameRunningRefusal(outcome.failedDetail || outcome.failed);
   const job = findJob(next.id);
   /* Отменённая крестиком: затвор открывается для следующей работы, а сама
      она уходит из списка — в игру она не записала ничего. Если запись всё же
@@ -455,6 +498,10 @@ async function pump() {
       void pump();
       return;
     }
+  }
+  if (job && outcome.gameRunning) {
+    waitForClosedGame(job);
+    return;
   }
   /* Работу могли убрать из списка, пока она шла: тогда итог показывать негде,
      но сама установка уже случилась — и об этом скажет уведомление. */
@@ -608,7 +655,9 @@ export function enqueueWorkshopInstall(spec) {
     onDone: spec.onDone || null,
     onFailed: spec.onFailed || null,
     onCancelled: spec.onCancelled || null,
+    onHeld: spec.onHeld || null,
     waitForGame: Boolean(spec.waitForGame),
+    waitOnRefusal: Boolean(spec.waitOnRefusal),
     doneHoldMs: Number(spec.doneHoldMs) || WORKSHOP_INSTALL_DONE_MS,
     status: "queued",
     phase: steps[0].id,

@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useQaQueueSeed } from "../../dev/use-qa-queue-seed.js";
 import { usePrefetchNext } from "../../features/downloads/usePrefetchNext.js";
+import { useDeferredResume } from "../../features/downloads/useDeferredResume.js";
 import { connectPartMapSource } from "../../features/catalog/part-map.js";
 import { scheduleCatalogWarm } from "../../features/catalog/warm-schedule.js";
 import { cloudItemsOf } from "../../features/builds/cloud-items.js";
@@ -58,6 +59,7 @@ import { useStartupRecovery } from "../../features/library/startup-recovery.js";
 import { useGameGate } from "../../features/onboarding/game-gate.js";
 import { forgetWorkshopInstallsAfterReset } from "../../workshop-library.js";
 import { resetWindowClock } from "../../features/downloads/reset-window-log.js"; // сброс 12.10
+import { joinSentences } from "../../utils/join-sentences.js";
 import { useReconcileNotices } from "../../hooks/reconcile-notices.js";
 import { useGameCrashWatch } from "../../features/game-crash/use-game-crash-watch.js";
 import { useCheckRemoved } from "../../hooks/useCheckRemoved.js";
@@ -839,7 +841,7 @@ export default function DesktopApp() {
           await syncInstalledProfile(game?.id).then(resetWindowDone);
         }
         completedSuccessfully = true; recordDownloadDone(current); // «Готово сегодня» в «Загрузках»: строка очереди уходит, след остаётся
-        showNotice([installWords?.text || (current.waitingAuto ? waitingCopyFor(language).notice(current.name || current.id) : successNotice(withEngineReplaced(current, installed), language)), guard && (await import("../../features/catalog/model-guard-note.js").then((m) => m.modelGuardNote(guard)).catch(() => "")), installed?.hostStanding && (await import("../../features/catalog/host-standing-note.js").then((m) => m.hostStandingNote(installed)).catch(() => ""))].filter(Boolean).join(" "), installWords?.tone);
+        showNotice([installWords?.text || (current.waitingAuto ? waitingCopyFor(language).notice(current.name || current.id) : successNotice(withEngineReplaced(current, installed), language)), installed?.scaleSkipped && (await import("../../features/catalog/model-scale-note.js").then((m) => m.modelScaleNote(installed.scaleSkipped, current.id)).catch(() => "")), guard && (await import("../../features/catalog/model-guard-note.js").then((m) => m.modelGuardNote(guard)).catch(() => "")), installed?.hostStanding && (await import("../../features/catalog/host-standing-note.js").then((m) => m.hostStandingNote(installed)).catch(() => ""))].filter(Boolean).reduce(joinSentences, ""), installWords?.tone);
       } catch (error) {
         await syncInstalledProfile(game?.id).catch(() => {});
         /* Разбор отказа и слово человеку — `bundle-failure.js` (по `import()`, в стартовом куске его нет): часть сборки не встала — сборка останавливается (Т-81d), но вопрос о чужих файлах и «оставил своё» её не останавливают. */
@@ -909,7 +911,7 @@ export default function DesktopApp() {
   /* Вопрос «оставить своё или заменить» (сборка или одиночная установка): «Загрузки» открываются сами, один раз на вопрос, не под набор в поле (`features/downloads/foreign-auto-open.js`, 17.11.2026). */
   useForeignQuestionOpen({ queue, visible: downloadsOpen && !downloadsClosing, open: openDownloads });
   /* Падения игры (ТЗ 11.11.2026): одно ненавязчивое уведомление после падения и переход в Библиотеку из «Логов». */
-  useGameCrashWatch({ language, notify: showNotice, openLibrary: ({ catalogModId }) => { const known = data.mods.find((item) => item.id === catalogModId); if (known) openMod(known); else navigate("library"); } });
+  useGameCrashWatch({ language, notify: showNotice });
   function closeDownloads() {
     if (!downloadsOpen || downloadsClosing) return;
     window.clearTimeout(downloadsCloseTimerRef.current);
@@ -1075,6 +1077,7 @@ export default function DesktopApp() {
     install: installOnce,
     ready: Boolean(account && game && !demoMode && preparation.status === "ready"),
   });
+  useDeferredResume({ account, game, preparation, prepareGame, mods: data.mods, queue, install: installOnce, notify: showNotice }); /* отложенные из-за открытой GTA V установки доходят сами (`deferred-resume.js`) */
   /* `options.waitingAuto` — тихая попытка `useWaitingUpdates`: строка очереди помечается, итог говорит очередь (успех — уведомлением, отказ «прежняя версия» — молча). */
   async function install(shown, options = {}) {
     const mod = cloud.freshMod(shown); /* пакет — из отложенного каталога, если там мод новее (`catalog-freeze.js`); подпись функции не менять: на неё смотрят сторожа одежды */
@@ -1087,6 +1090,7 @@ export default function DesktopApp() {
     if (catalogWork.isCatalogWork(mod)) return catalogWork[options.openInWorkshop ? "openFromShell" : "installFromShell"](mod, { navigate, showNotice, language });
     if (looksLikeClothing(mod) && (await import("../../features/clothing/install-guard.js").then((guard) => guard.openCardWithoutChoice(mod, options, { notify: showNotice, openMod, word: notices.chooseClothingTarget }), () => { showNotice(notices.chooseClothingUnavailable, "error"); return true; }))) return; /* вещь без выбора не ставится: `install-guard.js`; кусок не загрузился — слово и не ставим */
     if ((preparation.status !== "ready" || !game) && !(preparation.status === "running" && (await import("../../features/catalog/install-prepare-wait.js").then((part) => part.joinPreparing({ notify: showNotice, restart: () => installOnce(shown, options) }, mod), () => false)))) {
+      if (await import("../../features/downloads/deferred-installs.js").then((part) => part.holdUntilGameCloses({ preparation, game, mod, options, notify: showNotice }), () => false)) return; /* GTA V открыта — нажатие не пропадает: мод ждёт в «Загрузках» и встанет сам */
       const stop = preparationStop(preparation.status, game, notices, preparation.message, language);
       showNotice(stop.text, stop.tone);
       if (stop.pick) void chooseGameTarget();
@@ -1119,8 +1123,7 @@ export default function DesktopApp() {
         installable.packageStatus !== "preview" ||
         !cloudCatalogIDPattern.test(installable.id || "")
       ) {
-        /* Причину знает каталог: пакета нет вовсе или он не подписан
-           ключом каталога (apps/api/src/trusted-catalog.js). */
+        /* Причину знает каталог: пакета нет вовсе или он не подписан ключом каталога (apps/api/src/trusted-catalog.js). */
         showNotice(
           installable.packageStatus === "unsigned"
             ? notices.unsignedPackage
@@ -1149,9 +1152,8 @@ export default function DesktopApp() {
         return;
       }
     }
-    /* Замененка ставится не своим манифестом, а пакетом под выбранную вещь
-       сервера: его план и замену прежней на этой вещи делает Desktop при
-       записи (`applyClothingReplacement`). */
+    /* Замененка ставится не своим манифестом, а пакетом под выбранную вещь сервера:
+       его план и замену прежней на этой вещи делает Desktop при записи (`applyClothingReplacement`). */
     if (installable.clothingChoice || installable.tattooSetChoice) {
       if (installable.clothingChoice) showNotice(notices.swapStarted);
       enqueueInstall(installable, [], {
@@ -1164,9 +1166,8 @@ export default function DesktopApp() {
       });
       return;
     }
-    /* Первая установка после «Вернуть GTA V без модов»: игра была штатной
-       до этого щелчка (Т-87), теперь её готовим — план оружейного и
-       одёжного DLC без подготовки не сходится. */
+    /* Первая установка после «Вернуть GTA V без модов»: игра была штатной до этого щелчка (Т-87),
+       теперь её готовим — план оружейного и одёжного DLC без подготовки не сходится. */
     if (preparation.stockHold) await import("../../features/catalog/install-prepare-wait.js").then((part) => part.releaseHeldGame({ game, prepareGame, notify: showNotice }, installable), () => prepareGame(game, { force: true, releaseStockHold: true }));
     if (
       game.installReadiness !== "ready" &&

@@ -1,7 +1,5 @@
 import {
   createElement as h,
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -15,11 +13,7 @@ import { ArrowClockwise, ArrowSquareOut } from "../../ui/icons.jsx";
 import SegmentedControl from "../../ui/SegmentedControl.jsx";
 import { logsCopyFor } from "./logs-copy.js";
 import { DownloadSimple, Info, Trash } from "../../ui/icons.jsx";
-import GameCrashSection from "./GameCrashSection.jsx";
 import { openLink } from "./open-link.js";
-
-/* «Сверка с игрой» (ТЗ H1) грузится по требованию: её тексты на шести языках не нужны стартовому куску окна. */
-const ReconcileSection = lazy(() => import("./ReconcileSection.jsx"));
 
 export default function LogsPanel(props) {
   const { language = "ru" } = props;
@@ -44,10 +38,6 @@ export default function LogsPanel(props) {
 
   return (
     <section {...shellProps(copy)}>
-      <GameCrashSection language={language} />
-      <Suspense fallback={null}>
-        <ReconcileSection language={language} />
-      </Suspense>
       <LogBar copy={copy} panel={panel} options={options} shown={rows.length} />
       <ConfirmClear copy={copy} panel={panel} />
       <Statuses
@@ -401,15 +391,16 @@ function formatStamp(raw) {
 }
 
 /*
- * Записи сверки с игрой (`kind: "hud-reconcile"`) показывает свой раздел выше — целиком и на языке человека. Их служебная
- * строка остаётся в файле журнала («Скачать для тикета»), а в общий список не идёт: там она была бы повтором, да ещё и
- * по-русски на любом языке окна. `held` — сколько таких записей в журнале: «Очистить журнал» стирает и их.
+ * Служебные записи, для поддержки: падения игры (`kind: "game-crash"`, владелец, 26.11.2026: они «только пугают людей») и
+ * сверка с игрой (`kind: "hud-reconcile"`). В окне их нет, а в файле журнала («Скачать для тикета») они остаются. В
+ * списке это были бы строки по-русски на любом языке окна. `held` — сколько таких записей в журнале: «Очистить журнал»
+ * стирает и их.
  */
-const SHOWN_ABOVE_KIND = "hud-reconcile";
+const HIDDEN_KINDS = new Set(["game-crash", "hud-reconcile"]);
 
 function readLog(reply) {
   const all = reply?.entries ?? [];
-  const entries = all.filter((entry) => entry?.kind !== SHOWN_ABOVE_KIND);
+  const entries = all.filter((entry) => !HIDDEN_KINDS.has(entry?.kind));
   const held = all.length - entries.length;
   if (!all.length) return { entries, sources: [], held };
   return { entries, sources: reply.sources ?? [], held };

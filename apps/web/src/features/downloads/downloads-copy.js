@@ -17,6 +17,7 @@
 import { roundedRemaining } from "./eta.js";
 import { fillNamed } from "../../locales/tr-fill.js";
 import { trIn } from "../../locales/ui.js";
+import { joinSentences } from "../../utils/join-sentences.js";
 
 const pluralRules = new Map();
 function pluralOf(language, count, forms) {
@@ -291,7 +292,7 @@ export function failureNotice(item, failure, language = "ru") {
   const operation = copy.failed[item?.operation] ? item.operation : "install";
   const name = quoted(copy, item?.name || copy.nameless);
   const reason = inSentence(failure.reason, copy.keepCase);
-  return `${copy.failed[operation](name)}: ${reason}. ${copy.details}`;
+  return joinSentences(`${copy.failed[operation](name)}: ${reason}`, copy.details);
 }
 
 /** Всплывашка об успехе — с именем мода и тем, когда это увидеть в игре. */

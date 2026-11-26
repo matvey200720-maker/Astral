@@ -97,6 +97,10 @@ export function readAudioConfigSlots(buffer) {
   return slots;
 }
 
+/* Слоты семьи `<имя>_<номер>` (`PLAYER_WEAPON_0…2`). */
+const familyOf = (slots, name) =>
+  [...slots.values()].filter((slot) => slot.name.startsWith(`${name}_`) && /^\d+$/.test(slot.name.slice(name.length + 1)));
+
 /**
  * Значения одного слота (`{bytes, header, metadata}`) или `null`, если слота с таким именем нет.
  *
@@ -109,10 +113,35 @@ export function audioConfigSlot(buffer, name) {
   const slots = readAudioConfigSlots(buffer);
   const exact = slots.get(name);
   if (exact) return { bytes: exact.bytes, header: exact.header, metadata: exact.metadata };
-  const family = [...slots.values()].filter((slot) => slot.name.startsWith(`${name}_`) && /^\d+$/.test(slot.name.slice(name.length + 1)));
+  const family = familyOf(slots, name);
   if (!family.length) return null;
   const least = (key) => Math.min(...family.map((slot) => slot[key]));
   return { bytes: least("bytes"), header: least("header"), metadata: least("metadata") };
+}
+
+/**
+ * Копия файла с поднятыми слотами: `raised` — `{ИМЯ: {bytes, header, metadata}}`. Имя без точной записи — семья `<имя>_<номер>`
+ * (25.11.2026: банк ствола игрока игра грузит в любой из `PLAYER_WEAPON_0…2`, поэтому растут все три). Каждое число каждого слота —
+ * не меньше нынешнего: слот, который у чужого редукса уже больше, не уменьшается. Нет ни слота, ни семьи — отказ.
+ *
+ * @param {Buffer} buffer
+ * @param {Record<string, {bytes?: number, header?: number, metadata?: number}>} raised
+ * @returns {Buffer}
+ */
+export function raiseAudioConfigSlots(buffer, raised) {
+  const slots = readAudioConfigSlots(buffer);
+  const changes = {};
+  for (const [name, wanted] of Object.entries(raised || {})) {
+    const members = slots.has(name) ? [slots.get(name)] : familyOf(slots, name);
+    if (!members.length) refuse(`нет слота ${name}`);
+    for (const member of members) {
+      const next = {};
+      for (const key of ["bytes", "header", "metadata"])
+        if (wanted?.[key] !== undefined) next[key] = Math.max(member[key], Number(wanted[key]));
+      changes[member.name] = next;
+    }
+  }
+  return patchAudioConfigSlots(buffer, changes);
 }
 
 /**

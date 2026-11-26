@@ -697,6 +697,8 @@ contextBridge.exposeInMainWorld("modovik", {
     plan: (input) => invoke(IPC.INSTALLED_PLAN, input),
     uninstall: (input) => invoke(IPC.INSTALLED_UNINSTALL, input),
     guard: (input) => invoke(IPC.INSTALLED_GUARD, input),
+    hung: () => invoke(IPC.INSTALLED_HUNG),
+    closeHung: (input) => invoke(IPC.INSTALLED_CLOSE_HUNG, input),
   },
   choosePackage: () => invoke(IPC.CHOOSE_PACKAGE),
   planPackage: (input) => invoke(IPC.PLAN_PACKAGE, input),

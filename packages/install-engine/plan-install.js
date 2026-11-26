@@ -666,7 +666,7 @@ export async function installPackageBatch({
             String(file?.target).toLowerCase() === "update/update.rpf" &&
             !(hostFilesOf.get(original.parsed.id) || []).some((raw) => String(raw?.target).toLowerCase() === "update/update.rpf" && raw.entry === file.entry),
         );
-      const previous = toContainer ? previousSkinsOf(original.parsed, target) : [];
+      const previous = toContainer ? previousSkinsOf(original.parsed, target, original.origin) : [];
       /* «Новое заменяет старое» (слово владельца 22.11.2026, `host-standing.js`): работа, целиком перекрытая записями нового пакета в хосте, уходит той же установкой; частичное перекрытие — прежнее поведение и отчёт. */
       const over = toContainer ? hostWorksOver({ files: hostFilesOf.get(original.parsed.id), dlcName: original.parsed.dlcName, target, skip: hostSkipSet({ batchIds: checked.map((entry) => entry.parsed.id), replaceModIds: original.replaceModIds || [], previous }) }) : null;
       const covered = over?.covered || [];

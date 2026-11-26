@@ -349,6 +349,9 @@ const IPC_CHANNELS = Object.freeze({
   INSTALLED_PLAN: "modovik:installed-plan",
   INSTALLED_UNINSTALL: "modovik:installed-uninstall",
   INSTALLED_GUARD: "modovik:installed-guard",
+  /* Зависшая GTA V (26.11.2026): что похоже на зависшую и «Закрыть» по нажатию человека (`game-process-facts.js`). */
+  INSTALLED_HUNG: "modovik:installed-hung",
+  INSTALLED_CLOSE_HUNG: "modovik:installed-close-hung",
   CHOOSE_PACKAGE: "modovik:choose-package",
   PLAN_PACKAGE: "modovik:plan-package",
   INSTALL_PACKAGE: "modovik:install-package",

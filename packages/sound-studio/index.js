@@ -1774,6 +1774,7 @@ export {
 export {
   audioConfigSlot,
   patchAudioConfigSlots,
+  raiseAudioConfigSlots,
   readAudioConfigSlots,
 } from "./audio-config-slots.js";
 

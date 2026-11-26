@@ -580,6 +580,11 @@ export function OrdinaryInspector({ tool, config, onPatch, hit = false, onHit = 
               />
             ))}
           </div>
+          {config.visibilityMode === "persistent" && (
+            <p className="fx-hint">
+              {tr("Отменяет только затухание прицела игры. Если сервер прячет его или рисует свой, настройка не поможет.")}
+            </p>
+          )}
           {config.visibilityMode === "delayed" && (
             <Field
               kind="ordinary"

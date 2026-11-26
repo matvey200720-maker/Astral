@@ -122,6 +122,7 @@ export function registerInstalledIpc({
   manager = { planUninstall, uninstall },
   recordTiming = recordPassTiming,
   log = (entry) => appLog.record(entry),
+  gameFacts = () => import("./game-process-facts.js"),
 }) {
   const shared = { withInstallState, gtaSettingsPath, gtaSettingsStateDir, nativeContext, operations, findGame };
 
@@ -161,6 +162,9 @@ export function registerInstalledIpc({
       const value = safeInput(input);
       return inspectInstallRuntime(await findGame(value.targetId));
     },
+    /* Зависшая GTA V (26.11.2026): список — только то, что точно похоже на зависшую; закрытие — по нажатию человека и после повторной проверки. Модуль — по вызову. */
+    INSTALLED_HUNG: async () => ({ hung: await (await gameFacts()).listHungGames() }),
+    INSTALLED_CLOSE_HUNG: async (input) => (await gameFacts()).closeHungGame(safeInput(input).pid),
     INSTALLED_UNINSTALL: async (input) => {
       if (activeOperations?.size) throw new Error(QUEUE_BUSY);
       const { value, stateDir, ctx, tools } = await openSession(input);

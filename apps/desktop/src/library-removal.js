@@ -63,6 +63,9 @@ const GIB = 1024 ** 3;
  * только что поставленной) — это две-три минуты, как у самой установки.
  */
 export const RETIRE_REPLAY_LIMIT = 3;
+/* Предел для прежней версии, оставившей в игре свои записи (`leftoverPoints`): не убрать её значит оставить в игре старые
+   настройки, поэтому ждём дольше обычного — около шести минут на двенадцать работ, — но не сорок. */
+export const RETIRE_LEFTOVER_LIMIT = 12;
 const MAX_NATIVE_ITEMS = 64;
 const MAX_MOD_ITEMS = 256;
 const JOURNAL_VERSION = 1;
@@ -1153,6 +1156,25 @@ async function patchTargets(point, tools) {
 }
 
 /*
+ * Прежние версии, от которых в игре осталось своё: у них есть записи архива, которых новая версия не пишет, —
+ * маска размытия, скрытая и полупрозрачная карта (`graphics.ytd`), дальность радара (`mapzoomdata.meta`), файлы метки и
+ * маршрута GPS мини-карты. Оставить такую точку в стопке значит оставить эти настройки в игре (26.11.2026: человек
+ * поставил новую мини-карту, а часть прежних настроек не сменилась). Отдаёт имена точек. Патч новой или прежней
+ * версии не прочитать — сравнивать не с чем, и точка считается закрытой, как раньше.
+ */
+async function leftoverPoints(requests, points, successorTargets, tools) {
+  const found = new Set();
+  if (!successorTargets) return found;
+  for (const request of requests) {
+    const point = points.find((item) => item.id === request.restorePointId);
+    const targets = point ? await patchTargets(point, tools) : null;
+    if (targets && [...targets].some((target) => !successorTargets.has(target)))
+      found.add(request.restorePointId);
+  }
+  return found;
+}
+
+/*
  * Сколько установок хоста и пересборок движка придётся сделать заново, чтобы
  * снять `natives` перемоткой: работа за установку, подряд идущие звенья
  * движка — за одну пересборку (она кладёт все слои разом), и только если
@@ -1185,7 +1207,10 @@ async function replayLoad(input, tools) {
  * между версиями успело лечь что-то чужое — снимаются обычным удалением из
  * библиотеки, с перемоткой и возвратом того, что лежало сверху, — но только
  * пока возвращать нужно не больше `RETIRE_REPLAY_LIMIT` работ. Глубже уборка
- * не идёт: действие `kept` — прежняя точка остаётся в стопке.
+ * не идёт: действие `kept` — прежняя точка остаётся в стопке. Кроме прежней
+ * версии, чьи записи новая не переписала (`leftoverPoints`): без перемотки они
+ * остались бы в игре, и такая уборка идёт до `RETIRE_LEFTOVER_LIMIT` работ.
+ * Ещё глубже — тоже `kept`, но с причиной `leftovers`: окно об этом говорит.
  */
 export async function retireLibraryItems(input, tools) {
   await recoverLibraryRemoval(tools);
@@ -1263,23 +1288,45 @@ export async function retireLibraryItems(input, tools) {
   }
 
   if (retiring.size) {
-    const asked = [...retiring.values()];
+    let asked = [...retiring.values()];
     const replays = await replayLoad({ gameRoot, natives: asked }, tools);
     if (replays > RETIRE_REPLAY_LIMIT) {
+      /* Снимаются только те, от которых в игре осталось своё: остальные новая
+         версия переписала целиком, и их место в стопке игре не видно. */
+      const leftovers = await leftoverPoints(asked, points, successorTargets, tools);
+      const needed = asked.filter((item) => leftovers.has(item.restorePointId));
+      const load = !needed.length
+        ? 0
+        : needed.length === asked.length
+          ? replays
+          : await replayLoad({ gameRoot, natives: needed }, tools);
+      const forced = needed.length > 0 && load <= RETIRE_LEFTOVER_LIMIT;
+      const skipped = forced
+        ? asked.filter((item) => !leftovers.has(item.restorePointId))
+        : asked;
       /* Новая версия уже стоит: прежняя точка остаётся в стопке, а запись о
          ней — в библиотеке, откуда её снимет сам человек. */
-      for (const request of asked)
+      for (const request of skipped)
         outcome.natives.push({
           ...request,
           action: "kept",
-          reason: "too-deep",
+          reason: leftovers.has(request.restorePointId) ? "leftovers" : "too-deep",
           replays,
         });
-      tools.onRetireSkipped?.({
-        restorePointIds: asked.map((item) => item.restorePointId),
-        replays,
+      if (skipped.length)
+        tools.onRetireSkipped?.({
+          restorePointIds: skipped.map((item) => item.restorePointId),
+          replays,
+          ...(skipped.some((item) => leftovers.has(item.restorePointId))
+            ? { leftovers: true }
+            : {}),
+        });
+      if (!forced) return outcome;
+      tools.onRetireForced?.({
+        restorePointIds: needed.map((item) => item.restorePointId),
+        replays: load,
       });
-      return outcome;
+      asked = needed;
     }
     const removal = await removeLibraryItems(
       { gameRoot, natives: asked },

@@ -149,7 +149,7 @@ import { ownDlcVerifier } from "./dlc-archive-check.js";
 import { prepareRoadsDlcHosts } from "./roads-dlc-host.js";
 import { buildRoadsOffThread } from "./roads-build-host.js";
 import { preparePlacesDlcHost } from "./places-dlc-host.js";
-import { PLACES_DLC_TARGET, PLACES_MAP_SETS, refreshPlacesDlcBase } from "@modovik/install-engine/places-dlc.js";
+import { isMajesticFillerDictionary, PLACES_DLC_TARGET, PLACES_MAP_SETS, placesMirrorEntryOf, refreshPlacesDlcBase } from "@modovik/install-engine/places-dlc.js";
 import { placesViaUpdate } from "./places-update-install.js";
 import { normalizeVegetationProject } from "@modovik/climb-contract/recolor/vegetation";
 import { nearPlateTriangles } from "./recolor-lod.js";
@@ -1494,7 +1494,49 @@ const onPlacesMapStream = (entry) => /^astral_[a-z0-9]+_mp(?:_metadata)?\.rpf$/.
 
 /** Файлы, что манифест места положил в архив сетевой карты (по списку игры): для записи переигрывания. */
 function mappedNamesOf(manifest) {
-  return new Set((manifest.files || []).filter(onPlacesMapStream).map((file) => String(file.source).slice("payload/".length)));
+  const nameOfSource = (file) => String(file.source).slice("payload/".length);
+  const files = manifest.files || [];
+  const names = new Set(files.map(nameOfSource));
+  /* Фасад Majestic в сетевой карте (зеркало и словарь-наполнитель, 26.11.2026) — не по списку игры: «в сетевой карте» эти записи не числятся. */
+  return new Set(files.filter((file) => onPlacesMapStream(file) && file.entry !== placesMirrorEntryOf(manifest.recolor?.set, nameOfSource(file), names)).map(nameOfSource));
+}
+
+/*
+ * Фасад Мегамолла на сетевой карте (26.11.2026, `places-dlc.js`: `MAJESTIC_MIRROR_FILES`). DLC Majestic `mall_txt_repl` подменяет все семь файлов, поэтому
+ * пакет Мегамолла везёт все семь: нетронутые работой — штатными из игры игрока. Иначе вблизи или вдали остался бы фасад Majestic, а модель без своего
+ * словаря (и словарь без модели) в сетевую карту не идут.
+ */
+const MALL_BLOCK = "x64k.rpf:levels/gta5/_citye/scentral_01/sc1_22.rpf";
+const MALL_DISTRICT = "x64k.rpf:levels/gta5/_citye/scentral_01/scentral.rpf";
+export const MAJESTIC_STOCK_SOURCES = Object.freeze({
+  megamall: Object.freeze({
+    "sc1_22_mall_04bb.ydr": `${MALL_BLOCK}/sc1_22_mall_04bb.ydr`,
+    "sc1_22_mall_dec.ydr": `${MALL_BLOCK}/sc1_22_mall_dec.ydr`,
+    "sc1_22_hd.ytd": `${MALL_BLOCK}/sc1_22_hd.ytd`,
+    "sc1_22_lod.ytd": `${MALL_BLOCK}/sc1_22_lod.ytd`,
+    "sc1_22_slod1_children.ydd": `${MALL_DISTRICT}/sc1_22_slod1_children.ydd`,
+    "sc1_lod_21_22_27_28_34_children.ydd": `${MALL_DISTRICT}/sc1_lod_21_22_27_28_34_children.ydd`,
+    "sc1_lod_21_22_27_28_34_children.ytd": `${MALL_DISTRICT}/sc1_lod_21_22_27_28_34_children.ytd`,
+  }),
+});
+/*
+ * Новая раскладка фасада у этих мест — только с новым «Применить»: поставленное раньше подготовка игры не переставляет (слово ведущей 26.11.2026: первым на
+ * Majestic подмену моделей увидит человек, поэтому по его нажатию). Автоперенос — после захода на Majestic: убрать место из списка и добирать в переносе
+ * недостающие файлы фасада из игры.
+ */
+export const MAJESTIC_APPLY_ONLY_SETS = Object.freeze(["megamall"]);
+
+/** Штатные файлы фасада из игры: `[{ name, bytes }]`, все до одного — половина фасада на сетевой карте хуже, чем ничего. */
+async function majesticStockFiles(setId, game) {
+  const found = [];
+  const lost = [];
+  for (const [name, at] of Object.entries(MAJESTIC_STOCK_SOURCES[setId] || {})) {
+    const bytes = await game?.read(at).catch(() => null);
+    if (bytes) found.push({ name, bytes });
+    else lost.push(name);
+  }
+  if (lost.length) throw new Error(`Не прочитаны файлы игры (${lost.join(", ")}): без них место не встанет на Majestic — проверьте целостность игры.`);
+  return found;
 }
 
 /**
@@ -1560,6 +1602,8 @@ export async function buildRecolorPackage(
     }
   }
   let built;
+  /* Штатные файлы фасада для сетевой карты читаются, пока игра открыта; в пакет — после уступок, если работе есть что ставить. */
+  let facadeStock = [];
   try {
     built = set.build
       ? await set.build(project, resources, {
@@ -1649,19 +1693,24 @@ export async function buildRecolorPackage(
         hiddenReport: done.report,
       };
     }
+    if (built.files.length && MAJESTIC_STOCK_SOURCES[setId]) facadeStock = await majesticStockFiles(setId, game);
   } finally {
     await game?.close?.().catch(() => {});
   }
   const { patches } = built;
   /* Файлы, что уже везёт другой поставленный набор, уступаются ему. */
   const yielded = yieldedFiles(built.files, held, lod);
-  const files = built.files.filter((file) => !yielded.names.has(file.name.toLowerCase()));
-  if (!files.length) throw new Error("Всё как в игре — ставить нечего: снимите набор «Откатить».");
+  const own = built.files.filter((file) => !yielded.names.has(file.name.toLowerCase()));
+  if (!own.length) throw new Error("Всё как в игре — ставить нечего: снимите набор «Откатить».");
+  /* Фасад Majestic — все семь, нетронутые штатными. Модель-наполнитель — на старте и в сетевой карте; словарь-наполнитель (и уступленный другому набору) —
+     только в сетевой карте: имя на старте остаётся свободным для «Билбордов». */
+  const present = new Set(own.map((file) => file.name.toLowerCase()));
+  const files = [...own, ...facadeStock.filter((file) => !present.has(file.name)).map((file) => ({ ...file, filler: true, mapOnly: isMajesticFillerDictionary(setId, file.name) }))];
   /* Сторож краша для всех наборов: модель без группы шейдеров GTA не
      переживает (пустышки мода арены роняли игру 03.10.2026). */
   const unsafe = unsafeDrawables(files);
   if (unsafe.length) throw new Error(`Модель без шейдеров не поедет в игру — она уронила бы GTA: ${unsafe.join(", ")}.`);
-  const described = files.map((file) => ({ name: file.name, size: file.bytes.length, sha256: sha256(file.bytes) }));
+  const described = files.map((file) => ({ name: file.name, size: file.bytes.length, sha256: sha256(file.bytes), ...(file.mapOnly ? { mapOnly: true } : {}) }));
   /* Места с архивами сетевой карты: кроме `hei_` туда идут и файлы, что игра включает наборами `GROUP_MAP` (`game-map-names.js`, 26.10.2026). Игру прочитать
      не вышло — прежнее правило `hei_`. */
   const mapNames = PLACES_MAP_SETS.includes(setId) && typeof readMapNames === "function" ? (await Promise.resolve(readMapNames()).catch(() => null)) || null : null;
@@ -1687,10 +1736,11 @@ export async function buildRecolorPackage(
     project,
     /* Отпечатки файлов пакета — для главного процесса, когда сборка шла в
        своём потоке (`recolor-build-host.js`). */
-    payloadFiles: described.map((file) => ({ name: file.name, sha256: file.sha256 })),
+    /* `filler` — штатный наполнитель фасада Majestic: пакету мест он нужен, контейнеру update.rpf (GTA 5 RP) — нет (`places-update-install.js`). */
+    payloadFiles: described.map((file, index) => ({ name: file.name, sha256: file.sha256, ...(files[index].filler ? { filler: true } : {}) })),
     /* Файлы пакета с размерами — для записи переигрывания (`recolorReplayRecord`). `mapped` — собрано по списку игры: файл в архиве сетевой карты (true) или в архиве
        на старте (false); без списка (запасное правило `hei_`) пометки нет. */
-    files: described.map(({ name, size, sha256 }) => ({ name, size, sha256, ...(mapNames ? { mapped: mapped.has(name) } : {}) })),
+    files: described.map(({ name, size, sha256, mapOnly }) => ({ name, size, sha256, ...(mapNames ? { mapped: mapped.has(name) } : {}), ...(mapOnly ? { mapOnly } : {}) })),
     summary: {
       ...set.summary(project, patches),
       ...(built.lodReport ? { lod: lodSummary(built.lodReport) } : {}),
@@ -1824,6 +1874,9 @@ export async function heldByOtherSets(readState, stateDir, targetId, setId) {
       if (!match || match[1].toLowerCase() === setId) continue;
       const owner = match[1].toLowerCase();
       const name = match[2].split("/").pop().toLowerCase();
+      /* Словарь фасада Majestic в сетевой карте имени не занимает (26.11.2026): штатный наполнитель стоит только там, а крашеный занят записью на старте.
+         Иначе «Билборды», поставленные после Мегамолла, уступили бы ему свои щиты на этих листах. */
+      if (isMajesticFillerDictionary(owner, name) && String(entry.entry).toLowerCase().startsWith(`astral_${owner}_mp.rpf/`)) continue;
       /* `_manifest.ymf` у каждого контейнера свой (связь его карты плашек с
          его типами), общим файлом он не бывает. Уступленный «Заводу» или
          «Ангару», он пропадал у Мегамолла, «Ашана» и Арены, и их плашки —
@@ -2098,7 +2151,8 @@ const summaryOf = (built) => ({
   modId: built.manifest.id,
   entry: built.viaUpdate ? (packLaneOf(built) ? `x64/levels/gta5/astral_rp_road_${packLaneOf(built).id}(_b|_c|_d).rpf` : built.setId === "vegetation" ? "x64/astral/astral_rp_vegetation(_b).rpf" : "x64/astral/astral_rp_road(_b).rpf") : (GAME_SETS[built.setId] || RECOLOR_SETS[built.setId]).container,
   archive: built.viaUpdate ? (packLaneOf(built)?.target ?? "update/update.rpf") : GAME_SETS[built.setId]?.archive || RECOLOR_SETS[built.setId]?.archive || "update/update.rpf",
-  files: built.manifest.files.length,
+  /* Файлы работы, а не записи манифеста: у фасада Мегамолла их по две (на старте и зеркалом в сетевой карте). */
+  files: new Set(built.manifest.files.map((file) => file.source)).size,
   edition: "Legacy",
   restartRequired: true,
   ...built.summary,
@@ -2198,13 +2252,25 @@ async function migratePlacesOnce({ gameRoot, targetId, stateDir, tools: override
     const mapNames = mapped && entries.length ? await mapNamesOf(moving ? gameSet : "places") : null;
     /* Раскладка работы (у растительности — два пакета или три): место файла считается в ней же. */
     const layout = moving?.layoutOf ? moving.layoutOf(item) : undefined;
+    const present = new Set(entries.map(nameOf));
+    const mirrorOfEntry = (entry) => {
+      const mirror = moving ? null : placesMirrorEntryOf(setId, nameOf(entry), present);
+      return Boolean(mirror) && String(entry?.target).toLowerCase() === PLACES_DLC_TARGET && String(entry?.entry || "").toLowerCase() === mirror;
+    };
+    /* Мегамолл без фасада в сетевой карте (поставлен до 26.11.2026) в новую раскладку не переносится: она — только с новым «Применить». */
+    const facade = !MAJESTIC_APPLY_ONLY_SETS.includes(setId) || entries.some(mirrorOfEntry);
     const current = (entry) => {
-      const route = moving ? moving.route(nameOf(entry), mapNames, layout) : recolorRouteOf(setId, nameOf(entry), mapNames);
+      /* Зеркало и наполнитель фасада Majestic на своём месте. */
+      if (facade && mirrorOfEntry(entry)) return true;
+      const route = moving ? moving.route(nameOf(entry), mapNames, layout) : recolorRouteOf(setId, nameOf(entry), mapNames, { facade });
       if (String(entry?.target).toLowerCase() === route.target && String(entry?.entry || "").toLowerCase() === route.entry.toLowerCase()) return true;
       /* Список из игры не прочитан: файл, уже лежащий в архиве сетевой карты своего пакета, остаётся там. */
       return Boolean(mapped && !mapNames && String(entry?.target).toLowerCase() === route.target && mapped(entry));
     };
-    if (!entries.length || entries.every(current)) continue;
+    /* Файл фасада только в сетевой карте и не наполнитель — стена арены с 21.11 по 26.11: на старте её нет, и сюжет показывает штатную. Переносится. */
+    const startNames = new Set(entries.filter((entry) => !mirrorOfEntry(entry)).map(nameOf));
+    const mapOnlyFacade = facade && entries.some((entry) => mirrorOfEntry(entry) && !startNames.has(nameOf(entry)) && !isMajesticFillerDictionary(setId, nameOf(entry)));
+    if (!entries.length || (entries.every(current) && !mapOnlyFacade)) continue;
     if (moving && !entries.every((entry) => moving.targets.includes(String(entry?.target).toLowerCase()))) continue;
     /* Место могли уже перенести или снять, пока шли предыдущие. */
     const now = await tools.readState({ stateDir });
@@ -2212,8 +2278,12 @@ async function migratePlacesOnce({ gameRoot, targetId, stateDir, tools: override
     let packageRoot = null;
     try {
       const files = [];
+      const taken = new Set();
       for (const entry of entries) {
         const name = nameOf(entry);
+        /* Зеркало — вторая запись того же файла: в пакет он идёт один раз. */
+        if (taken.has(name)) continue;
+        taken.add(name);
         const layer = (target.archives?.[entry.target]?.entries?.[entry.entry]?.layers || []).find((candidate) => candidate.modId === item.modId);
         if (!layer?.cachePath || !layer?.sha256) throw new Error(`Файла ${name} нет в хранилище движка.`);
         files.push({ name, cachePath: layer.cachePath, sha256: layer.sha256 });
@@ -2229,9 +2299,11 @@ async function migratePlacesOnce({ gameRoot, targetId, stateDir, tools: override
         const bytes = await fs.readFile(file.cachePath);
         if (sha256(bytes) !== file.sha256) throw new Error(`Файл ${file.name} в хранилище движка изменился.`);
         await atomicWrite(path.join(packageRoot, "payload", file.name), bytes);
-        described.push({ name: file.name, size: bytes.length, sha256: file.sha256 });
+        /* Словарь-наполнитель фасада стоял только в сетевой карте — там и остаётся. */
+        const mapOnly = facade && isMajesticFillerDictionary(setId, file.name) && entries.filter((entry) => nameOf(entry) === file.name).every(mirrorOfEntry);
+        described.push({ name: file.name, size: bytes.length, sha256: file.sha256, ...(mapOnly ? { mapOnly } : {}) });
       }
-      const manifest = moving ? moving.build(described, mapNames, layout) : buildRecolorManifest(setId, described, { mapNames });
+      const manifest = moving ? moving.build(described, mapNames, layout) : buildRecolorManifest(setId, described, { mapNames, facade });
       if (!(moving ? moving.trusted(manifest, "Legacy") : isLocalRecolorManifest(manifest, "Legacy")))
         throw new Error("Перенесённый набор не прошёл строгую проверку доверия.");
       const built = { setId, manifest, packageRoot };
@@ -2371,7 +2443,7 @@ export function recolorReplayRecord(built) {
     sourceDigest: built.manifest.recolor.sourceDigest,
     order: {
       setId: built.setId,
-      files: built.files.map(({ name, size, sha256: hash, mapped }) => ({ name, size, sha256: hash, ...(typeof mapped === "boolean" ? { mapped } : {}) })),
+      files: built.files.map(({ name, size, sha256: hash, mapped, mapOnly }) => ({ name, size, sha256: hash, ...(typeof mapped === "boolean" ? { mapped } : {}), ...(mapOnly ? { mapOnly } : {}) })),
     },
   };
 }
@@ -2404,14 +2476,23 @@ export async function recolorReplayPackage(stateDir, replay) {
     const hash = await fingerprintSha256(file);
     if (hash !== String(item.sha256 || "") || stat.size !== item.size)
       throw new Error(`Работа «${workName}»: пакет для переигрывания изменён — переустановите набор из мастерской.`);
-    files.push({ name, size: stat.size, sha256: hash });
+    files.push({ name, size: stat.size, sha256: hash, ...(item.mapOnly === true ? { mapOnly: true } : {}) });
   }
   /* Собрано по списку игры (`game-map-names.js`): в записи у каждого файла пометка `mapped` — архив сетевой карты или архив на старте. Пометок нет — собрано
      по запасному правилу `hei_`. */
   const byList = listed.some((item) => typeof item?.mapped === "boolean");
   const mapNames = byList ? new Set(listed.filter((item) => item.mapped === true).map((item) => String(item.name).toLowerCase())) : null;
-  const rebuilt = buildRecolorManifest(setId, files, { mapNames });
-  if (rebuilt.recolor.sourceDigest !== digest || rebuilt.id !== replay.workId)
+  /* Тот же манифест, что в записи: нынешней раскладкой или, у записи до 26.11.2026, прежней (без фасада в сетевой карте). У записи с наполнителем фасада
+     прежней раскладки не бывает. */
+  const recorded = (facade) => {
+    try {
+      const rebuilt = buildRecolorManifest(setId, files, { mapNames, facade });
+      return rebuilt.recolor.sourceDigest === digest && rebuilt.id === replay.workId;
+    } catch {
+      return false;
+    }
+  };
+  if (!recorded(true) && !(files.every((file) => !file.mapOnly) && recorded(false)))
     throw new Error(`Работа «${workName}»: пакет для переигрывания изменён — переустановите набор из мастерской.`);
   return { packageRoot, files };
 }

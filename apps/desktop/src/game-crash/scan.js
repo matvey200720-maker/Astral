@@ -5,7 +5,7 @@
  * Читает только чужие журналы и файл состояния движка; ничего не запускает и не пишет в папку игры. Каждый источник
  * независим: сбой одного (нет `wevtutil`, нет папки Majestic) не отменяет остальные, причина уходит в `problems`.
  */
-import { buildReason, classifyWhere, rageMpRootOf } from "./classify.js";
+import { buildReason, classifyWhere, isRageLauncherAbort, rageMpRootOf } from "./classify.js";
 import { rageMpRoots, readGameCrashLogs, readMajesticCrashes, readQuickGameExits, readRageMpCrashes, readSinglePlayerHints } from "./client-logs.js";
 import { scrubLine } from "./scrub.js";
 import { readInstallIndex, resolveSuspects, wantedFiles } from "./suspects.js";
@@ -58,7 +58,7 @@ export function assemble({ wer = [], majestic = [], rage = [], hints = { logs: [
   };
 
   /* Падения с событием Windows — основные. Журнал Majestic берём «упавший» первым, иначе просто ближайший по времени. */
-  for (const crash of wer) {
+  for (const crash of wer.filter((item) => !isRageLauncherAbort(item))) {
     const maj = take(majestic, usedMajestic, crash.t, ATTACH_MS, (item) => item.crashed) || take(majestic, usedMajestic, crash.t, 20 * 1000);
     /* Журнал RAGE MP — улика, только если строка о падении с ВРЕМЕНЕМ легла в пределах двух минут от события Windows. */
     const rageLog = rage

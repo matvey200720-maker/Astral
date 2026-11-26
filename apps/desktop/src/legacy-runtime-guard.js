@@ -95,11 +95,14 @@ export const legacyRuntimeGuard = (genitive, subject) => ({
         `${subject} Majestic / GTA5RP поддерживает только GTA V Legacy.`,
       );
     const running = await runningGameProcesses(game);
-    if (running.length)
+    if (running.length) {
+      /* Путь найденного процесса — в журнал, один раз на процесс; отказ его не ждёт. */
+      void import("./game-process-facts.js").then((facts) => facts.noteBlockingProcesses(running)).catch(() => {});
       throw new Error(
         `Закройте GTA V и лаунчер проекта перед применением ${genitive}. ` +
           `Найден процесс: ${running.map(describeProcess).join(", ")}.`,
       );
+    }
     await assertNoModsShadow(gameRoot, genitive);
   },
 });

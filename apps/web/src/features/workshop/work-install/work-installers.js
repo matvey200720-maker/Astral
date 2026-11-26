@@ -667,6 +667,8 @@ async function optimizationPlan({ template }) {
           editor: word,
           key: storageKey,
           run: () => switchLayers(true),
+          /* Установка из сборки тоже не пропадает при открытой GTA V: ждёт и встаёт сама. */
+          waitOnRefusal: true,
           signature,
           steps: [
             stepOf("prepare", tr("Подготовка"), tr("Astral проверяет, что игра закрыта, и сверяет то, что уже стоит")),

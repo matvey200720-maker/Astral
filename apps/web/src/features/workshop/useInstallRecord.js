@@ -34,6 +34,8 @@ import {
   rollBackInstall,
   SUCCESSOR_LOST_MESSAGE,
   successorLost,
+  LEFTOVERS_KEPT_MESSAGE,
+  leftoversKept,
 } from "../library/retire-previous.js";
 import { tr } from "../../locales/ui.js";
 
@@ -215,6 +217,7 @@ export async function rememberInstallRecord(
   /* Новая версия не встала обратно (бета 15.10, kevake: трассеры остались
      штатными, а галочка пропала молча) — ошибка в очереди, а не «готово». */
   if (successorLost(retired, restorePointId)) throw new Error(tr(SUCCESSOR_LOST_MESSAGE));
+  if (leftoversKept(retired)) report?.({ rpNote: tr(LEFTOVERS_KEPT_MESSAGE) });
   return readRecord(storageKey) || next;
 }
 

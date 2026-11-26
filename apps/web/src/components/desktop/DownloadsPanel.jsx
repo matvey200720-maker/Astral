@@ -45,6 +45,10 @@ import { ribbonCopyFor } from "../../features/downloads/ribbon/ribbon-copy.js";
 import { useSortableRows } from "../../features/downloads/ribbon/useSortableRows.js";
 import { openCart } from "../../features/cart/cart-store.js";
 import { useInstallWaits } from "../../features/downloads/prepare-wait.js";
+import { useDeferredInstalls } from "../../features/downloads/deferred-installs.js";
+import { DeferredRow, GameWaitHero } from "../../features/downloads/ribbon/GameWaitItems.jsx";
+import HungGameClose from "../../features/downloads/HungGameClose.jsx";
+import { GAME_WAIT_NOTE } from "../../features/workshop/install-queue/queue.js";
 import PrepareWaitHero from "../../features/downloads/ribbon/PrepareWaitHero.jsx";
 import "./downloads-ribbon.css";
 
@@ -205,6 +209,8 @@ export default function DownloadsPanel({
   const doneLog = useDoneLog();
   /* Установка ждёт подготовку игры (T-0001): очереди у неё ещё нет, страница показывает её героем. */
   const waits = useInstallWaits();
+  /* Отложенные из-за открытой GTA V (26.11.2026): ждут здесь и ставятся сами, когда игру закроют. */
+  const deferred = useDeferredInstalls();
 
   const liveWorks = useWorkshopInstallsLive();
   const source = works ?? liveWorks;
@@ -315,7 +321,10 @@ export default function DownloadsPanel({
   /* Ожидание подготовки (T-0001) — героем, только когда страница иначе пуста; при живой очереди героя не видно, и вкладка его не считает.
      Запись, у которой подготовка уже кончилась (идёт план), уступает герою «Всё готово»: он и так не пустая страница. */
   const waitHero = hero.kind === "idle" && waits.length > 0 && (!showDone || waits.some((wait) => wait.phase === "preparing"));
-  const tabCount = liveCount + failedRows.length + failedJobs.length + (waitHero ? waits.length : 0);
+  /* Пусто, а моды ждут закрытия игры — герой говорит об этом, а не «Всё чисто» и не «Всё готово». */
+  const gameHero = hero.kind === "idle" && !waitHero && deferred.length > 0;
+  const restDeferred = gameHero ? deferred.slice(1) : deferred;
+  const tabCount = liveCount + failedRows.length + failedJobs.length + (waitHero ? waits.length : 0) + deferred.length;
 
   const failedExtras = { copy, rc, language, onCancel, onRetry, onOpenLogs };
   const rowProps = (row) => ({ row, copy, language, onCancel });
@@ -403,6 +412,8 @@ export default function DownloadsPanel({
     );
   } else if (waitHero) {
     heroNode = <PrepareWaitHero wait={waits[0]} copy={copy} language={language} />;
+  } else if (gameHero) {
+    heroNode = <GameWaitHero entry={deferred[0]} copy={copy} language={language} />;
   } else if (showDone) {
     heroNode = (
       <DoneHero
@@ -485,6 +496,11 @@ export default function DownloadsPanel({
     </div>
   ) : null;
   if (waitingList) queueRows.push(waitingList);
+  restDeferred.forEach((entry) => queueRows.push(<DeferredRow key={`d-${entry.id}`} entry={entry} language={language} />));
+  /* Зависшую GTA V предлагаем закрыть там, где её закрытия ждут; на герое кнопка уже есть. Не строкой очереди: без зависшей
+     игры кнопки нет вовсе, а строка из ничего прятала бы пустую очередь. */
+  const waitsForGame = restDeferred.length > 0 || workList.some((job) => job.note === GAME_WAIT_NOTE);
+  const hungGame = waitsForGame && !gameHero ? <HungGameClose /> : null;
 
   const idle = hero.kind === "idle";
   const queueCard = (
@@ -494,12 +510,14 @@ export default function DownloadsPanel({
         restWaiting.length +
         restJobs.length +
         restFailedRows.length +
-        restFailedJobs.length
+        restFailedJobs.length +
+        restDeferred.length
       }
       className={queueRows.length ? "dl-queue is-fit" : "dl-queue"}
       /* Карточка очереди по содержимому ниже библиотеки намеренно (17.11.2026): аудит «одинаковая высота в ряду» тут не про дефект. */
       auditIgnore={queueRows.length ? "row-height" : undefined}
       signal={queueRows.length}
+      before={hungGame}
     >
       {queueRows.length ? (
         queueRows

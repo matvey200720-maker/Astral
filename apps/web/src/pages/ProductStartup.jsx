@@ -11,6 +11,9 @@ import { ArrowRight, CaretDown, Check, CheckCircle, CircleNotch, ShieldCheck } f
 import { tr, useTr } from "../locales/ui.js";
 import { preparationLine } from "../components/desktop/shell-notices.js";
 
+/* «Закрыть зависшую GTA V» (26.11.2026): сама показывается, только когда игра и правда зависла; куском по запросу. */
+const HungGameClose = lazy(() => import("../features/downloads/HungGameClose.jsx"));
+
 export function PreparationDock({ state, language, onOpenSettings }) {
   useTr();
   const [open, setOpen] = useState(() => state?.status === "running");
@@ -68,6 +71,11 @@ export function PreparationDock({ state, language, onOpenSettings }) {
               </li>
             ))}
           </ol>
+          {state.status === "error" && (
+            <Suspense fallback={null}>
+              <HungGameClose />
+            </Suspense>
+          )}
           {needsAction && (
             <button onClick={onOpenSettings}>
               {dockCopy[3]}

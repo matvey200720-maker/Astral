@@ -45,6 +45,15 @@ export function classifyWhere({ wer, majestic, companions = [], rageMpPresent = 
   return "unknown";
 }
 
+/**
+ * `ragemp_v.exe` — лаунчер RAGE MP, а не игра (игра — `GTA5.exe`). Бывает, что при каждом запуске он обрывает себя
+ * fail-fast'ом из системной `ucrtbase.dll` (`c0000409`), а игра идёт дальше часами (журнал игрока, 23–26.11.2026).
+ * Падением игры это не считается. Остальные падения `ragemp_v.exe` (в модуле RAGE MP, с другим кодом, зависание)
+ * считаются, как и такой же fail-fast самой игры. Принимает событие Windows или поля записи `{ name, exception, module }`.
+ */
+export const isRageLauncherAbort = ({ name, exception, module } = {}) =>
+  /^ragemp_v\.exe$/i.test(String(name || "")) && exception === "c0000409" && /^ucrtbase\.dll$/i.test(path.win32.basename(String(module || "")));
+
 /** Корень RAGE MP по событию Windows: путь процесса или модуля внутри папки RAGEMP. */
 export const rageMpRootOf = (wer) => rageMpRootFromPath(wer?.appPath) || rageMpRootFromPath(wer?.modulePath);
 

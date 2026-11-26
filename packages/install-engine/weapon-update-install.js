@@ -134,9 +134,12 @@ export const inContainerItems = (containerItems, item) => [...(containerItems ||
  * план не видит): id установленных скинов с общим слотом `weapon-<модель>`. СКИН НИКОГДА НЕ СНИМАЕТ ГАНПАК (решение лида 1, 23.11.2026; в 1.0.2 в хосте так и было, скин ложился слоем, ганпак возвращался при снятии скина:
  * скин делают НА модели ганпака, без неё остаются штатная модель с текстурами скина): новый скин (`local-weapon-skin-*`, `local-clothing-skin-*`) заменяет только прежние СКИНЫ, ганпаки остаются под ним. Новый ганпак
  * мастерской (`local-gunpack-*`) заменяет прежние скины и ганпаки, чьи слоты все покрыты; чужие моды и пакеты каталога не затрагиваются.
+ * Копия мода каталога с другим размером модели (`local-gunpack-*` с `origin.catalogModId`, приложение: `catalog-model-scale.js`) — мод каталога, а не работа мастерской: сама она никого не снимает,
+ * замену называет приложение — ту же, что при установке этого мода в 100 % (26.11.2026).
  */
-export function previousSkinsOf(parsed, target) {
+export function previousSkinsOf(parsed, target, origin = null) {
   if (!SKIN_ID.test(String(parsed?.id || ""))) return [];
+  if (!SKIN_ONLY.test(String(parsed.id)) && origin?.catalogModId) return [];
   const replaces = SKIN_ONLY.test(String(parsed.id)) ? SKIN_ONLY : SKIN_ID;
   return (target?.installed || [])
     .filter((installed) => installed.modId !== parsed.id && replaces.test(String(installed.modId || "")) && replacedWhole(installed.slots, parsed.slots))

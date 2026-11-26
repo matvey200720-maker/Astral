@@ -9,6 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { writeFileAtomicSync } from "../atomic-file.js";
+import { isRageLauncherAbort } from "./classify.js";
 
 export const STORE_FILE = "game-crashes.json";
 export const KEEP_CRASHES = 10;
@@ -92,7 +93,9 @@ export function createCrashStore({ userData, fsImpl = fs, now = Date.now } = {})
     /** Падения, которых человеку ещё не показывали (не старше двух суток). */
     unnoticed() {
       const floor = now() - NOTICE_AGE_MS;
-      return state.crashes.filter((record) => record.t >= floor && !state.noticed.includes(record.id)).map((record) => ({ ...record }));
+      /* Обрыв лаунчера RAGE MP, записанный прошлой версией, всплывать не должен. */
+      const ofLauncher = (record) => isRageLauncherAbort({ name: record.process?.name, exception: record.exception, module: record.module?.name });
+      return state.crashes.filter((record) => record.t >= floor && !state.noticed.includes(record.id) && !ofLauncher(record)).map((record) => ({ ...record }));
     },
     markNoticed(ids) {
       const known = new Set(state.crashes.map((record) => record.id));

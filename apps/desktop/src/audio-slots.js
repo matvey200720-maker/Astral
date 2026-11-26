@@ -4,6 +4,8 @@
  * ЗАЧЕМ. Паки звуков оружия каталога собираются из чужих банков, и `weapons.awc` с их дорожками длиннее штатного — а слот
  * STATIC_WEAPONS в игре сделан ровно по штатному банку (`wave-slots.js`). Мёртвые дорожки освобождают немного (`slot-fit.js`);
  * если банк всё равно больше, слот поднимается в `update.rpf/x64/audio/config/audioconfig.dat4.rel` ровно под собранный банк.
+ * С 25.11.2026 так же растут слоты банков ствола игрока (все три `PLAYER_WEAPON_0…2` — по самому тесному банку) и ближнего боя
+ * (STATIC_MELEE).
  *
  * ЧТО ЭТО ЗА СЛОЙ. Производный, как реестры `content.xml` и `dlclist.xml` (`registry-composers.js`): запись `audioconfig.dat4.rel`
  * в update.rpf получает слой `@astral-audio-slots` (действие `replace`, файл — то, что лежало под ним, с поднятыми числами).
@@ -28,8 +30,10 @@ import {
   setRecordValue,
 } from "@modovik/install-engine/state-record.js";
 import {
-  patchAudioConfigSlots,
-  readAudioConfigSlots,
+  audioConfigSlot,
+  raiseAudioConfigSlots,
+  slotGrowthOf,
+  waveSlotOf,
 } from "@modovik/sound-studio";
 import {
   AUDIO_CONFIG_ARCHIVE,
@@ -41,14 +45,38 @@ import {
 import { appLog } from "./app-log.js";
 import { extractRpfEntry } from "./rpf-composer.js";
 
-/* Банки, чей слот Astral умеет поднимать: слот → архив и запись банка. */
-const GROWABLE_BANKS = Object.freeze([
-  Object.freeze({
-    slot: "STATIC_WEAPONS",
-    archive: "x64/audio/sfx/RESIDENT.rpf",
-    entry: "weapons.awc",
-  }),
-]);
+/*
+ * Банки со слоями звука, чей слот Astral умеет поднимать (`slot-fit.js`, `SLOT_GROWTH`): постоянные `weapons.awc` и `melee.awc` и любой
+ * банк ствола игрока — архив и имя банка берутся из состояния, а не перечисляются (25.11.2026). Банк, занятый паком целиком, не
+ * растёт и сюда не идёт — как и в расчёте самого банка (`planAwcEntry`).
+ */
+function growableBanks(target) {
+  const banks = [];
+  for (const [archive, record] of Object.entries(target?.archives || {}))
+    for (const entry of Object.keys(record?.entries || {})) {
+      const layers = (ownRecordValue(record.entries, entry)?.layers || []).filter(
+        (layer) => layer?.merge?.strategy === "awc-stream-layer-v1",
+      );
+      if (!layers.length || layers.some((layer) => layer.merge.completeBank))
+        continue;
+      const slot = waveSlotOf(archive, entry)?.name;
+      if (slot && slotGrowthOf(slot))
+        banks.push({ slot, archive, entry, layers });
+    }
+  return banks.sort((left, right) =>
+    `${left.archive}|${left.entry}`.localeCompare(`${right.archive}|${right.entry}`),
+  );
+}
+
+/* Банков в одном слоте много (три слота ствола на все личные банки): каждое число слота — наибольшее из того, что просят банки. */
+const widest = (slot, other) =>
+  slot
+    ? {
+        bytes: Math.max(slot.bytes, other.bytes),
+        header: Math.max(slot.header, other.header),
+        metadata: Math.max(slot.metadata, other.metadata),
+      }
+    : other;
 
 const ownLayers = (layers) =>
   (layers || []).filter((layer) => layer?.modId === AUDIO_SLOTS_LAYER);
@@ -84,15 +112,8 @@ export async function settleAudioSlots({
   ];
   /* Что банки просят: слот → числа. */
   const raised = {};
-  for (const bank of GROWABLE_BANKS) {
-    const bankRecord = ownRecordValue(
-      target?.archives?.[bank.archive]?.entries || {},
-      bank.entry,
-    );
-    const layers = (bankRecord?.layers || []).filter(
-      (layer) => layer?.merge?.strategy === "awc-stream-layer-v1",
-    );
-    if (!layers.length) continue;
+  for (const bank of growableBanks(target)) {
+    const { layers } = bank;
     /* Копия основы за дни остывает — уходит в куски и опись (`chunk-store.js`), файла нет; планировщик читает её отпечатком и распаковкой записи: вернуть до чтения (журнал тестера beta.109, 22.11.2026). */
     await ensureBaseFile({ target, archiveTarget: bank.archive, paths, targetKey, gameRoot, signal });
     const resource = target.resources?.[bank.archive];
@@ -111,7 +132,7 @@ export async function settleAudioSlots({
       /* Слот, на который ляжет наш слой: файл игрока без него. */
       slot: await slotInState(target, bank.slot, { withoutOwn: true }),
     });
-    if (plan.need) raised[bank.slot] = plan.need.raised;
+    if (plan.need) raised[bank.slot] = widest(raised[bank.slot], plan.need.raised);
   }
   const wanted = Object.keys(raised).length > 0;
   if (!wanted && !before.length) return { changed: false, raised };
@@ -179,14 +200,13 @@ export async function settleAudioSlots({
     }
   }
   const underBytes = await fs.readFile(underPath);
-  const slots = readAudioConfigSlots(underBytes);
-  /* Поднимается слот, которого в файле нет, — файл не тот (иная сборка игры): отказ словами. */
+  /* Поднимается слот, которого в файле нет (ни его, ни семьи `<имя>_<номер>`), — файл не тот (иная сборка игры): отказ словами. */
   for (const name of Object.keys(raised))
-    if (!slots.has(name))
+    if (!audioConfigSlot(underBytes, name))
       throw new Error(
         `В audioconfig.dat4.rel игрока нет слота ${name}: слот памяти для звукового банка не поднять.`,
       );
-  const patched = patchAudioConfigSlots(underBytes, raised);
+  const patched = raiseAudioConfigSlots(underBytes, raised);
   const fingerprint = createHash("sha256").update(patched).digest("hex");
   const output = path.join(directory, `${fingerprint}.rel`);
   if (

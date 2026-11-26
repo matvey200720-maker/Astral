@@ -14,6 +14,7 @@
 
 import { formatSize } from "../../catalog-utils.js";
 import { describeInstallFailure } from "../../utils/installFailure.js";
+import { joinSentences } from "../../utils/join-sentences.js";
 
 const WORDS = {
   ru: {
@@ -277,7 +278,7 @@ export function removalErrorText(error, language) {
   if (known) return words[known[1]];
   const failure = describeInstallFailure(detail, language);
   if (failure && failure.kind !== "unknown")
-    return `${failure.reason}. ${failure.advice}`;
+    return joinSentences(failure.reason, failure.advice);
   return detail;
 }
 

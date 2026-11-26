@@ -894,11 +894,22 @@ export function registerInstallerIpc({
         if (overlaysUpdateRoute) engineOptions.overlaysUpdateRoute = overlaysUpdateRoute;
         /* Размер модели в руках (библиотека v2): не штатный размер у пакета оружия — модели перешиваются, пакет ставится локальным пакетом ганпака (`catalog-model-scale.js`); 100 % — как раньше. */
         const modelScale = !many && !removing.length ? Number(common.modelScale) : 1;
+        /* Замена вокруг смены размера (`catalog-replacements.js`): своя копия того же мода с другим размером уходит этой же установкой — и в 100 %, и в пачке. */
+        {
+          const { catalogReplacements } = await import("./catalog-replacements.js");
+          const standing = (await inspectProfile({ stateDir: storageOptions.stateDir }).catch(() => null))?.targets?.[game.id]?.installed;
+          for (const [index, item] of items.entries()) {
+            const replaceModIds = catalogReplacements(item, standing, { installingId: item.manifest?.id });
+            if (replaceModIds.length || item.replaceModIds?.length) items[index] = { ...item, replaceModIds };
+          }
+        }
         result = await tracedStep("установка пакета", async () => {
+          /* Размер у этого пакета не поменять — ниже ставится подписанный пакет в 100 %, а окно получает причину (`scaleSkipped`). */
+          let scaleSkipped = null;
           if (wantsModelScale(items[0]?.manifest, modelScale)) {
             const { installScaledCatalogWeapon } = await import("./catalog-model-scale.js");
-            return installScaledCatalogWeapon(
-              { manifest: items[0].manifest, baseUrl: items[0].baseUrl, modelScale, gameRoot: game.path, targetId: game.id, origin: items[0].origin },
+            const scaled = await installScaledCatalogWeapon(
+              { manifest: items[0].manifest, baseUrl: items[0].baseUrl, modelScale, gameRoot: game.path, targetId: game.id, origin: items[0].origin, replaceModIds: items[0].replaceModIds },
               storageOptions.stateDir,
               {
                 publicKey,
@@ -909,10 +920,19 @@ export function registerInstallerIpc({
                 signal: controller.signal,
                 assertRuntimeSafety,
                 archiveTools: { rpfProbe: tools.rpfProbe, rpfComposer: tools.rpfComposer, dlcListProvider: tools.dlcListProvider, contentXmlProvider: tools.contentXmlProvider },
+                note: (message) => {
+                  console.warn(`[astral] ${message}`);
+                  appLog.record({ level: "warn", source: "install", message });
+                },
               },
             );
+            if (!scaled.plainInstall) return scaled;
+            scaleSkipped = scaled.scaleSkipped;
           }
-          if (!many) return installRemotePackage({ ...common, ...items[0], ...engineOptions });
+          if (!many) {
+            const answer = await installRemotePackage({ ...common, ...items[0], ...engineOptions });
+            return scaleSkipped ? { ...answer, scaleSkipped } : answer;
+          }
           /* «Прочее ганпака»: собирается из файлов подписанного пака и встаёт той же транзакцией, что стволы (`gunpack-extras.js`). Рабочая папка стирается при любом исходе. */
           const prepared = extras
             ? await buildPackExtras(extras, storageOptions.stateDir, {
@@ -934,7 +954,8 @@ export function registerInstallerIpc({
         });
         /* Сторож моделей-пустышек (`model-safety-guard.js`): что не положено при этой установке — строка в журнал и число с именами в итог (`modelGuard`) для окна. */
         {
-          const guard = (await import("./model-safety-guard.js")).withGuardReport(result, items.map((item) => item.manifest?.id));
+          /* `result.modId` — локальный пакет смены размера: снятые из него пустышки числятся за ним, а не за модом каталога. */
+          const guard = (await import("./model-safety-guard.js")).withGuardReport(result, [...items.map((item) => item.manifest?.id), result?.modId]);
           if (guard.line) appLog.record({ level: "warn", source: "install", message: guard.line });
           result = guard.result;
         }

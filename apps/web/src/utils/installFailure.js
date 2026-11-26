@@ -4,6 +4,7 @@
 // в готовые фразы имена файлов, папок и процессов.
 
 import { currentUiLanguage, tr, trIn } from "../locales/ui.js";
+import { joinSentences } from "./join-sentences.js";
 
 const LANGUAGES = ["ru", "uk", "en", "de", "pl", "fr"];
 const FALLBACK_LANGUAGE = "en";
@@ -772,7 +773,7 @@ export function describeInstallFailure(error, language = currentUiLanguage()) {
 export function failureLine(failure) {
   if (!failure) return "";
   if (failure.reason === failure.detail) return failure.reason;
-  return `${failure.reason}. ${failure.advice}`;
+  return joinSentences(failure.reason, failure.advice);
 }
 
 // Отмена — не отказ: вместо причины человеку показывают слово об отмене.

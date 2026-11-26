@@ -8,7 +8,8 @@
     ".": "./index.js",
     "./groups.js": "./groups.js",
     "./package.json": "./package.json",
-    "./pack-weapon-links.js": "./pack-weapon-links.js"
+    "./pack-weapon-links.js": "./pack-weapon-links.js",
+    "./sealed-bank-notes.js": "./sealed-bank-notes.js"
   },
   "dependencies": {
     "@modovik/awc": "*",

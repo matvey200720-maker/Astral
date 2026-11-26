@@ -1,7 +1,7 @@
 // Сколько слоя звукового пака тесно в слоте памяти игры — при сборке заявки, до публикации (20.11.2026).
 //
 // Игра грузит банк `weapons.awc` в слот памяти STATIC_WEAPONS, сделанный ровно по штатному банку (`@modovik/sound-studio`,
-// `wave-slots.js`). Слой пака, где дорожки длиннее штатных, не помещается: установка (`apps/desktop/src/audio-composer.js`) освобождает
+// `wave-slots.js`); так же устроены слоты ближнего боя (STATIC_MELEE) и банков ствола игрока (PLAYER_WEAPON). Слой пака, где дорожки длиннее штатных, не помещается: установка (`apps/desktop/src/audio-composer.js`) освобождает
 // мёртвые дорожки, а не хватило — поднимает слот в audioconfig.dat4.rel и пересобирает update.rpf. Это не отказ: пометка в описи пака
 // («нужен подъём слота на N»), чтобы куратор видел её до публикации, а человек — до установки. Отказ (`over`) — когда не хватит и
 // потолка роста слота: такой пак не встанет, и это видно сразу, а не у тестера.
@@ -14,6 +14,7 @@ import {
   chooseSpareDrops,
   raiseSlot,
   slotCeiling,
+  slotMembers,
   slotRaiseEnabled,
 } from "@modovik/sound-studio/slot-fit";
 import { WEAPON_BANK_SPARE } from "@modovik/sound-studio/weapon-bank-spare";
@@ -146,6 +147,15 @@ export function slotNeedsOfLayers(layers, sources, options = {}) {
 const describeNeed = (need) =>
   `${need.bank}.awc вырастет на ${sizeText(Math.max(0, need.dataGrowth))} звуков и ${Math.max(0, need.metadataGrowth)} Б служебных данных`;
 
+/* Что сделает установка со слотом банка; у семьи (три слота ствола игрока) растёт каждый, поэтому назван и общий прирост. */
+function raiseWords({ slot, raise }) {
+  const members = slotMembers(slot);
+  const each = `${sizeText(raise.bytes)} данных и ${raise.metadata} Б служебных`;
+  return members > 1
+    ? `поднимет ${members === 3 ? "три" : members} слота памяти ${slot}_0…${members - 1}, каждый на ${each} (всего на ${sizeText(raise.bytes * members)} данных)`
+    : `поднимет слот памяти ${slot} на ${each}`;
+}
+
 /** Пометки в опись заявки: `{ code, severity, message }` — их видит куратор до публикации. */
 export function slotProblems(needs) {
   return needs.map((need) => {
@@ -165,7 +175,7 @@ export function slotProblems(needs) {
       return {
         code: "sound-slot-raise",
         severity: "info",
-        message: `Нужен подъём слота: ${describeNeed(need)}; установка поднимет слот памяти ${need.slot} на ${sizeText(need.raise.bytes)} данных и ${need.raise.metadata} Б служебных и пересоберёт update.rpf (около минуты).`,
+        message: `Нужен подъём слота: ${describeNeed(need)}; установка ${raiseWords(need)} и пересоберёт update.rpf (около минуты).`,
       };
     return {
       code: "sound-slot-spare",
@@ -177,7 +187,18 @@ export function slotProblems(needs) {
 
 /** Фраза для описания карточки: человек видит её до установки; ничего — если слот не трогается. */
 export function slotNote(needs) {
-  const raise = needs.find((need) => need.outcome === "raise");
-  if (!raise) return "";
-  return `Звуки этого пака длиннее штатных: при установке Astral поднимет слот памяти звуков оружия (на ${sizeText(raise.raise.bytes)}) и пересоберёт update.rpf — это займёт около минуты; снятие пака вернёт слот как был.`;
+  const raises = needs.filter((need) => need.outcome === "raise");
+  if (!raises.length) return "";
+  /* Прибавка памяти, а не сумма по банкам: слот поднимается под самый тесный из своих банков, а у семьи растёт каждый слот. */
+  const widest = new Map();
+  for (const need of raises)
+    widest.set(need.slot, Math.max(widest.get(need.slot) || 0, need.raise.bytes));
+  let slots = 0;
+  let bytes = 0;
+  for (const [name, growth] of widest) {
+    slots += slotMembers(name);
+    bytes += growth * slotMembers(name);
+  }
+  const many = slots > 1;
+  return `Звуки этого пака длиннее штатных: при установке Astral поднимет ${many ? "слоты" : "слот"} памяти звуков оружия (${many ? "всего на" : "на"} ${sizeText(bytes)}) и пересоберёт update.rpf — это займёт около минуты; снятие пака вернёт ${many ? "слоты как были" : "слот как был"}.`;
 }

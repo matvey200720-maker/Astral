@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { RECOLOR_SET_ELEMENT_FILES, RECOLOR_SET_FILES, RECOLOR_SET_LOCAL_FILES, RECOLOR_SET_LOCAL_REPLACED, RECOLOR_SET_LOD_FILES } from "./recolor-sets.js";
-import { isArenaMapFile, isPlacesHeiFile, PLACES_DLC_CAPABILITY, PLACES_DLC_TARGET, PLACES_MAP_SETS, placesArchiveOf, placesStreamOf } from "./places-dlc.js";
+import { isMajesticFillerDictionary, isPlacesHeiFile, MAJESTIC_MIRROR_FILES, PLACES_DLC_CAPABILITY, PLACES_DLC_TARGET, PLACES_MAP_SETS, placesArchiveOf, placesMirrorEntryOf, placesStreamOf } from "./places-dlc.js";
 import { SHOPS_TRUST_FILES, SHOPS_TRUST_OVERRIDES } from "./shops-trust.js";
 import { BILLBOARDS_TRUST_FILES, BILLBOARDS_TRUST_OVERRIDES } from "./billboards-trust.js";
 /* «Флаги» (задача 7 ТЗ 10.10.2026, вечер). */
@@ -506,11 +506,11 @@ const CAPABILITIES = Object.freeze([
  *     мест: он главнее пакетов Rockstar (`patchday1ng`/`patchday2ng`);
  *   • модели и словари — в потоковый архив пакета мест.
  */
-export function recolorRouteOf(setId, name, mapNames = null) {
+export function recolorRouteOf(setId, name, mapNames = null, options = undefined) {
   const set = RECOLOR_SETS[setId];
   const lower = String(name).toLowerCase();
   if (/\.(?:ymap|ytyp|ymf)$/.test(lower) && !set.overrides.includes(lower)) return { target: "update/update.rpf", entry: `${set.layer}/${name}` };
-  return { target: set.archive, entry: `${placesArchiveOf(setId, name, mapNames)}/${name}` };
+  return { target: set.archive, entry: `${placesArchiveOf(setId, name, mapNames, options)}/${name}` };
 }
 
 /* Файл, что игра включает наборами `GROUP_MAP`, ушёл в архив сетевой карты места (`astral_<место>_mp(_metadata).rpf`). */
@@ -542,7 +542,11 @@ export function recolorDigest(setId, files) {
   const added = files.filter((file) => mappedOf(file) && !isPlacesHeiFile(setId, file.name)).map((file) => `+${file.name}`).sort();
   const held = files.filter((file) => !mappedOf(file) && isPlacesHeiFile(setId, file.name)).map((file) => `-${file.name}`).sort();
   const layout = added.length || held.length ? `\nmap-group-v2\n${[...added, ...held].join("\n")}` : files.some(mappedOf) ? "\nmap-group-v1" : "";
-  return createHash("sha256").update(`${setId}\nplaces-v${RECOLOR_SCHEMA}${layout}\n${lines.join("\n")}`, "utf8").digest("hex");
+  /* Фасад Majestic в архиве сетевой карты (26.11.2026) — тоже раскладка, «Применить» её сменит: `^имя` — на старте и зеркалом (`file.mirrored`), `~имя` — только
+     в сетевой карте, штатный словарь-наполнитель (`file.mapOnly`). */
+  const facade = files.flatMap((file) => (file.mirrored ? [`^${file.name}`] : file.mapOnly ? [`~${file.name}`] : [])).sort();
+  const mirrors = facade.length ? `\nmajestic-mirror-v1\n${facade.join("\n")}` : "";
+  return createHash("sha256").update(`${setId}\nplaces-v${RECOLOR_SCHEMA}${layout}${mirrors}\n${lines.join("\n")}`, "utf8").digest("hex");
 }
 
 /** Id пакета набора: `local-legacy-<набор>-<12 знаков хэша>`. */
@@ -553,15 +557,46 @@ export const isRecolorModId = (value, setId = null) => {
 
 export const recolorSetOfModId = (value) => MOD_ID.exec(String(value || ""))?.[1] || null;
 
-/** Манифест набора из описи собранных файлов `{ name, size, sha256 }`. */
-export function buildRecolorManifest(setId, files, { mapNames = null } = {}) {
+/**
+ * Манифест набора из описи собранных файлов `{ name, size, sha256 }`. `mapOnly` — штатный словарь-наполнитель фасада Majestic: одна запись в архиве сетевой
+ * карты. `facade: false` — раскладка до 26.11.2026: так перенос пересобирает Мегамолл, поставленный без фасада в сетевой карте.
+ */
+export function buildRecolorManifest(setId, files, { mapNames = null, facade = true } = {}) {
   const set = RECOLOR_SETS[setId];
   if (!set) throw new Error(`Набора перекраски «${setId}» нет.`);
+  const names = new Set(files.map((file) => String(file.name).toLowerCase()));
+  const mirrorOf = (file) => (facade ? placesMirrorEntryOf(setId, file.name, names) : null);
+  const routeOf = (file) => recolorRouteOf(setId, file.name, mapNames, { facade });
+  for (const file of files)
+    if (file.mapOnly && !(mirrorOf(file) && isMajesticFillerDictionary(setId, file.name))) throw new Error(`Файлу ${file.name} не место только в архиве сетевой карты.`);
   /* Файл в архиве сетевой карты — по тому, куда его правда положил маршрут (карты и типы вне перекрытий игры — в контейнер слоя, список игры их не касается). */
   const digest = recolorDigest(
     setId,
-    files.map((file) => ({ ...file, mapped: inMapArchive(setId, recolorRouteOf(setId, file.name, mapNames)) })),
+    files.map(({ name, sha256, mapOnly }) => ({
+      name,
+      sha256,
+      mapOnly: Boolean(mapOnly),
+      mapped: !mapOnly && inMapArchive(setId, routeOf({ name })),
+      mirrored: !mapOnly && Boolean(mirrorOf({ name })),
+    })),
   );
+  /* Файл фасада Majestic — двумя записями из одного файла пакета: на старте и зеркалом в архиве сетевой карты. */
+  const entries = [...files]
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+    .flatMap((file) => {
+      const record = {
+        source: `payload/${file.name}`,
+        ...routeOf(file),
+        action: "import",
+        merge: { strategy: "rpf-resource-layer-v1" },
+        size: file.size,
+        sha256: file.sha256,
+      };
+      const mirror = mirrorOf(file);
+      if (!mirror) return [record];
+      const onMap = { ...record, merge: { ...record.merge }, entry: mirror };
+      return file.mapOnly ? [onMap] : [record, onMap];
+    });
   const suffix = digest.slice(0, 12);
   return {
     id: `local-legacy-${setId}-${suffix}`,
@@ -580,18 +615,9 @@ export function buildRecolorManifest(setId, files, { mapNames = null } = {}) {
       set: setId,
       schemaVersion: RECOLOR_SCHEMA,
       sourceDigest: `sha256:${digest}`,
-      resourceCount: files.length,
+      resourceCount: entries.length,
     },
-    files: [...files]
-      .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
-      .map((file) => ({
-        source: `payload/${file.name}`,
-        ...recolorRouteOf(setId, file.name, mapNames),
-        action: "import",
-        merge: { strategy: "rpf-resource-layer-v1" },
-        size: file.size,
-        sha256: file.sha256,
-      })),
+    files: entries,
   };
 }
 
@@ -623,33 +649,58 @@ export function isLocalRecolorManifest(manifest, edition) {
      `partial` (завод): у него файлы групп независимы, «Стандарт» не едет. */
   const files = manifest.files;
   const allowed = [...set.files, ...set.extra];
-  if (!Array.isArray(files) || files.length < 1 || files.length > allowed.length) return false;
+  /* Сверх файлов набора — только зеркала фасада Majestic: те же файлы второй записью в архиве сетевой карты. */
+  const mirrorable = Object.keys(MAJESTIC_MIRROR_FILES[setId] || {}).length;
+  if (!Array.isArray(files) || files.length < 1 || files.length > allowed.length + mirrorable) return false;
   if (manifest.recolor.resourceCount !== files.length) return false;
-  const seen = new Set();
-  const digestInput = [];
+  const records = new Map(); // имя -> его записи
   for (const file of files) {
     if (!hasExactKeys(file, FILE_KEYS)) return false;
     if (typeof file.source !== "string" || !file.source.startsWith("payload/")) return false;
     const name = file.source.slice("payload/".length);
-    if (!allowed.includes(name) || seen.has(name)) return false;
-    seen.add(name);
-    const route = recolorRouteOf(setId, name);
-    /* Файл вправе лежать в архиве на старте или в архиве сетевой карты своего места: где его положила сборка по игре игрока, решает она, а раскладку держит id
-       (`recolorDigest`: какие файлы без `hei_` в архиве сетевой карты и какие `hei_` оставлены в архиве на старте). */
-    const mappedRoute = recolorRouteOf(setId, name, new Set([name.toLowerCase()]));
-    const unmappedRoute = recolorRouteOf(setId, name, new Set());
-    /* Файл арены из набора карты Majestic лежит в архиве сетевой карты при любом списке игры (`ARENA_MAP_FILES`): маршрут от списка не зависит. */
-    const mapped =
-      inMapArchive(setId, mappedRoute) && file.entry === mappedRoute.entry && (mappedRoute.entry !== unmappedRoute.entry || isArenaMapFile(setId, name));
-    if (file.target !== route.target) return false;
+    if (!allowed.includes(name)) return false;
+    if (file.target !== recolorRouteOf(setId, name).target) return false;
     if (file.action !== "import") return false;
-    if (file.entry !== mappedRoute.entry && file.entry !== unmappedRoute.entry) return false;
+    if (typeof file.entry !== "string") return false;
     if (!hasExactKeys(file.merge, ["strategy"])) return false;
     if (file.merge.strategy !== "rpf-resource-layer-v1") return false;
     if (!Number.isInteger(file.size) || file.size < 1 || file.size > set.maxBytes) return false;
     if (!/^[a-f0-9]{64}$/.test(file.sha256 || "")) return false;
-    digestInput.push({ name, sha256: file.sha256, mapped });
+    records.set(name, [...(records.get(name) || []), file]);
   }
+  const names = new Set(records.keys());
+  const seen = new Map(); // имя -> как лежит: байты и раскладка
+  for (const [name, found] of records) {
+    const mirrorEntry = placesMirrorEntryOf(setId, name, names);
+    /* Где вправе лежать основная запись. Файл — на старте или в архиве сетевой карты своего места: где его положила сборка по игре игрока, решает она, а
+       раскладку держит id (`recolorDigest`: какие файлы без `hei_` в архиве сетевой карты и какие `hei_` оставлены в архиве на старте). Прежняя раскладка
+       (до 26.11.2026, `facade: false`) — тоже своя: поставленное раньше остаётся доверенным. */
+    const now = recolorRouteOf(setId, name, new Set()).entry;
+    const [first, second] = found;
+    if (found.length === 2) {
+      /* На старте и зеркалом в сетевой карте — одни и те же байты. */
+      const mirror = found.find((file) => file.entry === mirrorEntry);
+      const primary = found.find((file) => file !== mirror);
+      if (!mirror || primary.entry !== now || primary.sha256 !== mirror.sha256 || primary.size !== mirror.size) return false;
+      seen.set(name, { sha256: primary.sha256, mapped: false, mirrored: true, mapOnly: false });
+    } else if (found.length !== 1 || second) {
+      return false;
+    } else if (first.entry === mirrorEntry && isMajesticFillerDictionary(setId, name)) {
+      seen.set(name, { sha256: first.sha256, mapped: false, mirrored: false, mapOnly: true });
+    } else {
+      const before = [new Set(), new Set([name.toLowerCase()])].map((list) => recolorRouteOf(setId, name, list, { facade: false }).entry);
+      if (first.entry !== now && !before.includes(first.entry)) return false;
+      seen.set(name, { sha256: first.sha256, mapped: inMapArchive(setId, first), mirrored: false, mapOnly: false });
+    }
+  }
+
+  /* Модель фасада и словарь, из которого модель Majestic берёт свои листы, — в сетевой карте только вместе. */
+  const onMap = (name) => Boolean(seen.get(name)?.mirrored || seen.get(name)?.mapOnly);
+  for (const name of seen.keys()) {
+    const pair = onMap(name) ? MAJESTIC_MIRROR_FILES[setId][name] : null;
+    if (pair && !onMap(pair)) return false;
+  }
+  const digestInput = [...seen].map(([name, file]) => ({ name, ...file }));
 
   /* Набор не `partial` едет целиком: его свои файлы — все до одного,
      кроме `optional`. */

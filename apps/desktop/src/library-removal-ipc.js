@@ -233,11 +233,18 @@ export function removalTools({
     report: (status) => operations?.report(status),
     /* Уборка прежней версии не пошла глубоко в стопку — след в журнале: без
        него «Применить» с оставшейся прежней версией выглядит как недоделка. */
-    onRetireSkipped: ({ restorePointIds, replays }) =>
+    onRetireSkipped: ({ restorePointIds, replays, leftovers }) =>
+      appLog.record({
+        level: leftovers ? "warn" : "info",
+        source: "install",
+        message: `замена прежней версии пропущена: под ней ${replays} работ, переставлять их слишком долго; точка ${restorePointIds.join(", ")} остаётся в стопке${leftovers ? "; в игре от неё остались свои записи" : ""}`,
+      }),
+    /* Прежняя версия оставила в игре записи, которых новая не пишет: снимаем перемоткой и глубже обычного предела. */
+    onRetireForced: ({ restorePointIds, replays }) =>
       appLog.record({
         level: "info",
         source: "install",
-        message: `замена прежней версии пропущена: под ней ${replays} работ, переставлять их слишком долго; точка ${restorePointIds.join(", ")} остаётся в стопке`,
+        message: `замена прежней версии: в игре от неё остались свои записи — снимаем точку ${restorePointIds.join(", ")}, переставить работ: ${replays}`,
       }),
   };
 }

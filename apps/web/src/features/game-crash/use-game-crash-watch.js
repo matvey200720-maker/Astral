@@ -1,15 +1,14 @@
 import { useEffect, useRef } from "react";
 import { desktopHost } from "../../api.js";
-import { useLibraryRequests } from "./library-requests.js";
 
-/* Слова уведомления (пять языков, ~340 строк) нужны только после падения: хук живёт в оболочке, и статический импорт
-   клал их в главный кусок сверх бюджета (verify-web-architecture). Грузятся при первом показе. */
+/* Слова уведомления (шесть языков) нужны только после падения: хук живёт в оболочке, а у главного куска окна бюджет
+   (verify-web-architecture). Грузятся при первом показе. */
 const loadCopy = () =>
   import("../../components/desktop/settings/game-crash-copy.js");
 
 /*
  * Падение игры в оболочке (ТЗ владельца 11.11.2026): короткое ненавязчивое уведомление ОДИН раз, когда человек
- * открыл Astral после падения, и переход в Библиотеку по просьбе раздела «Логи».
+ * открыл Astral после падения.
  *
  * Уведомление — обычная всплывашка оболочки, не окно поверх игры: пока окно Astral не в фокусе, ничего не
  * показывается и ждёт возвращения фокуса. Показанные падения помечаются в приложении (`markGameCrashesNoticed`):
@@ -17,8 +16,7 @@ const loadCopy = () =>
  */
 const FIRST_LOOK_MS = 4000;
 
-export function useGameCrashWatch({ language, notify, openLibrary }) {
-  useLibraryRequests(openLibrary);
+export function useGameCrashWatch({ language, notify }) {
   const latest = useRef({ language, notify });
   latest.current = { language, notify };
 
