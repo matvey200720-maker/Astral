@@ -24,6 +24,9 @@ Get-FileHash .\AstralBetaSetup.exe -Algorithm SHA256
 
 | Версия | Файл | SHA-256 |
 |---|---|---|
+| 1.0.12 | `base.zip` | `f78396e04f6c1e67e81a8a9b91ad29177c7f93459104fb0e4275359f2ca51329` |
+| 1.0.12 | `web.bundle` | `bf09f3bc20e4630bb7d8b771be75dc55e6a4fdb45c35803cbb3ea316ec74b3a1` |
+| 1.0.12 | `manifest.json` | `118495a0c609610df3342e2a5d1b8fd2b7871e26cf788c58a33cc3a15599a0d8` |
 | 1.0.11 | `base.zip` | `e24cb5de24a12303f069dd814f272169ca6441a35849b946592b1894486ec452` |
 | 1.0.11 | `web.bundle` | `8dedb8b511926468bafa8d432a9b6f129481042fc7ac94c02d7c5d9217ba5b6b` |
 | 1.0.11 | `manifest.json` | `560fc299c975b699dc7dacc9e6fdfbfc95e5c5fdd07792b27bfc22a7f9bfff7d` |
